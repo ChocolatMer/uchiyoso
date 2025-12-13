@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uchiyoso Calendar</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🗓️</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&family=Sawarabi+Mincho&family=Yomogi&family=Zen+Maru+Gothic:wght@500&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+<style>
+  :root {
+    /* --- UI用固定カラー --- */
+    --ui-accent: #d8a6b6;
+    --ui-text: #555;
+
+    /* --- カレンダーテーマカラー --- */
+    --accent-color: #d8a6b6;     
+    --text-color: #5d4e4e; 
+    
+    /* カレンダー外観設定 */
+    --outer-bg-color: #f4f6f9;    
+    --cal-grid-bg: rgba(255, 255, 255, 0.6); 
+    --cal-blur: 10px;             
+    
+    --memo-bg-color: rgba(255, 255, 255, 0.9);
+    --cal-cell-bg: transparent;
+
+    /* 曜日・祝日カラー */
+    --sat-color: #6a9bd6;
+    --sat-bg-color: #f0f8ff; 
+    
+    --sun-color: #d66a6a;
+    --sun-bg-color: #fff0f0; 
+    
+    --hol-color: #d66a6a;
+    --hol-bg: #fff5f5;
+
+    --bg-image-url: none;
+    --app-font: 'M PLUS Rounded 1c', sans-serif;
+
+    --text-align: left;
+    --sticker-size: 45px;
+
+    /* 形状・線種変数 */
+    --card-radius: 30px;      /* 角の丸み */
+    --line-style: solid;      /* 線の種類 */
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: var(--app-font);
+    background-color: #e6e9ef;
+    margin: 0;
+    min-height: 100vh;
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* --- ヘッダー --- */
+  header {
+    background: white;
+    padding: 15px 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+  }
+  h1 { margin: 0; font-size: 1.5rem; color: var(--ui-accent); transition: color 0.3s;}
+  .header-meta { font-size: 0.9rem; color: #888; }
+
+  /* --- メインレイアウト --- */
+  .app-container {
+    display: flex;
+    flex: 1;
+    padding: 15px 15px 15px 15px; 
+    gap: 20px;
+    width: 100%;
+    align-items: flex-start;
+    box-sizing: border-box; 
+  }
+
+  /* サイドバー共通設定 */
+  .sidebar {
+    width: 320px;
+    background: white;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+    display: flex; flex-direction: column; gap: 20px;
+    flex-shrink: 0;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  .left-sidebar { order: 1; }
+ .right-sidebar {
+    order: 3;
+    direction: rtl;       /* スクロールバーを左側（内側）に配置 */
+    overflow-y: scroll;   /* 中身が短くても、常にスクロールバー枠を表示する */
+  }
+
+  .right-sidebar > * {
+    direction: ltr;
+  }
+
+  /* 中央：カレンダーエリア */
+  #capture-area {
+    order: 2;
+    flex: 1;
+    background-color: var(--outer-bg-color); 
+    border-radius: var(--card-radius);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.08);
+    position: relative;
+    min-width: 950px; 
+    overflow: hidden; 
+    height: auto;
+    min-height: 700px;
+    transition: background-color 0.5s ease, border-radius 0.3s;
+  }
+
+  .bg-layer {
+    position: absolute; inset: 0; z-index: 0;
+    /* ▼▼▼ 修正: CSS変数ではなくインラインスタイルで制御するため初期値はnoneに固定 ▼▼▼ */
+    background-image: none; 
+    /* ▲▲▲ 修正ここまで ▲▲▲ */
+    background-size: cover; background-position: center;
+    opacity: 1;
+  }
+
+  .canvas-content {
+    position: relative; z-index: 1; padding: 40px;
+    display: flex; gap: 30px; 
+    min-height: 100%;
+  }
+
+  /* カレンダー本体 */
+  .calendar-section { flex: 7; display: flex; flex-direction: column; }
+
+  .cal-header {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 20px; 
+    border-bottom: 4px var(--line-style) var(--accent-color);
+    transition: border-color 0.3s, border-style 0.3s;
+  }
+  .cal-title { font-size: 4rem; font-weight: 800; color: #444; letter-spacing: 0.05em; line-height: 1; text-transform: uppercase; text-shadow: 2px 2px 0px rgba(255,255,255,0.8); }
+  .cal-year { font-size: 2rem; font-weight: bold; color: var(--accent-color); text-shadow: 1px 1px 0px rgba(255,255,255,0.8); transition: color 0.3s; }
+
+  .cal-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    background-color: var(--cal-grid-bg); 
+    border: 2px var(--line-style) var(--accent-color); 
+    border-radius: calc(var(--card-radius) * 0.66); /* 外枠に合わせて少し小さく */
+    overflow: hidden; 
+    flex: 1;
+    backdrop-filter: blur(var(--cal-blur)); 
+    -webkit-backdrop-filter: blur(var(--cal-blur));
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    transition: background-color 0.3s, border-color 0.3s, border-radius 0.3s, border-style 0.3s;
+  }
+
+  .day-label {
+    background: var(--accent-color); color: white;
+    text-align: center; padding: 10px 0; font-weight: bold; font-size: 1.1rem;
+    transition: background-color 0.3s;
+  }
+  
+  .day-cell {
+    border-right: 1px var(--line-style) var(--accent-color);
+    border-bottom: 1px var(--line-style) var(--accent-color);
+    min-height: 120px; 
+    padding: 8px;
+    display: flex; flex-direction: column;
+    position: relative;
+    background-color: var(--cal-cell-bg);
+    transition: border-color 0.3s, background-color 0.3s, border-style 0.3s;
+  }
+  .day-cell:nth-child(7n) { border-right: none; }
+
+  .day-number { 
+    font-size: 1.2rem; font-weight: bold; color: var(--accent-color); margin-bottom: 4px; pointer-events: none;
+    display: flex; align-items: center; gap: 5px;
+    transition: color 0.3s;
+  }
+  
+  .holiday-name {
+    font-size: 0.7rem; font-weight: normal; margin-left: auto; opacity: 0.8;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px;
+  }
+
+  /* カラー制御クラス */
+  .is-sat .day-number { color: var(--sat-color) !important; }
+  .day-label.sat-header { background: var(--sat-color) !important; }
+  .is-sun .day-number { color: var(--sun-color) !important; }
+  .day-label.sun-header { background: var(--sun-color) !important; }
+  .is-holiday .day-number { color: var(--hol-color) !important; }
+
+  .day-cell.fill-sat-bg { background-color: var(--sat-bg-color) !important; }
+  .day-cell.fill-sun-bg { background-color: var(--sun-bg-color) !important; }
+  .day-cell.fill-hol-bg { background-color: var(--hol-bg) !important; }
+
+
+  .cell-text {
+    flex: 1; outline: none; font-size: 0.95rem; line-height: 1.3; color: var(--text-color);
+    min-height: 1.5em; z-index: 2; word-break: break-all;
+    text-align: var(--text-align);
+  }
+
+  /* スタンプ */
+  .cell-stickers {
+    position: absolute; bottom: 4px; right: 4px; left: 4px;
+    height: 65px; pointer-events: none;
+    display: flex; justify-content: flex-end; align-items: flex-end; flex-wrap: wrap-reverse;
+    gap: 2px;
+    z-index: 10;
+  }
+  .placed-sticker {
+    width: var(--sticker-size); height: var(--sticker-size); 
+    object-fit: contain; 
+    filter: drop-shadow(2px 2px 2px rgba(0,0,0,0.1));
+    pointer-events: auto; cursor: pointer; transition: transform 0.1s;
+  }
+  .placed-sticker:hover { transform: scale(1.1); }
+  
+  .cell-stickers .placed-sticker:only-child {
+    width: calc(var(--sticker-size) * 1.6); 
+    height: calc(var(--sticker-size) * 1.6); 
+    transform: rotate(-5deg); 
+    filter: drop-shadow(3px 5px 5px rgba(0,0,0,0.15));
+  }
+  .cell-stickers .placed-sticker:only-child:hover { transform: scale(1.1) rotate(0deg); }
+
+  /* NOTE欄 */
+  .sidebar-section {
+    flex: 2.5; display: flex; flex-direction: column; gap: 20px;
+  }
+  .note-card {
+    background: var(--memo-bg-color); 
+    border: 2px var(--line-style) var(--accent-color);
+    border-radius: calc(var(--card-radius) * 0.66);
+    padding: 20px;
+    display: flex; flex-direction: column;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+    backdrop-filter: blur(5px);
+    transition: border-color 0.3s, background-color 0.3s, border-radius 0.3s, border-style 0.3s;
+  }
+  .note-title {
+    text-align: center; color: var(--accent-color); font-weight: bold; font-size: 1.2rem;
+    border-bottom: 2px dashed var(--accent-color); padding-bottom: 8px; margin-bottom: 12px;
+    outline: none;
+    transition: color 0.3s, border-color 0.3s;
+  }
+  .note-body {
+    flex: 1; outline: none; font-size: 1rem; line-height: 2em;
+    background-image: linear-gradient(transparent 95%, var(--accent-color) 96%);
+    background-size: 100% 2em;
+    min-height: 150px;
+    transition: background-image 0.3s;
+  }
+
+  /* UIパーツ */
+  .panel-section h3 {
+    margin: 0 0 15px 0; color: var(--ui-text); font-size: 1rem;
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 2px solid #eee; padding-bottom: 8px;
+  }
+  .sub-header {
+    font-size: 0.85rem; color: #444; background:#eef2f5; padding:6px 10px; border-radius:6px;
+    margin: 15px 0 10px 0; font-weight:bold; display:flex; align-items:center; gap:6px;
+  }
+
+  .input-group { margin-bottom: 15px; }
+  .input-group label { display: block; font-size: 0.8rem; color: #666; margin-bottom: 5px; }
+  
+  .row { display: flex; gap: 10px; align-items: center; }
+  select, input[type="text"], input[type="number"] {
+    width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 6px; color:#555;
+  }
+  input[type="color"] { width: 100%; height: 35px; border:none; padding:0; cursor: pointer; border-radius: 4px; border:1px solid #ddd; }
+  input[type="range"] { width: 100%; cursor: pointer; }
+
+  /* スイッチ類 (UIカラーで固定) */
+  .checkbox-switch {
+    display: flex; align-items: center; justify-content: space-between;
+    background: #f9f9f9; padding: 8px 10px; border-radius: 6px; border: 1px solid #eee; cursor: pointer;
+  }
+  .checkbox-switch input { display: none; }
+  .checkbox-switch span { font-size: 0.85rem; color: #555; }
+  .checkbox-switch .indicator {
+    width: 40px; height: 20px; background: #ddd; border-radius: 10px; position: relative; transition: 0.3s;
+  }
+  .checkbox-switch .indicator::after {
+    content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; 
+    background: white; border-radius: 50%; transition: 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .checkbox-switch input:checked + span + .indicator { background: var(--ui-accent); }
+  .checkbox-switch input:checked + span + .indicator::after { left: 22px; }
+
+  .radio-group {
+    display: flex; background: #eee; border-radius: 6px; padding: 3px; gap:2px;
+  }
+  .radio-group label {
+    flex: 1; text-align: center; padding: 6px; font-size: 0.8rem; cursor: pointer;
+    border-radius: 4px; color: #666; margin:0; transition: 0.2s;
+  }
+  .radio-group input { display: none; }
+  .radio-group input:checked + label {
+    background: white; color: var(--ui-accent); font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+
+  /* ボタン */
+  .btn {
+    width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer;
+    font-weight: bold; transition: 0.2s; font-size: 0.95rem;
+    display: flex; justify-content: center; align-items: center; gap: 8px;
+  }
+  .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-primary { background: #779ecb; color: white; }
+  .btn-outline { background: white; border: 2px solid #779ecb; color: #779ecb; }
+  .btn-accent { background: #ffe4e8; color: #d8a6b6; }
+  
+  .btn-tool {
+    flex:1; font-size:0.9rem; padding:8px; border-radius:6px; color:white;
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+  }
+  .btn-random { background: linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%); box-shadow: 0 2px 5px rgba(255, 154, 158, 0.4); }
+  .btn-reset { background: #b0b0b0; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+  .preset-grid { display: grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:10px; }
+  .btn-preset { 
+    font-size: 0.8rem; padding: 8px; border:1px solid #eee; background: white; color: #555;
+    border-radius: 6px; cursor: pointer; transition: 0.2s;
+    display: flex; align-items: center; gap:6px;
+  }
+  .btn-preset:hover { background: #f0f0f0; transform: translateY(-1px); }
+  .color-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+
+
+  .sticker-pool {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    background: #f9f9f9; padding: 10px; border-radius: 10px;
+    max-height: 250px; overflow-y: auto; border: 1px solid #eee;
+  }
+  .sticker-item { width: 100%; aspect-ratio: 1; object-fit: contain; cursor: grab; background:white; border-radius:4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+
+  .paint-tools {
+    background: #fdfdfd; border: 1px solid #eee; padding: 10px; border-radius: 8px;
+    /* デフォルトで無効化の見た目に */
+    opacity: 0.5; pointer-events: none; transition: opacity 0.3s;
+  }
+  .paint-mode-select { display: flex; gap: 5px; margin-bottom: 8px; }
+  .mode-btn {
+    flex: 1; border: 1px solid #ddd; background: white; padding: 6px; font-size: 0.8rem; cursor: pointer; border-radius: 4px;
+    display:flex; flex-direction:column; align-items:center; gap:2px;
+  }
+  .mode-btn.active { background: var(--ui-accent); color: white; border-color: var(--ui-accent); }
+  .cursor-paint .day-cell { cursor: crosshair; }
+
+</style>
+</head>
+<body>
+
+<header>
+  <h1><i class="fa-regular fa-calendar-check"></i> Uchiyoso Calendar Maker</h1>
+  <div class="header-meta">Ver 1.0 (Chocolat Mer)</div>
+</header>
+
+<div class="app-container">
+  
+  <aside class="sidebar left-sidebar">
+    <div class="panel-section">
+      <h3><i class="fa-solid fa-calendar-days"></i> 日付設定</h3>
+      <div class="row">
+        <select id="yearSelect"></select>
+        <select id="monthSelect"></select>
+      </div>
+      <div style="margin-top:10px;">
+        <label class="checkbox-switch">
+          <input type="checkbox" id="autoHoliday" checked>
+          <span>日本の祝日を表示</span>
+          <div class="indicator"></div>
+        </label>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <h3><i class="fa-solid fa-palette"></i> デザイン設定</h3>
+      
+      <div class="sub-header"><i class="fa-solid fa-image"></i> 外観・台紙 (外枠外)</div>
+      <div class="input-group">
+        <label>台紙の背景色</label>
+        <input type="color" id="outerBgColor" value="#f4f6f9" title="カレンダー外側の色">
+      </div>
+      <div class="input-group">
+        <label>または背景画像</label>
+        <input type="file" id="bgImageInput" accept="image/*">
+      </div>
+      
+      <div class="input-group">
+        <label>角の形状</label>
+        <div class="radio-group">
+          <input type="radio" name="cornerShape" id="shapeRound" value="30px" checked>
+          <label for="shapeRound">丸く</label>
+          <input type="radio" name="cornerShape" id="shapeSharp" value="0px">
+          <label for="shapeSharp">四角</label>
+        </div>
+      </div>
+
+      <div class="sub-header"><i class="fa-solid fa-table"></i> カレンダー本体 (枠内)</div>
+      
+      <div class="input-group">
+        <label>モード選択</label>
+        <div class="radio-group">
+          <input type="radio" name="calMode" id="modeGlass" value="glass" checked>
+          <label for="modeGlass">すりガラス</label>
+          <input type="radio" name="calMode" id="modeSolid" value="solid">
+          <label for="modeSolid">塗りつぶし</label>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>枠線の種類</label>
+        <select id="lineStyleSelect">
+          <option value="solid">実線 (通常)</option>
+          <option value="dashed">破線 (縫い目)</option>
+          <option value="dotted">点線</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <div class="row">
+           <div style="flex:1;">
+             <label style="font-size:0.8rem;">カレンダー色</label>
+             <input type="color" id="calGridBgColor" value="#ffffff">
+           </div>
+           <div style="flex:1;">
+             <label style="font-size:0.8rem;">メモ欄色</label>
+             <input type="color" id="memoBgColor" value="#ffffff">
+           </div>
+        </div>
+        
+        <label style="margin-top:8px;">カレンダー不透明度</label>
+        <input type="range" id="opacityRange" min="0" max="1" step="0.1" value="0.6" title="カレンダー不透明度">
+        
+        <label style="margin-top:8px;">メモ欄不透明度</label>
+        <input type="range" id="memoOpacityRange" min="0" max="1" step="0.1" value="0.9" title="メモ欄不透明度">
+      </div>
+
+      <div class="sub-header"><i class="fa-solid fa-swatchbook"></i> 配色カスタマイズ</div>
+      <div class="input-group">
+        <div class="row" style="margin-bottom:5px;">
+           <div style="flex:1"><label style="font-size:0.7em">テーマ</label><input type="color" id="accentColor" value="#d8a6b6"></div>
+           <div style="flex:1"><label style="font-size:0.7em">土曜文字</label><input type="color" id="satColor" value="#6a9bd6"></div>
+           <div style="flex:1"><label style="font-size:0.7em">日曜文字</label><input type="color" id="sunColor" value="#d66a6a"></div>
+        </div>
+        <div class="row" style="margin-bottom:5px;">
+           <div style="flex:1"><span style="font-size:0.7em; color:#ccc;">(背景)</span></div>
+           <div style="flex:1"><label style="font-size:0.7em">土曜背景</label><input type="color" id="satBgColor" value="#f0f8ff"></div>
+           <div style="flex:1"><label style="font-size:0.7em">日曜背景</label><input type="color" id="sunBgColor" value="#fff0f0"></div>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>特別な日の背景塗り（自動）</label>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <label class="checkbox-switch">
+            <input type="checkbox" id="fillSatSunBg" checked>
+            <span>土・日の背景を塗る</span>
+            <div class="indicator"></div>
+          </label>
+          <label class="checkbox-switch">
+            <input type="checkbox" id="fillHolidayBg" checked>
+            <span>祝日の背景を塗る</span>
+            <div class="indicator"></div>
+          </label>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label>フォント設定</label>
+        <select id="fontSelect">
+          <option value="'M PLUS Rounded 1c', sans-serif">丸文字（基本）</option>
+          <option value="'Sawarabi Mincho', serif">明朝体</option>
+          <option value="'Yomogi', cursive">手書き風</option>
+          <option value="'Zen Maru Gothic', sans-serif">丸ゴシック</option>
+        </select>
+        <div class="row" style="margin-top:8px;">
+           <div class="radio-group" style="width:100%;">
+             <input type="radio" name="textAlign" id="alignLeft" value="left" checked>
+             <label for="alignLeft"><i class="fa-solid fa-align-left"></i></label>
+             <input type="radio" name="textAlign" id="alignCenter" value="center">
+             <label for="alignCenter"><i class="fa-solid fa-align-center"></i></label>
+             <input type="radio" name="textAlign" id="alignRight" value="right">
+             <label for="alignRight"><i class="fa-solid fa-align-right"></i></label>
+           </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main id="capture-area">
+    <div class="bg-layer"></div>
+    <div class="canvas-content">
+      <div class="calendar-section">
+        <div class="cal-header">
+          <div class="cal-title" contenteditable="true" id="calTitleDisplay">DECEMBER</div>
+          <div class="cal-year" contenteditable="true" id="calYearDisplay">2025</div>
+        </div>
+        <div class="cal-grid" id="calendarGrid"></div>
+      </div>
+      <div class="sidebar-section">
+        <div class="note-card" style="flex:1;">
+          <div class="note-title" contenteditable="true">MONTHLY GOAL</div>
+          <div class="note-body" contenteditable="true" id="goalArea"></div>
+        </div>
+        <div class="note-card" style="flex:2;">
+          <div class="note-title" contenteditable="true">MEMO / FREE</div>
+          <div class="note-body" contenteditable="true" id="memoArea"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="sidebar right-sidebar">
+    
+    <div class="panel-section">
+      <h3><i class="fa-solid fa-wand-magic-sparkles"></i> テーマ一括変更</h3>
+      <div class="row">
+        <button class="btn btn-tool btn-random" id="randomThemeBtn">
+          <i class="fa-solid fa-shuffle"></i> ランダム
+        </button>
+        <button class="btn btn-tool btn-reset" id="resetThemeBtn">
+          <i class="fa-solid fa-rotate-left"></i> リセット
+        </button>
+      </div>
+      <div class="preset-grid">
+         <button class="btn-preset" onclick="applyPreset('nordic')"><span class="color-dot" style="background:#769fcd"></span>北欧風</button>
+         <button class="btn-preset" onclick="applyPreset('cafe')"><span class="color-dot" style="background:#d9ad7c"></span>カフェ</button>
+         <button class="btn-preset" onclick="applyPreset('mono')"><span class="color-dot" style="background:#888888"></span>モノクロ</button>
+         <button class="btn-preset" onclick="applyPreset('pop')"><span class="color-dot" style="background:#ff9a9e"></span>ポップ</button>
+      </div>
+    </div>
+
+    <div class="panel-section">
+      <h3><i class="fa-solid fa-fill-drip"></i> 自由着色 (クリック)</h3>
+      
+      <div style="margin-bottom:10px;">
+        <label class="checkbox-switch">
+          <input type="checkbox" id="enablePaintSwitch">
+          <span>クリック着色を有効にする</span>
+          <div class="indicator"></div>
+        </label>
+      </div>
+
+      <div class="paint-tools" id="paintToolsArea">
+        <div class="paint-mode-select">
+          <button class="mode-btn active" id="btnPaintBg" onclick="setPaintMode('bg')">
+            <i class="fa-solid fa-square"></i> マス背景
+          </button>
+          <button class="mode-btn" id="btnPaintText" onclick="setPaintMode('text')">
+            <i class="fa-solid fa-font"></i> 文字色
+          </button>
+        </div>
+        <div class="row">
+           <input type="color" id="customPaintColor" value="#ffcccc">
+           <button class="btn btn-outline" style="padding:0 15px; font-size:0.8rem; border-color:#ccc; color:#666;" onclick="resetPaint()">クリア</button>
+        </div>
+        <div style="font-size:0.75rem; color:#888; margin-top:5px;">
+           ※カレンダーをクリックして個別着色
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section" style="flex:1; display:flex; flex-direction:column;">
+      <h3><i class="fa-solid fa-icons"></i> スタンプ編集</h3>
+      <p style="font-size:0.8rem; color:#666; margin-bottom:5px;">ドラッグ＆ドロップ / クリック削除</p>
+      
+      <div class="input-group" style="margin-bottom:10px;">
+        <div class="row">
+           <label style="margin:0; font-size:0.8rem;">サイズ調整</label>
+           <input type="range" id="stickerSizeRange" min="20" max="80" value="45" style="flex:1;">
+        </div>
+      </div>
+
+      <div class="sticker-pool" id="stickerPool">
+        <img src="images/stamp/DICE.png" class="sticker-item" draggable="true">
+        <img src="images/stamp/TEAMWORK.png" class="sticker-item" draggable="true">
+        <img src="images/stamp/RELAX.png" class="sticker-item" draggable="true">
+        <img src="images/stamp/AGENDA.png" class="sticker-item" draggable="true">
+        <img src="images/stamp/DRAWING.png" class="sticker-item" draggable="true">
+        <img src="images/stamp/CREATION.png" class="sticker-item" draggable="true">
+      </div>
+      <button class="btn btn-accent" style="margin-top:10px;" onclick="document.getElementById('addStickerInput').click()">＋画像を追加</button>
+      <input type="file" id="addStickerInput" accept="image/*" style="display:none;">
+    </div>
+
+    <div class="panel-section" style="margin-top:auto;">
+      <h3><i class="fa-solid fa-floppy-disk"></i> 保存・書き出し</h3>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button class="btn btn-primary" id="saveProjectBtn">プロジェクト保存 (.json)</button>
+        <button class="btn btn-outline" onclick="document.getElementById('loadProjectInput').click()">続きから再開</button>
+        <input type="file" id="loadProjectInput" accept=".json" style="display:none;">
+        <hr style="width:100%; border:0; border-top:1px solid #eee;">
+        <button class="btn btn-primary" style="background:#444;" id="exportBtn">画像をダウンロード</button>
+      </div>
+    </div>
+
+  </aside>
+
+</div>
+
+<script>
+  // --- 1. 祝日ロジック ---
+  function getRawHolidayName(yearIn, monthIn, dayIn) {
+    const year = parseInt(yearIn);
+    const month = parseInt(monthIn);
+    const day = parseInt(dayIn);
+
+    const fixed = { 
+        '1-1':'元日','2-11':'建国記念の日','2-23':'天皇誕生日',
+        '4-29':'昭和の日','5-3':'憲法記念日','5-4':'みどりの日','5-5':'こどもの日',
+        '8-11':'山の日','11-3':'文化の日','11-23':'勤労感謝の日' 
+    };
+    const key = `${month}-${day}`;
+    if (fixed[key]) return fixed[key];
+
+    const vernal = Math.floor(20.8431 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
+    const autumn = Math.floor(23.2488 + 0.242194 * (year - 1980) - Math.floor((year - 1980) / 4));
+    if (month === 3 && day === vernal) return '春分の日';
+    if (month === 9 && day === autumn) return '秋分の日';
+
+    function isHappyMonday(m, n) {
+        if (month !== m) return false;
+        const date = new Date(year, month - 1, day);
+        if (date.getDay() !== 1) return false; 
+        const weekNum = Math.floor((day - 1) / 7) + 1;
+        return weekNum === n;
+    }
+
+    if (isHappyMonday(1, 2)) return '成人の日';
+    if (isHappyMonday(7, 3)) return '海の日';
+    if (isHappyMonday(9, 3)) return '敬老の日';
+    if (isHappyMonday(10, 2)) return 'スポーツの日';
+
+    return null; 
+  }
+
+  function getHolidayInfo(yearIn, monthIn, dayIn) {
+    const year = parseInt(yearIn);
+    const month = parseInt(monthIn);
+    const day = parseInt(dayIn);
+
+    const name = getRawHolidayName(year, month, day);
+    if (name) return { name, isHoliday: true };
+
+    let d = 1;
+    while (true) {
+        const prevDate = new Date(year, month - 1, day - d);
+        const pYear = prevDate.getFullYear();
+        const pMonth = prevDate.getMonth() + 1;
+        const pDay = prevDate.getDate();
+        
+        const pName = getRawHolidayName(pYear, pMonth, pDay);
+        if (!pName) break; 
+
+        if (prevDate.getDay() === 0) {
+            return { name: '振替休日', isHoliday: true };
+        }
+        d++;
+    }
+
+    const yesterday = new Date(year, month - 1, day - 1);
+    const tomorrow = new Date(year, month - 1, day + 1);
+    
+    const yName = getRawHolidayName(yesterday.getFullYear(), yesterday.getMonth() + 1, yesterday.getDate());
+    const tName = getRawHolidayName(tomorrow.getFullYear(), tomorrow.getMonth() + 1, tomorrow.getDate());
+
+    if (yName && tName) {
+        const todayObj = new Date(year, month-1, day);
+        if (todayObj.getDay() !== 0) { 
+             return { name: '国民の休日', isHoliday: true };
+        }
+    }
+
+    return { name: '', isHoliday: false };
+  }
+
+  // --- 2. 初期化 ---
+  const root = document.documentElement;
+  const grid = document.getElementById('calendarGrid');
+  const yearSelect = document.getElementById('yearSelect');
+  const monthSelect = document.getElementById('monthSelect');
+  const todayDate = new Date();
+  
+  const currentYear = todayDate.getFullYear();
+  for(let y = currentYear - 1; y <= currentYear + 3; y++){
+    const opt = document.createElement('option');
+    opt.value = y; opt.innerText = y + '年';
+    if(y === currentYear) opt.selected = true;
+    yearSelect.appendChild(opt);
+  }
+  const monthsEn = ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"];
+  for(let m = 1; m <= 12; m++){
+    const opt = document.createElement('option');
+    opt.value = m; opt.innerText = m + '月';
+    if(m === todayDate.getMonth() + 1) opt.selected = true;
+    monthSelect.appendChild(opt);
+  }
+
+  // --- 3. データ保持 ---
+  function getGridData() {
+    const dataMap = {};
+    document.querySelectorAll('.day-cell').forEach(cell => {
+      if(!cell.dataset.date) return;
+      const stickers = [];
+      cell.querySelectorAll('.placed-sticker').forEach(img => stickers.push(img.src));
+      dataMap[cell.dataset.date] = {
+        text: cell.querySelector('.cell-text').innerHTML,
+        stickers: stickers,
+        customBg: cell.style.backgroundColor,
+        customNumColor: cell.querySelector('.day-number').style.color,
+        customTextColor: cell.querySelector('.cell-text').style.color
+      };
+    });
+    return dataMap;
+  }
+  function restoreGridData(dataMap) {
+    if(!dataMap) return;
+    Object.keys(dataMap).forEach(date => {
+      const cell = document.querySelector(`.day-cell[data-date="${date}"]`);
+      if(cell && dataMap[date]) {
+        const d = dataMap[date];
+        cell.querySelector('.cell-text').innerHTML = d.text;
+        const area = cell.querySelector('.cell-stickers');
+        area.innerHTML = '';
+        d.stickers.forEach(src => createSticker(area, src));
+        if(d.customBg) cell.style.setProperty('background-color', d.customBg, 'important');
+        if(d.customNumColor) cell.querySelector('.day-number').style.setProperty('color', d.customNumColor, 'important');
+        if(d.customTextColor) cell.querySelector('.cell-text').style.setProperty('color', d.customTextColor, 'important');
+      }
+    });
+  }
+
+  // --- 4. カレンダー生成 ---
+  function generateCalendar(yearIn, monthIn, keepData = false) {
+    const year = parseInt(yearIn);
+    const month = parseInt(monthIn);
+
+    let savedData = null;
+    if(keepData) savedData = getGridData();
+    grid.innerHTML = '';
+    
+    document.getElementById('calTitleDisplay').innerText = monthsEn[month - 1];
+    document.getElementById('calYearDisplay').innerText = year;
+
+    const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+    days.forEach((d, index) => {
+      const div = document.createElement('div');
+      div.className = 'day-label'; div.innerText = d;
+      if(index === 0) div.classList.add('sun-header');
+      if(index === 6) div.classList.add('sat-header');
+      grid.appendChild(div);
+    });
+
+    const firstDay = new Date(year, month - 1, 1).getDay();
+    const lastDate = new Date(year, month, 0).getDate();
+    const useHoliday = document.getElementById('autoHoliday').checked;
+
+    for(let i=0; i<firstDay; i++){
+      const cell = document.createElement('div');
+      cell.className = 'day-cell empty-cell';
+      if(i === 0) cell.classList.add('is-sun');
+      if(i === 6) cell.classList.add('is-sat');
+      grid.appendChild(cell);
+    }
+
+    for(let i=1; i<=lastDate; i++){
+      const currentDate = new Date(year, month - 1, i);
+      const dayOfWeek = currentDate.getDay(); 
+      const cell = document.createElement('div');
+      cell.className = 'day-cell';
+      cell.dataset.date = i;
+      
+      if(dayOfWeek === 0) cell.classList.add('is-sun');
+      if(dayOfWeek === 6) cell.classList.add('is-sat');
+
+      let holName = '';
+      if(useHoliday) {
+        const h = getHolidayInfo(year, month, i);
+        if(h.isHoliday) {
+          cell.classList.add('is-holiday');
+          holName = `<span class="holiday-name">${h.name}</span>`;
+        }
+      }
+
+      cell.innerHTML = `
+        <div class="day-number">${i}${holName}</div>
+        <div class="cell-text" contenteditable="true"></div>
+        <div class="cell-stickers"></div>
+      `;
+      cell.addEventListener('dragover', e => e.preventDefault());
+      cell.addEventListener('drop', handleDrop);
+      cell.addEventListener('click', (e) => handleCellPaint(e, cell));
+      grid.appendChild(cell);
+    }
+    
+    if(keepData && savedData) restoreGridData(savedData);
+    updateColorSettings();
+  }
+
+  yearSelect.addEventListener('change', () => generateCalendar(yearSelect.value, monthSelect.value, false));
+  monthSelect.addEventListener('change', () => generateCalendar(yearSelect.value, monthSelect.value, false));
+  document.getElementById('autoHoliday').addEventListener('change', () => generateCalendar(yearSelect.value, monthSelect.value, true));
+
+
+  // --- 5. スタイル・カラー制御 ---
+
+  // HexをRgbaに変換して透明度を適用する関数
+  function hexToRgba(hex, alpha) {
+    if(!hex || hex.length < 7) return hex;
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  function updateCalendarStyle() {
+    const outerBg = document.getElementById('outerBgColor').value;
+    const gridBg = document.getElementById('calGridBgColor').value;
+    const memoBg = document.getElementById('memoBgColor').value; 
+    
+    const satBg = document.getElementById('satBgColor').value;
+    const sunBg = document.getElementById('sunBgColor').value;
+    const holBgHex = '#fff5f5'; 
+
+    const isGlass = document.getElementById('modeGlass').checked;
+    
+    const opacity = isGlass ? document.getElementById('opacityRange').value : 1;
+    const memoOpacity = isGlass ? document.getElementById('memoOpacityRange').value : 1;
+
+    document.getElementById('opacityRange').disabled = !isGlass;
+    document.getElementById('memoOpacityRange').disabled = !isGlass;
+
+    root.style.setProperty('--outer-bg-color', outerBg);
+    
+    // カレンダー本体の背景
+    root.style.setProperty('--cal-grid-bg', hexToRgba(gridBg, opacity));
+
+    // ▼▼▼ 修正: 土日祝の背景色は、重なりによる濃さを軽減するため不透明度を半分にする ▼▼▼
+    // すりガラスモードでかつ透過がある場合、セル自体の透明度をさらに下げる
+    const cellOpacity = isGlass ? opacity * 0.5 : 1; 
+
+    root.style.setProperty('--sat-bg-color', hexToRgba(satBg, cellOpacity));
+    root.style.setProperty('--sun-bg-color', hexToRgba(sunBg, cellOpacity));
+    root.style.setProperty('--hol-bg', hexToRgba(holBgHex, cellOpacity));
+    // ▲▲▲ 修正ここまで ▲▲▲
+    
+    root.style.setProperty('--memo-bg-color', hexToRgba(memoBg, memoOpacity));
+
+    if(isGlass) {
+       root.style.setProperty('--cal-blur', '10px');
+    } else {
+       root.style.setProperty('--cal-blur', '0px');
+    }
+  }
+
+  function updateColorSettings() {
+    const fillSatSun = document.getElementById('fillSatSunBg').checked;
+    const fillHoliday = document.getElementById('fillHolidayBg').checked;
+
+    const cells = document.querySelectorAll('.day-cell');
+    cells.forEach(cell => {
+      cell.classList.remove('fill-sat-bg', 'fill-sun-bg', 'fill-hol-bg');
+      if(fillSatSun) {
+        if(cell.classList.contains('is-sat')) cell.classList.add('fill-sat-bg');
+        if(cell.classList.contains('is-sun')) cell.classList.add('fill-sun-bg');
+      }
+      if(fillHoliday && cell.classList.contains('is-holiday')) {
+        cell.classList.add('fill-hol-bg');
+      }
+    });
+  }
+
+  document.getElementById('outerBgColor').addEventListener('input', updateCalendarStyle);
+  document.getElementById('calGridBgColor').addEventListener('input', updateCalendarStyle);
+  document.getElementById('opacityRange').addEventListener('input', updateCalendarStyle);
+  document.getElementById('memoOpacityRange').addEventListener('input', updateCalendarStyle);
+
+  document.getElementById('modeGlass').addEventListener('change', updateCalendarStyle);
+  document.getElementById('modeSolid').addEventListener('change', updateCalendarStyle);
+  
+  // ▼▼▼ 修正: 大容量画像対応 (CSS変数ではなくDOM直接操作) ▼▼▼
+  document.getElementById('bgImageInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if(file){
+      const reader = new FileReader();
+      
+      reader.onload = (ev) => {
+          // CSS変数経由だと容量制限に引っかかるため、直接スタイルを書き換える
+          document.querySelector('.bg-layer').style.backgroundImage = `url(${ev.target.result})`;
+          // CSS変数はクリアしておく
+          root.style.setProperty('--bg-image-url', 'none');
+      };
+      
+      reader.onerror = () => {
+          alert('画像の読み込みに失敗しました。');
+      };
+
+      try {
+        reader.readAsDataURL(file);
+      } catch(err) {
+        console.error(err);
+        alert('画像の処理中にエラーが発生しました。');
+      }
+    }
+  });
+  // ▲▲▲ 修正ここまで ▲▲▲
+
+  const simpleColorInputs = ['accentColor', 'satColor', 'sunColor'];
+  simpleColorInputs.forEach(id => {
+    document.getElementById(id).addEventListener('input', e => root.style.setProperty(`--${id.replace('Color','')}-color`, e.target.value));
+  });
+
+  document.getElementById('satBgColor').addEventListener('input', updateCalendarStyle);
+  document.getElementById('sunBgColor').addEventListener('input', updateCalendarStyle);
+  
+  document.getElementById('memoBgColor').addEventListener('input', updateCalendarStyle);
+
+  document.getElementById('fontSelect').addEventListener('change', e => root.style.setProperty('--app-font', e.target.value));
+  document.getElementById('fillSatSunBg').addEventListener('change', updateColorSettings);
+  document.getElementById('fillHolidayBg').addEventListener('change', updateColorSettings);
+  
+  document.querySelectorAll('input[name="textAlign"]').forEach(r => {
+    r.addEventListener('change', (e) => root.style.setProperty('--text-align', e.target.value));
+  });
+  document.getElementById('stickerSizeRange').addEventListener('input', (e) => {
+    root.style.setProperty('--sticker-size', e.target.value + 'px');
+  });
+
+  document.querySelectorAll('input[name="cornerShape"]').forEach(r => {
+    r.addEventListener('change', (e) => root.style.setProperty('--card-radius', e.target.value));
+  });
+  document.getElementById('lineStyleSelect').addEventListener('change', (e) => {
+    root.style.setProperty('--line-style', e.target.value);
+  });
+
+
+  // --- ランダム・リセット・プリセット ---
+  const defaultColors = {
+    accent: '#d8a6b6', sat: '#6a9bd6', sun: '#d66a6a',
+    satBg: '#f0f8ff', sunBg: '#fff0f0',
+    outer: '#f4f6f9', grid: '#ffffff', memo: '#ffffff'
+  };
+
+  function setValuesAndProps(vals) {
+    document.getElementById('accentColor').value = vals.accent;
+    root.style.setProperty('--accent-color', vals.accent);
+    document.getElementById('satColor').value = vals.sat;
+    root.style.setProperty('--sat-color', vals.sat);
+    document.getElementById('sunColor').value = vals.sun;
+    root.style.setProperty('--sun-color', vals.sun);
+    
+    document.getElementById('satBgColor').value = vals.satBg || '#f0f8ff';
+    document.getElementById('sunBgColor').value = vals.sunBg || '#fff0f0';
+
+    document.getElementById('outerBgColor').value = vals.outer;
+    document.getElementById('calGridBgColor').value = vals.grid;
+    document.getElementById('memoBgColor').value = vals.memo || '#ffffff';
+    
+    updateCalendarStyle();
+  }
+
+document.getElementById('resetThemeBtn').addEventListener('click', () => {
+    if(!confirm('色設定を初期状態に戻しますか？（背景画像もクリアされます）')) return;
+    setValuesAndProps(defaultColors);
+    // 背景画像のクリア
+    document.querySelector('.bg-layer').style.backgroundImage = 'none';
+    root.style.setProperty('--bg-image-url', 'none');
+  });
+
+  document.getElementById('randomThemeBtn').addEventListener('click', () => {
+    const hslToHex = (h,s,l) => {
+      l/=100; const a=s*Math.min(l,1-l)/100;
+      const f=n=>{const k=(n+h/30)%12; const color=l-a*Math.max(Math.min(k-3,9-k,1),-1); return Math.round(255*color).toString(16).padStart(2,'0');};
+      return `#${f(0)}${f(8)}${f(4)}`;
+    };
+    
+    const hMain = Math.floor(Math.random() * 360);
+    const main = hslToHex(hMain, 60, 65);
+    
+    const hBg = Math.floor(Math.random() * 360);
+    const bg = hslToHex(hBg, 30, 92);
+
+    document.getElementById('accentColor').value = main;
+    root.style.setProperty('--accent-color', main);
+
+    document.getElementById('outerBgColor').value = bg;
+    root.style.setProperty('--outer-bg-color', bg);
+    
+    document.getElementById('memoBgColor').value = '#ffffff';
+    
+    updateCalendarStyle();
+  });
+
+  function applyPreset(type) {
+    const p = {
+      nordic: { accent:'#769fcd', sat:'#b9d7ea', sun:'#fca3cc', outer:'#f7fbfc', grid:'#ffffff', memo:'#f0f8ff', satBg:'#e6f2ff', sunBg:'#ffe6e6' },
+      cafe: { accent:'#d9ad7c', sat:'#a2836e', sun:'#c94c4c', outer:'#fffbf0', grid:'#fffff0', memo:'#fffbf0', satBg:'#f5ece5', sunBg:'#f5e5e5' },
+      mono: { accent:'#555555', sat:'#888888', sun:'#aaaaaa', outer:'#eeeeee', grid:'#ffffff', memo:'#f5f5f5', satBg:'#eeeeee', sunBg:'#dddddd' },
+      pop: { accent:'#ff9a9e', sat:'#a18cd1', sun:'#fbc2eb', outer:'#fff0f5', grid:'#ffffff', memo:'#fff0f5', satBg:'#fce4ec', sunBg:'#f3e5f5' }
+    };
+    if(p[type]) setValuesAndProps(p[type]);
+  }
+
+
+  // --- 6. 個別セル着色 ---
+  let paintMode = 'bg'; 
+  let isClearMode = false;
+  
+  function setPaintMode(mode) {
+    paintMode = mode;
+    document.getElementById('btnPaintBg').className = mode === 'bg' ? 'mode-btn active' : 'mode-btn';
+    document.getElementById('btnPaintText').className = mode === 'text' ? 'mode-btn active' : 'mode-btn';
+    isClearMode = false;
+  }
+  
+  function resetPaint() {
+    isClearMode = true;
+    alert('クリアモード：セルをクリックするとリセットされます');
+  }
+
+  document.getElementById('enablePaintSwitch').addEventListener('change', function(e) {
+    const area = document.getElementById('paintToolsArea');
+    if(e.target.checked) {
+        area.style.opacity = '1';
+        area.style.pointerEvents = 'auto';
+        document.body.classList.add('cursor-paint');
+    } else {
+        area.style.opacity = '0.5';
+        area.style.pointerEvents = 'none';
+        document.body.classList.remove('cursor-paint');
+    }
+  });
+
+  function handleCellPaint(e, cell) {
+    if(!document.getElementById('enablePaintSwitch').checked) return;
+
+    if(e.target.closest('.placed-sticker')) return;
+    if(isClearMode) {
+      if(paintMode === 'bg') cell.style.backgroundColor = '';
+      if(paintMode === 'text') {
+        if(cell.querySelector('.day-number')) cell.querySelector('.day-number').style.color = '';
+        if(cell.querySelector('.cell-text')) cell.querySelector('.cell-text').style.color = '';
+      }
+      updateColorSettings(); 
+    } else {
+      const color = document.getElementById('customPaintColor').value;
+      if(paintMode === 'bg') {
+        cell.style.setProperty('background-color', color, 'important');
+      } else if (paintMode === 'text') {
+        if(cell.querySelector('.day-number')) cell.querySelector('.day-number').style.setProperty('color', color, 'important');
+        if(cell.querySelector('.cell-text')) cell.querySelector('.cell-text').style.setProperty('color', color, 'important');
+      }
+    }
+  }
+
+
+  // --- 7. スタンプ ---
+  function handleDrop(e) {
+    e.preventDefault();
+    const src = e.dataTransfer.getData('text/uri-list');
+    if (!src) return;
+    createSticker(this.querySelector('.cell-stickers'), src);
+  }
+  function createSticker(container, src) {
+    const img = document.createElement('img');
+    img.src = src;
+    img.className = 'placed-sticker';
+    img.addEventListener('click', function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      if(confirm('スタンプを削除しますか？')) this.remove();
+    });
+    container.appendChild(img);
+  }
+  document.getElementById('stickerPool').addEventListener('dragstart', (e) => {
+    if(e.target.tagName === 'IMG') e.dataTransfer.setData('text/uri-list', e.target.src);
+  });
+  document.getElementById('addStickerInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if(file){
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const img = document.createElement('img');
+        img.src = ev.target.result;
+        img.className = 'sticker-item';
+        img.draggable = true;
+        document.getElementById('stickerPool').appendChild(img);
+      };
+      reader.readAsDataURL(file);
+    }
+    this.value = '';
+  });
+
+
+  // --- 8. 保存・読込 ---
+ document.getElementById('saveProjectBtn').addEventListener('click', () => {
+    const data = getGridData();
+    
+    // ▼▼▼ 修正: 保存時もDOMから直接画像URLを取得 ▼▼▼
+    let bgData = null;
+    const currentBgStyle = document.querySelector('.bg-layer').style.backgroundImage;
+    const currentBgVar = getComputedStyle(root).getPropertyValue('--bg-image-url').trim();
+    
+    // 優先的にDOMスタイルを見る
+    let rawBg = (currentBgStyle && currentBgStyle !== 'none') ? currentBgStyle : currentBgVar;
+
+    if(rawBg && rawBg !== 'none') {
+        const match = rawBg.match(/^url\(['"]?(.*?)['"]?\)$/);
+        if (match && match[1]) {
+            bgData = match[1];
+        }
+    }
+    // ▲▲▲ 修正ここまで ▲▲▲
+
+    const saveObj = {
+      meta: { year: yearSelect.value, month: monthSelect.value },
+      style: {
+        bgImage: bgData, 
+        accent: document.getElementById('accentColor').value,
+        sat: document.getElementById('satColor').value,
+        sun: document.getElementById('sunColor').value,
+        
+        outerBg: document.getElementById('outerBgColor').value, 
+        calGridBg: document.getElementById('calGridBgColor').value,
+        memoBg: document.getElementById('memoBgColor').value,
+
+        satBg: document.getElementById('satBgColor').value,
+        sunBg: document.getElementById('sunBgColor').value,
+
+        mode: document.getElementById('modeGlass').checked ? 'glass' : 'solid',
+        
+        font: document.getElementById('fontSelect').value,
+        
+        opacity: document.getElementById('opacityRange').value,
+        memoOpacity: document.getElementById('memoOpacityRange').value,
+
+        autoHoliday: document.getElementById('autoHoliday').checked,
+        fillSatSun: document.getElementById('fillSatSunBg').checked,
+        fillHoliday: document.getElementById('fillHolidayBg').checked,
+        
+        textAlign: document.querySelector('input[name="textAlign"]:checked').value,
+        stickerSize: document.getElementById('stickerSizeRange').value,
+
+        cornerShape: document.querySelector('input[name="cornerShape"]:checked').value,
+        lineStyle: document.getElementById('lineStyleSelect').value
+      },
+      content: {
+        title: document.getElementById('calTitleDisplay').innerText,
+        goal: document.getElementById('goalArea').innerHTML,
+        memo: document.getElementById('memoArea').innerHTML
+      },
+      cells: data
+    };
+    const blob = new Blob([JSON.stringify(saveObj)], {type:'application/json'});
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `uchiyoso_${saveObj.meta.year}_${saveObj.meta.month}.json`;
+    link.click();
+  });
+
+  document.getElementById('loadProjectInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if(data.meta){
+          yearSelect.value = data.meta.year;
+          monthSelect.value = data.meta.month;
+        }
+       if(data.style){
+          const s = data.style;
+          
+          if (s.bgImage) {
+             const urlValue = s.bgImage.startsWith('url(') ? s.bgImage : `url(${s.bgImage})`;
+             // ▼▼▼ 修正: 読み込み時もDOMに直接セット ▼▼▼
+             document.querySelector('.bg-layer').style.backgroundImage = urlValue;
+             root.style.setProperty('--bg-image-url', 'none'); 
+          } else {
+             document.querySelector('.bg-layer').style.backgroundImage = 'none';
+             root.style.setProperty('--bg-image-url', 'none');
+          }
+
+          setValuesAndProps({
+             accent: s.accent,
+             sat: s.sat || '#6a9bd6',
+             sun: s.sun || '#d66a6a',
+             satBg: s.satBg || '#f0f8ff',
+             sunBg: s.sunBg || '#fff0f0',
+             outer: s.outerBg,
+             grid: s.calGridBg,
+             memo: s.memoBg || '#ffffff'
+          });
+
+          if(s.mode === 'solid') document.getElementById('modeSolid').checked = true;
+          else document.getElementById('modeGlass').checked = true;
+
+          document.getElementById('fontSelect').value = s.font;
+          
+          document.getElementById('opacityRange').value = s.opacity;
+          if(s.memoOpacity !== undefined) {
+              document.getElementById('memoOpacityRange').value = s.memoOpacity;
+          } else {
+              document.getElementById('memoOpacityRange').value = s.opacity; 
+          }
+
+          if(s.autoHoliday !== undefined) document.getElementById('autoHoliday').checked = s.autoHoliday;
+          if(s.fillSatSun !== undefined) document.getElementById('fillSatSunBg').checked = s.fillSatSun;
+          if(s.fillHoliday !== undefined) document.getElementById('fillHolidayBg').checked = s.fillHoliday;
+          
+          if(s.textAlign) {
+             document.querySelector(`input[name="textAlign"][value="${s.textAlign}"]`).checked = true;
+             root.style.setProperty('--text-align', s.textAlign);
+          }
+          if(s.stickerSize) {
+             document.getElementById('stickerSizeRange').value = s.stickerSize;
+             root.style.setProperty('--sticker-size', s.stickerSize + 'px');
+          }
+
+          if(s.cornerShape) {
+            document.querySelector(`input[name="cornerShape"][value="${s.cornerShape}"]`).checked = true;
+            root.style.setProperty('--card-radius', s.cornerShape);
+          }
+          if(s.lineStyle) {
+            document.getElementById('lineStyleSelect').value = s.lineStyle;
+            root.style.setProperty('--line-style', s.lineStyle);
+          }
+
+          root.style.setProperty('--app-font', s.font);
+          updateCalendarStyle();
+        }
+        generateCalendar(data.meta.year, data.meta.month, false);
+        if(data.content){
+          document.getElementById('calTitleDisplay').innerText = data.content.title;
+          document.getElementById('goalArea').innerHTML = data.content.goal;
+          document.getElementById('memoArea').innerHTML = data.content.memo;
+        }
+        if(data.cells){
+            if(Array.isArray(data.cells)){
+                const map = {}; data.cells.forEach(c => map[c.date] = c);
+                restoreGridData(map);
+            } else { restoreGridData(data.cells); }
+        }
+        alert('読み込み完了');
+      } catch(err){ console.error(err); alert('読み込みエラー'); }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const target = document.getElementById('capture-area');
+    const btn = document.getElementById('exportBtn');
+    const orgText = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 生成中...';
+    target.style.borderRadius = '0';
+    setTimeout(() => {
+      html2canvas(target, { scale: 2, useCORS: true }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `my_calendar_${yearSelect.value}_${monthSelect.value}.png`;
+        link.href = canvas.toDataURL();
+        link.click();
+        btn.innerHTML = orgText;
+        target.style.borderRadius = getComputedStyle(root).getPropertyValue('--card-radius');
+      });
+    }, 200);
+  });
+
+  generateCalendar(yearSelect.value, monthSelect.value);
+  updateCalendarStyle();
+
+</script>
+</body>
+</html>

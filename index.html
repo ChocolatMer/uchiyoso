@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uchiyoso Maker - 3D Space</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+
+<style>
+/* Note: 元のCSSはそのまま維持し、最後に新しいスタイルを追加します */
+
+/* ★変更エリア：ダンシング・ティッカー (右上) ★ */
+    .area-ticker {
+        grid-column: span 2;
+        padding: 0;
+        position: relative;
+        /* 背景を少しリッチに：ガラス感を維持しつつ、ほんのりピンク */
+        background: rgba(255, 255, 255, 0.25);
+        overflow: hidden; 
+        /* 枠自体も少し浮き上がらせる */
+        box-shadow: 
+            var(--glass-shadow),
+            inset 0 0 20px rgba(255, 158, 187, 0.1);
+    }
+    
+    .ticker-wrap {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        white-space: nowrap;
+        /* 両端のフェードを少し強めて、奥から出てくる感を演出 */
+        mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
+        -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
+        
+        display: flex;
+        align-items: center; /* 上下中央揃え */
+    }
+
+    .ticker-content {
+        display: inline-flex; /* inline-blockから変更して並びを安定化 */
+        align-items: center;
+        /* スピード調整：20s -> 25s (動きが増えるので少しゆっくりに) */
+        animation: marquee 25s linear infinite;
+    }
+    
+    .ticker-item {
+        display: inline-flex;
+        align-items: center;
+        margin: 0 15px;
+        font-weight: 900;
+        font-size: 1.6rem;
+        color: var(--accent-pink);
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        
+        /* ★ここがポイント：文字自体も踊らせるアニメーション設定★ */
+        animation: dance 3s ease-in-out infinite;
+    }
+
+    /* 奇数番目のアイテム：上に跳ねる */
+    .ticker-item:nth-child(odd) {
+        animation-delay: 0s;
+        color: #ff9ebb; /* メインピンク */
+    }
+
+    /* 偶数番目のアイテム：タイミングをずらしてリズムを作る */
+    .ticker-item:nth-child(even) {
+        animation-name: dance-reverse; /* 逆の動き */
+        animation-delay: -1.5s;
+        color: #ffc3d6; /* 少し薄いピンクで奥行き感 */
+    }
+    
+    .ticker-item span {
+        margin-right: 8px;
+        font-size: 1.8rem;
+        filter: drop-shadow(0 4px 0 rgba(255,255,255,0.6)); /* ポップな影 */
+        display: inline-block;
+        
+        /* アイコンだけさらに個別に回す */
+        animation: spin-icon 4s ease-in-out infinite;
+    }
+    
+    .ticker-item.hollow {
+        color: transparent;
+        /* 線の色を濃くして視認性アップ */
+        -webkit-text-stroke: 2px rgba(139, 107, 97, 0.4);
+        opacity: 0.8;
+    }
+
+    /* --- アニメーション定義 --- */
+
+    /* 横スクロール */
+    @keyframes marquee {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
+
+    /* 文字が上下に揺れながら少し傾く（ダンス） */
+    @keyframes dance {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        25% { transform: translateY(-6px) rotate(-3deg); } /* 上がって左に傾く */
+        75% { transform: translateY(2px) rotate(2deg); }   /* 下がって右に傾く */
+    }
+
+    /* 偶数用：動きを逆にして波打つ感じにする */
+    @keyframes dance-reverse {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        25% { transform: translateY(6px) rotate(3deg); }
+        75% { transform: translateY(-2px) rotate(-2deg); }
+    }
+
+    /* アイコンが可愛く揺れる */
+    @keyframes spin-icon {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.2) rotate(15deg); }
+    }
+
+    :root {
+        --text-main: #5a3d35;
+        --text-sub: #8b6b61;
+        --accent-pink: #ff9ebb;
+        --accent-gradient: linear-gradient(135deg, #ff9ebb 0%, #ffc3d6 100%);
+        
+        /* 進化したグラスモーフィズム変数 */
+        --glass-bg: rgba(255, 255, 255, 0.15);
+        --glass-border: rgba(255, 255, 255, 0.4);
+        --glass-shine: rgba(255, 255, 255, 0.6);
+        --glass-shadow: 0 8px 32px 0 rgba(90, 61, 53, 0.1);
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        text-decoration: none;
+    }
+
+    body {
+        font-family: "Zen Maru Gothic", sans-serif;
+        background-color: #fce4ec;
+        background-image: url('images/background/fur-texture-pink.jpg');
+        background-size: cover;
+        background-position: center;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        color: var(--text-main);
+        
+        /* 3D空間の定義：より深い奥行きを設定 */
+        perspective: 1500px;
+    }
+
+    .ambient-light {
+        position: absolute;
+        width: 100%; height: 100%;
+        background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.1) 100%);
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    /* --- Bento Grid コンテナ --- */
+    .bento-container {
+        position: relative;
+        z-index: 10;
+        width: 1000px;
+        max-width: 90%;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr); /* 4カラム */
+        grid-template-rows: auto auto auto;    /* 行の高さ自動 */
+        gap: 24px; /* カード間の隙間を広げてBento感を強調 */
+        
+        /* 3D配置：画面全体に対して少しだけ上向きに傾ける（静的） */
+        transform: rotateX(5deg) translateY(-20px);
+        transform-style: preserve-3d;
+        transition: transform 0.5s ease;
+    }
+
+    /* --- 進化したグラスモーフィズムカード --- */
+    .glass-card {
+        background: var(--glass-bg);
+        /* ブラーを強めてすりガラス感をアップ */
+        backdrop-filter: blur(40px) saturate(180%);
+        -webkit-backdrop-filter: blur(40px) saturate(180%);
+        
+        /* ボーダーの輝き表現（二重ボーダー風） */
+        border: 1px solid var(--glass-border);
+        box-shadow: 
+            var(--glass-shadow),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.2), /* 内側の輝き */
+            inset 0 1px 0 0 rgba(255, 255, 255, 0.5); /* 上部のハイライト */
+            
+        border-radius: 36px; /* 角丸を大きくしてモダンに */
+        padding: 24px;
+        
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+        
+        /* 3Dホバー用の設定 */
+        transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        transform: translateZ(0px);
+        
+        /* コンテンツがガラスの奥にあるように見せる */
+        transform-style: preserve-3d;
+    }
+
+    /* カードホバー時の挙動（お気に入りの浮き出し感を強化） */
+    .glass-card:hover {
+        background: rgba(255, 255, 255, 0.25);
+        border-color: var(--glass-shine);
+        /* Z軸方向への移動を大きくし、3D感を強調 */
+        transform: translateZ(50px) scale(1.02);
+        box-shadow: 
+            0 30px 60px rgba(0, 0, 0, 0.1),
+            inset 0 0 20px rgba(255, 255, 255, 0.5);
+        z-index: 20; /* ホバー時に一番手前に */
+    }
+
+    /* 光の反射エフェクト（キラッとする演出） */
+    .glass-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: -100%;
+        width: 100%; height: 100%;
+        background: linear-gradient(
+            90deg,
+            transparent,
+            rgba(255, 255, 255, 0.4),
+            transparent
+        );
+        transform: skewX(-25deg);
+        transition: 0.5s;
+        pointer-events: none;
+    }
+    .glass-card:hover::before {
+        left: 100%;
+        transition: 0.7s ease-in-out;
+    }
+
+    /* --- コンテンツエリア設定 --- */
+
+    /* プロフィール (左上: 2x2) */
+    .area-profile {
+        grid-column: span 2;
+        grid-row: span 2;
+        align-items: flex-start;
+        text-align: left;
+        padding: 40px;
+        background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 100%);
+    }
+
+    .profile-header {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        margin-bottom: 24px;
+        transform: translateZ(20px); /* 文字をガラスより手前に浮かせる */
+    }
+    .avatar {
+        width: 90px; height: 90px;
+        border-radius: 50%;
+        background-image: url('images/background/fur-texture-pink.jpg');
+        background-size: cover;
+        border: 4px solid rgba(255,255,255,0.8);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    }
+    .site-title {
+        font-size: 2.2rem;
+        font-weight: 900;
+        letter-spacing: 0.05em;
+        color: var(--text-main);
+        text-shadow: 0 2px 10px rgba(255,255,255,0.5);
+    }
+    .site-desc {
+        font-size: 1rem;
+        color: var(--text-main);
+        opacity: 0.8;
+        font-weight: 700;
+    }
+    .profile-text {
+        font-size: 0.95rem;
+        line-height: 1.8;
+        color: var(--text-main);
+        transform: translateZ(10px);
+    }
+
+    /* スタッツ (右上: 横長) */
+    .area-stats {
+        grid-column: span 2;
+        flex-direction: row;
+        justify-content: space-evenly;
+    }
+    .stat-box { 
+        text-align: center; 
+        transform: translateZ(10px);
+    }
+    .stat-num { 
+        font-size: 2rem; 
+        font-weight: 900; 
+        display: block; 
+        color: var(--text-main);
+        /* 数字にグラデーションをかける */
+        background: linear-gradient(135deg, #ff9ebb 0%, #ff7b9c 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .stat-label { 
+        font-size: 0.75rem; 
+        font-weight: 700; 
+        letter-spacing: 0.1em;
+        color: var(--text-sub);
+    }
+
+    /* ツールボタン (下部) - お気に入りの挙動は維持 */
+    .area-tool {
+        grid-column: span 1;
+        aspect-ratio: 1 / 1;
+        cursor: pointer;
+    }
+    .area-tool-wide {
+        grid-column: span 2;
+        aspect-ratio: auto;
+        flex-direction: row;
+        gap: 20px;
+        justify-content: flex-start;
+        padding-left: 40px;
+    }
+
+    .icon-circle {
+        width: 64px; height: 64px;
+        background: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        color: var(--accent-pink);
+        margin-bottom: 12px;
+        box-shadow: 0 10px 25px rgba(255, 158, 187, 0.2);
+        transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* バウンドするような動き */
+        transform: translateZ(20px); /* アイコンを浮かす */
+    }
+    /* ボタンのホバー挙動（お気に入り） */
+    .area-tool:hover .icon-circle {
+        background: var(--accent-pink);
+        color: white;
+        transform: translateZ(40px) scale(1.15) rotate(-10deg); /* 3D的な飛び出し強化 */
+        box-shadow: 0 15px 30px rgba(255, 158, 187, 0.5);
+    }
+    
+    .tool-info {
+        transform: translateZ(10px);
+    }
+    .tool-label {
+        font-weight: 800;
+        font-size: 1.1rem;
+        color: var(--text-main);
+    }
+    .tool-sub {
+        font-size: 0.8rem;
+        color: var(--text-sub);
+        margin-top: 4px;
+    }
+
+    /* NEWバッジ (3Dフロート) */
+    .badge {
+        position: absolute;
+        top: 20px; right: 20px;
+        background: var(--accent-gradient);
+        color: white;
+        font-size: 0.75rem;
+        padding: 6px 14px;
+        border-radius: 50px;
+        font-weight: bold;
+        box-shadow: 0 5px 15px rgba(255, 158, 187, 0.5);
+        animation: bounce 2s infinite;
+        transform: translateZ(30px); /* バッジを一番手前に */
+        border: 2px solid #fff;
+    }
+
+    /* ロック状態 */
+    .area-locked {
+        background: rgba(255, 255, 255, 0.05);
+        border-style: dashed;
+        cursor: default;
+    }
+    .area-locked .icon-circle { 
+        background: rgba(255,255,255,0.2); 
+        color: #fff; 
+        box-shadow: none;
+    }
+    .area-locked:hover { 
+        transform: translateZ(0); 
+        box-shadow: none; 
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* シェアボタン */
+    .area-share {
+        grid-column: span 4;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+        backdrop-filter: none;
+        padding: 10px;
+        display: flex;
+        justify-content: center; /* 中央揃えに変更 */
+    }
+    .btn-share-pill {
+        padding: 14px 40px;
+        background: rgba(255,255,255,0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid #fff;
+        border-radius: 50px;
+        font-weight: 800;
+        color: var(--text-main);
+        transition: 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        transform: translateZ(0);
+    }
+    .btn-share-pill:hover {
+        background: #fff;
+        color: var(--accent-pink);
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 15px 40px rgba(255, 158, 187, 0.3);
+    }
+
+    @media (max-width: 768px) {
+        .bento-container {
+            grid-template-columns: 1fr 1fr;
+            width: 95%;
+            padding-bottom: 50px;
+            transform: none; /* スマホでは3D角度を解除 */
+        }
+        .area-profile { grid-column: span 2; text-align: center; align-items: center; }
+        .profile-header { flex-direction: column; }
+        .area-stats { grid-column: span 2; }
+        .area-tool-wide { 
+            grid-column: span 2; 
+            justify-content: center; /* スマホでは中央揃え */
+            padding-left: 0;
+        }
+        .area-tool-wide .tool-info { text-align: left; }
+        body { overflow-y: auto; height: auto; display: block; padding-top: 50px; }
+    }
+
+    @keyframes bounce {
+        0%, 100% { transform: translateZ(30px) translateY(0); }
+        50% { transform: translateZ(30px) translateY(-5px); }
+    }
+
+    /* --- ふわふわパーティクル（お気に入りのため変更なし） --- */
+    .floating-particle {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(8px);
+        opacity: 0.6;
+        animation: floatUp 15s linear infinite;
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    @keyframes floatUp {
+        0% { transform: translateY(110vh) translateX(0) rotate(0deg); opacity: 0; }
+        10% { opacity: 0.6; }
+        90% { opacity: 0.6; }
+        100% { transform: translateY(-20vh) translateX(20px) rotate(360deg); opacity: 0; }
+    }
+
+    /* -------------------------------------------------- */
+    /* ▼▼▼ 追加スタイル：遊ぶぬいぐるみ (右下固定) ▼▼▼ */
+    /* -------------------------------------------------- */
+    .floating-mascot {
+        position: fixed; /* スクロールしても画面の同じ位置に固定 */
+        bottom: 40px;    /* 下からの距離 */
+        right: 40px;     /* 右からの距離 */
+        width: 140px;    /* ぬいぐるみのサイズ */
+        height: auto;
+        z-index: 100;    /* 最前面に表示 */
+        cursor: pointer; /* カーソルを指マークに */
+        
+        /* 通常時のアニメーション：ふわふわと不規則に遊ぶ */
+        animation: playful-float 7s ease-in-out infinite;
+        /* ホバー時の変形を滑らかにする */
+        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .floating-mascot img {
+        width: 100%;
+        height: auto;
+        display: block;
+        /* ぬいぐるみに少し立体的な影をつける */
+        filter: drop-shadow(0 8px 20px rgba(90, 61, 53, 0.25));
+        transition: filter 0.3s ease;
+    }
+
+    /* --- ホバー時の挙動 --- */
+    .floating-mascot:hover {
+        /* ホバーした瞬間、少し大きくなって傾く（「おっ？」という感じ） */
+        transform: scale(1.15) rotate(10deg);
+        /* アニメーションをより活発なものに変更 */
+        animation: playful-excited 0.8s ease-in-out infinite alternate;
+    }
+    
+    .floating-mascot:hover img {
+        /* ホバー時に影を強くして浮遊感を強調 */
+        filter: drop-shadow(0 12px 25px rgba(255, 158, 187, 0.4));
+    }
+
+    /* --- アニメーション定義 --- */
+
+    /* 通常時のふわふわ（不規則な浮遊） */
+    @keyframes playful-float {
+        0%, 100% { transform: translate(0, 0) rotate(0deg); }
+        20% { transform: translate(-10px, -15px) rotate(-4deg); }
+        40% { transform: translate(5px, -5px) rotate(2deg); }
+        60% { transform: translate(-5px, 8px) rotate(-2deg); }
+        80% { transform: translate(8px, -10px) rotate(4deg); }
+    }
+
+    /* ホバー時の興奮（ブルブル震えながら少し動く） */
+    @keyframes playful-excited {
+        0% { transform: scale(1.15) rotate(10deg) translate(0, 0); }
+        100% { transform: scale(1.15) rotate(12deg) translate(4px, -4px); }
+    }
+
+    /* スマホでのサイズ調整 */
+    @media (max-width: 768px) {
+        .floating-mascot {
+            width: 90px;
+            bottom: 20px;
+            right: 20px;
+        }
+    }
+    /* -------------------------------------------------- */
+    /* ▲▲▲ 追加スタイル終了 ▲▲▲ */
+    /* -------------------------------------------------- */
+
+ /* --- ▼▼▼ 追加：オープニング登場アニメーション ▼▼▼ --- */
+    @keyframes entranceFadeUp {
+        0% { opacity: 0; transform: translateY(60px) scale(0.9); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .glass-card, .area-share {
+        opacity: 0;
+        animation: entranceFadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    }
+    /* 順番に表示 */
+    .area-profile { animation-delay: 0.1s; }
+    .area-ticker { animation-delay: 0.2s; }
+    .area-tool-wide { animation-delay: 0.3s; }
+    .glass-card:nth-of-type(4) { animation-delay: 0.4s; }
+    .glass-card:nth-of-type(5) { animation-delay: 0.5s; }
+    .glass-card:nth-of-type(6) { animation-delay: 0.6s; }
+    .glass-card:nth-of-type(7) { animation-delay: 0.7s; }
+    .area-share { animation-delay: 0.9s; }
+
+    /* レスポンシブ */
+    @media (max-width: 768px) {
+        .bento-container {
+            grid-template-columns: 1fr 1fr; width: 95%; padding-bottom: 50px; transform: none;
+        }
+        .area-profile { grid-column: span 2; text-align: center; align-items: center; }
+        .profile-header { flex-direction: column; }
+        .area-stats { grid-column: span 2; }
+        .area-tool-wide { grid-column: span 2; justify-content: center; padding-left: 0; }
+        .area-tool-wide .tool-info { text-align: left; }
+        body { overflow-y: auto; height: auto; display: block; padding-top: 50px; }
+        .floating-mascot { width: 90px; bottom: 20px; right: 20px; }
+    }
+
+
+</style>
+</head>
+<body>
+
+    <div class="ambient-light"></div>
+    <div class="bento-container">
+        
+        <div class="glass-card area-profile">
+            <div class="profile-header">
+                <div class="avatar"></div>
+                <div>
+                    <h1 class="site-title">Uchiyoso Maker</h1>
+                    <p class="site-desc">あなたの「うちよそ」を、もっと特別に。</p>
+                </div>
+            </div>
+            <p class="profile-text">
+                創作活動を支援するデザインツールセット。<br>
+                美しい関係性グラフやSSを、<br>
+                まるで魔法のように直感的に作成できます。
+            </p>
+        </div>
+
+        <div class="glass-card area-ticker">
+            <div class="ticker-wrap">
+                <div class="ticker-content">
+                    <div class="ticker-item"><span>♥</span>LOVE</div>
+                    <div class="ticker-item hollow">CREATION</div>
+                    <div class="ticker-item"><span>★</span>DREAM</div>
+                    <div class="ticker-item hollow">STORY</div>
+                    <div class="ticker-item"><span>♦</span>RELATION</div>
+                    <div class="ticker-item hollow">UCHIYOSO</div>
+                    
+                    <div class="ticker-item"><span>♥</span>LOVE</div>
+                    <div class="ticker-item hollow">CREATION</div>
+                    <div class="ticker-item"><span>★</span>DREAM</div>
+                    <div class="ticker-item hollow">STORY</div>
+                    <div class="ticker-item"><span>♦</span>RELATION</div>
+                    <div class="ticker-item hollow">UCHIYOSO</div>
+                </div>
+            </div>
+        </div>
+
+        <a href="10graphmaker.html" class="glass-card area-tool area-tool-wide">
+            <span class="badge">NEW Update</span>
+            <div class="icon-circle">
+                <span class="material-symbols-rounded">bar_chart</span>
+            </div>
+            <div class="tool-info">
+                <div class="tool-label">グラフを作る</div>
+                <div class="tool-sub">関係性を可視化しよう</div>
+            </div>
+        </a>
+
+        <a href="#" class="glass-card area-tool">
+            <div class="icon-circle">
+                <span class="material-symbols-rounded">image</span>
+            </div>
+            <div class="tool-info">
+                <div class="tool-label">画像生成</div>
+            </div>
+        </a>
+
+        <a href="#" class="glass-card area-tool">
+            <div class="icon-circle">
+                <span class="material-symbols-rounded">edit_note</span>
+            </div>
+            <div class="tool-info">
+                <div class="tool-label">SSエディタ</div>
+            </div>
+        </a>
+
+        <a href="labelmaker.html" class="glass-card area-tool">
+            <span class="badge" style="top: 10px; right: 10px; font-size: 0.6rem; padding: 4px 10px;">NEW</span>
+            <div class="icon-circle">
+                <span class="material-symbols-rounded">style</span>
+            </div>
+            <div class="tool-info">
+                <div class="tool-label">ラベルメーカー</div>
+            </div>
+        </a>
+
+        <a href="backclear.html" class="glass-card area-tool">
+            <span class="badge" style="top: 10px; right: 10px; font-size: 0.6rem; padding: 4px 10px; background: linear-gradient(135deg, #a8cce8 0%, #8ec5fc 100%);">NEW</span>
+            <div class="icon-circle">
+                <span class="material-symbols-rounded">layers_clear</span>
+            </div>
+
+            <div class="tool-info">
+                <div class="tool-label">背景除去</div>
+            </div>
+        </a>
+
+        <a href="calendar.html" class="glass-card area-tool">
+            <span class="badge" style="top: 10px; right: 10px; font-size: 0.6rem; padding: 4px 10px; background: linear-gradient(135deg, #ffe082 0%, #ffca28 100%); color: #5a3d35;">NEW</span>
+            <div class="icon-circle">
+                <span class="material-symbols-rounded">calendar_month</span>
+            </div>
+            <div class="tool-info">
+                <div class="tool-label">カレンダー</div>
+                <div class="tool-sub">日付を彩る</div>
+            </div>
+        </a>
+
+        <div class="area-share">
+            <a href="#" class="btn-share-pill">
+                <span class="material-symbols-rounded">share</span>
+                ページをシェアする
+            </a>
+        </div>
+
+    </div>
+
+    <a href="badohuro.html" class="floating-mascot">
+        <img src="images/icons/nui1.png" alt="遊んでいるぬいぐるみ">
+    </a>
+    <script>
+    // --- 背景にふわふわパーティクルを生成 ---
+    function createParticles() {
+        const colors = ['#ff9ebb', '#a8cce8', '#ffffff'];
+        const count = 12; // 粒の数
+        
+        for(let i=0; i < count; i++) {
+            const span = document.createElement('span');
+            span.classList.add('floating-particle');
+            
+            // ランダムなサイズ
+            const sizeValue = Math.random() * 60 + 20;
+            span.style.width = sizeValue + 'px';
+            span.style.height = sizeValue + 'px';
+            
+            // 横位置を0%〜100%の間で完全にランダム化
+            span.style.left = Math.random() * 100 + '%';
+            
+            // 縦の初期位置をバラけさせる
+            span.style.top = Math.random() * 100 + 'vh';
+            
+            span.style.background = colors[Math.floor(Math.random() * colors.length)];
+            
+            // アニメーション速度と遅延をランダム化
+            const duration = Math.random() * 10 + 15;
+            const delay = Math.random() * 10;
+            span.style.animationDuration = duration + 's';
+            span.style.animationDelay = '-' + delay + 's';
+            
+            document.body.appendChild(span);
+        }
+    }
+    
+    createParticles();
+</script>
+
+</body>
+</html>
