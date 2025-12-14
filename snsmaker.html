@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNS Maker v1.6 Chocolat Mer (Call UI Tweak)</title>
+    <title>SNS Maker v1.8 Chocolat Mer (Call Default)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -35,7 +35,7 @@
             gap: 1.5rem;
         }
 
-        /* Phone Frame - LARGER SIZE */
+        /* Phone Frame */
         .phone-frame {
             width: 480px;
             height: 1020px;
@@ -136,7 +136,7 @@
             border-bottom: 6px solid transparent;
         }
 
-        /* --- CALL & PHOTO STYLES (TWEAKED) --- */
+        /* --- CALL & PHOTO STYLES --- */
         .call-active-widget {
             background: #242424; 
             color: white; 
@@ -149,7 +149,7 @@
         /* Call History Bubbles */
         .call-history-bubble {
             border-radius: 20px;
-            padding: 14px 16px; /* Tweaked padding for better balance */
+            padding: 14px 16px;
             display: flex;
             align-items: center;
             gap: 12px;
@@ -170,15 +170,14 @@
             border-top: 0px solid transparent; border-left: 6px solid var(--line-green); border-bottom: 6px solid transparent;
         }
         
-        /* Icon Circle Size Tweak */
         .call-icon-circle {
-            width: 42px;  /* Slightly larger */
+            width: 42px;
             height: 42px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px; /* Slightly larger font */
+            font-size: 20px;
             flex-shrink: 0;
         }
         .call-history-bubble.left .call-icon-circle { background: #f0f0f0; color: #242424; }
@@ -197,6 +196,11 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         [contenteditable="true"]:focus { outline: 2px solid #a78bfa; background: rgba(255,255,255,0.3); border-radius: 4px; }
+        
+        /* Active Tab Style */
+        .tab-active { background-color: white; color: #1f2937; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .tab-inactive { color: #4b5563; background-color: transparent; }
+        .tab-inactive:hover { background-color: rgba(255,255,255,0.5); }
     </style>
 </head>
 <body class="flex items-center justify-center p-4 min-h-screen">
@@ -388,50 +392,55 @@
 
             <hr class="border-gray-200 my-2">
 
-            <div class="bg-gray-100 p-1 rounded-lg flex text-xs font-bold text-gray-500 overflow-x-auto">
-                <button onclick="setMode('text')" id="tab-text" class="flex-1 py-2 rounded-md bg-white text-gray-800 shadow-sm transition whitespace-nowrap px-2">💬 テキスト</button>
-                <button onclick="setMode('sticker')" id="tab-sticker" class="flex-1 py-2 rounded-md hover:bg-white/50 transition whitespace-nowrap px-2">😊 スタンプ</button>
-                <button onclick="setMode('photo')" id="tab-photo" class="flex-1 py-2 rounded-md hover:bg-white/50 transition whitespace-nowrap px-2">📷 画像</button>
-                <button onclick="setMode('call')" id="tab-call" class="flex-1 py-2 rounded-md hover:bg-white/50 transition whitespace-nowrap px-2">📞 通話</button>
+            <div class="mb-3">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">メッセージ</label>
+                <textarea id="message-input" rows="3" class="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-green-400 outline-none text-sm resize-none shadow-inner" placeholder="メッセージを入力..."></textarea>
+                <button onclick="sendTextMsg()" class="mt-2 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 rounded-lg text-xs transition shadow-md">
+                    <i class="fa-solid fa-paper-plane"></i> テキストを送信
+                </button>
             </div>
 
-            <div class="flex-1 flex flex-col gap-4 mt-2">
+            <div class="bg-gray-100 p-1 rounded-lg flex text-xs font-bold text-gray-500 overflow-x-auto mb-2">
+                <button onclick="toggleMode('call')" id="tab-call" class="flex-1 py-2 rounded-md transition whitespace-nowrap px-2 tab-inactive">📞 通話</button>
+                <button onclick="toggleMode('sticker')" id="tab-sticker" class="flex-1 py-2 rounded-md transition whitespace-nowrap px-2 tab-inactive">😊 スタンプ</button>
+                <button onclick="toggleMode('photo')" id="tab-photo" class="flex-1 py-2 rounded-md transition whitespace-nowrap px-2 tab-inactive">📷 画像</button>
+            </div>
+
+            <div class="flex-1 flex flex-col gap-3">
                 
-                <div id="input-text-area" class="block">
-                    <textarea id="message-input" rows="4" class="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-green-400 outline-none text-sm resize-none" placeholder="メッセージを入力..."></textarea>
-                </div>
-
-                <div id="input-sticker-area" class="hidden">
-                    <div class="grid grid-cols-3 gap-2 mb-2">
-                        <img src="https://placehold.co/200x200/png?text=OK!" onclick="selectSticker(this)" class="cursor-pointer rounded border-2 border-transparent hover:border-green-500 transition">
-                        <img src="https://placehold.co/200x200/png?text=LOVE" onclick="selectSticker(this)" class="cursor-pointer rounded border-2 border-transparent hover:border-green-500 transition">
-                        <img src="https://placehold.co/200x200/png?text=Shock" onclick="selectSticker(this)" class="cursor-pointer rounded border-2 border-transparent hover:border-green-500 transition">
+                <div id="attachment-panel" class="min-h-[50px]">
+                    <div id="input-sticker-area" class="hidden">
+                        <div class="grid grid-cols-3 gap-2 mb-2">
+                            <img src="https://placehold.co/200x200/png?text=OK!" onclick="selectSticker(this)" class="cursor-pointer rounded border-2 border-transparent hover:border-green-500 transition">
+                            <img src="https://placehold.co/200x200/png?text=LOVE" onclick="selectSticker(this)" class="cursor-pointer rounded border-2 border-transparent hover:border-green-500 transition">
+                            <img src="https://placehold.co/200x200/png?text=Shock" onclick="selectSticker(this)" class="cursor-pointer rounded border-2 border-transparent hover:border-green-500 transition">
+                        </div>
+                        <div class="text-xs text-gray-500 mt-2">※スタンプ画像のアップロード</div>
+                        <input type="file" id="sticker-upload" accept="image/*" class="mt-2 text-xs w-full">
                     </div>
-                    <div class="text-xs text-gray-500 mt-2">※スタンプ画像のアップロード</div>
-                    <input type="file" id="sticker-upload" accept="image/*" class="mt-2 text-xs w-full">
-                </div>
 
-                <div id="input-photo-area" class="hidden">
-                    <div class="bg-white p-4 rounded-xl border border-dashed border-gray-300 text-center">
-                        <i class="fa-regular fa-image text-3xl text-gray-300 mb-2"></i>
-                        <p class="text-xs text-gray-500 mb-3">送信する写真を選択してください</p>
-                        <input type="file" id="photo-upload" accept="image/*" class="text-xs w-full">
+                    <div id="input-photo-area" class="hidden">
+                        <div class="bg-white p-4 rounded-xl border border-dashed border-gray-300 text-center">
+                            <i class="fa-regular fa-image text-3xl text-gray-300 mb-2"></i>
+                            <p class="text-xs text-gray-500 mb-3">送信する写真を選択してください</p>
+                            <input type="file" id="photo-upload" accept="image/*" class="text-xs w-full">
+                        </div>
                     </div>
-                </div>
 
-                <div id="input-call-area" class="hidden space-y-3">
-                    <div class="grid grid-cols-1 gap-2">
-                        <select id="call-status" class="p-2 border rounded-lg text-sm bg-white focus:ring-2 focus:ring-purple-400 w-full">
-                            <option value="active">🟢 通話中</option>
-                            <option value="voice">📞 音声通話</option>
-                            <option value="cancel">🚫 キャンセル</option>
-                            <option value="noanswer">🔴 応答なし</option>
-                        </select>
-                        <input type="text" id="call-duration" value="12:34" class="p-2 border rounded-lg text-sm bg-white w-full" placeholder="時間/テキスト">
+                    <div id="input-call-area" class="hidden space-y-3">
+                        <div class="grid grid-cols-1 gap-2">
+                            <select id="call-status" class="p-2 border rounded-lg text-sm bg-white focus:ring-2 focus:ring-purple-400 w-full">
+                                <option value="active">🟢 通話中</option>
+                                <option value="voice">📞 音声通話</option>
+                                <option value="cancel">🚫 キャンセル</option>
+                                <option value="noanswer">🔴 応答なし</option>
+                            </select>
+                            <input type="text" id="call-duration" value="12:34" class="p-2 border rounded-lg text-sm bg-white w-full" placeholder="時間/テキスト">
+                        </div>
                     </div>
                 </div>
 
-                <div class="flex gap-2 items-end mt-2">
+                <div class="flex gap-2 items-end mt-1">
                     <div class="flex-1">
                         <div id="read-count-wrapper" class="hidden mb-2">
                             <div class="flex items-center gap-2 bg-green-50 px-3 py-1 rounded text-xs text-green-800 border border-green-200">
@@ -440,7 +449,7 @@
                                 <span class="text-[10px] opacity-70">※自分のみ</span>
                             </div>
                         </div>
-                        <button onclick="addToChat()" class="w-full bg-gradient-to-r from-green-400 to-green-500 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2">
+                        <button onclick="addToChat()" id="send-btn" class="w-full bg-gradient-to-r from-gray-700 to-gray-800 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2">
                             <i class="fa-solid fa-paper-plane"></i> 送信
                         </button>
                     </div>
@@ -470,9 +479,10 @@
             { id: 'char2', name: 'Yua', type: 'other', icon: 'images/icons/lineicon-yua.png', defaultIcon: 'images/icons/lineicon-yua.png' }
         ];
 
+        // Default set to 'call' as requested
         let state = { 
             selectedCharId: 'me', 
-            mode: 'text', 
+            mode: 'call', 
             selectedStickerSrc: '',
             isHeaderLocked: false,
             isGroupMode: false,
@@ -484,6 +494,7 @@
         function init() { 
             renderCharList(); 
             updateTime();
+            updateTabUI(); // Ensure tab UI reflects default state
             setInterval(updateTime, 1000);
             document.getElementById('header-name-input').value = document.getElementById('header-name').innerText;
         }
@@ -611,20 +622,51 @@
             }
         }
 
-        // --- Mode Switching ---
-        function setMode(mode) {
-            state.mode = mode;
-            ['text', 'sticker', 'call', 'photo'].forEach(m => {
+        // --- Mode Switching (Tab Toggle) ---
+        function toggleMode(mode) {
+            if (state.mode === mode) {
+                state.mode = 'text';
+            } else {
+                state.mode = mode;
+            }
+            updateTabUI();
+        }
+
+        function updateTabUI() {
+            ['sticker', 'call', 'photo'].forEach(m => {
                 const btn = document.getElementById(`tab-${m}`);
                 const area = document.getElementById(`input-${m}-area`);
-                if (m === mode) {
-                    btn.className = 'flex-1 py-2 rounded-md bg-white text-gray-800 shadow-sm transition whitespace-nowrap px-2';
+                
+                if (m === state.mode) {
+                    btn.classList.remove('tab-inactive');
+                    btn.classList.add('tab-active');
                     if(area) area.style.display = 'block';
                 } else {
-                    btn.className = 'flex-1 py-2 rounded-md hover:bg-white/50 transition whitespace-nowrap px-2';
+                    btn.classList.remove('tab-active');
+                    btn.classList.add('tab-inactive');
                     if(area) area.style.display = 'none';
                 }
             });
+
+            // Update Main Button Text based on Tab
+            const btn = document.getElementById('send-btn');
+            if (state.mode === 'sticker') {
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> スタンプ送信';
+                btn.className = "w-full bg-gradient-to-r from-green-400 to-green-500 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2";
+            }
+            else if (state.mode === 'photo') {
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 画像送信';
+                btn.className = "w-full bg-gradient-to-r from-green-400 to-green-500 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2";
+            }
+            else if (state.mode === 'call') {
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 通話履歴追加';
+                btn.className = "w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2";
+            }
+            else {
+                // If tabs are closed, main button acts as generic sender (fallback)
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 送信';
+                btn.className = "w-full bg-gradient-to-r from-gray-500 to-gray-600 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2";
+            }
         }
 
         function selectSticker(imgEl) {
@@ -662,23 +704,38 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        // --- Chat Generation (TWEAKED) ---
-        function addToChat() {
+        // --- NEW: Dedicated Text Sender ---
+        function sendTextMsg() {
             const container = document.getElementById('capture-area');
+            const char = characters.find(c => c.id === state.selectedCharId);
+            const isMe = char.type === 'me';
+            const timeStr = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+
+            const text = document.getElementById('message-input').value.trim().replace(/\n/g, '<br>');
+            if (!text) return;
+            
+            const bubbleClass = isMe ? 'bubble-right' : 'bubble-left';
+            const contentHtml = `<div class="bubble ${bubbleClass}" contenteditable="true">${text}</div>`;
+            document.getElementById('message-input').value = '';
+
+            appendMessage(isMe, contentHtml, char, timeStr);
+        }
+
+        // --- Tab Content Sender (Sticker/Photo/Call) ---
+        function addToChat() {
+            // If tabs are closed (mode='text'), treat main button as text sender fallback
+            if(state.mode === 'text') {
+                sendTextMsg();
+                return;
+            }
+
             const char = characters.find(c => c.id === state.selectedCharId);
             const isMe = char.type === 'me';
             const timeStr = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
             
             let contentHtml = '';
-
-            if (state.mode === 'text') {
-                const text = document.getElementById('message-input').value.trim().replace(/\n/g, '<br>');
-                if (!text) return;
-                const bubbleClass = isMe ? 'bubble-right' : 'bubble-left';
-                contentHtml = `<div class="bubble ${bubbleClass}" contenteditable="true">${text}</div>`;
-                document.getElementById('message-input').value = '';
-            }
-            else if (state.mode === 'sticker') {
+            
+            if (state.mode === 'sticker') {
                 if (!state.selectedStickerSrc) return;
                 contentHtml = `<img src="${state.selectedStickerSrc}" class="rounded-lg max-w-[150px] relative z-10">`;
             }
@@ -705,7 +762,6 @@
                         </div>`;
                 } else {
                     let iconClass = ''; let title = '';
-                    // 時間表示用のHTMLを準備（デフォルトは表示）
                     let durationHtml = `<div class="text-[10px] opacity-70" contenteditable="true">${duration}</div>`;
 
                     if (status === 'voice') {
@@ -713,11 +769,11 @@
                     } 
                     else if (status === 'cancel') {
                         iconClass = 'fa-solid fa-phone-slash'; title = 'キャンセル';
-                        durationHtml = ''; // キャンセルは時間を非表示
+                        durationHtml = '';
                     } 
                     else if (status === 'noanswer') {
                         iconClass = 'fa-solid fa-phone-slash'; title = '応答なし';
-                        durationHtml = ''; // 応答なしは時間を非表示
+                        durationHtml = '';
                     }
                     const sideClass = isMe ? 'right' : 'left';
                     contentHtml = `
@@ -731,6 +787,11 @@
                 }
             }
 
+            appendMessage(isMe, contentHtml, char, timeStr);
+        }
+
+        function appendMessage(isMe, contentHtml, char, timeStr) {
+            const container = document.getElementById('capture-area');
             const msgRow = document.createElement('div');
             msgRow.className = isMe ? "flex justify-end items-end gap-1 mb-1 group relative z-10" : "flex justify-start items-end gap-2 mb-1 group relative z-10";
 
@@ -740,8 +801,11 @@
                 readLabel = `既読 ${countVal}`;
             }
 
+            // Call active widget is special (full widthish)
+            const isCallActive = contentHtml.includes('call-active-widget');
+
             if (isMe) {
-                 if(state.mode === 'call' && document.getElementById('call-status').value === 'active') {
+                 if(isCallActive) {
                      msgRow.innerHTML = `${contentHtml}`;
                 } else {
                     msgRow.innerHTML = `
@@ -753,7 +817,7 @@
                     `;
                 }
             } else {
-                 if(state.mode === 'call' && document.getElementById('call-status').value === 'active') {
+                 if(isCallActive) {
                      msgRow.innerHTML = `${contentHtml}`;
                 } else {
                     const isEmoji = char.icon && !char.icon.includes('/') && !char.icon.includes('data:image');
@@ -785,7 +849,7 @@
             if (lastMsg) container.removeChild(lastMsg);
         }
 
-        // --- Background & Save (Standard) ---
+        // --- Background & Save ---
         document.getElementById('bg-upload').addEventListener('change', function(e) {
             if (e.target.files && e.target.files[0]) {
                 const reader = new FileReader();
@@ -832,24 +896,22 @@
             }
         });
 
-        // --- RESTORED ORIGINAL CAPTURE LOGIC (STRICT) ---
+        // --- CAPTURE ALIGNMENT FIX (INTERNAL) ---
         function adjustTextPosition(clonedDoc) {
              const bubbles = clonedDoc.querySelectorAll('.bubble');
              bubbles.forEach(b => {
-                 b.style.alignItems = 'flex-start';
-                 b.style.paddingTop = '1px';
-                 b.style.paddingBottom = '15px';
-                 b.style.lineHeight = '1.2';
-                 b.style.transform = 'none';
+                 b.style.transform = 'translateY(-5px)'; 
+                 b.style.display = 'flex';
+                 b.style.alignItems = 'center';
              });
-
+             const callBubbles = clonedDoc.querySelectorAll('.call-history-bubble');
+             callBubbles.forEach(cb => {
+                 cb.style.transform = 'translateY(-5px)';
+             });
              const dateLabels = clonedDoc.querySelectorAll('.date-label');
              dateLabels.forEach(l => {
-                 l.style.display = 'inline-flex';
-                 l.style.alignItems = 'flex-start';
-                 l.style.paddingTop = '0px';
+                 l.style.paddingTop = '2px';
                  l.style.paddingBottom = '4px';
-                 l.style.transform = 'none';
              });
         }
 
@@ -865,7 +927,6 @@
                 imageTimeout: 15000,
                 onclone: (clonedDoc) => {
                     adjustTextPosition(clonedDoc);
-                    // スマホの形状を維持するため、フレーム削除処理は行わない
                 }
 
             }).then(canvas => {
@@ -890,7 +951,7 @@
                 onclone: (clonedDoc) => {
                     adjustTextPosition(clonedDoc);
 
-                    // 画面のみ保存の場合はフレームを削除
+                    // Frame Removal for Screenshot mode
                     const clonedFrame = clonedDoc.querySelector('.phone-frame');
                     clonedFrame.style.border = 'none';
                     clonedFrame.style.borderRadius = '0';
