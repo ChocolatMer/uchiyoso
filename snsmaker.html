@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNS Maker v2.1 Chocolat Mer (Best Mix)</title>
+    <title>SNS Maker v2.2 Chocolat Mer (Call Icon Fix)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -817,7 +817,18 @@
                 }
             } else {
                  if(isCallActive) {
-                     msgRow.innerHTML = `${contentHtml}`;
+                     // FIX: Add Icon for other person's Active Call
+                    const isEmoji = char.icon && !char.icon.includes('/') && !char.icon.includes('data:image');
+                    const iconHtml = isEmoji 
+                        ? `<div class="w-12 h-12 rounded-full bg-white border border-gray-300 flex items-center justify-center text-2xl mb-auto shrink-0">${char.icon}</div>`
+                        : `<img src="${char.icon}" onerror="this.src='https://placehold.co/100x100/gray/white?text=${char.name.charAt(0)}'" class="w-12 h-12 rounded-full mb-auto border border-gray-300 bg-white object-cover shrink-0">`;
+
+                     msgRow.innerHTML = `
+                        ${iconHtml}
+                        <div class="bubble-wrapper">
+                            ${contentHtml}
+                        </div>
+                     `;
                 } else {
                     const isEmoji = char.icon && !char.icon.includes('/') && !char.icon.includes('data:image');
                     const iconHtml = isEmoji 
@@ -895,9 +906,9 @@
             }
         });
 
-        // --- CAPTURE ALIGNMENT FIX (V1.0 Logic + Icon Fix) ---
+        // --- CAPTURE ALIGNMENT FIX (V1.0 Logic + Call Icon Fix) ---
         function adjustTextPosition(clonedDoc) {
-             // 1. TEXT BUBBLES (From User's v1.0 code)
+             // 1. TEXT BUBBLES (From User's v1.0 code - KEEPING AS IS)
              const bubbles = clonedDoc.querySelectorAll('.bubble');
              bubbles.forEach(b => {
                  b.style.alignItems = 'flex-start';
@@ -917,11 +928,22 @@
                  l.style.transform = 'none';
              });
 
-             // 3. ICON FIX (Newly added to match v2.0 structure)
-             // v2.0 icons use w-12, v1.0 used w-11. We target w-12 here.
-             const icons = clonedDoc.querySelectorAll('.chat-area-container img.w-12');
-             icons.forEach(icon => {
+             // 3. ICON FIX - Standard Chat Icons
+             const chatIcons = clonedDoc.querySelectorAll('.chat-area-container img.w-12');
+             chatIcons.forEach(icon => {
                  icon.style.transform = 'translateY(-5px)';
+             });
+
+             // 4. ICON FIX - Call History Icons (Handset)
+             const callHistoryIcons = clonedDoc.querySelectorAll('.call-icon-circle');
+             callHistoryIcons.forEach(icon => {
+                 icon.style.transform = 'translateY(-4px)'; // Nudge up specific to call history
+             });
+
+             // 5. ICON FIX - Active Call Widget Icon (Pulsing Circle)
+             const activeCallIcons = clonedDoc.querySelectorAll('.call-active-widget .w-10');
+             activeCallIcons.forEach(icon => {
+                 icon.style.transform = 'translateY(-4px)'; // Nudge up specific to active call
              });
         }
 
