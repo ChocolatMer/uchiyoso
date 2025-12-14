@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNS Maker v2.2 Chocolat Mer (Best Mix)</title>
+    <title>SNS Maker v2.3 Chocolat Mer (Best Mix)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -351,7 +351,7 @@
                     </div>
                 </div>
 
-                <div class="bg-white px-4 py-3 pb-5 border-t border-gray-200 flex items-center gap-5 shrink-0 z-20">
+                <div class="bg-white px-4 py-3 pb-3 border-t border-gray-200 flex items-center gap-5 shrink-0 z-20">
                     <i class="fa-solid fa-plus footer-icon text-3xl"></i>
                     <i class="fa-solid fa-camera footer-icon text-3xl"></i>
                     <i class="fa-regular fa-image footer-icon text-3xl"></i>
@@ -841,14 +841,22 @@
                     `;
                 }
             } else {
-                 if(isCallActive) {
-                     msgRow.innerHTML = `${contentHtml}`;
-                } else {
-                    const isEmoji = char.icon && !char.icon.includes('/') && !char.icon.includes('data:image');
-                    const iconHtml = isEmoji 
-                        ? `<div class="w-12 h-12 rounded-full bg-white border border-gray-300 flex items-center justify-center text-2xl mb-auto shrink-0">${char.icon}</div>`
-                        : `<img src="${char.icon}" onerror="this.src='https://placehold.co/100x100/gray/white?text=${char.name.charAt(0)}'" class="w-12 h-12 rounded-full mb-auto border border-gray-300 bg-white object-cover shrink-0">`;
+                 // UPDATED: Always show icon for 'Other', even if call active
+                const isEmoji = char.icon && !char.icon.includes('/') && !char.icon.includes('data:image');
+                const iconHtml = isEmoji 
+                    ? `<div class="w-12 h-12 rounded-full bg-white border border-gray-300 flex items-center justify-center text-2xl mb-auto shrink-0">${char.icon}</div>`
+                    : `<img src="${char.icon}" onerror="this.src='https://placehold.co/100x100/gray/white?text=${char.name.charAt(0)}'" class="w-12 h-12 rounded-full mb-auto border border-gray-300 bg-white object-cover shrink-0">`;
 
+                 if(isCallActive) {
+                     // For 'Other' active call, keep standard structure so icon shows
+                     msgRow.innerHTML = `
+                        ${iconHtml}
+                        <div>
+                             <div class="flex items-end gap-1 bubble-wrapper">
+                                ${contentHtml}
+                            </div>
+                        </div>`;
+                } else {
                     msgRow.innerHTML = `
                         ${iconHtml}
                         <div>
@@ -920,7 +928,7 @@
             }
         });
 
-        // --- CAPTURE ALIGNMENT FIX (V1.0 Logic + Icon Fix) ---
+        // --- CAPTURE ALIGNMENT FIX (V2.3 Logic) ---
         function adjustTextPosition(clonedDoc) {
              // 1. TEXT BUBBLES
              const bubbles = clonedDoc.querySelectorAll('.bubble');
@@ -932,14 +940,14 @@
                  b.style.transform = 'none';
              });
 
-             // 2. DATE LABELS
+             // 2. DATE LABELS (Adjusted Upward)
              const dateLabels = clonedDoc.querySelectorAll('.date-label');
              dateLabels.forEach(l => {
                  l.style.display = 'inline-flex';
                  l.style.alignItems = 'flex-start';
                  l.style.paddingTop = '0px';
                  l.style.paddingBottom = '4px';
-                 l.style.transform = 'none';
+                 l.style.transform = 'translateY(-4px)'; // Moved up
              });
 
              // 3. ICON FIX
@@ -948,10 +956,10 @@
                  icon.style.transform = 'translateY(-5px)';
              });
              
-             // 4. CALL ICON FIX
+             // 4. CALL ICON FIX (Adjusted Upward)
              const callIcons = clonedDoc.querySelectorAll('.call-icon-circle i, .call-active-widget i');
              callIcons.forEach(icon => {
-                 icon.style.transform = 'translateY(-5px)'; 
+                 icon.style.transform = 'translateY(-8px)'; // Lifted higher
              });
         }
 
