@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNS Maker v2.4 Chocolat Mer (Best Mix)</title>
+    <title>SNS Maker v2.5 Chocolat Mer (Fixed)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -928,7 +928,7 @@
             }
         });
 
-        // --- CAPTURE ALIGNMENT FIX (V2.4 Logic) ---
+        // --- CAPTURE ALIGNMENT FIX (V2.5 Logic - FIXED SELECTOR SYNTAX) ---
         function adjustTextPosition(clonedDoc) {
              // 1. TEXT BUBBLES
              const bubbles = clonedDoc.querySelectorAll('.bubble');
@@ -944,9 +944,9 @@
              const dateLabels = clonedDoc.querySelectorAll('.date-label');
              dateLabels.forEach(l => {
                  l.style.display = 'inline-flex';
-                 l.style.alignItems = 'center'; // Change to center for better vertical align
+                 l.style.alignItems = 'center'; 
                  l.style.paddingTop = '0px';
-                 l.style.paddingBottom = '5px'; // Increase bottom padding to push text up visually
+                 l.style.paddingBottom = '5px'; 
                  l.style.transform = 'translateY(-4px)'; 
              });
 
@@ -962,23 +962,24 @@
                  icon.style.transform = 'translateY(-8px)'; 
              });
 
-             // 5. CALL TEXT FIX (NEW: Text Only)
+             // 5. CALL TEXT FIX (FIXED SELECTOR SYNTAX)
+             // ERROR WAS HERE: .text-[10px] -> .text-\[10px\]
              const callTextElements = clonedDoc.querySelectorAll(
                  '.call-history-bubble .font-bold, ' + 
                  '.call-history-bubble .opacity-70, ' +
                  '.call-active-widget .font-bold, ' +
-                 '.call-active-widget .text-[10px]' // duration text in active widget
+                 '.call-active-widget .text-\\[10px\\]' // <--- ESCAPED BRACKETS
              );
              callTextElements.forEach(el => {
                  el.style.position = 'relative';
-                 el.style.top = '-4px'; // Lift text up
+                 el.style.top = '-4px'; 
              });
 
-             // 6. FOOTER ICONS FIX (NEW: Icons Only)
+             // 6. FOOTER ICONS FIX
              const footerIcons = clonedDoc.querySelectorAll('.footer-icon, .fa-face-smile');
              footerIcons.forEach(el => {
                  el.style.position = 'relative';
-                 el.style.top = '-5px'; // Lift icons up
+                 el.style.top = '-5px'; 
              });
         }
 
@@ -1001,7 +1002,10 @@
                 link.download = `SNS_PHONE_${Date.now()}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
-            }).catch(err => alert("保存に失敗しました。"));
+            }).catch(err => {
+                console.error(err);
+                alert("保存に失敗しました。");
+            });
         }
 
         function downloadScreenShot() {
@@ -1032,7 +1036,10 @@
                 link.download = `SNS_SCREEN_${Date.now()}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
-            }).catch(err => alert("保存に失敗しました。"));
+            }).catch(err => {
+                console.error(err);
+                alert("保存に失敗しました。");
+            });
         }
 
         function downloadFullChat() {
@@ -1061,7 +1068,10 @@
                 link.download = `SNS_FULLCHAT_${Date.now()}.png`;
                 link.href = canvas.toDataURL("image/png");
                 link.click();
-            }).catch(err => alert("保存に失敗しました。"));
+            }).catch(err => {
+                console.error(err);
+                alert("保存に失敗しました。");
+            });
         }
 
         init();
