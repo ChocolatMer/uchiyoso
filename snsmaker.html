@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNS Maker v1.8 Chocolat Mer (Call Default)</title>
+    <title>SNS Maker v1.9 Chocolat Mer (Align Fix)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -801,7 +801,6 @@
                 readLabel = `既読 ${countVal}`;
             }
 
-            // Call active widget is special (full widthish)
             const isCallActive = contentHtml.includes('call-active-widget');
 
             if (isMe) {
@@ -896,18 +895,25 @@
             }
         });
 
-        // --- CAPTURE ALIGNMENT FIX (INTERNAL) ---
+        // --- CAPTURE ALIGNMENT FIX (REVISED) ---
         function adjustTextPosition(clonedDoc) {
              const bubbles = clonedDoc.querySelectorAll('.bubble');
              bubbles.forEach(b => {
-                 b.style.transform = 'translateY(-5px)'; 
+                 // Force alignment to top to prevent "dropping" and add manual padding
                  b.style.display = 'flex';
-                 b.style.alignItems = 'center';
+                 b.style.alignItems = 'flex-start'; // Changed from center to flex-start
+                 b.style.paddingTop = '8px'; // Manual centering
+                 b.style.paddingBottom = '8px';
+                 b.style.transform = 'translateY(-3px)'; // Slight nudge up
              });
+             
              const callBubbles = clonedDoc.querySelectorAll('.call-history-bubble');
              callBubbles.forEach(cb => {
+                 cb.style.alignItems = 'flex-start';
+                 cb.style.paddingTop = '12px'; // Push down slightly to center
                  cb.style.transform = 'translateY(-5px)';
              });
+
              const dateLabels = clonedDoc.querySelectorAll('.date-label');
              dateLabels.forEach(l => {
                  l.style.paddingTop = '2px';
