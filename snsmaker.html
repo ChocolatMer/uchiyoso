@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNS Maker v2.1 Chocolat Mer (Best Mix)</title>
+    <title>SNS Maker v2.2 Chocolat Mer (Best Mix)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -134,6 +134,18 @@
             border-top: 0px solid transparent;
             border-left: 6px solid var(--line-green);
             border-bottom: 6px solid transparent;
+        }
+
+        /* --- NEW: No Tail Style for Continuous Messages --- */
+        .no-tail::before {
+            display: none !important;
+            content: none !important;
+        }
+        .bubble-left.no-tail {
+            border-top-left-radius: 20px !important;
+        }
+        .bubble-right.no-tail {
+            border-top-right-radius: 20px !important;
         }
 
         /* --- CALL & PHOTO STYLES --- */
@@ -326,7 +338,7 @@
                     <div class="flex justify-center my-3 relative z-10">
                         <span class="bg-black/10 text-white text-[11px] px-3 py-1 rounded-full cursor-text date-label" contenteditable="true">今日</span>
                     </div>
-                    <div class="flex justify-start items-end gap-2 relative z-10">
+                    <div class="flex justify-start items-end gap-2 relative z-10 message-row" data-sender-id="char1">
                         <img src="images/icons/lineicon-syu.png" onerror="this.src='https://placehold.co/100x100/orange/white?text=S'" class="w-12 h-12 rounded-full mb-auto border border-gray-300 bg-white object-cover">
                         <div>
                             <div class="bubble-wrapper">
@@ -339,7 +351,7 @@
                     </div>
                 </div>
 
-                <div class="bg-white px-4 py-3 pb-8 border-t border-gray-200 flex items-center gap-5 shrink-0 z-20">
+                <div class="bg-white px-4 py-3 pb-5 border-t border-gray-200 flex items-center gap-5 shrink-0 z-20">
                     <i class="fa-solid fa-plus footer-icon text-3xl"></i>
                     <i class="fa-solid fa-camera footer-icon text-3xl"></i>
                     <i class="fa-regular fa-image footer-icon text-3xl"></i>
@@ -714,7 +726,17 @@
             const text = document.getElementById('message-input').value.trim().replace(/\n/g, '<br>');
             if (!text) return;
             
-            const bubbleClass = isMe ? 'bubble-right' : 'bubble-left';
+            // Logic for continuous messages (hide tail)
+            let bubbleClass = isMe ? 'bubble-right' : 'bubble-left';
+            
+            // Check previous message
+            const children = Array.from(container.children);
+            const lastMsgRow = children.reverse().find(el => el.classList.contains('message-row'));
+            
+            if (lastMsgRow && lastMsgRow.dataset.senderId === char.id) {
+                bubbleClass += ' no-tail';
+            }
+
             const contentHtml = `<div class="bubble ${bubbleClass}" contenteditable="true">${text}</div>`;
             document.getElementById('message-input').value = '';
 
@@ -793,7 +815,10 @@
         function appendMessage(isMe, contentHtml, char, timeStr) {
             const container = document.getElementById('capture-area');
             const msgRow = document.createElement('div');
-            msgRow.className = isMe ? "flex justify-end items-end gap-1 mb-1 group relative z-10" : "flex justify-start items-end gap-2 mb-1 group relative z-10";
+            
+            // Add class 'message-row' and data-sender-id for continuous check
+            msgRow.className = isMe ? "flex justify-end items-end gap-1 mb-1 group relative z-10 message-row" : "flex justify-start items-end gap-2 mb-1 group relative z-10 message-row";
+            msgRow.setAttribute('data-sender-id', char.id);
 
             let readLabel = "既読";
             if (state.isGroupMode) {
@@ -897,7 +922,7 @@
 
         // --- CAPTURE ALIGNMENT FIX (V1.0 Logic + Icon Fix) ---
         function adjustTextPosition(clonedDoc) {
-             // 1. TEXT BUBBLES (From User's v1.0 code)
+             // 1. TEXT BUBBLES
              const bubbles = clonedDoc.querySelectorAll('.bubble');
              bubbles.forEach(b => {
                  b.style.alignItems = 'flex-start';
@@ -907,7 +932,7 @@
                  b.style.transform = 'none';
              });
 
-             // 2. DATE LABELS (From User's v1.0 code)
+             // 2. DATE LABELS
              const dateLabels = clonedDoc.querySelectorAll('.date-label');
              dateLabels.forEach(l => {
                  l.style.display = 'inline-flex';
@@ -917,18 +942,16 @@
                  l.style.transform = 'none';
              });
 
-             // 3. ICON FIX (Newly added to match v2.0 structure)
-             // v2.0 icons use w-12, v1.0 used w-11. We target w-12 here.
+             // 3. ICON FIX
              const icons = clonedDoc.querySelectorAll('.chat-area-container img.w-12');
              icons.forEach(icon => {
                  icon.style.transform = 'translateY(-5px)';
              });
              
-             // 4. CALL ICON FIX (NEW - Added for Phone Icon Alignment)
-             // html2canvas renders the phone icon too low. We lift it up specifically during capture.
+             // 4. CALL ICON FIX
              const callIcons = clonedDoc.querySelectorAll('.call-icon-circle i, .call-active-widget i');
              callIcons.forEach(icon => {
-                 icon.style.transform = 'translateY(-5px)'; // Lift icon up
+                 icon.style.transform = 'translateY(-5px)'; 
              });
         }
 
