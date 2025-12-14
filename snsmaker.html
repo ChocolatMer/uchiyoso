@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNS Maker v2.5 Chocolat Mer (Fixed)</title>
+    <title>SNS Maker v2.6 Chocolat Mer (Final Fix)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -928,7 +928,7 @@
             }
         });
 
-        // --- CAPTURE ALIGNMENT FIX (V2.5 Logic - FIXED SELECTOR SYNTAX) ---
+        // --- CAPTURE ALIGNMENT FIX (V2.6 Logic - SAFE & ROBUST) ---
         function adjustTextPosition(clonedDoc) {
              // 1. TEXT BUBBLES
              const bubbles = clonedDoc.querySelectorAll('.bubble');
@@ -946,7 +946,7 @@
                  l.style.display = 'inline-flex';
                  l.style.alignItems = 'center'; 
                  l.style.paddingTop = '0px';
-                 l.style.paddingBottom = '5px'; 
+                 l.style.paddingBottom = '4px'; 
                  l.style.transform = 'translateY(-4px)'; 
              });
 
@@ -962,24 +962,32 @@
                  icon.style.transform = 'translateY(-8px)'; 
              });
 
-             // 5. CALL TEXT FIX (FIXED SELECTOR SYNTAX)
-             // ERROR WAS HERE: .text-[10px] -> .text-\[10px\]
-             const callTextElements = clonedDoc.querySelectorAll(
+             // 5. CALL TEXT FIX (Safe Approach)
+             // Instead of brittle complex selectors, use class logic
+             const callTexts = clonedDoc.querySelectorAll(
                  '.call-history-bubble .font-bold, ' + 
                  '.call-history-bubble .opacity-70, ' +
-                 '.call-active-widget .font-bold, ' +
-                 '.call-active-widget .text-\\[10px\\]' // <--- ESCAPED BRACKETS
+                 '.call-active-widget .font-bold'
              );
-             callTextElements.forEach(el => {
+             callTexts.forEach(el => {
                  el.style.position = 'relative';
-                 el.style.top = '-4px'; 
+                 el.style.top = '-6px'; 
              });
+             
+             // Handle the specific duration class safely
+             try {
+                 const durationTexts = clonedDoc.querySelectorAll('.call-active-widget .text-\\[10px\\]');
+                 durationTexts.forEach(el => {
+                     el.style.position = 'relative';
+                     el.style.top = '-6px';
+                 });
+             } catch(e) { console.log('Duration selector error', e); }
 
              // 6. FOOTER ICONS FIX
              const footerIcons = clonedDoc.querySelectorAll('.footer-icon, .fa-face-smile');
              footerIcons.forEach(el => {
                  el.style.position = 'relative';
-                 el.style.top = '-5px'; 
+                 el.style.top = '-6px'; 
              });
         }
 
