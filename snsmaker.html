@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNS Maker v1.0 Chocolat Mer (Icon Fix)</title>
+    <title>SNS Maker v2.1 Chocolat Mer (Best Mix)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -20,35 +20,40 @@
             font-family: 'Noto Sans JP', sans-serif;
             background: #e0e5ec;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         /* Glass Panel */
-        .editor-panel {
+        .glass-panel {
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(20px);
             border-radius: 24px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
         }
 
-        /* Phone Frame - Enlarged */
+        /* Phone Frame */
         .phone-frame {
-            width: 450px;
-            height: 1000px;
-            border-radius: 55px;
+            width: 480px;
+            height: 1020px;
+            border-radius: 60px;
             border: 16px solid #1c1c1e;
             background: #fff;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.4);
             flex-shrink: 0;
-            z-index: 1;
+            z-index: 10;
+            margin: 0 auto;
         }
 
         .notch {
             position: absolute;
             top: 0; left: 50%; transform: translateX(-50%);
-            width: 160px; height: 36px; background: #1c1c1e;
+            width: 180px; height: 36px; background: #1c1c1e;
             border-bottom-left-radius: 22px; border-bottom-right-radius: 22px;
             z-index: 50;
         }
@@ -60,8 +65,8 @@
         }
         
         .app-header {
-            height: 100px;
-            padding-top: 50px; 
+            height: 96px;
+            padding-top: 48px; 
             background: rgba(132, 158, 191, 0.95);
             backdrop-filter: blur(4px);
             z-index: 30;
@@ -85,17 +90,17 @@
         /* --- BUBBLE STYLE --- */
         .bubble-wrapper {
             display: flex;
-            align-items: flex-start;
+            align-items: flex-end;
             max-width: 100%;
         }
 
         .bubble {
             position: relative;
-            padding: 8px 12px;
-            border-radius: 18px;
-            font-size: 15px;
+            padding: 9px 14px;
+            border-radius: 20px;
+            font-size: 16px;
             line-height: 1.4;
-            min-height: 38px;
+            min-height: 40px;
             display: flex;
             align-items: center;
             max-width: 300px;
@@ -131,112 +136,125 @@
             border-bottom: 6px solid transparent;
         }
 
-        /* --- CALL HISTORY BUBBLES --- */
+        /* --- CALL & PHOTO STYLES --- */
+        .call-active-widget {
+            background: #242424; 
+            color: white; 
+            border-radius: 20px; 
+            padding: 16px; 
+            min-width: 220px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        /* Call History Bubbles */
         .call-history-bubble {
-            border-radius: 18px;
-            padding: 10px 12px;
+            border-radius: 20px;
+            padding: 14px 16px;
             display: flex;
             align-items: center;
-            gap: 10px;
-            min-width: 180px;
+            gap: 12px;
+            min-width: 220px;
             box-shadow: 0 1px 1px rgba(0,0,0,0.1);
             position: relative;
             z-index: 1;
         }
-
-        .call-history-bubble.left {
-            background: #ffffff;
-            color: #242424;
-            margin-left: 6px;
-            border-top-left-radius: 0;
-        }
+        
+        .call-history-bubble.left { background: #ffffff; color: #242424; margin-left: 6px; border-top-left-radius: 0; }
         .call-history-bubble.left::before {
             content: ""; position: absolute; top: 0; left: -6px; width: 0; height: 0;
-            border-top: 0px solid transparent;
-            border-right: 6px solid #ffffff;
-            border-bottom: 6px solid transparent;
+            border-top: 0px solid transparent; border-right: 6px solid #ffffff; border-bottom: 6px solid transparent;
         }
-
-        .call-history-bubble.right {
-            background: var(--line-green);
-            color: #242424;
-            margin-right: 6px;
-            border-top-right-radius: 0;
-        }
+        .call-history-bubble.right { background: var(--line-green); color: #242424; margin-right: 6px; border-top-right-radius: 0; }
         .call-history-bubble.right::before {
             content: ""; position: absolute; top: 0; right: -6px; width: 0; height: 0;
-            border-top: 0px solid transparent;
-            border-left: 6px solid var(--line-green);
-            border-bottom: 6px solid transparent;
+            border-top: 0px solid transparent; border-left: 6px solid var(--line-green); border-bottom: 6px solid transparent;
         }
-
+        
         .call-icon-circle {
-            width: 32px;
-            height: 32px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 20px;
             flex-shrink: 0;
         }
         .call-history-bubble.left .call-icon-circle { background: #f0f0f0; color: #242424; }
         .call-history-bubble.right .call-icon-circle { background: rgba(0,0,0,0.1); color: #242424; }
-        
-        .call-active-widget {
-            background: #242424;
-            color: white;
-            border-radius: 20px;
-            padding: 14px;
-            min-width: 200px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
+
+        .photo-msg { border-radius: 16px; border: 1px solid rgba(0,0,0,0.1); max-width: 240px; }
 
         .meta-text {
-            font-size: 9px; color: #fff; line-height: 1.2;
+            font-size: 10px; color: #fff; line-height: 1.2;
             text-shadow: 0 1px 2px rgba(0,0,0,0.3);
             white-space: nowrap;
         }
         
         .header-count { box-shadow: none !important; text-shadow: none !important; }
-        .footer-icon { font-size: 1.5rem; color: #2e353d; cursor: pointer; }
+        .footer-icon { font-size: 1.6rem; color: #2e353d; cursor: pointer; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
         [contenteditable="true"]:focus { outline: 2px solid #a78bfa; background: rgba(255,255,255,0.3); border-radius: 4px; }
+        
+        /* Active Tab Style */
+        .tab-active { background-color: white; color: #1f2937; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .tab-inactive { color: #4b5563; background-color: transparent; }
+        .tab-inactive:hover { background-color: rgba(255,255,255,0.5); }
     </style>
 </head>
-<body class="flex items-center justify-center p-4 lg:p-8">
+<body class="flex items-center justify-center p-4 min-h-screen">
 
-    <div class="flex flex-col lg:flex-row gap-8 w-full max-w-[1600px] items-start justify-center h-full">
+    <div class="grid grid-cols-1 xl:grid-cols-[340px_auto_340px] gap-8 w-full max-w-[1900px] items-start h-[95vh]">
 
-        <div class="editor-panel w-full lg:w-[480px] p-6 flex flex-col gap-6 max-h-[95vh] overflow-y-auto no-scrollbar">
+        <div class="glass-panel p-6 h-full overflow-y-auto no-scrollbar order-2 xl:order-1">
             
-            <div class="border-b pb-4 border-gray-300">
-                <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                    <i class="fa-solid fa-file-export text-purple-600"></i> SNS Maker
+            <div class="border-b pb-2 border-gray-300">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-gear text-gray-500"></i> 設定・保存
                 </h2>
             </div>
 
-            <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
-                <label class="text-xs font-bold text-purple-600 uppercase tracking-wider mb-2 block">Project Data</label>
+            <div class="space-y-2">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">画像保存</label>
+                <button onclick="downloadPhoneView()" class="w-full border-2 border-gray-800 text-gray-800 font-bold py-3 rounded-xl hover:bg-gray-800 hover:text-white transition flex items-center justify-center gap-2 text-sm">
+                    <i class="fa-solid fa-mobile-screen"></i> スマホ全体保存
+                </button>
                 <div class="flex gap-2">
-                    <button onclick="saveProjectData()" class="flex-1 bg-white border border-purple-300 text-purple-700 text-xs font-bold py-2 rounded-lg hover:bg-purple-100 transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-download"></i> データ保存(.json)
+                    <button onclick="downloadScreenShot()" class="flex-1 bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition flex items-center justify-center gap-2 text-sm">
+                        <i class="fa-solid fa-crop-simple"></i> 画面のみ
                     </button>
-                    <label class="flex-1 cursor-pointer bg-purple-600 border border-transparent text-white text-xs font-bold py-2 rounded-lg hover:bg-purple-700 transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-upload"></i> データ読込
-                        <input type="file" id="json-upload" accept=".json" class="hidden">
-                    </label>
+                    <button onclick="downloadFullChat()" class="flex-1 bg-gray-800 text-white font-bold py-3 rounded-xl hover:bg-gray-900 transition flex items-center justify-center gap-2 text-sm">
+                        <i class="fa-solid fa-scroll"></i> 縦長保存
+                    </button>
                 </div>
             </div>
 
-            <div>
-                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Speaker & Members</label>
-                <div class="flex gap-3 overflow-x-auto pb-4 items-end" id="char-list"></div>
-                <button onclick="addNewCharacter()" class="w-full mt-2 border border-dashed border-purple-400 text-purple-600 text-xs font-bold py-2 rounded-lg hover:bg-purple-50 transition">
-                    <i class="fa-solid fa-plus"></i> 新しいキャラクターを追加
-                </button>
+            <hr class="border-gray-200">
+
+            <div class="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                <label class="text-xs font-bold text-blue-600 uppercase tracking-wider mb-2 block">Room Settings</label>
+                <div class="flex items-center justify-between mb-3 bg-white p-2 rounded-lg border border-blue-100">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-users text-blue-500"></i>
+                        <span class="text-sm font-bold text-gray-700">グループモード</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="group-mode-toggle" class="sr-only peer" onchange="toggleGroupMode()">
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                    </label>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="flex-1 relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-heading text-gray-400 text-xs"></i>
+                        </div>
+                        <input type="text" id="header-name-input" oninput="syncHeaderName(this.value)" placeholder="ヘッダー名" class="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-400 outline-none">
+                    </div>
+                    <button id="lock-header-btn" onclick="toggleHeaderLock()" class="w-10 h-10 flex items-center justify-center rounded-lg border border-gray-300 bg-white text-gray-400 hover:text-blue-500 transition" title="固定">
+                        <i class="fa-solid fa-lock-open" id="lock-icon"></i>
+                    </button>
+                </div>
             </div>
 
             <div class="bg-gray-100 p-4 rounded-xl border border-gray-200">
@@ -244,7 +262,7 @@
                 <div class="flex flex-col gap-3">
                     <div class="flex gap-2">
                         <label class="flex-1 cursor-pointer bg-white border border-gray-300 text-gray-600 text-xs font-bold py-2 rounded-lg hover:bg-gray-50 transition flex items-center justify-center gap-2">
-                            <i class="fa-regular fa-image"></i> 背景画像
+                            <i class="fa-regular fa-image"></i> 画像変更
                             <input type="file" id="bg-upload" accept="image/*" class="hidden">
                         </label>
                         <button onclick="resetBg()" class="px-3 bg-white border border-gray-300 text-gray-600 rounded-lg text-xs">
@@ -258,160 +276,227 @@
                 </div>
             </div>
 
-            <div class="bg-gray-100 p-1 rounded-lg flex text-sm font-bold text-gray-500">
-                <button onclick="setMode('text')" id="tab-text" class="flex-1 py-2 rounded-md bg-white text-gray-800 shadow-sm transition">💬 テキスト</button>
-                <button onclick="setMode('sticker')" id="tab-sticker" class="flex-1 py-2 rounded-md hover:bg-white/50 transition">😊 スタンプ</button>
-                <button onclick="setMode('call')" id="tab-call" class="flex-1 py-2 rounded-md hover:bg-white/50 transition">📞 通話</button>
-            </div>
-
-            <div id="input-text-area" class="block">
-                <textarea id="message-input" rows="2" class="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-green-400 outline-none text-sm" placeholder="メッセージを入力..."></textarea>
-            </div>
-
-            <div id="input-sticker-area" class="hidden">
-                <div class="grid grid-cols-3 gap-2 mb-2">
-                    <img src="https://placehold.co/200x200/png?text=OK!" onclick="selectSticker(this)" class="cursor-pointer rounded border-2 border-transparent hover:border-green-500 transition">
-                    <img src="https://placehold.co/200x200/png?text=LOVE" onclick="selectSticker(this)" class="cursor-pointer rounded border-2 border-transparent hover:border-green-500 transition">
-                    <img src="https://placehold.co/200x200/png?text=Shock" onclick="selectSticker(this)" class="cursor-pointer rounded border-2 border-transparent hover:border-green-500 transition">
-                </div>
-                <div class="text-xs text-gray-500 mt-2">※画像保存の前に、自分の画像をアップロードしてスタンプ化も可能です。</div>
-                <input type="file" id="sticker-upload" accept="image/*" class="mt-2 text-xs w-full">
-            </div>
-
-            <div id="input-call-area" class="hidden space-y-3">
-                <div class="grid grid-cols-2 gap-2">
-                    <select id="call-status" class="p-2 border rounded-lg text-sm bg-white focus:ring-2 focus:ring-purple-400">
-                        <option value="active">🟢 通話中</option>
-                        <option value="voice">📞 音声通話</option>
-                        <option value="cancel">🚫 キャンセル</option>
-                        <option value="noanswer">🔴 応答なし</option>
-                    </select>
-                    <input type="text" id="call-duration" value="12:34" class="p-2 border rounded-lg text-sm bg-white" placeholder="時間/テキスト">
-                </div>
-            </div>
-
-            <div class="flex gap-2 pt-2">
-                <button onclick="addToChat()" class="flex-1 bg-gradient-to-r from-green-400 to-green-500 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-paper-plane"></i> 送信
-                </button>
-                <button onclick="undoLast()" class="px-5 bg-gray-200 text-gray-600 font-bold rounded-xl hover:bg-gray-300 transition" title="1つ戻る">
-                    <i class="fa-solid fa-rotate-left"></i>
-                </button>
-            </div>
-
-            <div class="pt-2">
-                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">特殊挿入</label>
-                <div class="flex gap-2">
-                    <button onclick="addDate('今日')" class="flex-1 bg-white border border-gray-300 text-gray-600 text-xs font-bold py-2 rounded-lg hover:bg-gray-50 transition">今日</button>
-                    <button onclick="addDate('昨日')" class="flex-1 bg-white border border-gray-300 text-gray-600 text-xs font-bold py-2 rounded-lg hover:bg-gray-50 transition">昨日</button>
-                    <button onclick="addDate(prompt('テキストを入力','2025/12/24'))" class="flex-1 bg-white border border-gray-300 text-gray-600 text-xs font-bold py-2 rounded-lg hover:bg-gray-50 transition">自由</button>
-                </div>
-            </div>
-
             <hr class="border-gray-200">
 
-            <div class="space-y-2">
-                <button onclick="downloadPhoneView()" class="w-full border-2 border-gray-800 text-gray-800 font-bold py-3 rounded-xl hover:bg-gray-800 hover:text-white transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-mobile-screen"></i> スマホ全体を保存
-                </button>
-                <button onclick="downloadScreenShot()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-crop-simple"></i> 画面のみ保存 (スクショ風)
-                </button>
-                <button onclick="downloadFullChat()" class="w-full bg-gray-800 text-white font-bold py-3 rounded-xl hover:bg-gray-900 transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-scroll"></i> 会話全体を保存 (縦長)
-                </button>
+            <div class="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                <label class="text-xs font-bold text-purple-600 uppercase tracking-wider mb-2 block">Project Data</label>
+                <div class="flex gap-2">
+                    <button onclick="saveProjectData()" class="flex-1 bg-white border border-purple-300 text-purple-700 text-xs font-bold py-2 rounded-lg hover:bg-purple-100 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-download"></i> 保存
+                    </button>
+                    <label class="flex-1 cursor-pointer bg-purple-600 border border-transparent text-white text-xs font-bold py-2 rounded-lg hover:bg-purple-700 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-upload"></i> 読込
+                        <input type="file" id="json-upload" accept=".json" class="hidden">
+                    </label>
+                </div>
             </div>
+
         </div>
 
-        <div class="phone-frame flex flex-col shadow-2xl transition-all duration-300">
-            <div class="notch"></div>
-            
-            <div class="status-bar-bg w-full flex justify-between items-end px-7 pb-5 absolute top-0 left-0 right-0 pointer-events-none">
-                <span id="sb-time" class="text-white text-[15px] font-bold pointer-events-auto leading-none mb-0.5" contenteditable="true">12:34</span>
-                <div class="flex gap-1.5 text-white items-center">
-                    <i class="fa-solid fa-signal text-[14px]"></i>
-                    <i class="fa-solid fa-wifi text-[14px]"></i>
-                    <i class="fa-solid fa-battery-full text-[20px]"></i>
-                </div>
-            </div>
-
-            <div class="app-header flex items-end px-4 pb-3 justify-between sticky top-0 border-b border-black/5">
-                <div class="flex items-center gap-1 text-white cursor-pointer hover:opacity-70 pb-1">
-                    <i class="fa-solid fa-chevron-left text-2xl"></i>
-                </div>
+        <div class="flex items-center justify-center h-full order-1 xl:order-2">
+            <div class="phone-frame flex flex-col shadow-2xl transition-all duration-300">
+                <div class="notch"></div>
                 
-                <div class="text-white font-bold text-lg flex-1 ml-4 outline-none header-count pb-1" contenteditable="true" spellcheck="false" id="header-name">鱸</div>
-                
-                <div class="flex items-center gap-6 text-white pb-1 mr-1">
-                    <i class="fa-solid fa-magnifying-glass text-xl"></i>
-                    <i class="fa-solid fa-phone text-xl"></i>
-                    <i class="fa-solid fa-bars text-2xl"></i>
-                </div>
-            </div>
-
-            <div id="capture-area" class="flex-1 chat-area-container overflow-y-auto p-4 space-y-1 no-scrollbar flex flex-col pb-4">
-                <div class="bg-overlay" id="bg-overlay-layer"></div>
-                
-                <div class="flex justify-center my-2 relative z-10">
-                    <span class="bg-black/10 text-white text-[10px] px-3 py-1 rounded-full cursor-text date-label" contenteditable="true">今日</span>
+                <div class="status-bar-bg w-full flex justify-between items-end px-7 pb-5 absolute top-0 left-0 right-0 pointer-events-none">
+                    <span id="sb-time" class="text-white text-[15px] font-bold pointer-events-auto leading-none mb-0.5" contenteditable="true">12:34</span>
+                    <div class="flex gap-1.5 text-white items-center">
+                        <i class="fa-solid fa-signal text-[14px]"></i>
+                        <i class="fa-solid fa-wifi text-[14px]"></i>
+                        <i class="fa-solid fa-battery-full text-[22px]"></i>
+                    </div>
                 </div>
 
-                <div class="flex justify-start items-end gap-2 relative z-10">
-                    <img src="images/icons/lineicon-syu.png" onerror="this.src='https://placehold.co/100x100/orange/white?text=S'" class="w-11 h-11 rounded-full mb-auto border border-gray-300 bg-white object-cover">
-                    <div>
-                        <div class="bubble-wrapper">
-                            <div class="bubble bubble-left" contenteditable="true">サンプル</div>
-                            <div class="flex flex-col justify-end min-w-[30px] ml-1">
-                                <span class="meta-text text-[9px] text-white/80" contenteditable="true">18:20</span>
+                <div class="app-header flex items-end px-5 pb-4 justify-between sticky top-0 border-b border-black/5">
+                    <div class="flex items-center gap-1 text-white cursor-pointer hover:opacity-70 pb-1">
+                        <i class="fa-solid fa-chevron-left text-2xl"></i>
+                        <span id="header-group-count" class="text-sm font-bold ml-1 hidden" contenteditable="true"></span>
+                    </div>
+                    
+                    <div class="text-white font-bold text-xl flex-1 ml-4 outline-none header-count pb-1 truncate" contenteditable="true" spellcheck="false" id="header-name">鱸</div>
+                    
+                    <div class="flex items-center gap-7 text-white pb-1 mr-1">
+                        <i class="fa-solid fa-magnifying-glass text-2xl"></i>
+                        <i class="fa-solid fa-phone text-2xl"></i>
+                        <i class="fa-solid fa-bars text-3xl"></i>
+                    </div>
+                </div>
+
+                <div id="capture-area" class="flex-1 chat-area-container overflow-y-auto p-5 space-y-1 no-scrollbar flex flex-col pb-6">
+                    <div class="bg-overlay" id="bg-overlay-layer"></div>
+                    <div class="flex justify-center my-3 relative z-10">
+                        <span class="bg-black/10 text-white text-[11px] px-3 py-1 rounded-full cursor-text date-label" contenteditable="true">今日</span>
+                    </div>
+                    <div class="flex justify-start items-end gap-2 relative z-10">
+                        <img src="images/icons/lineicon-syu.png" onerror="this.src='https://placehold.co/100x100/orange/white?text=S'" class="w-12 h-12 rounded-full mb-auto border border-gray-300 bg-white object-cover">
+                        <div>
+                            <div class="bubble-wrapper">
+                                <div class="bubble bubble-left" contenteditable="true">サンプル</div>
+                                <div class="flex flex-col justify-end min-w-[30px] ml-1 pb-1">
+                                    <span class="meta-text text-[10px] text-white/80" contenteditable="true">18:20</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="flex justify-end items-end gap-1 mb-1 group relative z-10">
-                     <div class="call-active-widget flex items-center justify-between z-10">
-                         <div class="flex items-center gap-3 z-10">
-                            <div class="w-10 h-10 rounded-full bg-green-500 flex items-center justify-center animate-pulse">
-                                <i class="fa-solid fa-phone text-white"></i>
-                            </div>
-                            <div>
-                                <div class="text-white text-xs font-bold" contenteditable="true">通話中</div>
-                                <div class="text-white/80 text-[10px]" contenteditable="true">05:24</div>
-                            </div>
-                         </div>
-                     </div>
+                <div class="bg-white px-4 py-3 pb-8 border-t border-gray-200 flex items-center gap-5 shrink-0 z-20">
+                    <i class="fa-solid fa-plus footer-icon text-3xl"></i>
+                    <i class="fa-solid fa-camera footer-icon text-3xl"></i>
+                    <i class="fa-regular fa-image footer-icon text-3xl"></i>
+                    <div class="flex-1 bg-[#f2f2f2] rounded-full h-11 flex items-center px-3 justify-end relative cursor-text">
+                        <div class="absolute left-3 right-8 text-gray-800 text-base overflow-hidden h-9 top-1 outline-none leading-9" contenteditable="true"></div>
+                        <i class="fa-regular fa-face-smile text-gray-500 text-2xl cursor-pointer"></i>
+                    </div>
+                    <i class="fa-solid fa-microphone footer-icon text-2xl"></i>
                 </div>
+            </div>
+        </div>
 
+        <div class="glass-panel p-6 h-full overflow-y-auto no-scrollbar order-3">
+            
+            <div class="border-b pb-2 border-gray-300">
+                <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+                    <i class="fa-solid fa-pen-nib text-green-500"></i> キャラ・操作
+                </h2>
             </div>
 
-            <div class="bg-white px-3 py-2 pb-6 border-t border-gray-200 flex items-center gap-4 shrink-0 z-20">
-                <i class="fa-solid fa-plus footer-icon text-2xl"></i>
-                <i class="fa-solid fa-camera footer-icon text-2xl"></i>
-                <i class="fa-regular fa-image footer-icon text-2xl"></i>
+            <div>
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Speaker</label>
+                <div class="flex gap-3 overflow-x-auto pb-2 items-end no-scrollbar" id="char-list"></div>
                 
-                <div class="flex-1 bg-[#f2f2f2] rounded-full h-10 flex items-center px-3 justify-end relative cursor-text">
-                    <div class="absolute left-3 right-8 text-gray-800 text-sm overflow-hidden h-8 top-1 outline-none leading-8" contenteditable="true"></div>
-                    <i class="fa-regular fa-face-smile text-gray-500 text-xl cursor-pointer"></i>
+                <div class="mt-2 bg-white p-3 rounded-lg border border-gray-200 shadow-sm" id="char-edit-panel">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-bold text-gray-600 truncate max-w-[150px]" id="editing-char-name">設定中: ...</span>
+                        <button onclick="resetCharIcon()" class="text-[10px] bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-gray-600 transition whitespace-nowrap">
+                            <i class="fa-solid fa-rotate-left"></i> 元に戻す
+                        </button>
+                    </div>
+                    <div class="flex gap-2 items-center">
+                        <label class="cursor-pointer bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs px-3 py-2 rounded-lg transition border border-gray-300 flex items-center gap-1 whitespace-nowrap">
+                            <i class="fa-solid fa-upload"></i> 画像
+                            <input type="file" id="char-icon-upload" accept="image/*" class="hidden">
+                        </label>
+                        <div class="h-6 w-[1px] bg-gray-300 mx-1"></div>
+                        <div class="flex gap-1 overflow-x-auto no-scrollbar">
+                            <button onclick="updateCharIcon('🐶')" class="w-8 h-8 flex items-center justify-center bg-gray-50 hover:bg-yellow-100 rounded border border-gray-200 text-lg flex-shrink-0">🐶</button>
+                            <button onclick="updateCharIcon('🐱')" class="w-8 h-8 flex items-center justify-center bg-gray-50 hover:bg-yellow-100 rounded border border-gray-200 text-lg flex-shrink-0">🐱</button>
+                            <button onclick="updateCharIcon('👩')" class="w-8 h-8 flex items-center justify-center bg-gray-50 hover:bg-yellow-100 rounded border border-gray-200 text-lg flex-shrink-0">👩</button>
+                            <button onclick="updateCharIcon('👨')" class="w-8 h-8 flex items-center justify-center bg-gray-50 hover:bg-yellow-100 rounded border border-gray-200 text-lg flex-shrink-0">👨</button>
+                        </div>
+                    </div>
                 </div>
-                <i class="fa-solid fa-microphone footer-icon text-xl"></i>
+                <button onclick="addNewCharacter()" class="w-full mt-2 border border-dashed border-purple-400 text-purple-600 text-xs font-bold py-2 rounded-lg hover:bg-purple-50 transition">
+                    <i class="fa-solid fa-plus"></i> 新規キャラクター追加
+                </button>
+            </div>
+
+            <hr class="border-gray-200 my-2">
+
+            <div class="mb-3">
+                <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">メッセージ</label>
+                <textarea id="message-input" rows="3" class="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-green-400 outline-none text-sm resize-none shadow-inner" placeholder="メッセージを入力..."></textarea>
+                <button onclick="sendTextMsg()" class="mt-2 w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 rounded-lg text-xs transition shadow-md">
+                    <i class="fa-solid fa-paper-plane"></i> テキストを送信
+                </button>
+            </div>
+
+            <div class="bg-gray-100 p-1 rounded-lg flex text-xs font-bold text-gray-500 overflow-x-auto mb-2">
+                <button onclick="toggleMode('call')" id="tab-call" class="flex-1 py-2 rounded-md transition whitespace-nowrap px-2 tab-inactive">📞 通話</button>
+                <button onclick="toggleMode('sticker')" id="tab-sticker" class="flex-1 py-2 rounded-md transition whitespace-nowrap px-2 tab-inactive">😊 スタンプ</button>
+                <button onclick="toggleMode('photo')" id="tab-photo" class="flex-1 py-2 rounded-md transition whitespace-nowrap px-2 tab-inactive">📷 画像</button>
+            </div>
+
+            <div class="flex-1 flex flex-col gap-3">
+                
+                <div id="attachment-panel" class="min-h-[50px]">
+                    <div id="input-sticker-area" class="hidden">
+                        <div class="grid grid-cols-3 gap-2 mb-2">
+                            <img src="https://placehold.co/200x200/png?text=OK!" onclick="selectSticker(this)" class="cursor-pointer rounded border-2 border-transparent hover:border-green-500 transition">
+                            <img src="https://placehold.co/200x200/png?text=LOVE" onclick="selectSticker(this)" class="cursor-pointer rounded border-2 border-transparent hover:border-green-500 transition">
+                            <img src="https://placehold.co/200x200/png?text=Shock" onclick="selectSticker(this)" class="cursor-pointer rounded border-2 border-transparent hover:border-green-500 transition">
+                        </div>
+                        <div class="text-xs text-gray-500 mt-2">※スタンプ画像のアップロード</div>
+                        <input type="file" id="sticker-upload" accept="image/*" class="mt-2 text-xs w-full">
+                    </div>
+
+                    <div id="input-photo-area" class="hidden">
+                        <div class="bg-white p-4 rounded-xl border border-dashed border-gray-300 text-center">
+                            <i class="fa-regular fa-image text-3xl text-gray-300 mb-2"></i>
+                            <p class="text-xs text-gray-500 mb-3">送信する写真を選択してください</p>
+                            <input type="file" id="photo-upload" accept="image/*" class="text-xs w-full">
+                        </div>
+                    </div>
+
+                    <div id="input-call-area" class="hidden space-y-3">
+                        <div class="grid grid-cols-1 gap-2">
+                            <select id="call-status" class="p-2 border rounded-lg text-sm bg-white focus:ring-2 focus:ring-purple-400 w-full">
+                                <option value="active">🟢 通話中</option>
+                                <option value="voice">📞 音声通話</option>
+                                <option value="cancel">🚫 キャンセル</option>
+                                <option value="noanswer">🔴 応答なし</option>
+                            </select>
+                            <input type="text" id="call-duration" value="12:34" class="p-2 border rounded-lg text-sm bg-white w-full" placeholder="時間/テキスト">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-2 items-end mt-1">
+                    <div class="flex-1">
+                        <div id="read-count-wrapper" class="hidden mb-2">
+                            <div class="flex items-center gap-2 bg-green-50 px-3 py-1 rounded text-xs text-green-800 border border-green-200">
+                                <span class="font-bold">既読数:</span>
+                                <input type="number" id="read-count-val" value="2" min="1" class="w-12 p-1 rounded border border-green-300 text-center">
+                                <span class="text-[10px] opacity-70">※自分のみ</span>
+                            </div>
+                        </div>
+                        <button onclick="addToChat()" id="send-btn" class="w-full bg-gradient-to-r from-gray-700 to-gray-800 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-paper-plane"></i> 送信
+                        </button>
+                    </div>
+                    <button onclick="undoLast()" class="px-5 py-3 h-[48px] bg-gray-200 text-gray-600 font-bold rounded-xl hover:bg-gray-300 transition" title="1つ戻る">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                </div>
+
+                <div class="pt-2">
+                    <label class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">特殊挿入</label>
+                    <div class="flex gap-2">
+                        <button onclick="addDate('今日')" class="flex-1 bg-white border border-gray-300 text-gray-600 text-xs font-bold py-2 rounded-lg hover:bg-gray-50 transition">今日</button>
+                        <button onclick="addDate(prompt('テキストを入力','2025/12/24'))" class="flex-1 bg-white border border-gray-300 text-gray-600 text-xs font-bold py-2 rounded-lg hover:bg-gray-50 transition">自由</button>
+                    </div>
+                </div>
+
             </div>
         </div>
 
     </div>
 
     <script>
+        // Init Data with defaultIcon property for Reset fix
         let characters = [
-            { id: 'me', name: '自分', type: 'me', icon: '' },
-            { id: 'char1', name: '鱸', type: 'other', icon: 'images/icons/lineicon-syu.png' },
-            { id: 'char2', name: 'Yua', type: 'other', icon: 'images/icons/lineicon-yua.png' }
+            { id: 'me', name: '自分', type: 'me', icon: '', defaultIcon: '' },
+            { id: 'char1', name: '鱸', type: 'other', icon: 'images/icons/lineicon-syu.png', defaultIcon: 'images/icons/lineicon-syu.png' },
+            { id: 'char2', name: 'Yua', type: 'other', icon: 'images/icons/lineicon-yua.png', defaultIcon: 'images/icons/lineicon-yua.png' }
         ];
 
-        let state = { selectedCharId: 'me', mode: 'text', selectedStickerSrc: '' };
+        // Default set to 'call' as requested
+        let state = { 
+            selectedCharId: 'me', 
+            mode: 'call', 
+            selectedStickerSrc: '',
+            isHeaderLocked: false,
+            isGroupMode: false,
+            uploadedPhotoSrc: '' 
+        };
+
+        const randomEmojis = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐙'];
 
         function init() { 
             renderCharList(); 
             updateTime();
+            updateTabUI(); // Ensure tab UI reflects default state
             setInterval(updateTime, 1000);
+            document.getElementById('header-name-input').value = document.getElementById('header-name').innerText;
         }
 
         function updateTime() {
@@ -423,6 +508,7 @@
             }
         }
 
+        // --- Character Logic ---
         function renderCharList() {
             const container = document.getElementById('char-list');
             container.innerHTML = '';
@@ -430,41 +516,157 @@
                 const isSelected = char.id === state.selectedCharId;
                 const div = document.createElement('div');
                 div.className = `cursor-pointer flex flex-col items-center min-w-[50px] transition ${isSelected ? 'scale-110 opacity-100' : 'opacity-60'}`;
+                
                 div.onclick = () => { 
                     state.selectedCharId = char.id; 
                     renderCharList(); 
-                    if(char.type === 'other') document.getElementById('header-name').innerText = char.name;
+                    if(char.type === 'other' && !state.isHeaderLocked) {
+                        const newName = state.isGroupMode ? `${char.name} (2)` : char.name;
+                        document.getElementById('header-name').innerText = newName;
+                        document.getElementById('header-name-input').value = newName;
+                    }
                 };
                 
                 let iconHtml;
+                const isEmoji = char.icon && !char.icon.includes('/') && !char.icon.includes('data:image');
+                
                 if (char.type === 'me') {
-                    iconHtml = `<div class="w-11 h-11 rounded-full bg-green-500 border-2 border-white flex items-center justify-center text-white text-[10px] shadow font-bold">自分</div>`;
+                    iconHtml = `<div class="w-12 h-12 rounded-full bg-green-500 border-2 border-white flex items-center justify-center text-white text-[10px] shadow font-bold">自分</div>`;
+                } else if (isEmoji) {
+                    iconHtml = `<div class="w-12 h-12 rounded-full bg-white border-2 border-white flex items-center justify-center text-2xl shadow">${char.icon}</div>`;
                 } else {
-                    iconHtml = `<img src="${char.icon}" onerror="this.src='https://placehold.co/100x100/gray/white?text=${char.name.charAt(0)}'" class="w-11 h-11 rounded-full border-2 border-white shadow object-cover">`;
+                    iconHtml = `<img src="${char.icon}" onerror="this.src='https://placehold.co/100x100/gray/white?text=${char.name.charAt(0)}'" class="w-12 h-12 rounded-full border-2 border-white shadow object-cover">`;
                 }
-
                 div.innerHTML = `${iconHtml}<span class="text-[9px] text-gray-500 mt-1 font-bold truncate max-w-[50px]">${char.name}</span>`;
                 container.appendChild(div);
             });
+
+            const curChar = characters.find(c => c.id === state.selectedCharId);
+            document.getElementById('editing-char-name').innerText = `設定中: ${curChar.name}`;
+            const editPanel = document.getElementById('char-edit-panel');
+            if(curChar.type === 'me') {
+                editPanel.classList.add('opacity-50', 'pointer-events-none');
+            } else {
+                editPanel.classList.remove('opacity-50', 'pointer-events-none');
+            }
         }
 
         function addNewCharacter() {
             const name = prompt("キャラクターの名前を入力してください:", "新キャラ");
             if (!name) return;
-            const iconUrl = prompt("アイコン画像のURLを入力してください:", "");
-            const finalIcon = iconUrl ? iconUrl : `https://placehold.co/100x100/gray/white?text=${name.charAt(0)}`;
-            characters.push({ id: 'char' + Date.now(), name: name, type: 'other', icon: finalIcon });
+            const randomEmoji = randomEmojis[Math.floor(Math.random() * randomEmojis.length)];
+            characters.push({ id: 'char' + Date.now(), name: name, type: 'other', icon: randomEmoji, defaultIcon: randomEmoji });
             renderCharList();
         }
 
-        function setMode(mode) {
-            state.mode = mode;
-            ['text', 'sticker', 'call'].forEach(m => {
-                document.getElementById(`tab-${m}`).className = m === mode 
-                    ? 'flex-1 py-2 rounded-md bg-white text-gray-800 shadow-sm transition' 
-                    : 'flex-1 py-2 rounded-md hover:bg-white/50 transition';
-                document.getElementById(`input-${m}-area`).style.display = m === mode ? 'block' : 'none';
+        document.getElementById('char-icon-upload').addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) { updateCharIcon(e.target.result); }
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        function updateCharIcon(newIcon) {
+            const index = characters.findIndex(c => c.id === state.selectedCharId);
+            if(index > -1 && characters[index].type !== 'me') {
+                characters[index].icon = newIcon;
+                renderCharList();
+            }
+        }
+
+        function resetCharIcon() {
+             const index = characters.findIndex(c => c.id === state.selectedCharId);
+             if(index > -1 && characters[index].type !== 'me') {
+                const char = characters[index];
+                if (char.defaultIcon && char.defaultIcon !== '') {
+                    char.icon = char.defaultIcon;
+                } else {
+                    char.icon = `https://placehold.co/100x100/gray/white?text=${char.name.charAt(0)}`;
+                }
+                renderCharList();
+             }
+        }
+
+        // --- Settings Logic ---
+        function toggleHeaderLock() {
+            state.isHeaderLocked = !state.isHeaderLocked;
+            const btn = document.getElementById('lock-header-btn');
+            const icon = document.getElementById('lock-icon');
+            if(state.isHeaderLocked) {
+                btn.classList.add('text-blue-500', 'border-blue-500');
+                icon.className = 'fa-solid fa-lock';
+            } else {
+                btn.classList.remove('text-blue-500', 'border-blue-500');
+                icon.className = 'fa-solid fa-lock-open';
+            }
+        }
+
+        function syncHeaderName(val) { document.getElementById('header-name').innerText = val; }
+
+        function toggleGroupMode() {
+            const checkbox = document.getElementById('group-mode-toggle');
+            state.isGroupMode = checkbox.checked;
+            const headerNameEl = document.getElementById('header-name');
+            const currentName = headerNameEl.innerText.split('(')[0].trim();
+            const countWrapper = document.getElementById('read-count-wrapper');
+
+            if(state.isGroupMode) {
+                headerNameEl.innerText = `${currentName} (3)`;
+                document.getElementById('header-name-input').value = headerNameEl.innerText;
+                countWrapper.classList.remove('hidden');
+            } else {
+                headerNameEl.innerText = currentName;
+                document.getElementById('header-name-input').value = headerNameEl.innerText;
+                countWrapper.classList.add('hidden');
+            }
+        }
+
+        // --- Mode Switching (Tab Toggle) ---
+        function toggleMode(mode) {
+            if (state.mode === mode) {
+                state.mode = 'text';
+            } else {
+                state.mode = mode;
+            }
+            updateTabUI();
+        }
+
+        function updateTabUI() {
+            ['sticker', 'call', 'photo'].forEach(m => {
+                const btn = document.getElementById(`tab-${m}`);
+                const area = document.getElementById(`input-${m}-area`);
+                
+                if (m === state.mode) {
+                    btn.classList.remove('tab-inactive');
+                    btn.classList.add('tab-active');
+                    if(area) area.style.display = 'block';
+                } else {
+                    btn.classList.remove('tab-active');
+                    btn.classList.add('tab-inactive');
+                    if(area) area.style.display = 'none';
+                }
             });
+
+            // Update Main Button Text based on Tab
+            const btn = document.getElementById('send-btn');
+            if (state.mode === 'sticker') {
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> スタンプ送信';
+                btn.className = "w-full bg-gradient-to-r from-green-400 to-green-500 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2";
+            }
+            else if (state.mode === 'photo') {
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 画像送信';
+                btn.className = "w-full bg-gradient-to-r from-green-400 to-green-500 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2";
+            }
+            else if (state.mode === 'call') {
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 通話履歴追加';
+                btn.className = "w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2";
+            }
+            else {
+                // If tabs are closed, main button acts as generic sender (fallback)
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 送信';
+                btn.className = "w-full bg-gradient-to-r from-gray-500 to-gray-600 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2";
+            }
         }
 
         function selectSticker(imgEl) {
@@ -478,8 +680,16 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     state.selectedStickerSrc = e.target.result;
-                    alert("スタンプ用画像を読み込みました。");
+                    alert("スタンプ画像を読み込みました");
                 }
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        document.getElementById('photo-upload').addEventListener('change', function(e) {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) { state.uploadedPhotoSrc = e.target.result; }
                 reader.readAsDataURL(e.target.files[0]);
             }
         });
@@ -488,30 +698,50 @@
             if(!label) return;
             const container = document.getElementById('capture-area');
             const div = document.createElement('div');
-            div.className = "flex justify-center my-4 relative z-10";
-            div.innerHTML = `<span class="bg-black/10 text-white text-[10px] px-3 py-1 rounded-full cursor-text date-label" contenteditable="true">${label}</span>`;
+            div.className = "flex justify-center my-3 relative z-10";
+            div.innerHTML = `<span class="bg-black/10 text-white text-[11px] px-3 py-1 rounded-full cursor-text date-label" contenteditable="true">${label}</span>`;
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
         }
 
-        function addToChat() {
+        // --- NEW: Dedicated Text Sender ---
+        function sendTextMsg() {
             const container = document.getElementById('capture-area');
+            const char = characters.find(c => c.id === state.selectedCharId);
+            const isMe = char.type === 'me';
+            const timeStr = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+
+            const text = document.getElementById('message-input').value.trim().replace(/\n/g, '<br>');
+            if (!text) return;
+            
+            const bubbleClass = isMe ? 'bubble-right' : 'bubble-left';
+            const contentHtml = `<div class="bubble ${bubbleClass}" contenteditable="true">${text}</div>`;
+            document.getElementById('message-input').value = '';
+
+            appendMessage(isMe, contentHtml, char, timeStr);
+        }
+
+        // --- Tab Content Sender (Sticker/Photo/Call) ---
+        function addToChat() {
+            // If tabs are closed (mode='text'), treat main button as text sender fallback
+            if(state.mode === 'text') {
+                sendTextMsg();
+                return;
+            }
+
             const char = characters.find(c => c.id === state.selectedCharId);
             const isMe = char.type === 'me';
             const timeStr = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
             
             let contentHtml = '';
-
-            if (state.mode === 'text') {
-                const text = document.getElementById('message-input').value.trim().replace(/\n/g, '<br>');
-                if (!text) return;
-                const bubbleClass = isMe ? 'bubble-right' : 'bubble-left';
-                contentHtml = `<div class="bubble ${bubbleClass}" contenteditable="true">${text}</div>`;
-                document.getElementById('message-input').value = '';
-            }
-            else if (state.mode === 'sticker') {
+            
+            if (state.mode === 'sticker') {
                 if (!state.selectedStickerSrc) return;
-                contentHtml = `<img src="${state.selectedStickerSrc}" class="rounded-lg max-w-[140px] relative z-10">`;
+                contentHtml = `<img src="${state.selectedStickerSrc}" class="rounded-lg max-w-[150px] relative z-10">`;
+            }
+            else if (state.mode === 'photo') {
+                if (!state.uploadedPhotoSrc) { alert('写真を選択してください'); return; }
+                contentHtml = `<img src="${state.uploadedPhotoSrc}" class="photo-msg relative z-10">`;
             }
             else if (state.mode === 'call') {
                 const status = document.getElementById('call-status').value;
@@ -530,64 +760,83 @@
                                 </div>
                              </div>
                         </div>`;
-                } 
-                else {
+                } else {
                     let iconClass = ''; let title = '';
+                    let durationHtml = `<div class="text-[10px] opacity-70" contenteditable="true">${duration}</div>`;
+
                     if (status === 'voice') {
                         iconClass = 'fa-solid fa-phone'; title = '音声通話';
-                    } else if (status === 'cancel') {
+                    } 
+                    else if (status === 'cancel') {
                         iconClass = 'fa-solid fa-phone-slash'; title = 'キャンセル';
-                    } else if (status === 'noanswer') {
+                        durationHtml = '';
+                    } 
+                    else if (status === 'noanswer') {
                         iconClass = 'fa-solid fa-phone-slash'; title = '応答なし';
+                        durationHtml = '';
                     }
                     const sideClass = isMe ? 'right' : 'left';
                     contentHtml = `
                         <div class="call-history-bubble ${sideClass}">
-                            <div class="call-icon-circle">
-                                <i class="${iconClass}"></i>
+                            <div class="call-icon-circle"><i class="${iconClass}"></i></div>
+                            <div class="flex flex-col justify-center">
+                                <div class="text-sm font-bold leading-tight" contenteditable="true">${title}</div>
+                                ${durationHtml}
                             </div>
-                            <div class="flex flex-col">
-                                <div class="text-sm font-bold" contenteditable="true">${title}</div>
-                                <div class="text-[10px] opacity-70" contenteditable="true">${duration}</div>
-                            </div>
-                        </div>
-                    `;
+                        </div>`;
                 }
             }
 
+            appendMessage(isMe, contentHtml, char, timeStr);
+        }
+
+        function appendMessage(isMe, contentHtml, char, timeStr) {
+            const container = document.getElementById('capture-area');
             const msgRow = document.createElement('div');
             msgRow.className = isMe ? "flex justify-end items-end gap-1 mb-1 group relative z-10" : "flex justify-start items-end gap-2 mb-1 group relative z-10";
 
+            let readLabel = "既読";
+            if (state.isGroupMode) {
+                const countVal = document.getElementById('read-count-val').value;
+                readLabel = `既読 ${countVal}`;
+            }
+
+            const isCallActive = contentHtml.includes('call-active-widget');
+
             if (isMe) {
-                 if(state.mode === 'call' && document.getElementById('call-status').value === 'active') {
+                 if(isCallActive) {
                      msgRow.innerHTML = `${contentHtml}`;
                 } else {
                     msgRow.innerHTML = `
                         <div class="flex flex-col items-end min-w-[30px] text-right pb-1">
-                            <span class="meta-text text-[9px] text-white mb-[1px] cursor-pointer" contenteditable="true">既読</span>
-                            <span class="meta-text text-[9px] text-white/80 cursor-pointer" contenteditable="true">${timeStr}</span>
+                            <span class="meta-text text-[10px] text-white mb-[1px] cursor-pointer" contenteditable="true">${readLabel}</span>
+                            <span class="meta-text text-[10px] text-white/80 cursor-pointer" contenteditable="true">${timeStr}</span>
                         </div>
                         <div class="bubble-wrapper">${contentHtml}</div>
                     `;
                 }
             } else {
-                 if(state.mode === 'call' && document.getElementById('call-status').value === 'active') {
+                 if(isCallActive) {
                      msgRow.innerHTML = `${contentHtml}`;
                 } else {
+                    const isEmoji = char.icon && !char.icon.includes('/') && !char.icon.includes('data:image');
+                    const iconHtml = isEmoji 
+                        ? `<div class="w-12 h-12 rounded-full bg-white border border-gray-300 flex items-center justify-center text-2xl mb-auto shrink-0">${char.icon}</div>`
+                        : `<img src="${char.icon}" onerror="this.src='https://placehold.co/100x100/gray/white?text=${char.name.charAt(0)}'" class="w-12 h-12 rounded-full mb-auto border border-gray-300 bg-white object-cover shrink-0">`;
+
                     msgRow.innerHTML = `
-                        <img src="${char.icon}" onerror="this.src='https://placehold.co/100x100/gray/white?text=${char.name.charAt(0)}'" class="w-11 h-11 rounded-full mb-auto border border-gray-300 bg-white object-cover">
+                        ${iconHtml}
                         <div>
                             <div class="flex items-end gap-1 bubble-wrapper">
                                 ${contentHtml}
                                 <div class="flex flex-col justify-end min-w-[30px] ml-1 pb-1">
-                                    <span class="meta-text text-[9px] text-white/80 cursor-pointer" contenteditable="true">${timeStr}</span>
+                                    <span class="meta-text text-[10px] text-white/80 cursor-pointer" contenteditable="true">${timeStr}</span>
                                 </div>
                             </div>
                         </div>
                     `;
                 }
             }
-
             container.appendChild(msgRow);
             container.scrollTop = container.scrollHeight;
         }
@@ -599,24 +848,19 @@
             if (lastMsg) container.removeChild(lastMsg);
         }
 
-        // --- BACKGROUND ---
+        // --- Background & Save ---
         document.getElementById('bg-upload').addEventListener('change', function(e) {
             if (e.target.files && e.target.files[0]) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('capture-area').style.backgroundImage = `url(${e.target.result})`;
-                }
+                reader.onload = function(e) { document.getElementById('capture-area').style.backgroundImage = `url(${e.target.result})`; }
                 reader.readAsDataURL(e.target.files[0]);
             }
         });
         document.getElementById('bg-opacity').addEventListener('input', function(e) {
             document.getElementById('bg-overlay-layer').style.backgroundColor = `rgba(0,0,0,${e.target.value})`;
         });
-        function resetBg() {
-            document.getElementById('capture-area').style.backgroundImage = 'none';
-        }
+        function resetBg() { document.getElementById('capture-area').style.backgroundImage = 'none'; }
 
-        // --- JSON SAVE & LOAD ---
         function saveProjectData() {
             const captureArea = document.getElementById('capture-area');
             const data = {
@@ -640,32 +884,20 @@
                 reader.onload = function(e) {
                     try {
                         const data = JSON.parse(e.target.result);
-                        if(data.characters) {
-                            characters = data.characters;
-                            renderCharList();
-                        }
-                        if(data.htmlContent) {
-                            document.getElementById('capture-area').innerHTML = data.htmlContent;
-                        }
-                        if(data.backgroundStyle) {
-                            document.getElementById('capture-area').style.backgroundImage = data.backgroundStyle;
-                        }
-                        if(data.overlayColor) {
-                             document.getElementById('bg-overlay-layer').style.backgroundColor = data.overlayColor;
-                        }
-                        alert("データを読み込みました！");
-                    } catch(err) {
-                        alert("読み込みエラー: ファイル形式を確認してください");
-                    }
+                        if(data.characters) { characters = data.characters; renderCharList(); }
+                        if(data.htmlContent) { document.getElementById('capture-area').innerHTML = data.htmlContent; }
+                        if(data.backgroundStyle) { document.getElementById('capture-area').style.backgroundImage = data.backgroundStyle; }
+                        if(data.overlayColor) { document.getElementById('bg-overlay-layer').style.backgroundColor = data.overlayColor; }
+                        alert("データ読込完了");
+                    } catch(err) { alert("読込エラー"); }
                 }
                 reader.readAsText(e.target.files[0]);
             }
         });
 
-        // --- CAPTURE LOGIC (Revised with Icon Fix) ---
-
+        // --- CAPTURE ALIGNMENT FIX (V1.0 Logic + Icon Fix) ---
         function adjustTextPosition(clonedDoc) {
-             // テキスト位置の調整（ユーザー提供のオリジナルロジックを維持）
+             // 1. TEXT BUBBLES (From User's v1.0 code)
              const bubbles = clonedDoc.querySelectorAll('.bubble');
              bubbles.forEach(b => {
                  b.style.alignItems = 'flex-start';
@@ -675,7 +907,7 @@
                  b.style.transform = 'none';
              });
 
-             // 日付ラベルの調整（ユーザー提供のオリジナルロジックを維持）
+             // 2. DATE LABELS (From User's v1.0 code)
              const dateLabels = clonedDoc.querySelectorAll('.date-label');
              dateLabels.forEach(l => {
                  l.style.display = 'inline-flex';
@@ -685,11 +917,11 @@
                  l.style.transform = 'none';
              });
 
-             // 【新規追加】アイコン位置の補正
-             // チャットエリア内のアイコン画像(.w-11)を見つけて上にずらす
-             const icons = clonedDoc.querySelectorAll('.chat-area-container img.w-11');
+             // 3. ICON FIX (Newly added to match v2.0 structure)
+             // v2.0 icons use w-12, v1.0 used w-11. We target w-12 here.
+             const icons = clonedDoc.querySelectorAll('.chat-area-container img.w-12');
              icons.forEach(icon => {
-                 icon.style.transform = 'translateY(-5px)'; // 5px上に引き上げる
+                 icon.style.transform = 'translateY(-5px)';
              });
         }
 
@@ -705,7 +937,6 @@
                 imageTimeout: 15000,
                 onclone: (clonedDoc) => {
                     adjustTextPosition(clonedDoc);
-                    // スマホの形状を維持するため、フレーム削除処理は行わない
                 }
 
             }).then(canvas => {
@@ -730,7 +961,7 @@
                 onclone: (clonedDoc) => {
                     adjustTextPosition(clonedDoc);
 
-                    // 画面のみ保存の場合はフレームを削除
+                    // Frame Removal for Screenshot mode
                     const clonedFrame = clonedDoc.querySelector('.phone-frame');
                     clonedFrame.style.border = 'none';
                     clonedFrame.style.borderRadius = '0';
