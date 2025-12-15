@@ -1,0 +1,379 @@
+/* --- style-cork.css --- */
+/* THEME: ANALOG / INVESTIGATION BOARD (Final) */
+
+/* =========================================
+   1. FONTS & BASICS
+   ========================================= */
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Klee+One:wght@400;600&family=Shippori+Mincho:wght@400;700&display=swap');
+
+:root {
+    /* 色定義 */
+    --bg-cork: #e0d5c1;
+    --paper-base: #fdfbf7;
+    --paper-line: #aaccff;
+    --ink-main: #2b2b2b;
+    --ink-sub: #555;
+    --ink-red: #d9333f;    /* 重要箇所・スタンプ色 */
+    --ink-blue: #0044cc;   /* 手書きメモ色 */
+    
+    /* script.js制御用カラー変数 */
+    --primary: #d9333f;    /* HP */
+    --secondary: #0044cc;  /* MP */
+    --accent: #d4a017;     /* SAN */
+    --grow: #00cc44;       /* 成長 */
+
+    --shadow-paper: 0 4px 10px rgba(0,0,0,0.15), 0 1px 3px rgba(0,0,0,0.1);
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background-color: var(--bg-cork);
+    background-image: 
+        radial-gradient(#b8a890 1px, transparent 1px),
+        radial-gradient(#b8a890 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-position: 0 0, 10px 10px;
+    
+    color: var(--ink-main);
+    font-family: 'Shippori Mincho', serif;
+    
+    /* 画面からはみ出た場合のスクロール許可 */
+    height: 100vh;
+    overflow-y: auto; 
+    overflow-x: auto; 
+}
+
+/* スクロールバー装飾 */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 5px; border: 2px solid transparent; background-clip: content-box; }
+
+/* =========================================
+   2. BOOT SCREEN
+   ========================================= */
+#boot-screen.hidden { opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
+#boot-screen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #111; z-index: 9999; color: #eee;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Courier Prime', monospace;
+}
+.boot-terminal { text-align: center; }
+.glitch { font-size: 2rem; color: #ddd; margin-bottom: 20px; }
+.loader-bar { background: #333; margin: 20px auto; width: 200px; height: 4px; }
+.bar-fill { height: 100%; background: #999; }
+.upload-area .cyber-btn {
+    background: #eee; color: #333; border: 1px solid #999;
+    font-family: 'Courier Prime', monospace; padding: 10px 20px;
+    box-shadow: 2px 2px 0 #bbb; cursor: pointer;
+}
+.upload-area .cyber-btn:hover { transform: translate(1px, 1px); box-shadow: 1px 1px 0 #bbb; }
+
+/* =========================================
+   3. LAYOUT & GRID (SWAP LOGIC INCLUDED)
+   ========================================= */
+.dashboard-grid {
+    display: grid;
+    /* デフォルト: 左(Profile) 中(Skills) 右(Database) */
+    grid-template-columns: 320px minmax(500px, 1fr) 350px;
+    gap: 20px;
+    padding: 40px;
+    max-width: 1920px;
+    margin: 0 auto;
+    min-height: 100vh;
+    transition: all 0.5s ease; /* レイアウト変更時のアニメーション */
+}
+
+/* ★ SWAP MODE: 中央と右を入れ替え */
+.dashboard-grid.swapped {
+    /* 右カラム(Skills)は少し狭く、中央(Database)は広く */
+    grid-template-columns: 320px minmax(500px, 1fr) 380px;
+}
+.dashboard-grid.swapped .col-center { order: 3; } /* Skills -> 右へ */
+.dashboard-grid.swapped .col-right { order: 2; }  /* Database -> 中央へ */
+
+/* パネル共通スタイル */
+.panel {
+    background: var(--paper-base);
+    box-shadow: var(--shadow-paper);
+    border-radius: 2px;
+    position: relative;
+    display: flex; flex-direction: column;
+}
+/* マスキングテープ装飾 */
+.panel::before {
+    content: ''; position: absolute;
+    top: -15px; left: 50%; transform: translateX(-50%);
+    width: 100px; height: 30px;
+    background: rgba(255,255,255,0.4);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    border: 1px solid rgba(255,255,255,0.6);
+    opacity: 0.8; z-index: 10;
+}
+
+/* =========================================
+   4. LEFT COLUMN: PROFILE
+   ========================================= */
+.col-left { display: flex; flex-direction: column; gap: 20px; height: fit-content; }
+
+.profile-card {
+    padding: 15px 15px 40px 15px; background: #fff;
+    transform: rotate(-1deg); border: 1px solid #ddd;
+}
+.profile-card::before {
+    top: -12px; transform: translateX(-50%) rotate(2deg);
+    background: rgba(220, 200, 100, 0.4);
+}
+.img-frame {
+    width: 100%; aspect-ratio: 1 / 1; background: #000; overflow: hidden;
+    margin-bottom: 15px; border: 1px solid #eee;
+    filter: sepia(0.3) contrast(1.1);
+}
+.img-frame img { width: 100%; height: 100%; object-fit: cover; }
+.scan-bar { display: none; }
+
+.name-box h2 { font-family: 'Klee One', cursive; font-size: 2rem; margin: 0; color: var(--ink-main); }
+.kana-text { font-family: 'Shippori Mincho', serif; font-size: 0.8rem; color: var(--ink-sub); display: block; }
+.meta-info {
+    margin-top: 10px; font-family: 'Courier Prime', monospace;
+    font-size: 0.9rem; border-top: 2px dotted #ccc; padding-top: 10px;
+    display: flex; justify-content: space-between;
+}
+.tag-cloud { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+.tag {
+    background: #ffeb3b; color: #333; padding: 2px 8px; font-size: 0.8rem;
+    font-family: 'Klee One', cursive; box-shadow: 1px 1px 2px rgba(0,0,0,0.2); transform: rotate(1deg);
+}
+
+.vitals-module { padding: 20px; background: #fffaf0; transform: rotate(1deg); }
+.vital-head { font-family: 'Courier Prime', monospace; font-weight: bold; }
+.bar-track { height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden; border: 1px solid #bbb; margin-top: 2px; }
+.bar-fill { height: 100%; position: static; animation: none; box-shadow: none; }
+.hp { background: #d9534f !important; } .mp { background: #5bc0de !important; } .san { background: #555 !important; }
+.db-row { border-top: 1px solid #ccc; margin-top: 10px; padding-top: 10px; display: flex; justify-content: space-between; }
+.db-val { color: var(--ink-red); font-weight: bold; }
+
+.stats-module { background: #fff; background-image: linear-gradient(#eee 1px, transparent 1px), linear-gradient(90deg, #eee 1px, transparent 1px); background-size: 10px 10px; padding: 15px; }
+.stat-box { background: transparent; border: 1px solid #aaa; color: var(--ink-main); font-family: 'Courier Prime', monospace; text-align: center; padding: 5px; }
+.status-flavor-container { border-top: 2px solid var(--ink-main); margin-top: 15px; padding-top: 10px; }
+.status-flavor-container h4 { margin: 0 0 10px 0; font-family: 'Shippori Mincho', serif; font-size: 0.9rem; }
+.flavor-list li { border-bottom: 1px dashed #ccc; display: flex; justify-content: space-between; font-size: 0.8rem; padding: 2px 0; }
+.flavor-text { font-family: 'Klee One', cursive; color: var(--ink-blue); }
+
+/* =========================================
+   5. SKILL PANEL (Center or Right)
+   ========================================= */
+.col-center {
+    background: linear-gradient(to bottom, transparent 29px, var(--paper-line) 30px), var(--paper-base);
+    background-size: 100% 30px; background-attachment: local;
+    border-left: 4px double #ccc; padding: 0; min-height: 800px;
+}
+.col-center::before { display: none; }
+
+.panel-header {
+    background: var(--paper-base); padding: 20px 30px;
+    border-bottom: 2px solid var(--ink-main); position: sticky; top: 0; z-index: 10;
+}
+.header-title-area h3 { font-family: 'Shippori Mincho', serif; font-size: 1.5rem; margin: 0; text-decoration: underline; text-underline-offset: 5px; }
+
+/* SWAPボタンの表示制御 */
+.swap-btn-trigger {
+    background: transparent; border: 1px solid var(--ink-sub); color: var(--ink-sub);
+    font-family: 'Courier Prime', monospace; padding: 2px 8px; cursor: pointer;
+    font-size: 0.8rem; margin-left: 10px; border-radius: 4px;
+}
+.swap-btn-trigger:hover { background: #eee; color: #000; }
+
+/* Skillsが右側（狭い）に来た時はSWAPボタンを隠し、Database側に表示する制御 */
+.dashboard-grid:not(.swapped) .info-deck .swap-btn-trigger { display: none; }
+.dashboard-grid.swapped .skill-panel .swap-btn-trigger { display: none; }
+
+.toggles-area { margin-top: 10px; display: flex; gap: 15px; }
+.toggle-switch { display: inline-flex; align-items: center; cursor: pointer; }
+.toggle-switch input { display: none; }
+.slider {
+    width: 30px; height: 16px; background: #ccc; border-radius: 8px; position: relative;
+    margin-right: 5px; transition: 0.3s;
+}
+.slider::after {
+    content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px;
+    background: #fff; border-radius: 50%; transition: 0.3s;
+}
+.toggle-switch input:checked + .slider { background: var(--ink-red); }
+.toggle-switch input:checked + .slider::after { transform: translateX(14px); }
+.label-text { font-family: 'Courier Prime', monospace; font-size: 0.7rem; }
+
+/* TABS */
+.tabs { display: flex; gap: 5px; margin-top: 15px; }
+.tab {
+    background: #dcdcdc; border: 1px solid #bbb; border-bottom: none;
+    padding: 5px 15px; border-radius: 5px 5px 0 0;
+    font-family: 'Courier Prime', monospace; cursor: pointer; color: #666;
+}
+.tab.active {
+    background: var(--paper-base); color: var(--ink-red); font-weight: bold;
+    height: 40px; margin-top: -5px; box-shadow: 0 -2px 3px rgba(0,0,0,0.05);
+}
+
+/* TABLE AREA */
+.summary-viz {
+    padding: 20px; background: rgba(255,255,255,0.7); margin: 20px;
+    border: 1px dashed #aaa; display: flex; align-items: center; gap: 20px;
+}
+.skill-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.skill-table th {
+    text-align: left; font-family: 'Courier Prime', monospace;
+    border-bottom: 2px solid var(--ink-main); padding: 5px 15px; color: var(--ink-sub);
+}
+.skill-table td { padding: 0 15px; height: 60px; vertical-align: middle; border-bottom: none; }
+
+.skill-table td:nth-child(1) { font-family: 'Shippori Mincho', serif; font-weight: bold; font-size: 1.1rem; }
+.skill-table td:nth-child(2) { font-family: 'Courier Prime', monospace; font-size: 1.4rem; font-weight: bold; }
+
+/* 技能詳細入力欄（手書き風） */
+.skill-desc-inp {
+    width: 100%; background: transparent; border: none; font-family: 'Klee One', cursive;
+    color: var(--ink-blue); font-size: 1rem; line-height: 1.5; resize: none; overflow: hidden; padding: 0;
+}
+.skill-desc-inp:focus { outline: none; }
+
+/* ★ SHORT DESC MODE: 1行省略表示 */
+.short-view .skill-desc-inp {
+    height: 1.5em !important;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    display: block;
+    overflow: hidden !important;
+    opacity: 0.8;
+}
+/* カーソル合わせると展開 */
+.short-view .skill-desc-inp:hover,
+.short-view .skill-desc-inp:focus {
+    height: auto !important;
+    white-space: normal;
+    background: rgba(255,255,255,0.9);
+    position: relative; z-index: 100;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+    padding: 5px;
+}
+
+/* マーカー風バー */
+.dist-bar-track { height: 12px; display: flex; gap: 2px; margin-top: 5px; }
+.dist-bar-track div {
+    height: 100%; opacity: 0.7; mix-blend-mode: multiply;
+    border-radius: 2px 4px 4px 2px; transform: skewX(-10deg);
+}
+.d-init { background: #999; } .d-job { background: #333; } .d-int { background: #ff0055; } .d-grow { background: #00cc44; }
+
+/* バッジ */
+.mastery-badge {
+    border: 2px solid currentColor; border-radius: 50%; padding: 2px 4px;
+    font-family: 'Courier Prime', monospace; font-size: 0.6rem;
+    transform: rotate(-15deg); margin-left: 5px; display: inline-block;
+}
+
+/* ★ SWAP MODE: SKILLS ON RIGHT (コンパクト化) */
+.dashboard-grid.swapped .skill-table th:nth-child(3),
+.dashboard-grid.swapped .skill-table td:nth-child(3) .dist-bar-track,
+.dashboard-grid.swapped .skill-table td:nth-child(3) .val-row {
+    display: none; /* 詳細バーと数値を隠す */
+}
+.dashboard-grid.swapped .skill-table td { height: auto; padding: 10px 15px; border-bottom: 1px dashed #ccc; }
+.dashboard-grid.swapped .summary-viz { flex-direction: column; text-align: center; }
+
+/* =========================================
+   6. DATABASE (Right or Center)
+   ========================================= */
+.col-right { display: flex; flex-direction: column; height: fit-content; }
+
+.info-deck {
+    height: 100%; background: #f4f0e6;
+    border: 1px solid #d4c4a8; min-height: 600px;
+    border-radius: 2px;
+}
+
+.deck-header { background: #eaddcf; padding: 15px; border-bottom: 1px solid #d4c4a8; }
+.deck-tabs { display: flex; gap: 2px; overflow-x: auto; margin-top: 10px; }
+.d-tab {
+    background: #d4c4a8; border: none; padding: 5px 10px;
+    font-family: 'Courier Prime', monospace; font-size: 0.75rem;
+    cursor: pointer; color: #555; white-space: nowrap;
+}
+.d-tab:hover { background: #dfd4c0; }
+.d-tab.active { background: #f4f0e6; font-weight: bold; color: #000; }
+
+.deck-content { padding: 20px; font-family: 'Klee One', cursive; color: var(--ink-main); }
+.deck-pane { display: none; height: 100%; flex-direction: column; }
+.deck-pane.active { display: flex; }
+
+/* メモ帳エリア */
+#memoArea {
+    width: 100%; height: 100%; min-height: 400px;
+    background: transparent; border: none;
+    font-family: 'Klee One', cursive; font-size: 1.1rem;
+    color: var(--ink-main); line-height: 1.8rem;
+    background-image: linear-gradient(transparent 1.7rem, #ccc 1.7rem);
+    background-size: 100% 1.8rem; background-attachment: local;
+}
+#memoArea:focus { outline: none; }
+
+/* アイテムリスト（右側表示時の読みやすさ重視） */
+.item-row {
+    border-bottom: 1px dotted #aaa; padding: 8px 0;
+    display: flex; flex-direction: column;
+}
+.item-name {
+    font-family: 'Shippori Mincho', serif; font-weight: bold;
+    border-left: 3px solid var(--ink-red); padding-left: 5px;
+    color: var(--ink-main);
+}
+.item-desc-inp {
+    width: 100%; background: transparent; border: none;
+    font-family: 'Klee One', cursive; color: var(--ink-sub);
+    font-size: 0.9rem; resize: none; margin-top: 2px;
+}
+
+/* ★ SWAP MODE: DATABASE IN CENTER (広々と表示) */
+.dashboard-grid.swapped .deck-content {
+    background: 
+        linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
+    background-size: 20px 20px; /* 方眼紙風 */
+}
+.dashboard-grid.swapped .item-row {
+    background: #fff; border: 1px solid #ddd;
+    padding: 15px; margin-bottom: 10px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.05);
+    transform: rotate(-0.5deg);
+}
+.dashboard-grid.swapped .item-name { font-size: 1.2rem; border-left-width: 5px; }
+.dashboard-grid.swapped .item-desc-inp { font-size: 1rem; color: var(--ink-main); }
+
+/* =========================================
+   7. UTILITIES
+   ========================================= */
+#themeSwitcher {
+    position: fixed; top: 10px; right: 10px; z-index: 1000;
+    font-family: 'Courier Prime', monospace; background: #fff;
+    border: 2px solid #333; padding: 5px 15px; cursor: pointer;
+    box-shadow: 3px 3px 0 #333; font-weight: bold;
+}
+#themeSwitcher:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #333; }
+
+/* モーダル */
+dialog { background: #fff; border: 2px solid #333; color: #000; padding: 20px; box-shadow: 10px 10px 0 rgba(0,0,0,0.2); }
+dialog::backdrop { background: rgba(0,0,0,0.5); }
+.modal-head { display: flex; justify-content: space-between; font-family: 'Courier Prime', monospace; border-bottom: 2px solid #333; margin-bottom: 10px; }
+.close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+#savedList li { padding: 5px; border-bottom: 1px dashed #ccc; cursor: pointer; font-family: 'Klee One', cursive; }
+#savedList li:hover { background: #eee; color: var(--ink-red); }
+
+/* レスポンシブ */
+@media (max-width: 1200px) {
+    .dashboard-grid, .dashboard-grid.swapped {
+        grid-template-columns: 1fr; display: block; padding: 20px;
+    }
+    .col-left, .col-center, .col-right { margin-bottom: 30px; }
+}

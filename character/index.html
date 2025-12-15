@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBER_OS // SYSTEM_V6.0</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Zen+Kaku+Gothic+New:wght@300;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <link id="mainStyle" rel="stylesheet" href="style.css">
+    
+    <script src="data.js" defer></script>
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <div class="scanlines"></div>
+
+    <button id="themeSwitcher" class="theme-switch-btn">◆ THEME: CYBER</button>
+
+    <div id="boot-screen">
+        <div class="boot-terminal">
+            <h1 class="glitch" data-text="CYBER_OS_V6.0">CYBER_OS_V6.0</h1>
+            <div class="loader-bar"><div class="bar-fill"></div></div>
+            <p class="sys-msg">> EXPANDING VISUAL MODULES...</p>
+            
+            <div class="upload-area">
+                <label class="cyber-btn large">
+                    <span class="icon">📂</span> IMPORT DATA [.txt]
+                    <input type="file" id="fileInput" accept=".txt">
+                </label>
+                <div class="sub-actions">
+                    <button id="btnLocalLoad" class="cyber-btn text-btn">LOAD MEMORY</button>
+                    <button id="btnLocalSave" class="cyber-btn text-btn">SAVE MEMORY</button>
+                </div>
+            </div>
+            <p class="version-info">TARGET: IaChara Export Format</p>
+        </div>
+    </div>
+
+    <div class="dashboard-grid" id="dashboard">
+        
+        <aside class="col-left">
+            <div class="panel profile-card">
+                <div class="img-frame">
+                    <img src="" id="charImage" alt="NO_SIGNAL">
+                    <div class="scan-bar"></div>
+                </div>
+                <div class="name-box">
+                    <h2 id="charName">NO DATA</h2>
+                    <span id="charKana" class="kana-text"></span>
+                </div>
+                <div class="meta-info">
+                    <div id="charJob" class="job-text">UNKNOWN CLASS</div>
+                    <div id="charAge" class="age-text">AGE: ??</div>
+                </div>
+                <div id="charTags" class="tag-cloud"></div>
+            </div>
+
+            <div class="panel vitals-module">
+                <h3>VITAL MONITOR</h3>
+                <div class="vital-row">
+                    <div class="vital-head"><span>HP</span><span id="valHP" class="vital-val">0/0</span></div>
+                    <div class="bar-track"><div id="barHP" class="bar-fill hp"></div></div>
+                </div>
+                <div class="vital-row">
+                    <div class="vital-head"><span>MP</span><span id="valMP" class="vital-val">0/0</span></div>
+                    <div class="bar-track"><div id="barMP" class="bar-fill mp"></div></div>
+                </div>
+                <div class="vital-row">
+                    <div class="vital-head"><span>SAN</span><span id="valSAN" class="vital-val">0/0</span></div>
+                    <div class="bar-track"><div id="barSAN" class="bar-fill san"></div></div>
+                </div>
+                <div class="db-row">
+                    <span class="db-label">DAMAGE BONUS (DB)</span>
+                    <span id="valDB" class="db-val">±0</span>
+                </div>
+            </div>
+
+            <div class="panel stats-module">
+                <h3>ATTRIBUTE MATRIX</h3>
+                <div class="chart-container-sq">
+                    <canvas id="mainStatsChart"></canvas>
+                </div>
+                <div class="stats-grid" id="rawStatsGrid"></div>
+                
+                <div class="status-flavor-container">
+                    <h4>STATUS EVALUATION</h4>
+                    <ul id="statusFlavorList" class="flavor-list"></ul>
+                </div>
+            </div>
+        </aside>
+
+        <section class="col-center panel skill-panel">
+            <div class="panel-header sticky-header">
+                <div class="header-top">
+                    <div class="header-title-area">
+                        <h3>SKILL ANALYZER</h3>
+                        <button class="swap-btn-trigger swap-btn" title="Swap Layout">⇄ SWAP</button>
+                    </div>
+                    
+                    <div class="toggles-area">
+                        <label class="toggle-switch" title="説明文を短く表示">
+                            <input type="checkbox" id="shortDescToggle">
+                            <span class="slider"></span>
+                            <span class="label-text">SHORT DESC</span>
+                        </label>
+                        
+                        <label class="toggle-switch" title="初期値から成長していない技能を隠す">
+                            <input type="checkbox" id="hideInitToggle">
+                            <span class="slider"></span>
+                            <span class="label-text">HIDE INITIAL</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="tabs" id="skillTabs">
+                    <button class="tab active" data-cat="summary">総合 (SUMMARY)</button>
+                    <button class="tab" data-cat="combat">戦闘</button>
+                    <button class="tab" data-cat="explore">探索</button>
+                    <button class="tab" data-cat="action">行動</button>
+                    <button class="tab" data-cat="negotiate">交渉</button>
+                    <button class="tab" data-cat="knowledge">知識</button>
+                </div>
+            </div>
+
+            <div class="skill-content-area">
+                <div id="summaryViz" class="summary-viz">
+                    <div class="viz-wrapper large-viz">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                    <div class="viz-info">
+                        <h4 id="chartTitle">ANALYSIS</h4>
+                        <p id="chartDesc">Select a category to view details.</p>
+                    </div>
+                </div>
+
+                <div class="table-wrapper scroller">
+                    <table class="skill-table">
+                        <thead>
+                            <tr>
+                                <th width="25%">SKILL NAME</th>
+                                <th width="10%">VAL</th>
+                                <th width="65%">POINT DISTRIBUTION</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skillListBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <aside class="col-right panel info-deck">
+            <div class="deck-header">
+                <div class="header-top">
+                    <div class="header-title-area">
+                        <h3>DATABASE</h3>
+                        <button class="swap-btn-trigger swap-btn" title="Swap Layout">⇄ SWAP</button>
+                    </div>
+                </div>
+                <div class="deck-tabs" id="infoTabs">
+                    <button class="d-tab active" data-target="panelMemo">MEMO</button>
+                    <button class="d-tab" data-target="panelItem">ITEMS</button>
+                    <button class="d-tab" data-target="panelSpells">MAGIC/AF</button> <button class="d-tab" data-target="panelEntities">ENTITY</button> <button class="d-tab" data-target="panelHistory">LOGS</button>
+                </div>
+            </div>
+
+            <div class="deck-content scroller">
+                <div id="panelMemo" class="deck-pane active">
+                    <textarea id="memoArea" class="cyber-input" placeholder="Character notes..."></textarea>
+                </div>
+
+                <div id="panelItem" class="deck-pane">
+                    <div class="item-list" id="itemList"></div>
+                </div>
+
+                <div id="panelSpells" class="deck-pane">
+                    <div class="content-box" id="spellsList"></div>
+                </div>
+
+                <div id="panelEntities" class="deck-pane">
+                    <div class="content-box" id="entitiesList"></div>
+                </div>
+
+                <div id="panelHistory" class="deck-pane">
+                    <div class="content-box" id="scenarioList"></div>
+                </div>
+            </div>
+        </aside>
+
+    </div>
+
+    <dialog id="loadDialog">
+        <div class="modal-box">
+            <div class="modal-head">
+                <h3>Load from Local Storage</h3>
+                <button class="close-btn" onclick="document.getElementById('loadDialog').close()">×</button>
+            </div>
+            <ul id="savedList" class="scroller"></ul>
+        </div>
+    </dialog>
+</body>
+</html>
