@@ -1,4 +1,7 @@
 // --- script.js ---
+// ★一番上にこの行がないと動きません！
+import { login, logout, monitorAuth, saveToCloud, loadFromCloud } from "./firestore.js";
+
 // --- GLOBAL STATE ---
 let charData = null;
 let charts = { main: null, category: null };
@@ -10,7 +13,8 @@ const els = {
     hideToggle: document.getElementById('hideInitToggle'),
     shortDescToggle: document.getElementById('shortDescToggle'),
     summaryViz: document.getElementById('summaryViz'),
-    localSave: document.getElementById('btnLocalSave'),
+    // 古いローカル保存ボタンは使わないので削除しても良いですが、エラー防止のため残してもOK
+    localSave: document.getElementById('btnLocalSave'), // HTMLでIDを変えたので、下で再取得します
     localLoad: document.getElementById('btnLocalLoad'),
     modal: document.getElementById('loadDialog'),
     savedList: document.getElementById('savedList'),
@@ -18,8 +22,8 @@ const els = {
     chartTitle: document.getElementById('chartTitle'),
     chartDesc: document.getElementById('chartDesc'),
     dashboard: document.getElementById('dashboard'),
-    themeSwitcher: document.getElementById('themeSwitcher'), // Added
-    mainStyle: document.getElementById('mainStyle')          // Added
+    themeSwitcher: document.getElementById('themeSwitcher'),
+    mainStyle: document.getElementById('mainStyle')
 };
 
 const CAT_COLORS = {
@@ -38,6 +42,59 @@ function adjustHeight(el) {
 }
 
 // --- EVENTS ---
+// ★ここから新しいボタンの設定です
+const btnLogin = document.getElementById('btnLogin');
+const btnLogout = document.getElementById('btnLogout');
+const btnCloudSave = document.getElementById('btnLocalSave'); // IDはSAVE CLOUDボタンのもの
+const btnCloudLoad = document.getElementById('btnLocalLoad'); // IDはLOAD CLOUDボタンのもの
+
+if(btnLogin) btnLogin.addEventListener('click', login);
+if(btnLogout) btnLogout.addEventListener('click', logout);
+
+// 認証状態を監視してボタンを切り替える
+monitorAuth(
+    (user) => { // ログインした時
+        if(btnLogin) btnLogin.classList.add('hidden');
+        if(btnLogout) {
+            btnLogout.classList.remove('hidden');
+            btnLogout.textContent = "DISCONNECT (" + user.displayName + ")";
+        }
+    },
+    () => { // ログアウトした時
+        if(btnLogin) btnLogin.classList.remove('hidden');
+        if(btnLogout) btnLogout.classList.add('hidden');
+    }
+);
+
+// 保存ボタン（クラウド用）
+if(btnCloudSave) {
+    btnCloudSave.addEventListener('click', () => {
+        if(!charData) return;
+        charData.memo = document.getElementById('memoArea').value;
+        saveToCloud(charData); // firestore.jsの機能を呼ぶ
+    });
+}
+
+// 読み込みボタン（クラウド用）
+if(btnCloudLoad) {
+    btnCloudLoad.addEventListener('click', async () => {
+        const cloudStore = await loadFromCloud(); // firestore.jsの機能を呼ぶ
+        
+        if(cloudStore) {
+            const list = document.getElementById('savedList'); 
+            list.innerHTML='';
+            Object.keys(cloudStore).forEach(k => {
+                const li = document.createElement('li');
+                li.textContent = "☁️ " + k;
+                li.onclick = () => { launchDashboard(cloudStore[k]); document.getElementById('loadDialog').close(); };
+                list.appendChild(li);
+            });
+            document.getElementById('loadDialog').showModal();
+        }
+    });
+}
+
+// --- 既存の機能 ---
 els.file.addEventListener('change', handleFile);
 els.hideToggle.addEventListener('change', () => renderCurrentTab());
 
@@ -50,11 +107,11 @@ els.shortDescToggle.addEventListener('change', (e) => {
     }
 });
 
-// ★ THEME SWITCH LOGIC
 els.themeSwitcher.addEventListener('click', () => {
     const currentHref = els.mainStyle.getAttribute('href');
-    if (currentHref.includes('cork')) {
-        els.mainStyle.setAttribute('href', 'style.css');
+    // パスが変わったのでファイル名だけで判定するように修正
+    if (currentHref.includes('style-cork.css')) {
+        els.mainStyle.setAttribute('href', 'style.css'); // 同階層ならファイル名だけでOK
         els.themeSwitcher.textContent = '◆ THEME: CYBER';
     } else {
         els.mainStyle.setAttribute('href', 'style-cork.css');
@@ -62,9 +119,7 @@ els.themeSwitcher.addEventListener('click', () => {
     }
 });
 
-els.localSave.addEventListener('click', saveMemory);
-els.localLoad.addEventListener('click', loadMemoryMenu);
-
+// タブ切り替えなどはそのまま
 els.tabs.addEventListener('click', (e) => {
     if(e.target.classList.contains('tab')) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -131,7 +186,7 @@ function renderCurrentTab() {
     renderSkillSection(activeCat);
 }
 
-// --- PARSER ---
+// --- PARSER (変更なし) ---
 function parseData(text) {
     const d = {
         name: '', kana: '', job: '', age: '??', tags: '', image: '', db: '±0',
@@ -456,24 +511,4 @@ function chartOpts(max) {
         }},
         plugins: { legend: {display:false} }, maintainAspectRatio: false
     };
-}
-
-function saveMemory() {
-    if(!charData) return;
-    charData.memo = document.getElementById('memoArea').value;
-    let s = JSON.parse(localStorage.getItem('cy_v5_store'))||{};
-    s[charData.name] = charData;
-    localStorage.setItem('cy_v5_store', JSON.stringify(s));
-    alert('SAVED');
-}
-function loadMemoryMenu() {
-    const s = JSON.parse(localStorage.getItem('cy_v5_store'))||{};
-    const list = document.getElementById('savedList'); list.innerHTML='';
-    Object.keys(s).forEach(k => {
-        const li = document.createElement('li');
-        li.textContent = k;
-        li.onclick = () => { launchDashboard(s[k]); document.getElementById('loadDialog').close(); };
-        list.appendChild(li);
-    });
-    document.getElementById('loadDialog').showModal();
 }
