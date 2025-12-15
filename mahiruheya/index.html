@@ -273,8 +273,8 @@
             this.stage = document.getElementById('game-stage');
             this.char = document.getElementById('character');
             this.bg = new Image();
-            this.bg.src = 'images/background/gamebg-heya1.png';
-            this.bg.onerror = () => { this.bg.src = 'images/background/gamebg-heya1.png'; };
+            this.bg.src = '../images/background/gamebg-heya1.png';
+            this.bg.onerror = () => { this.bg.src = '../images/background/gamebg-heya1.png'; };
             this.bg.onload = () => this.resize();
 
             this.stats = { h: 70, f: 70 };
@@ -379,7 +379,7 @@
             if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
             
             const img = new Image();
-            img.src = "images/hoko/mahiru.png";
+            img.src = "../images/hoko/mahiru.png";
             img.onload = () => {
                 this.sprite.w = img.width / 3;
                 this.sprite.h = img.height / 4;

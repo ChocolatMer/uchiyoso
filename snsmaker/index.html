@@ -339,7 +339,7 @@
                         <span class="bg-black/10 text-white text-[11px] px-3 py-1 rounded-full cursor-text date-label" contenteditable="true">今日</span>
                     </div>
                     <div class="flex justify-start items-end gap-2 relative z-10 message-row" data-sender-id="char1">
-                        <img src="images/icons/lineicon-syu.png" onerror="this.src='https://placehold.co/100x100/orange/white?text=S'" class="w-12 h-12 rounded-full mb-auto border border-gray-300 bg-white object-cover">
+                        <img src="../images/icons/lineicon-syu.png" onerror="this.src='https://placehold.co/100x100/orange/white?text=S'" class="w-12 h-12 rounded-full mb-auto border border-gray-300 bg-white object-cover">
                         <div>
                             <div class="bubble-wrapper">
                                 <div class="bubble bubble-left" contenteditable="true">サンプル</div>
@@ -423,9 +423,9 @@
                 <div id="attachment-panel" class="min-h-[50px]">
                     <div id="input-sticker-area" class="hidden">
                         <div class="grid grid-cols-3 gap-2 mb-2">
-                            <img src="https://placehold.co/200x200/png?text=OK!" onclick="selectSticker(this)" class="cursor-pointer rounded border-2 border-transparent hover:border-green-500 transition">
-                            <img src="https://placehold.co/200x200/png?text=LOVE" onclick="selectSticker(this)" class="cursor-pointer rounded border-2 border-transparent hover:border-green-500 transition">
-                            <img src="https://placehold.co/200x200/png?text=Shock" onclick="selectSticker(this)" class="cursor-pointer rounded border-2 border-transparent hover:border-green-500 transition">
+                            <img src="../https://placehold.co/200x200/png?text=OK!" onclick="selectSticker(this)" class="cursor-pointer rounded border-2 border-transparent hover:border-green-500 transition">
+                            <img src="../https://placehold.co/200x200/png?text=LOVE" onclick="selectSticker(this)" class="cursor-pointer rounded border-2 border-transparent hover:border-green-500 transition">
+                            <img src="../https://placehold.co/200x200/png?text=Shock" onclick="selectSticker(this)" class="cursor-pointer rounded border-2 border-transparent hover:border-green-500 transition">
                         </div>
                         <div class="text-xs text-gray-500 mt-2">※スタンプ画像のアップロード</div>
                         <input type="file" id="sticker-upload" accept="image/*" class="mt-2 text-xs w-full">
@@ -487,10 +487,10 @@
         // Init Data with defaultIcon property for Reset fix
         let characters = [
             { id: 'me', name: '自分', type: 'me', icon: '', defaultIcon: '' },
-            { id: 'char1', name: '鱸', type: 'other', icon: 'images/icons/lineicon-syu.png', defaultIcon: 'images/icons/lineicon-syu.png' },
-            { id: 'char2', name: 'Yua', type: 'other', icon: 'images/icons/lineicon-yua.png', defaultIcon: 'images/icons/lineicon-yua.png' },
-            { id: 'char3', name: '天空', type: 'other', icon: 'images/icons/lineicon-sora.png', defaultIcon: 'images/icons/lineicon-sora.png' },
-            { id: 'char4', name: '雨蓮', type: 'other', icon: 'images/icons/lineicon-uren.png', defaultIcon: 'images/icons/lineicon-uren.png' },
+            { id: 'char1', name: '鱸', type: 'other', icon: '../images/icons/lineicon-syu.png', defaultIcon: 'images/icons/lineicon-syu.png' },
+            { id: 'char2', name: 'Yua', type: 'other', icon: '../images/icons/lineicon-yua.png', defaultIcon: 'images/icons/lineicon-yua.png' },
+            { id: 'char3', name: '天空', type: 'other', icon: '../images/icons/lineicon-sora.png', defaultIcon: 'images/icons/lineicon-sora.png' },
+            { id: 'char4', name: '雨蓮', type: 'other', icon: '../images/icons/lineicon-uren.png', defaultIcon: 'images/icons/lineicon-uren.png' },
         ];
 
         // Default set to 'call' as requested
