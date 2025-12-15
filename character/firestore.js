@@ -5,7 +5,6 @@ import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChang
 import { getFirestore, doc, setDoc, getDoc } 
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// ★今貼っていただいた「正しい設定」に書き換えました！
 const firebaseConfig = {
   apiKey: "AIzaSyBZVh6NhFA_BSuyUW-sZV2QPSvSzdYJZWU",
   authDomain: "chocolatmer-uchiyoso.firebaseapp.com",
@@ -111,3 +110,4 @@ export async function loadFromCloud() {
         return null;
     }
 }
+
