@@ -188,6 +188,7 @@ function renderCurrentTab() {
 
 // --- PARSER (変更なし) ---
 function parseData(text) {
+    id: crypto.randomUUID(),
     const d = {
         name: '', kana: '', job: '', age: '??', tags: '', image: '', db: '±0',
         stats: {}, vitals: {}, skills: {combat:[], explore:[], action:[], negotiate:[], knowledge:[]},
@@ -512,3 +513,15 @@ function chartOpts(max) {
         plugins: { legend: {display:false} }, maintainAspectRatio: false
     };
 }
+// ヘッダーの「保存」ボタンが押されたら、この関数が呼ばれます
+window.prepareSaveData = function() {
+    if(!charData) {
+        alert("データが読み込まれていません。");
+        return null;
+    }
+    // 画面のメモ欄の内容を最新データに反映
+    const memo = document.getElementById('memoArea');
+    if(memo) charData.memo = memo.value;
+    
+    return charData; // ヘッダーにデータを渡す
+};

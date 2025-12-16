@@ -11,33 +11,14 @@
     <link id="mainStyle" rel="stylesheet" href="style.css">
     
     <script src="data.js" defer></script>
-<script type="module" src="firestore.js"></script>
-<script type="module" src="script.js"></script>
+
 </head>
 <body>
     <div class="scanlines"></div>
 
     <button id="themeSwitcher" class="theme-switch-btn">◆ THEME: CYBER</button>
 
-    <div id="boot-screen">
-        <div class="boot-terminal">
-            <h1 class="glitch" data-text="CYBER_OS_V6.0">CYBER_OS_V6.0</h1>
-            <div class="loader-bar"><div class="bar-fill"></div></div>
-            <p class="sys-msg">> EXPANDING VISUAL MODULES...</p>
-            
-            <div class="upload-area">
-                <label class="cyber-btn large">
-                    <span class="icon">📂</span> IMPORT DATA [.txt]
-                    <input type="file" id="fileInput" accept=".txt">
-                </label>
-                <div class="sub-actions">
-    <button id="btnLogin" class="cyber-btn text-btn">CONNECT NET (LOGIN)</button>
-    <button id="btnLogout" class="cyber-btn text-btn hidden">DISCONNECT</button>
     
-    <button id="btnLocalLoad" class="cyber-btn text-btn">LOAD CLOUD</button>
-    <button id="btnLocalSave" class="cyber-btn text-btn">SAVE CLOUD</button>
-　　　　　　　</div>
-            </div>
             <p class="version-info">TARGET: IaChara Export Format</p>
         </div>
     </div>
@@ -203,5 +184,16 @@
             <ul id="savedList" class="scroller"></ul>
         </div>
     </dialog>
+
+<script type="module">
+        // ヘッダー（黒いバー）を読み込んで表示する
+        import { initHeader } from "./header.js";
+        initHeader();
+    </script>
+
+    <script src="script.js" type="module"></script>
+
+</body> </html>
+
 </body>
 </html>
