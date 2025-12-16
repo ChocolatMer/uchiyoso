@@ -227,41 +227,16 @@ function renderProfile(d) {
     setBar('SAN', d.vitals.san, 99);
 
     const sGrid = document.getElementById('rawStatsGrid'); sGrid.innerHTML='';
-    if(d.stats) {
-        Object.keys(d.stats).forEach(k => sGrid.innerHTML+=`<div class="stat-box"><small>${k}</small><span>${d.stats[k]}</span></div>`);
-    }
-
-    // ★修正: ステータス評価 (STATUS EVALUATION) のロジックを復活
-    const fList = document.getElementById('statusFlavorList');
-    // data.js で定義された STATUS_FLAVOR が読み込まれているか確認
-    if (fList && typeof STATUS_FLAVOR !== 'undefined' && d.stats) {
-        fList.innerHTML = '';
-        Object.keys(d.stats).forEach(key => {
-            const val = d.stats[key];
-            let text = "---";
-            if(STATUS_FLAVOR[key]) {
-                if(STATUS_FLAVOR[key][val]) text = STATUS_FLAVOR[key][val];
-                else {
-                    // 範囲外の数値の場合、近似値を探すロジック
-                    const keys = Object.keys(STATUS_FLAVOR[key]).map(Number).sort((a,b)=>a-b);
-                    if(val <= keys[0]) text = STATUS_FLAVOR[key][keys[0]];
-                    else if(val >= keys[keys.length-1]) text = STATUS_FLAVOR[key][keys[keys.length-1]];
-                }
-            }
-            const li = document.createElement('li');
-            li.innerHTML = `<span class="flavor-label">${key}</span> <span class="flavor-text">${text}</span>`;
-            fList.appendChild(li);
-        });
-    }
+    Object.keys(d.stats).forEach(k => sGrid.innerHTML+=`<div class="stat-box"><small>${k}</small><span>${d.stats[k]}</span></div>`);
 
     const ctx = document.getElementById('mainStatsChart').getContext('2d');
     if(charts.main) charts.main.destroy();
     charts.main = new Chart(ctx, {
         type: 'radar',
         data: {
-            labels: Object.keys(d.stats || {}),
+            labels: Object.keys(d.stats),
             datasets: [{
-                label: 'BASE', data: Object.values(d.stats || {}),
+                label: 'BASE', data: Object.values(d.stats),
                 backgroundColor: 'rgba(255,0,85,0.2)', borderColor: '#ff0055', borderWidth: 1, pointRadius: 0
             }]
         },
