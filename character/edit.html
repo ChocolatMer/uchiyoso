@@ -206,7 +206,7 @@
         import { loadFromCloud, monitorAuth } from "./firestore.js";
         // ★重要: detaフォルダのschema.jsからマッピングと保存ロジックだけ読み込む
         // parseIaCharaはこのファイル内で定義して使う（schema.jsを変更しないため）
-        import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING } from "./deta/schema.js";
+        import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING } from "./data/schema.js";
 
         const getEl = (id) => document.getElementById(id);
         const setVal = (id, v) => { const el = getEl(id); if(el) el.value = (v == null ? '' : v); };
