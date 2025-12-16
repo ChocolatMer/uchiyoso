@@ -251,11 +251,6 @@
             });
         };
 
-        // 初期ロード
-        loadFromCloud().then(data => {
-            if(data) window.renderCharacterList(data);
-        });
-
         const btnPrev = document.getElementById('btnPrev');
         const btnNext = document.getElementById('btnNext');
         const SCROLL_AMOUNT = 210; 

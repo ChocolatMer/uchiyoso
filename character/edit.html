@@ -6,98 +6,84 @@
     <title>DATA EDITOR</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
-    
     <link href="edit/header.css" rel="stylesheet">
 
     <style>
         body {
-            background-color: #202020;
-            color: #ddd;
+            background-color: #202020; color: #ddd;
             font-family: 'Noto Sans JP', sans-serif;
             margin: 0; padding: 0;
         }
-
         .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 80px 20px 100px; /* ヘッダー分空ける */
+            max-width: 900px; margin: 0 auto; padding: 80px 20px 100px;
         }
 
         /* ツールバー */
         .toolbar {
-            background: #333; padding: 20px;
-            border-radius: 4px; margin-bottom: 30px;
-            display: flex; justify-content: space-between; align-items: center;
-            border: 1px solid #444;
+            background: #333; padding: 20px; border-radius: 4px; margin-bottom: 30px;
+            display: flex; justify-content: space-between; align-items: center; border: 1px solid #444;
         }
-        select {
-            padding: 10px; background: #111; color: #fff; border: 1px solid #555;
-            font-size: 1rem; width: 300px; border-radius: 4px;
-        }
-        .btn-new {
-            background: #44ff44; color: #000; border: none; padding: 10px 20px;
-            font-weight: bold; cursor: pointer; border-radius: 4px;
-        }
-        .btn-delete {
-            background: #ff4444; color: #fff; border: none; padding: 5px 10px;
-            cursor: pointer; border-radius: 4px; font-size: 0.8rem; margin-left: 10px;
-        }
+        select { padding: 10px; background: #111; color: #fff; border: 1px solid #555; width: 300px; border-radius: 4px; }
+        .btn-new { background: #44ff44; color: #000; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; border-radius: 4px; }
+        .btn-delete { background: #ff4444; color: #fff; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 0.8rem; }
 
-        /* フォームレイアウト */
-        h2 { border-bottom: 2px solid #555; padding-bottom: 10px; margin-top: 40px; color: #aaa; font-size: 1.2rem; }
-        
+        /* レイアウト */
+        h2 { border-bottom: 2px solid #555; padding-bottom: 10px; margin-top: 40px; color: #aaa; font-size: 1.1rem; display: flex; justify-content: space-between; align-items: flex-end; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .form-row { margin-bottom: 15px; }
         .form-row.full { grid-column: span 2; }
+        .form-row.tri { grid-column: span 3; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
 
-        label { display: block; color: #888; font-size: 0.8rem; margin-bottom: 5px; font-family: 'Roboto Mono', monospace; }
+        label { display: block; color: #888; font-size: 0.75rem; margin-bottom: 5px; font-family: 'Roboto Mono', monospace; }
         
-        input[type="text"], input[type="number"] {
+        input[type="text"], input[type="number"], input[type="date"] {
             width: 100%; padding: 10px; box-sizing: border-box;
             background: #2a2a2a; border: 1px solid #444; color: #fff;
-            border-radius: 4px; font-size: 1rem;
+            border-radius: 4px; font-size: 0.95rem;
         }
-        input:focus, textarea:focus { border-color: #44ff44; outline: none; background: #333; }
-
+        input:focus, textarea:focus, select:focus { border-color: #44ff44; outline: none; background: #333; }
         textarea {
             width: 100%; padding: 10px; box-sizing: border-box;
             background: #2a2a2a; border: 1px solid #444; color: #fff;
-            border-radius: 4px; font-size: 0.9rem; line-height: 1.6;
-            min-height: 100px; resize: vertical;
+            border-radius: 4px; font-size: 0.9rem; line-height: 1.6; min-height: 80px; resize: vertical;
         }
 
-        /* --- 画像セクション（2カラム） --- */
+        /* 分析エリア（右側のヒント） */
+        .calc-hint {
+            font-size: 0.75rem; color: #00f3ff; margin-top: 5px; text-align: right;
+            background: rgba(0, 243, 255, 0.1); padding: 5px 10px; border-radius: 4px;
+            display: inline-block; float: right;
+        }
+        .warn-hint { color: #ffaa00; background: rgba(255, 170, 0, 0.1); }
+
+        /* 画像エリア */
         .visual-grid {
             display: grid; grid-template-columns: 1fr 1fr; gap: 30px;
             background: #252525; padding: 20px; border-radius: 4px; border: 1px solid #444;
         }
-        .visual-box {
-            display: flex; flex-direction: column; gap: 10px;
-        }
         .img-preview-box {
-            width: 100%; height: 250px;
-            background: #000; border: 1px solid #444;
-            display: flex; align-items: center; justify-content: center;
-            overflow: hidden; position: relative;
+            width: 100%; height: 200px; background: #000; border: 1px solid #444;
+            display: flex; align-items: center; justify-content: center; position: relative;
         }
-        .img-preview {
-            max-width: 100%; max-height: 100%; object-fit: contain;
-        }
-        .img-label {
-            position: absolute; top: 5px; left: 5px;
-            background: rgba(0,0,0,0.7); color: #aaa;
-            padding: 2px 6px; font-size: 0.7rem; border-radius: 2px;
-        }
+        .img-preview { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .img-label { position: absolute; top: 5px; left: 5px; background: rgba(0,0,0,0.7); color: #aaa; padding: 2px 6px; font-size: 0.7rem; }
 
-        /* ステータス入力欄 */
+        /* ステータス */
         .stats-container {
             display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px;
             background: #252525; padding: 15px; border-radius: 4px;
         }
         .stat-box { text-align: center; }
-        .stat-box input { text-align: center; font-weight: bold; color: #44ff44; }
+        .stat-box input { text-align: center; font-weight: bold; color: #44ff44; font-size: 1.1rem; }
+        .derived-val { color: #888; font-size: 0.8rem; margin-top: 5px; }
 
-        .helper-text { font-size: 0.75rem; color: #666; margin-top: 4px; }
+        /* テキスト詳細のタブ風切り替え（シンプルに並べる形式に変更） */
+        .text-section {
+            border-left: 3px solid #444; padding-left: 15px; margin-bottom: 20px;
+        }
+        .text-section h3 { font-size: 0.9rem; color: #44ff44; margin: 0 0 10px 0; opacity: 0.8; }
     </style>
 </head>
 <body>
@@ -111,78 +97,133 @@
         
         <div class="toolbar">
             <div>
-                <label>EDIT TARGET (編集対象)</label>
-                <select id="charSelect">
-                    <option value="">LOADING...</option>
-                </select>
+                <label>EDIT TARGET</label>
+                <select id="charSelect"><option value="">LOADING...</option></select>
             </div>
             <div>
-                <button id="btnCreateNew" class="btn-new">+ CREATE NEW</button>
+                <button id="btnCreateNew" class="btn-new">+ NEW</button>
             </div>
         </div>
 
         <div id="editorArea" style="opacity:0.3; pointer-events:none;">
             
-            <h2>BASIC INFO</h2>
+            <h2>BASIC PROFILE</h2>
             <div class="form-grid">
                 <div class="form-row"><label>NAME (名前)</label><input type="text" id="inpName"></div>
                 <div class="form-row"><label>KANA (フリガナ)</label><input type="text" id="inpKana"></div>
                 <div class="form-row"><label>JOB (職業)</label><input type="text" id="inpJob"></div>
-                <div class="form-row"><label>AGE (年齢)</label><input type="text" id="inpAge"></div>
-                <div class="form-row full"><label>TAGS (スペース区切り)</label><input type="text" id="inpTags"></div>
+                <div class="form-row"><label>TAGS (タグ)</label><input type="text" id="inpTags"></div>
+            </div>
+
+            <div class="grid-4">
+                <div class="form-row">
+                    <label>AGE (年齢)</label>
+                    <input type="number" id="inpAge">
+                    <div id="eduHint" class="calc-hint" style="display:none;"></div>
+                </div>
+                <div class="form-row"><label>GENDER (性別)</label><input type="text" id="inpGender" placeholder="男/女/その他"></div>
+                <div class="form-row"><label>BIRTHDAY (誕生日)</label><input type="text" id="inpBirthday" placeholder="12月6日"></div>
+                <div class="form-row"><label>BIRTHPLACE (出身)</label><input type="text" id="inpOrigin"></div>
+            </div>
+
+            <div class="grid-3" style="background:#252525; padding:15px; border-radius:4px; margin-top:10px;">
+                <div class="form-row">
+                    <label>HEIGHT (cm)</label>
+                    <input type="number" id="inpHeight">
+                    <div id="heightAvg" class="calc-hint derived-val"></div>
+                </div>
+                <div class="form-row">
+                    <label>WEIGHT (kg)</label>
+                    <input type="number" id="inpWeight">
+                    <div id="weightAvg" class="calc-hint derived-val"></div>
+                </div>
+                <div class="form-row">
+                    <label>BMI / BODY TYPE</label>
+                    <input type="text" id="outBMI" readonly style="background:#111; color:#888; border:none;">
+                </div>
+            </div>
+
+            <div class="grid-3" style="margin-top:15px;">
+                <div class="form-row"><label>HAIR COLOR (髪色)</label><input type="text" id="inpHair"></div>
+                <div class="form-row"><label>EYE COLOR (瞳の色)</label><input type="text" id="inpEye"></div>
+                <div class="form-row"><label>SKIN COLOR (肌の色)</label><input type="text" id="inpSkin"></div>
             </div>
 
             <h2>VISUALS</h2>
             <div class="visual-grid">
-                <div class="visual-box">
-                    <label>STANDING ART (全身立ち絵)</label>
-                    <div class="img-preview-box">
-                        <span class="img-label">BODY</span>
-                        <img id="previewBody" class="img-preview" src="">
-                    </div>
-                    <input type="text" id="inpImageBody" placeholder="https://... (URL)">
-                    <div class="helper-text">詳細画面やカードの背景に使われます</div>
+                <div>
+                    <label>STANDING ART (全身)</label>
+                    <div class="img-preview-box"><span class="img-label">BODY</span><img id="previewBody" class="img-preview"></div>
+                    <input type="text" id="inpImageBody" placeholder="URL..." style="margin-top:5px;">
                 </div>
-
-                <div class="visual-box">
-                    <label>FACE ICON (顔アイコン)</label>
-                    <div class="img-preview-box">
-                        <span class="img-label">ICON</span>
-                        <img id="previewIcon" class="img-preview" src="">
-                    </div>
-                    <input type="text" id="inpImageIcon" placeholder="https://... (URL)">
-                    <div class="helper-text">チャットやリストのサムネイル用</div>
+                <div>
+                    <label>FACE ICON (アイコン)</label>
+                    <div class="img-preview-box"><span class="img-label">ICON</span><img id="previewIcon" class="img-preview"></div>
+                    <input type="text" id="inpImageIcon" placeholder="URL..." style="margin-top:5px;">
                 </div>
             </div>
 
-            <h2>STATS & VITALS</h2>
-            <div class="form-row">
-                <label>MAIN STATS</label>
-                <div class="stats-container">
-                    <div class="stat-box"><label>STR</label><input type="number" id="s_str"></div>
-                    <div class="stat-box"><label>CON</label><input type="number" id="s_con"></div>
-                    <div class="stat-box"><label>POW</label><input type="number" id="s_pow"></div>
-                    <div class="stat-box"><label>DEX</label><input type="number" id="s_dex"></div>
-                    <div class="stat-box"><label>APP</label><input type="number" id="s_app"></div>
-                    <div class="stat-box"><label>SIZ</label><input type="number" id="s_siz"></div>
-                    <div class="stat-box"><label>INT</label><input type="number" id="s_int"></div>
-                    <div class="stat-box"><label>EDU</label><input type="number" id="s_edu"></div>
-                </div>
+            <h2>STATS & VITALS <span style="font-size:0.8rem; font-weight:normal;">(自動算出: 知識=EDU*5, アイデア=INT*5, 幸運=POW*5)</span></h2>
+            <div class="stats-container">
+                <div class="stat-box"><label>STR</label><input type="number" id="s_str"></div>
+                <div class="stat-box"><label>CON</label><input type="number" id="s_con"></div>
+                <div class="stat-box"><label>POW</label><input type="number" id="s_pow"><div class="derived-val">LUCK:<span id="val_luck">0</span></div></div>
+                <div class="stat-box"><label>DEX</label><input type="number" id="s_dex"></div>
+                <div class="stat-box"><label>APP</label><input type="number" id="s_app"></div>
+                <div class="stat-box"><label>SIZ</label><input type="number" id="s_siz"></div>
+                <div class="stat-box"><label>INT</label><input type="number" id="s_int"><div class="derived-val">IDE:<span id="val_idea">0</span></div></div>
+                <div class="stat-box"><label>EDU</label><input type="number" id="s_edu"><div class="derived-val">KNOW:<span id="val_know">0</span></div></div>
             </div>
 
-            <div class="form-grid" style="margin-top:20px;">
-                <div class="form-row"><label>HP</label><input type="number" id="v_hp"></div>
-                <div class="form-row"><label>MP</label><input type="number" id="v_mp"></div>
-                <div class="form-row"><label>SAN</label><input type="number" id="v_san"></div>
+            <div class="grid-4" style="margin-top:20px;">
+                <div class="form-row"><label>HP (Max)</label><input type="number" id="v_hp"></div>
+                <div class="form-row"><label>MP (Max)</label><input type="number" id="v_mp"></div>
+                <div class="form-row"><label>SAN (現在値)</label><input type="number" id="v_san"></div>
                 <div class="form-row"><label>DB</label><input type="text" id="v_db"></div>
             </div>
 
-            <h2>DETAILS</h2>
-            <div class="form-row"><label>MEMO</label><textarea id="txtMemo"></textarea></div>
-            <div class="form-grid">
-                <div class="form-row"><label>ITEMS</label><textarea id="txtItems"></textarea></div>
-                <div class="form-row"><label>SPELLS / AF</label><textarea id="txtSpells"></textarea></div>
-                <div class="form-row full"><label>SCENARIO LOGS</label><textarea id="txtScenarios"></textarea></div>
+            <h2>DETAILS (PROFILE & TEXT)</h2>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <div>
+                    <div class="text-section">
+                        <h3>経歴 (BACKGROUND)</h3>
+                        <textarea id="txtBackground"></textarea>
+                    </div>
+                    <div class="text-section">
+                        <h3>性格 (PERSONALITY)</h3>
+                        <textarea id="txtPersonality"></textarea>
+                    </div>
+                    <div class="text-section">
+                        <h3>人間関係 (RELATIONSHIPS)</h3>
+                        <textarea id="txtRelations"></textarea>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-section">
+                        <h3>外見的特徴 (APPEARANCE)</h3>
+                        <textarea id="txtAppearance"></textarea>
+                    </div>
+                    <div class="text-section">
+                        <h3>RP用補足 (ROLEPLAY NOTES)</h3>
+                        <textarea id="txtRoleplay"></textarea>
+                    </div>
+                    <div class="text-section">
+                        <h3>その他のメモ (GENERAL MEMO)</h3>
+                        <textarea id="txtMemo"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-section">
+                <h3>技能詳細 (SKILL DETAILS / POINT ALLOCATION)</h3>
+                <textarea id="txtSkillDetails" placeholder="例：図書館…調べ物に慣れている(30P) など"></textarea>
+            </div>
+
+            <h2>INVENTORY & LOGS</h2>
+            <div class="grid-3">
+                <div class="form-row"><label>所持品 (ITEMS)</label><textarea id="txtItems"></textarea></div>
+                <div class="form-row"><label>魔術/AF (SPELLS/AF)</label><textarea id="txtSpells"></textarea></div>
+                <div class="form-row"><label>通過シナリオ (SCENARIOS)</label><textarea id="txtScenarios"></textarea></div>
             </div>
 
             <div style="margin-top:50px; text-align:right;">
@@ -192,20 +233,40 @@
     </div>
 
     <script type="module">
-        import { loadFromCloud, saveToCloud } from "./firestore.js";
+        import { loadFromCloud, saveToCloud, monitorAuth } from "./firestore.js";
 
+        // DOM要素取得
+        const ids = [
+            'inpName','inpKana','inpJob','inpTags','inpAge','inpGender','inpBirthday','inpOrigin',
+            'inpHeight','inpWeight','inpHair','inpEye','inpSkin',
+            'inpImageBody','inpImageIcon',
+            's_str','s_con','s_pow','s_dex','s_app','s_siz','s_int','s_edu',
+            'v_hp','v_mp','v_san','v_db',
+            'txtBackground','txtPersonality','txtRelations','txtAppearance','txtRoleplay','txtMemo','txtSkillDetails',
+            'txtItems','txtSpells','txtScenarios'
+        ];
+        const el = {};
+        ids.forEach(id => el[id] = document.getElementById(id));
         const charSelect = document.getElementById('charSelect');
         const editorArea = document.getElementById('editorArea');
-        const btnCreate = document.getElementById('btnCreateNew');
-        const btnDelete = document.getElementById('btnDelete');
-        
-        const inpBody = document.getElementById('inpImageBody');
-        const inpIcon = document.getElementById('inpImageIcon');
-        const preBody = document.getElementById('previewBody');
-        const preIcon = document.getElementById('previewIcon');
 
         let allData = {};
         let currentId = null;
+
+        // 平均値データ（簡易目安：日本人20代）
+        const AVG_DATA = {
+            male: { h: 171.5, w: 64.0 },
+            female: { h: 158.0, w: 50.0 }
+        };
+
+        // ログイン監視
+        monitorAuth((user) => {
+            if (user) {
+                init();
+            } else {
+                charSelect.innerHTML = '<option>LOGIN REQUIRED</option>';
+            }
+        });
 
         async function init() {
             try {
@@ -214,7 +275,6 @@
                 renderSelect();
             } catch (e) { console.error(e); }
         }
-        init();
 
         function renderSelect() {
             charSelect.innerHTML = '<option value="">-- SELECT CHARACTER --</option>';
@@ -237,10 +297,207 @@
             loadCharacterToForm(allData[currentId]);
         });
 
-        btnCreate.addEventListener('click', () => {
+        // --- ロジック: データ読み込み ---
+        function loadCharacterToForm(d) {
+            editorArea.style.opacity = '1';
+            editorArea.style.pointerEvents = 'auto';
+
+            // 基本フィールド
+            el.inpName.value = d.name || '';
+            el.inpKana.value = d.kana || '';
+            el.inpJob.value = d.job || '';
+            el.inpTags.value = d.tags || '';
+            el.inpAge.value = d.age || '';
+            el.inpGender.value = d.gender || '';
+            el.inpBirthday.value = d.birthday || '';
+            el.inpOrigin.value = d.birthplace || '';
+            el.inpHeight.value = d.height || '';
+            el.inpWeight.value = d.weight || '';
+            el.inpHair.value = d.colorHair || '';
+            el.inpEye.value = d.colorEye || '';
+            el.inpSkin.value = d.colorSkin || '';
+
+            // 画像
+            el.inpImageBody.value = d.image || '';
+            el.inpImageIcon.value = d.icon || '';
+            document.getElementById('previewBody').src = d.image || '';
+            document.getElementById('previewIcon').src = d.icon || '';
+
+            // ステータス
+            const s = d.stats || {};
+            el.s_str.value = s.STR; el.s_con.value = s.CON; el.s_pow.value = s.POW;
+            el.s_dex.value = s.DEX; el.s_app.value = s.APP; el.s_siz.value = s.SIZ;
+            el.s_int.value = s.INT; el.s_edu.value = s.EDU;
+
+            // バイタル
+            const v = d.vitals || {};
+            el.v_hp.value = v.hp; el.v_mp.value = v.mp; el.v_san.value = v.san;
+            el.v_db.value = d.db || '±0';
+
+            // ★メモの分解ロジック
+            // いあきゃら形式の[ヘッダー]を検知して各ボックスへ振り分ける
+            const fullMemo = d.memo || '';
+            
+            function extractSection(tag) {
+                const regex = new RegExp(`\\[${tag}\\]\\n([\\s\\S]*?)(\\n\\[|$)`);
+                const match = fullMemo.match(regex);
+                return match ? match[1].trim() : '';
+            }
+
+            el.txtBackground.value = extractSection('経歴');
+            el.txtPersonality.value = extractSection('性格');
+            el.txtRelations.value = extractSection('人間関係');
+            el.txtAppearance.value = extractSection('外見');
+            el.txtRoleplay.value = extractSection('RP用補足') || extractSection('RP補足');
+            el.txtSkillDetails.value = extractSection('技能詳細') || extractSection('職業P振り分け詳細'); // 揺らぎ対応
+            
+            // 残りのメモ（ヘッダー以外の部分）を抽出するのは難しいので、
+            // ヘッダーが含まれていない場合は「その他のメモ」に入れる
+            if (!fullMemo.includes('[')) {
+                el.txtMemo.value = fullMemo;
+            } else {
+                el.txtMemo.value = extractSection('メモ');
+            }
+
+            el.txtSpells.value = d.spells || '';
+            el.txtScenarios.value = d.scenarios || '';
+            if(Array.isArray(d.items)) {
+                el.txtItems.value = d.items.map(i => i.name).join('\n');
+            } else {
+                el.txtItems.value = '';
+            }
+
+            updateCalculations();
+        }
+
+        // --- ロジック: データ保存 ---
+        window.prepareSaveData = function() {
+            if(!currentId) return null;
+            const char = allData[currentId];
+
+            char.name = el.inpName.value;
+            char.kana = el.inpKana.value;
+            char.job = el.inpJob.value;
+            char.tags = el.inpTags.value;
+            char.age = el.inpAge.value;
+            char.gender = el.inpGender.value;
+            char.birthday = el.inpBirthday.value;
+            char.birthplace = el.inpOrigin.value;
+            char.height = el.inpHeight.value;
+            char.weight = el.inpWeight.value;
+            char.colorHair = el.inpHair.value;
+            char.colorEye = el.inpEye.value;
+            char.colorSkin = el.inpSkin.value;
+
+            char.image = el.inpImageBody.value;
+            char.icon = el.inpImageIcon.value;
+
+            char.stats = {
+                STR: parseInt(el.s_str.value)||0, CON: parseInt(el.s_con.value)||0, POW: parseInt(el.s_pow.value)||0,
+                DEX: parseInt(el.s_dex.value)||0, APP: parseInt(el.s_app.value)||0, SIZ: parseInt(el.s_siz.value)||0,
+                INT: parseInt(el.s_int.value)||0, EDU: parseInt(el.s_edu.value)||0
+            };
+            char.vitals = char.vitals || {};
+            char.vitals.hp = parseInt(el.v_hp.value)||0;
+            char.vitals.mp = parseInt(el.v_mp.value)||0;
+            char.vitals.san = parseInt(el.v_san.value)||0;
+            char.db = el.v_db.value;
+
+            // ★メモの再結合
+            let combinedMemo = "";
+            if(el.txtBackground.value) combinedMemo += `[経歴]\n${el.txtBackground.value}\n\n`;
+            if(el.txtPersonality.value) combinedMemo += `[性格]\n${el.txtPersonality.value}\n\n`;
+            if(el.txtRelations.value) combinedMemo += `[人間関係]\n${el.txtRelations.value}\n\n`;
+            if(el.txtAppearance.value) combinedMemo += `[外見]\n${el.txtAppearance.value}\n\n`;
+            if(el.txtRoleplay.value) combinedMemo += `[RP用補足]\n${el.txtRoleplay.value}\n\n`;
+            if(el.txtSkillDetails.value) combinedMemo += `[技能詳細]\n${el.txtSkillDetails.value}\n\n`;
+            if(el.txtMemo.value) combinedMemo += `[メモ]\n${el.txtMemo.value}`;
+            
+            char.memo = combinedMemo.trim();
+            char.spells = el.txtSpells.value;
+            char.scenarios = el.txtScenarios.value;
+
+            char.items = el.txtItems.value.split('\n').filter(t => t.trim()!=='').map(t => ({name: t, desc: ''}));
+
+            alert("保存しました！");
+            return char;
+        };
+
+        // --- 便利機能: 計算とヒント ---
+        function updateCalculations() {
+            // 派生ステータス
+            const pow = parseInt(el.s_pow.value)||0;
+            const int = parseInt(el.s_int.value)||0;
+            const edu = parseInt(el.s_edu.value)||0;
+            document.getElementById('val_luck').textContent = pow * 5;
+            document.getElementById('val_idea').textContent = int * 5;
+            document.getElementById('val_know').textContent = edu * 5;
+
+            // EDU年齢チェック
+            const age = parseInt(el.inpAge.value);
+            const eduHint = document.getElementById('eduHint');
+            if(age && edu) {
+                const minAge = edu + 6;
+                if(age < minAge) {
+                    eduHint.style.display = 'block';
+                    eduHint.className = 'calc-hint warn-hint';
+                    eduHint.textContent = `⚠️ EDU${edu}の最低年齢は${minAge}歳です`;
+                } else {
+                    eduHint.style.display = 'block';
+                    eduHint.className = 'calc-hint';
+                    eduHint.textContent = `✅ EDU${edu} (最低年齢: ${minAge}歳)`;
+                }
+            } else {
+                eduHint.style.display = 'none';
+            }
+
+            // BMIと平均値
+            const h = parseFloat(el.inpHeight.value);
+            const w = parseFloat(el.inpWeight.value);
+            const gender = el.inpGender.value;
+            
+            // 平均値表示
+            let avgH = 0, avgW = 0;
+            if(gender && (gender.includes('男') || gender.includes('male'))) {
+                avgH = AVG_DATA.male.h; avgW = AVG_DATA.male.w;
+            } else {
+                // デフォルトは女性基準（または中間）にするか、指定があれば
+                avgH = AVG_DATA.female.h; avgW = AVG_DATA.female.w;
+            }
+            
+            if(h) {
+                document.getElementById('heightAvg').textContent = `(平均: ${avgH}cm)`;
+            }
+            if(w) {
+                document.getElementById('weightAvg').textContent = `(平均: ${avgW}kg)`;
+            }
+
+            // BMI計算
+            if(h > 0 && w > 0) {
+                const bmi = w / ((h/100) * (h/100));
+                let type = "普通";
+                if(bmi < 18.5) type = "低体重";
+                else if(bmi >= 25) type = "肥満";
+                document.getElementById('outBMI').value = `BMI: ${bmi.toFixed(1)} (${type})`;
+            } else {
+                document.getElementById('outBMI').value = "";
+            }
+        }
+
+        // イベントリスナー登録
+        ['inpAge','s_edu','inpHeight','inpWeight','inpGender','s_pow','s_int'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateCalculations);
+        });
+
+        // 画像プレビュー
+        document.getElementById('inpImageBody').addEventListener('input', (e)=>document.getElementById('previewBody').src = e.target.value);
+        document.getElementById('inpImageIcon').addEventListener('input', (e)=>document.getElementById('previewIcon').src = e.target.value);
+
+        // 新規作成
+        document.getElementById('btnCreateNew').addEventListener('click', () => {
             const newId = crypto.randomUUID();
             const newChar = {
-                id: newId, name: "New Character",
+                id: newId, name: "新規キャラクター",
                 stats: {STR:10, CON:10, POW:10, DEX:10, APP:10, SIZ:10, INT:10, EDU:10},
                 vitals: {hp:10, mp:10, san:50},
                 items: [], skills: {combat:[], explore:[], action:[], negotiate:[], knowledge:[]}
@@ -250,97 +507,16 @@
             renderSelect();
             loadCharacterToForm(newChar);
         });
-
-        function loadCharacterToForm(d) {
-            editorArea.style.opacity = '1';
-            editorArea.style.pointerEvents = 'auto';
-
-            setVal('inpName', d.name);
-            setVal('inpKana', d.kana);
-            setVal('inpJob', d.job);
-            setVal('inpAge', d.age);
-            setVal('inpTags', d.tags);
-
-            // ★画像：立ち絵(image) と アイコン(icon) を読み分け
-            setVal('inpImageBody', d.image); // 従来のimageは立ち絵へ
-            setVal('inpImageIcon', d.icon);  // 新しいiconデータ
-
-            preBody.src = d.image || '';
-            preIcon.src = d.icon || '';
-
-            const s = d.stats || {};
-            setVal('s_str', s.STR); setVal('s_con', s.CON); setVal('s_pow', s.POW);
-            setVal('s_dex', s.DEX); setVal('s_app', s.APP); setVal('s_siz', s.SIZ);
-            setVal('s_int', s.INT); setVal('s_edu', s.EDU);
-
-            const v = d.vitals || {};
-            setVal('v_hp', v.hp); setVal('v_mp', v.mp); setVal('v_san', v.san);
-            setVal('v_db', d.db);
-
-            setVal('txtMemo', d.memo);
-            setVal('txtSpells', d.spells);
-            setVal('txtScenarios', d.scenarios);
-
-            if(Array.isArray(d.items)) {
-                document.getElementById('txtItems').value = d.items.map(i => i.name).join('\n');
-            } else {
-                setVal('txtItems', '');
-            }
-        }
-
-        // 保存処理
-        window.prepareSaveData = function() {
-            if(!currentId) return null;
-            const char = allData[currentId];
-            
-            char.name = getVal('inpName');
-            char.kana = getVal('inpKana');
-            char.job = getVal('inpJob');
-            char.age = getVal('inpAge');
-            char.tags = getVal('inpTags');
-
-            // ★画像保存
-            char.image = getVal('inpImageBody'); // 立ち絵
-            char.icon = getVal('inpImageIcon');  // アイコン
-
-            char.stats = {
-                STR: getNum('s_str'), CON: getNum('s_con'), POW: getNum('s_pow'),
-                DEX: getNum('s_dex'), APP: getNum('s_app'), SIZ: getNum('s_siz'),
-                INT: getNum('s_int'), EDU: getNum('s_edu')
-            };
-            char.vitals = char.vitals || {};
-            char.vitals.hp = getNum('v_hp');
-            char.vitals.mp = getNum('v_mp');
-            char.vitals.san = getNum('v_san');
-            char.db = getVal('v_db');
-
-            char.memo = getVal('txtMemo');
-            char.spells = getVal('txtSpells');
-            char.scenarios = getVal('txtScenarios');
-
-            const itemText = getVal('txtItems');
-            char.items = itemText.split('\n').filter(t => t.trim() !== '').map(t => ({name: t, desc: ''}));
-
-            alert("保存しました！");
-            return char;
-        };
-
-        // プレビュー連動
-        inpBody.addEventListener('input', (e)=>{ preBody.src = e.target.value; });
-        inpIcon.addEventListener('input', (e)=>{ preIcon.src = e.target.value; });
-
-        btnDelete.addEventListener('click', async () => {
+        
+        document.getElementById('btnDelete').addEventListener('click', async () => {
             if(!currentId) return;
-            if(confirm('本当に削除しますか？')) {
+            if(confirm('削除しますか？')) {
                 delete allData[currentId];
-                alert('リストから削除しました。データベースへの反映はページリロード後に自動同期されます。');
+                alert('削除しました。反映にはリロードが必要です。');
                 location.reload();
             }
         });
 
-        function setVal(id, val) { document.getElementById(id).value = val || ''; }
-        function getVal(id) { return document.getElementById(id).value; }
-        function getNum(id) { return parseInt(document.getElementById(id).value) || 0; }
     </script>
 </body>
 </html>
