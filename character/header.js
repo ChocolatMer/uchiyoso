@@ -7,7 +7,7 @@ export function initHeader() {
 
     // 2. ページタイトルを自動判定するロジック
     const path = window.location.pathname;
-    let pageTitle = "SYSTEM_V6.0"; // デフォルト
+    let pageTitle = "SYSTEM"; // デフォルト
 
     if (path.includes("list.html")) {
         pageTitle = "SQUAD SELECTION"; // リスト画面
