@@ -204,13 +204,23 @@
 
     <script type="module">
         import { loadFromCloud, monitorAuth } from "./firestore.js";
-        // ★重要: detaフォルダのschema.jsからマッピングと保存ロジックだけ読み込む
-        // parseIaCharaはこのファイル内で定義して使う（schema.jsを変更しないため）
-        import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING } from "./data/schema.js";
+        // dataフォルダのschema.jsから全てのロジックをインポート
+        import { collectFormData, parseIaChara, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING } from "./data/schema.js";
 
         const getEl = (id) => document.getElementById(id);
         const setVal = (id, v) => { const el = getEl(id); if(el) el.value = (v == null ? '' : v); };
         const setSrc = (id, s) => { const el = getEl(id); if(el) el.src = s || ''; };
+
+        // メモ欄のマッピング（parseIaCharaの戻り値オブジェクトとHTML IDの対応）
+        const MEMO_ID_MAP = {
+            background: 'txtBackground',
+            personality: 'txtPersonality',
+            relations: 'txtRelations',
+            appearance: 'txtAppearance',
+            roleplay: 'txtRoleplay',
+            skillDetails: 'txtSkillDetails',
+            memo: 'txtMemo'
+        };
 
         let allData = {};
         let currentId = null;
@@ -251,29 +261,33 @@
             if(target) loadCharacterToForm(target);
         });
 
+        // データのロード処理
         function loadCharacterToForm(d) {
             getEl('editorArea').style.opacity='1';
             getEl('editorArea').style.pointerEvents='auto';
             
-            // schema.jsのマッピングを使って値をセット
+            // 1. schema.jsのFIELD_MAPPINGを使用して基本データをセット
             FIELD_MAPPING.forEach(field => {
                 setVal(field.id, d[field.key]);
             });
             setSrc('previewBody', d.image);
             setSrc('previewIcon', d.icon);
 
+            // 2. ステータス・バイタルのセット
             const s = d.stats || {};
             STATS_MAPPING.forEach(f => setVal(f.id, s[f.key]));
             const v = d.vitals || {};
             VITALS_MAPPING.forEach(f => setVal(f.id, v[f.key]));
 
-            // メモなどの特殊処理 (schema.jsにマッピングされていない部分を補完)
+            // 3. メモ（保存時は結合された文字列）を分解してセット
+            // schema.jsのcollectFormDataで結合された [タグ] 形式を分解
             const fullMemo = d.memo || '';
             const extract = (tag) => {
                 const regex = new RegExp(`\\[${tag}\\]\\n([\\s\\S]*?)(\\n\\[|$)`);
                 const m = fullMemo.match(regex);
                 return m ? m[1].trim() : '';
             };
+            
             setVal('txtBackground', extract('経歴'));
             setVal('txtPersonality', extract('性格'));
             setVal('txtRelations', extract('人間関係'));
@@ -281,9 +295,11 @@
             setVal('txtRoleplay', extract('RP補足')||extract('RP用補足'));
             setVal('txtSkillDetails', extract('技能詳細')||extract('職業P振り分け詳細'));
             
+            // "メモ"タグがある場合と、タグなしの生テキストの場合を考慮
             if(!fullMemo.includes('[')) setVal('txtMemo', fullMemo);
             else setVal('txtMemo', extract('メモ'));
 
+            // 4. アイテムリスト（配列 -> テキスト）
             if(Array.isArray(d.items)) {
                 const lines = d.items.map(i => i.desc ? `${i.name} : ${i.desc}` : i.name);
                 setVal('txtItems', lines.join('\n'));
@@ -291,11 +307,12 @@
                 setVal('txtItems', '');
             }
 
-            // シナリオ詳細（配列→テキスト）
+            // 5. シナリオ詳細（配列 -> テキスト）
             if(Array.isArray(d.scenarioList)) {
                 const text = d.scenarioList.map(scn => `[${scn.title}]\n${scn.desc}`).join('\n\n');
                 setVal('txtScenarioDetails', text);
             } else {
+                // 旧データ形式への対応
                 const simpleList = d.scenarios || "";
                 if (simpleList && !d.scenarioList) {
                     const converted = simpleList.split('\n')
@@ -310,147 +327,63 @@
             runCalculations();
         }
 
-        // ★保存処理: schema.js の collectFormData を使う
+        // ★保存処理: schema.js の collectFormData を使用してデータ収集
         window.prepareSaveData = function() {
             if(!currentId) return null;
             const originalData = Object.values(allData).find(c=>c.id==currentId);
             if(!originalData) return null;
 
             // overwriteEmpty=false (安全モード) で保存データを生成
+            // これにより、画面上の空欄で既存データを誤って消すのを防ぎます
             const finalData = collectFormData(originalData, false);
 
             alert("保存しました！");
             return finalData;
         };
 
-        // ★スマートインポート: parseIaChara はここで定義 (schema.jsを変更しないため)
-        function parseIaChara(text) {
-            const d = { stats:{}, vitals:{}, memo:{} };
-            const m = (regex) => (text.match(regex)||[])[1]||'';
-
-            d.name = m(/名前[:：]\s*(.+)/);
-            d.kana = m(/名前[:：].+\((.+)\)/);
-            d.job = m(/職業[:：]\s*(.+?)(?=\s|$)/);
-            d.tags = m(/タグ[:：]\s*(.+)/);
-            d.age = m(/年齢[:：]\s*(\d+)/);
-            d.gender = m(/性別[:：]\s*(\S+)/);
-            d.height = m(/身長[:：]\s*(\d+)/);
-            d.weight = m(/体重[:：]\s*(\d+)/);
-            d.birthday = m(/誕生日[:：]\s*(\S+)/);
-            d.origin = m(/出身[:：]\s*(\S+)/);
-            d.hair = m(/髪の色[:：]\s*(\S+)/);
-            d.eye = m(/瞳の色[:：]\s*(\S+)/);
-            d.skin = m(/肌の色[:：]\s*(\S+)/);
-            d.image = m(/画像URL[:：]\s*(\S+)/) || m(/【画像】\n:(\S+)/) || m(/【立ち絵】\n:(\S+)/);
-            d.icon = m(/アイコンURL[:：]\s*(\S+)/) || m(/【アイコン】\n:(\S+)/);
-            d.money = m(/(?:現在の)?所持金[:：]\s*(.+)/);
-            d.debt = m(/借金[:：]\s*(.+)/);
-
-            const getStat = (name) => {
-                const reg = new RegExp(`${name}[\\s:：]+(\\d+)`);
-                return parseInt(m(reg)) || 0;
-            };
-            d.stats.STR = getStat('STR'); d.stats.CON = getStat('CON');
-            d.stats.POW = getStat('POW'); d.stats.DEX = getStat('DEX');
-            d.stats.APP = getStat('APP'); d.stats.SIZ = getStat('SIZ');
-            d.stats.INT = getStat('INT'); d.stats.EDU = getStat('EDU');
-            d.vitals.hp = getStat('HP'); d.vitals.mp = getStat('MP');
-            d.vitals.san = parseInt(m(/SAN[:：\s]+(\d+)/)) || getStat('SAN');
-            d.db = m(/DB[:：\s]+([+-]\S+)/);
-
-            const getSec = (tag) => {
-                const regex = new RegExp(`(?:\\[|【|〈)${tag}(?:\\]|】|〉)([\\s\\S]*?)(?:(?:\\[|【|〈)|$)`);
-                const match = text.match(regex);
-                return match ? match[1].trim() : '';
-            };
-            d.memo.background = getSec('経歴');
-            d.memo.personality = getSec('性格');
-            d.memo.relations = getSec('人間関係');
-            d.memo.appearance = getSec('外見') || getSec('外見的特徴');
-            d.memo.roleplay = getSec('RP補足') || getSec('RP用補足');
-            d.memo.skillDetails = getSec('技能詳細') || getSec('職業P振り分け詳細');
-            d.memo.memo = getSec('メモ');
-
-            d.spells = getSec('魔導書、呪文、アーティファクト') || getSec('魔術');
-            d.encountered = getSec('遭遇した超自然の存在') || getSec('遭遇した神話生物');
-            d.growth = getSec('新たに得た知識・経験');
-            d.scenarios = getSec('通過したシナリオ名') || getSec('通過シナリオ');
-
-            if (d.scenarios) {
-                const titles = d.scenarios.match(/\[(.*?)\]/g);
-                if(titles) {
-                    d.scenarioDetailsText = titles.map(t => `${t}\n(詳細未記入)`).join('\n\n');
-                } else {
-                    d.scenarioDetailsText = d.scenarios;
-                }
-            }
-
-            const skillStart = text.indexOf('【技能値】');
-            const nextSec = text.match(/【(戦闘|所持品|メモ)/);
-            const skillEnd = nextSec ? nextSec.index : text.length;
-            if (skillStart !== -1) {
-                d.skillList = text.substring(skillStart + 5, skillEnd).trim();
-            }
-
-            const wMatch = text.match(/【戦闘・武器・防具】([\s\S]*?)【/);
-            if(wMatch) d.weapons = wMatch[1].trim();
-
-            const itemSection = getSec('所持品');
-            if(itemSection) {
-                const lines = itemSection.split('\n');
-                const items = [];
-                lines.forEach(line => {
-                    if(!line.trim() || line.includes('名称') && line.includes('単価')) return;
-                    const parts = line.trim().split(/\s+/);
-                    if(parts.length > 0) {
-                        const name = parts[0];
-                        let desc = "";
-                        if(parts.length >= 5) desc = parts.slice(4).join(' ');
-                        else if(parts.length > 1) desc = parts.slice(1).join(' ');
-                        items.push(desc ? `${name} : ${desc}` : name);
-                    }
-                });
-                d.itemsStr = items.join('\n');
-            }
-            return d;
-        }
-
+        // ★スマートインポート: schema.js の parseIaChara を使用
         getEl('btnMerge').addEventListener('click', () => {
             const text = getEl('txtImportSource').value;
             if(!text) return;
             
+            // schema.jsのパーサーを利用
             const p = parseIaChara(text);
+
             const fillIfEmpty = (id, val) => {
                 const current = getEl(id)?.value;
                 if(!current && val) setVal(id, val);
             };
 
-            // マッピングで自動入力
-            FIELD_MAPPING.forEach(f => fillIfEmpty(f.id, p[f.key]));
+            // 1. 基本フィールドの埋め込み
+            FIELD_MAPPING.forEach(f => {
+                if(p[f.key]) fillIfEmpty(f.id, p[f.key]);
+            });
+
+            // 2. ステータス・バイタルの埋め込み
             STATS_MAPPING.forEach(f => fillIfEmpty(f.id, p.stats[f.key]));
             VITALS_MAPPING.forEach(f => fillIfEmpty(f.id, p.vitals[f.key]));
             
-            fillIfEmpty('txtBackground', p.memo.background);
-            fillIfEmpty('txtPersonality', p.memo.personality);
-            fillIfEmpty('txtRelations', p.memo.relations);
-            fillIfEmpty('txtAppearance', p.memo.appearance);
-            fillIfEmpty('txtRoleplay', p.memo.roleplay);
-            fillIfEmpty('txtSkillDetails', p.memo.skillDetails);
-            fillIfEmpty('txtMemo', p.memo.memo);
+            // 3. メモ項目の埋め込み (p.memoはオブジェクト形式で返ってくる)
+            Object.keys(MEMO_ID_MAP).forEach(key => {
+                if(p.memo[key]) fillIfEmpty(MEMO_ID_MAP[key], p.memo[key]);
+            });
 
+            // 4. アイテム
             if(p.itemsStr) {
                 const currentItems = getEl('txtItems').value;
                 if(!currentItems) setVal('txtItems', p.itemsStr);
                 else setVal('txtItems', currentItems + '\n' + p.itemsStr);
             }
 
+            // 5. 画像
             if(p.image && !getEl('previewBody').src) setSrc('previewBody', p.image);
             if(p.icon && !getEl('previewIcon').src) setSrc('previewIcon', p.icon);
 
-            alert("不足データを補完しました！");
+            alert("不足データを補完しました！(Using Schema Parser)");
             runCalculations();
         });
 
+        // 自動計算ロジック（UI制御のためここはlocalに残す）
         function runCalculations() {
             const age = parseInt(getEl('inpAge')?.value)||0;
             const edu = parseInt(getEl('s_edu')?.value)||0;
@@ -474,7 +407,8 @@
 
         getEl('btnCreateNew').addEventListener('click', ()=>{
             const id=crypto.randomUUID();
-            allData[id]={id, name:"新規キャラ", stats:{}, vitals:{}, items:[]};
+            // 新規作成時も基本構造はSchema準拠が望ましいが、空でよいので簡易初期化
+            allData[id]={id, name:"新規キャラ", stats:{}, vitals:{}, items:[], scenarioList:[]};
             currentId=id; renderSelect(); loadCharacterToForm(allData[id]);
         });
         getEl('btnDelete').addEventListener('click', async ()=>{
