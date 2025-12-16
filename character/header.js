@@ -17,12 +17,12 @@ export function initHeader() {
         pageTitle = "DATA EDITOR";     // 編集画面
     }
 
-    // 3. ヘッダーHTML生成
+// 3. ヘッダーHTML生成
     const headerHTML = `
         <header id="sys-header">
             <a href="${path.includes('/detail/') ? '../list.html' : 'list.html'}">
                 <div class="header-logo">
-                    <span>CHARACTER DATA<span class="header-version">// ${pageTitle}</span></span>
+                    <span>${mainTitle} <span class="header-version">// ${subTitle}</span></span>
                     <span id="headerInfo">OFFLINE</span>
                 </div>
             </a>
