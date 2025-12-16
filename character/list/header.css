@@ -57,3 +57,34 @@
 
 .hidden { display: none !important; }
 .header-spacer { height: 50px; }
+
+/* --- ボタンの個別デザイン（追記） --- */
+
+/* ログインボタン：サイバーブルー */
+#headerLoginBtn {
+    border: 1px solid #00f3ff;
+    color: #00f3ff;
+    background: rgba(0, 243, 255, 0.1);
+    box-shadow: 0 0 5px rgba(0, 243, 255, 0.2);
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+#headerLoginBtn:hover {
+    background: #00f3ff;
+    color: #000;
+    box-shadow: 0 0 15px rgba(0, 243, 255, 0.8);
+}
+
+/* ログアウトボタン：警告レッド */
+#headerLogoutBtn {
+    border: 1px solid #ff4444;
+    color: #ff4444;
+    background: rgba(255, 68, 68, 0.1);
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+#headerLogoutBtn:hover {
+    background: #ff4444;
+    color: #fff;
+    box-shadow: 0 0 15px rgba(255, 68, 68, 0.8);
+}
