@@ -2,22 +2,33 @@ import { login, logout, saveToCloud, loadFromCloud, monitorAuth } from "./firest
 
 export function initHeader() {
     // 1. CSS自動読み込み
-    // (detail.htmlなどのフォルダ内ページからは ../css/header.css を、ルートからは css/header.css を探す)
-    // ※今回はCSSのパス問題を防ぐため、HTML側で読み込んでいる前提の書き方にします
-
-    // 2. ページタイトルを自動判定するロジック
-    const path = window.location.pathname;
-    let pageTitle = "SYSTEM"; // デフォルト
-
-    if (path.includes("list.html")) {
-        pageTitle = "SQUAD SELECTION"; // リスト画面
-    } else if (path.includes("detail.html")) {
-        pageTitle = "PERSONAL DATA";   // 詳細画面
-    } else if (path.includes("edit.html")) {
-        pageTitle = "DATA EDITOR";     // 編集画面
+    if (!document.querySelector('link[href*="header.css"]')) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        // パス判定：detailフォルダ等の中にいる場合は親階層を見に行く
+        const path = window.location.pathname;
+        link.href = (path.includes('/detail/') || path.includes('/list/')) ? '../header.css' : 'header.css'; 
+        document.head.appendChild(link);
     }
 
-// 3. ヘッダーHTML生成
+    // 2. タイトルの決定
+    const path = window.location.pathname;
+    
+    // (A) メインタイトル：HTMLの<title>タグから文字を取得
+    // " - SYSTEM_V6" などの共通部分があれば消す処理もここで可能
+    const mainTitle = document.title; 
+
+    // (B) サブタイトル（右側の小さい文字）：ファイル名で判定
+    let subTitle = "CHARACTER";
+    if (path.includes("list.html")) {
+        subTitle = "SQUAD SELECTION";
+    } else if (path.includes("detail.html")) {
+        subTitle = "PERSONAL DATA";
+    } else if (path.includes("edit.html")) {
+        subTitle = "DATA EDITOR";
+    }
+
+    // 3. ヘッダーHTML生成
     const headerHTML = `
         <header id="sys-header">
             <a href="${path.includes('/detail/') ? '../list.html' : 'list.html'}">
@@ -40,7 +51,7 @@ export function initHeader() {
         document.body.insertAdjacentHTML('afterbegin', headerHTML);
     }
 
-    // --- 機能設定 ---
+    // --- 以下、機能設定（変更なし） ---
     const btnLogin = document.getElementById('headerLoginBtn');
     const btnLogout = document.getElementById('headerLogoutBtn');
     const btnSave = document.getElementById('globalSaveBtn');
