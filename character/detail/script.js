@@ -1,6 +1,6 @@
 // detail/script.js
 import { login, logout, monitorAuth, saveToCloud, loadFromCloud } from "../firestore.js";
-// ★共通の解析ロジックを読み込む
+// ★重要: schema.js の場所が "data" フォルダであることを前提としています
 import { parseIaChara } from "../data/schema.js";
 
 // --- GLOBAL STATE ---
@@ -149,8 +149,7 @@ function handleFile(e) {
     const r = new FileReader();
     r.onload = (ev) => {
         try {
-            // ★schema.js の共通解析ロジックを使用
-            // これにより編集画面と同じデータを取得できます
+            // schema.js の parseIaChara を使用して解析
             const d = parseIaChara(ev.target.result);
             launchDashboard(d);
         } catch(err) { console.error(err); alert('Parse Error: ' + err.message); }
@@ -161,12 +160,10 @@ function handleFile(e) {
 function launchDashboard(data) {
     charData = data;
     
-    // 描画処理（チャート含む）
     renderProfile(data);
     renderSkillSection('summary'); 
     renderItems(data.items);
     
-    // テキスト反映
     document.getElementById('memoArea').value = data.memo;
     
     const histBox = document.getElementById('scenarioList');
@@ -208,7 +205,7 @@ function renderCurrentTab() {
 }
 
 // -----------------------------------------------------------
-// ★以下、グラフ描画などの詳細画面固有ロジックはそのまま維持
+// 描画関連
 // -----------------------------------------------------------
 
 function renderProfile(d) {
@@ -228,6 +225,28 @@ function renderProfile(d) {
 
     const sGrid = document.getElementById('rawStatsGrid'); sGrid.innerHTML='';
     Object.keys(d.stats).forEach(k => sGrid.innerHTML+=`<div class="stat-box"><small>${k}</small><span>${d.stats[k]}</span></div>`);
+
+    // ★修正: ステータス評価 (STATUS EVALUATION) の復活
+    const fList = document.getElementById('statusFlavorList');
+    // data.js で定義された STATUS_FLAVOR が存在するかチェック
+    if (fList && typeof STATUS_FLAVOR !== 'undefined') {
+        fList.innerHTML = '';
+        Object.keys(d.stats).forEach(key => {
+            const val = d.stats[key];
+            let text = "---";
+            if(STATUS_FLAVOR[key]) {
+                if(STATUS_FLAVOR[key][val]) text = STATUS_FLAVOR[key][val];
+                else {
+                    const keys = Object.keys(STATUS_FLAVOR[key]).map(Number).sort((a,b)=>a-b);
+                    if(val <= keys[0]) text = STATUS_FLAVOR[key][keys[0]];
+                    else if(val >= keys[keys.length-1]) text = STATUS_FLAVOR[key][keys[keys.length-1]];
+                }
+            }
+            const li = document.createElement('li');
+            li.innerHTML = `<span class="flavor-label">${key}</span> <span class="flavor-text">${text}</span>`;
+            fList.appendChild(li);
+        });
+    }
 
     const ctx = document.getElementById('mainStatsChart').getContext('2d');
     if(charts.main) charts.main.destroy();
@@ -272,7 +291,7 @@ function renderSkillSection(cat) {
     
     if(cat === 'summary') {
         ['combat','explore','action','negotiate','knowledge'].forEach(c => {
-            skillsToRender = skillsToRender.concat(charData.skills[c]);
+            if(charData.skills[c]) skillsToRender = skillsToRender.concat(charData.skills[c]);
         });
     } else {
         skillsToRender = charData.skills[cat] || [];
@@ -343,7 +362,8 @@ function renderTabChart(cat, skills) {
         const catLabels = ['戦闘','探索','行動','交渉','知識'];
         labels = catLabels;
         data = cats.map(c => {
-            const sorted = [...charData.skills[c]].sort((a,b)=>b.total-a.total);
+            const list = charData.skills[c] || [];
+            const sorted = [...list].sort((a,b)=>b.total-a.total);
             if(sorted.length === 0) return 0;
             const top = sorted.slice(0, 3);
             const sum = top.reduce((a,b) => a + b.total, 0);
