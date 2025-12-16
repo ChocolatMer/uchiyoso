@@ -188,8 +188,8 @@ function renderCurrentTab() {
 
 // --- PARSER (変更なし) ---
 function parseData(text) {
-    id: crypto.randomUUID(),
     const d = {
+        id: crypto.randomUUID(),
         name: '', kana: '', job: '', age: '??', tags: '', image: '', db: '±0',
         stats: {}, vitals: {}, skills: {combat:[], explore:[], action:[], negotiate:[], knowledge:[]},
         items: [], memo: '', scenarios: '', spells: '', entities: ''
