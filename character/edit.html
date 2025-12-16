@@ -50,7 +50,7 @@
             border-radius: 4px; font-size: 0.9rem; line-height: 1.6; min-height: 80px; resize: vertical;
         }
 
-        /* 分析・ヒント表示エリア */
+        /* 分析エリア */
         .analysis-box {
             background: #252525; padding: 15px; border-radius: 4px; border: 1px solid #444; margin-top: 5px;
             font-size: 0.85rem; color: #ccc;
@@ -225,7 +225,7 @@
     <script type="module">
         import { loadFromCloud, saveToCloud, monitorAuth } from "./firestore.js";
 
-        // 安全なDOM取得関数（エラーで止まらないようにする）
+        // ヘルパー関数（存在チェック付き）
         const getEl = (id) => document.getElementById(id);
         const safeVal = (id) => { const el = getEl(id); return el ? el.value : ''; };
         const setVal = (id, v) => { const el = getEl(id); if(el) el.value = (v == null ? '' : v); };
@@ -238,10 +238,9 @@
         let allData = {};
         let currentId = null;
 
-        // 日本人の平均身長・体重データ（簡易テーブル）
-        // キー: 年代(10, 20...), 値: {m:{h,w}, f:{h,w}}
+        // 平均値データ（簡易目安）
         const AGE_STATS = {
-            10: { m: {h:168, w:58}, f: {h:157, w:50} }, // 10代後半想定
+            10: { m: {h:168, w:58}, f: {h:157, w:50} },
             20: { m: {h:171, w:65}, f: {h:158, w:51} },
             30: { m: {h:172, w:70}, f: {h:158, w:54} },
             40: { m: {h:171, w:73}, f: {h:158, w:56} },
@@ -269,12 +268,15 @@
         function renderSelect() {
             if(!charSelect) return;
             charSelect.innerHTML = '<option value="">-- SELECT CHARACTER --</option>';
+            
+            // 全データを走査してリストに追加
             Object.values(allData).forEach(char => {
                 const opt = document.createElement('option');
                 opt.value = char.id;
-                opt.textContent = char.name;
+                opt.textContent = char.name || '(No Name)';
                 charSelect.appendChild(opt);
             });
+            
             if(currentId) charSelect.value = currentId;
         }
 
@@ -288,7 +290,18 @@
                     }
                     return;
                 }
-                loadCharacterToForm(allData[currentId]);
+                
+                // ★ここが修正点：データ探索ロジックを強化
+                // allData[currentId] で取れない場合(配列の場合など)に備えて find を使う
+                const charList = Object.values(allData);
+                const targetData = charList.find(c => c.id == currentId);
+                
+                if (targetData) {
+                    loadCharacterToForm(targetData);
+                } else {
+                    console.error("Data not found for ID:", currentId);
+                    alert("エラー: データの読み込みに失敗しました (ID不一致)");
+                }
             });
         }
 
@@ -297,7 +310,6 @@
             editorArea.style.opacity = '1';
             editorArea.style.pointerEvents = 'auto';
 
-            // 値をセット
             setVal('inpName', d.name);
             setVal('inpKana', d.kana);
             setVal('inpJob', d.job);
@@ -326,7 +338,7 @@
             setVal('v_hp', v.hp); setVal('v_mp', v.mp); setVal('v_san', v.san);
             setVal('v_db', d.db || '±0');
 
-            // メモ分割読み込み
+            // メモ分割
             const fullMemo = d.memo || '';
             const extract = (tag) => {
                 const regex = new RegExp(`\\[${tag}\\]\\n([\\s\\S]*?)(\\n\\[|$)`);
@@ -340,7 +352,6 @@
             setVal('txtRoleplay', extract('RP補足') || extract('RP用補足'));
             setVal('txtSkillDetails', extract('技能詳細'));
             
-            // ヘッダーがない場合はメモ欄に全部入れる
             if (!fullMemo.includes('[')) setVal('txtMemo', fullMemo);
             else setVal('txtMemo', extract('メモ'));
 
@@ -353,60 +364,56 @@
                 setVal('txtItems', '');
             }
 
-            // ★読み込み直後に計算実行
+            // 読み込み完了後に計算を実行
             runCalculations();
         }
 
-        // --- リアルタイム計算ロジック ---
+        // --- リアルタイム計算 ---
         function runCalculations() {
-            // 1. EDU年齢チェック
+            // EDUチェック
             const age = parseInt(safeVal('inpAge')) || 0;
             const edu = parseInt(safeVal('s_edu')) || 0;
             const eduArea = getEl('eduCheckArea');
             const eduMsg = getEl('eduMsg');
 
-            if (edu > 0 && age > 0) {
-                const minAge = edu + 6;
-                eduArea.style.display = 'block';
-                if (age < minAge) {
-                    eduMsg.className = 'warn-text';
-                    eduMsg.textContent = ` ⚠️ 年齢不足です (EDU${edu}の場合、最低${minAge}歳必要)`;
+            if (eduArea) {
+                if (edu > 0 && age > 0) {
+                    const minAge = edu + 6;
+                    eduArea.style.display = 'block';
+                    if (age < minAge) {
+                        eduMsg.className = 'warn-text';
+                        eduMsg.textContent = ` ⚠️ 年齢不足 (EDU${edu}なら最低${minAge}歳)`;
+                    } else {
+                        eduMsg.className = 'calc-val';
+                        eduMsg.textContent = ` ✅ OK (最低${minAge}歳)`;
+                    }
                 } else {
-                    eduMsg.className = 'calc-val';
-                    eduMsg.textContent = ` ✅ OK (最低${minAge}歳)`;
+                    eduArea.style.display = 'none';
                 }
-            } else {
-                eduArea.style.display = 'none';
             }
 
-            // 2. BMIと平均比較
+            // BMI・平均比較
             const h = parseFloat(safeVal('inpHeight'));
             const w = parseFloat(safeVal('inpWeight'));
             const gender = safeVal('inpGender');
             
-            // BMI
             if (h > 0 && w > 0) {
                 const bmi = w / ((h/100) ** 2);
                 let type = "普通";
-                if (bmi < 18.5) type = "低体重(痩せ型)";
+                if (bmi < 18.5) type = "低体重";
                 else if (bmi >= 25) type = "肥満気味";
                 setTxt('outBMI', `${bmi.toFixed(1)} (${type})`);
             } else {
                 setTxt('outBMI', '--');
             }
 
-            // 平均比較
             if (age > 0) {
-                // 年代を丸める (24 -> 20, 39 -> 30)
                 let ageKey = Math.floor(age / 10) * 10;
                 if(ageKey < 10) ageKey = 10;
                 if(ageKey > 60) ageKey = 60;
                 
-                // 性別判定
-                let gKey = 'm'; // デフォルト男
-                if (gender && (gender.includes('女') || gender.includes('Female') || gender.includes('Woman'))) {
-                    gKey = 'f';
-                }
+                let gKey = 'm';
+                if (gender && (gender.includes('女') || gender.includes('Woman'))) gKey = 'f';
 
                 const data = AGE_STATS[ageKey] ? AGE_STATS[ageKey][gKey] : null;
                 setTxt('lblAgeGroup', `${ageKey}代${gKey==='m'?'男性':'女性'}`);
@@ -416,32 +423,34 @@
                     const diffW = (w - data.w).toFixed(1);
                     const signH = diffH >= 0 ? '+' : '';
                     const signW = diffW >= 0 ? '+' : '';
-                    
                     setTxt('outAvgComp', `身長 ${data.h}cm(${signH}${diffH}), 体重 ${data.w}kg(${signW}${diffW})`);
                 } else if(data) {
                     setTxt('outAvgComp', `平均目安: ${data.h}cm / ${data.w}kg`);
                 } else {
-                    setTxt('outAvgComp', 'データなし');
+                    setTxt('outAvgComp', '--');
                 }
             } else {
                 setTxt('lblAgeGroup', '--');
                 setTxt('outAvgComp', '--');
             }
 
-            // ステータス倍率計算
+            // ステータス倍率
             const pow = parseInt(safeVal('s_pow'))||0;
             const int = parseInt(safeVal('s_int'))||0;
+            const eduv = parseInt(safeVal('s_edu'))||0;
             setTxt('val_luck', pow * 5);
             setTxt('val_idea', int * 5);
-            setTxt('val_know', edu * 5);
+            setTxt('val_know', eduv * 5);
         }
 
-        // --- 保存ロジック ---
+        // --- 保存 ---
         window.prepareSaveData = function() {
             if(!currentId) return null;
-            const char = allData[currentId];
+            // 検索して取得
+            const charList = Object.values(allData);
+            const char = charList.find(c => c.id == currentId);
+            if(!char) return null;
             
-            // 基本
             char.name = safeVal('inpName');
             char.kana = safeVal('inpKana');
             char.job = safeVal('inpJob');
@@ -461,7 +470,6 @@
             char.image = safeVal('inpImageBody');
             char.icon = safeVal('inpImageIcon');
 
-            // ステータス
             char.stats = {
                 STR: parseInt(safeVal('s_str'))||0, CON: parseInt(safeVal('s_con'))||0, 
                 POW: parseInt(safeVal('s_pow'))||0, DEX: parseInt(safeVal('s_dex'))||0, 
@@ -474,10 +482,8 @@
             char.vitals.san = parseInt(safeVal('v_san'))||0;
             char.db = safeVal('v_db');
 
-            // メモ結合
             let memoArr = [];
             const addSec = (t, v) => { if(v) memoArr.push(`[${t}]\n${v}`); };
-            
             addSec('経歴', safeVal('txtBackground'));
             addSec('性格', safeVal('txtPersonality'));
             addSec('人間関係', safeVal('txtRelations'));
@@ -485,11 +491,10 @@
             addSec('RP補足', safeVal('txtRoleplay'));
             addSec('技能詳細', safeVal('txtSkillDetails'));
             addSec('メモ', safeVal('txtMemo'));
-            
             char.memo = memoArr.join('\n\n');
+            
             char.spells = safeVal('txtSpells');
             char.scenarios = safeVal('txtScenarios');
-
             const itemsStr = safeVal('txtItems');
             char.items = itemsStr.split('\n').filter(t => t.trim()!=='').map(t => ({name: t, desc: ''}));
 
@@ -497,33 +502,32 @@
             return char;
         };
 
-        // イベント監視（入力があるたびに計算）
+        // イベントリスナー
         const calcTargets = ['inpAge', 'inpHeight', 'inpWeight', 'inpGender', 's_edu', 's_pow', 's_int'];
         calcTargets.forEach(id => {
             const el = getEl(id);
             if(el) el.addEventListener('input', runCalculations);
         });
 
-        // 画像プレビュー連動
         getEl('inpImageBody')?.addEventListener('input', (e)=>setSrc('previewBody', e.target.value));
         getEl('inpImageIcon')?.addEventListener('input', (e)=>setSrc('previewIcon', e.target.value));
 
-        // 新規作成ボタン
         getEl('btnCreateNew')?.addEventListener('click', () => {
             const newId = crypto.randomUUID();
             const newChar = {
                 id: newId, name: "新規キャラクター",
                 stats: {STR:10, CON:10, POW:10, DEX:10, APP:10, SIZ:10, INT:10, EDU:10},
-                vitals: {hp:10, mp:10, san:50},
-                items: []
+                vitals: {hp:10, mp:10, san:50}, items: []
             };
             allData[newId] = newChar;
             currentId = newId;
             renderSelect();
-            loadCharacterToForm(newChar);
+            // 新規作成時も検索ロジックを通す（配列に追加するため）
+            const charList = Object.values(allData);
+            const target = charList.find(c => c.id == newId);
+            loadCharacterToForm(target || newChar);
         });
         
-        // 削除ボタン
         getEl('btnDelete')?.addEventListener('click', async () => {
             if(!currentId) return;
             if(confirm('本当に削除しますか？')) {
