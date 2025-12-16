@@ -220,7 +220,7 @@
     <script type="module">
         import { loadFromCloud, monitorAuth } from "./firestore.js";
         // schema.js を利用
-        import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING } from "./js/schema.js";
+        import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING } from "data/schema.js";
 
         const getEl = (id) => document.getElementById(id);
         const setVal = (id, v) => { const el = getEl(id); if(el) el.value = (v == null ? '' : v); };
