@@ -1,5 +1,4 @@
 // --- script.js ---
-// ★一番上にこの行がないと動きません！
 import { login, logout, monitorAuth, saveToCloud, loadFromCloud } from "../firestore.js";
 
 // --- GLOBAL STATE ---
@@ -42,25 +41,24 @@ function adjustHeight(el) {
 }
 
 // --- EVENTS ---
-// ★ここから新しいボタンの設定です
 const btnLogin = document.getElementById('btnLogin');
 const btnLogout = document.getElementById('btnLogout');
-const btnCloudSave = document.getElementById('btnLocalSave'); // IDはSAVE CLOUDボタンのもの
-const btnCloudLoad = document.getElementById('btnLocalLoad'); // IDはLOAD CLOUDボタンのもの
+const btnCloudSave = document.getElementById('btnLocalSave'); 
+const btnCloudLoad = document.getElementById('btnLocalLoad'); 
 
 if(btnLogin) btnLogin.addEventListener('click', login);
 if(btnLogout) btnLogout.addEventListener('click', logout);
 
 // 認証状態を監視してボタンを切り替える
 monitorAuth(
-    (user) => { // ログインした時
+    (user) => { 
         if(btnLogin) btnLogin.classList.add('hidden');
         if(btnLogout) {
             btnLogout.classList.remove('hidden');
             btnLogout.textContent = "DISCONNECT (" + user.displayName + ")";
         }
     },
-    () => { // ログアウトした時
+    () => { 
         if(btnLogin) btnLogin.classList.remove('hidden');
         if(btnLogout) btnLogout.classList.add('hidden');
     }
@@ -71,21 +69,21 @@ if(btnCloudSave) {
     btnCloudSave.addEventListener('click', () => {
         if(!charData) return;
         charData.memo = document.getElementById('memoArea').value;
-        saveToCloud(charData); // firestore.jsの機能を呼ぶ
+        saveToCloud(charData); 
     });
 }
 
 // 読み込みボタン（クラウド用）
 if(btnCloudLoad) {
     btnCloudLoad.addEventListener('click', async () => {
-        const cloudStore = await loadFromCloud(); // firestore.jsの機能を呼ぶ
+        const cloudStore = await loadFromCloud(); 
         
         if(cloudStore) {
             const list = document.getElementById('savedList'); 
             list.innerHTML='';
             Object.keys(cloudStore).forEach(k => {
                 const li = document.createElement('li');
-                li.textContent = "☁️ " + k;
+                li.textContent = "☁️ " + (cloudStore[k].name || "No Name");
                 li.onclick = () => { launchDashboard(cloudStore[k]); document.getElementById('loadDialog').close(); };
                 list.appendChild(li);
             });
@@ -119,7 +117,6 @@ els.themeSwitcher.addEventListener('click', () => {
     }
 });
 
-// タブ切り替えなどはそのまま
 els.tabs.addEventListener('click', (e) => {
     if(e.target.classList.contains('tab')) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -168,14 +165,46 @@ function handleFile(e) {
 
 function launchDashboard(data) {
     charData = data;
+    
+    // 1. 既存の描画処理（チャート含む）
     renderProfile(data);
     renderSkillSection('summary'); 
     renderItems(data.items);
     
+    // 2. テキストエリアへの反映
     document.getElementById('memoArea').value = data.memo;
-    renderSimpleList('scenarioList', data.scenarios, 'scenario-tag');
-    document.getElementById('spellsList').textContent = data.spells || 'No records.';
-    document.getElementById('entitiesList').textContent = data.entities || 'No records.';
+    
+    // 3. シナリオ詳細
+    const histBox = document.getElementById('scenarioList');
+    if(histBox) {
+        histBox.innerHTML = '';
+        if(Array.isArray(data.scenarioList) && data.scenarioList.length > 0) {
+            data.scenarioList.forEach(scn => {
+                const div = document.createElement('div');
+                div.className = 'scenario-entry'; 
+                div.style.marginBottom = "15px";
+                div.innerHTML = `<h4 style="color:var(--secondary); margin-bottom:5px;">${scn.title}</h4><div style="font-size:0.9rem; color:#aaa;">${scn.desc}</div>`;
+                histBox.appendChild(div);
+            });
+        } else {
+            renderSimpleList('scenarioList', data.scenarios, 'scenario-tag');
+        }
+    }
+
+    // 4. その他テキストデータ反映
+    const setTxt = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val || 'No records.'; };
+    setTxt('spellsList', data.spells);
+    setTxt('entitiesList', data.encountered); 
+    setTxt('growthList', data.growth);
+    setTxt('weaponList', data.weapons);
+
+    // 5. 所持金
+    const moneyEl = document.getElementById('valMoney');
+    if(moneyEl) {
+        const m = data.money || '0';
+        const d = data.debt || '0';
+        moneyEl.textContent = `Money: ${m} / Debt: ${d}`;
+    }
 
     els.boot.classList.add('hidden');
     document.body.classList.add('loaded');
@@ -186,44 +215,52 @@ function renderCurrentTab() {
     renderSkillSection(activeCat);
 }
 
-// --- PARSER (変更なし) ---
+// --- PARSER (チャート用構造を維持しつつ新項目を追加) ---
 function parseData(text) {
     const d = {
         id: crypto.randomUUID(),
         name: '', kana: '', job: '', age: '??', tags: '', image: '', db: '±0',
-        stats: {}, vitals: {}, skills: {combat:[], explore:[], action:[], negotiate:[], knowledge:[]},
-        items: [], memo: '', scenarios: '', spells: '', entities: ''
+        stats: {}, vitals: {}, 
+        skills: {combat:[], explore:[], action:[], negotiate:[], knowledge:[]},
+        items: [], memo: '', scenarios: '', spells: '', 
+        encountered: '', growth: '', weapons: '', money: '', debt: '', scenarioList: []
     };
+
+    const m = (regex) => (text.match(regex)||[])[1]||'';
 
     const nameLine = (text.match(/名前:\s*(.+)/)||[])[1] || 'Unknown';
     const nameMatch = nameLine.match(/^(.+?)[\s　]*[(（](.+?)[)）]/);
     if(nameMatch) { d.name = nameMatch[1].trim(); d.kana = nameMatch[2].trim(); } 
     else { d.name = nameLine; }
 
-    d.job = (text.match(/職業:\s*(.+)/)||[])[1]||'';
-    d.age = (text.match(/年齢:\s*(.+?)\s/)||[])[1]||'??';
-    d.tags = (text.match(/タグ:\s*(.+)/)||[])[1]||'';
-    d.image = (text.match(/【アイコン】\s*:?(\s*https?:\/\/[^\s]+)/)||[])[1]||'';
+    d.job = m(/職業:\s*(.+)/);
+    d.age = m(/年齢:\s*(.+?)\s/)||'??';
+    d.tags = m(/タグ:\s*(.+)/);
+    d.image = m(/【アイコン】\s*:?(\s*https?:\/\/[^\s]+)/);
+    d.money = m(/(?:現在の)?所持金[:：]\s*(.+)/);
+    d.debt = m(/借金[:：]\s*(.+)/);
 
+    // ステータス（チャートに必須）
     ['STR','CON','POW','DEX','APP','SIZ','INT','EDU'].forEach(k => {
         const regex = new RegExp(`${k}\\s+(\\d+)`);
         d.stats[k] = parseInt((text.match(regex)||['', '0'])[1]);
     });
     
-    d.vitals.hp = (text.match(/HP\s+(\d+)/)||[])[1]||0;
-    d.vitals.mp = (text.match(/MP\s+(\d+)/)||[])[1]||0;
-    d.vitals.san = (text.match(/現在SAN値\s*(\d+)/)||[])[1]||0;
-    d.db = (text.match(/DB\s*([+-\d]+[dD\d]*)/)||[])[1] || '±0';
+    d.vitals.hp = m(/HP\s+(\d+)/)||0;
+    d.vitals.mp = m(/MP\s+(\d+)/)||0;
+    d.vitals.san = m(/現在SAN値\s*(\d+)/)||0;
+    d.db = m(/DB\s*([+-\d]+[dD\d]*)/) || '±0';
 
     const descMap = {};
     const detailSec = text.split('[技能詳細]')[1];
     if(detailSec) {
         detailSec.split('\n').forEach(l => {
-            const m = l.match(/^([^\s…]+)[…\s]+(.+)/);
-            if(m) descMap[m[1].trim()] = m[2].trim();
+            const match = l.match(/^([^\s…]+)[…\s]+(.+)/);
+            if(match) descMap[match[1].trim()] = match[2].trim();
         });
     }
 
+    // 技能リスト（チャートに必須）
     const lines = text.split('\n');
     let cat = null;
     lines.forEach(l => {
@@ -236,11 +273,11 @@ function parseData(text) {
         else if(l.startsWith('【')) cat=null;
 
         if(cat) {
-            const m = l.match(/^([^\d]+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)/);
-            if(m && m[1].trim()!=='技能名') {
-                const n = m[1].trim();
+            const match = l.match(/^([^\d]+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)/);
+            if(match && match[1].trim()!=='技能名') {
+                const n = match[1].trim();
                 d.skills[cat].push({
-                    name: n, total: parseInt(m[2]), init: parseInt(m[3]), job: parseInt(m[4]), interest: parseInt(m[5]), growth: parseInt(m[6]),
+                    name: n, total: parseInt(match[2]), init: parseInt(match[3]), job: parseInt(match[4]), interest: parseInt(match[5]), growth: parseInt(match[6]),
                     desc: descMap[n]||'',
                     category: cat
                 });
@@ -257,21 +294,23 @@ function parseData(text) {
         }
     });
 
-    const spellMatch = text.match(/〈魔導書、呪文、アーティファクト〉([\s\S]*?)〈/);
-    if(spellMatch) d.spells = spellMatch[1].trim();
+    const getSec = (tag) => (text.match(new RegExp(`〈${tag}〉([\\s\\S]*?)(〈|【|$)`))||[])[1]||'';
+    d.spells = getSec('魔導書、呪文、アーティファクト').trim();
+    d.encountered = getSec('遭遇した超自然の存在').trim();
+    d.growth = getSec('新たに得た知識・経験').trim();
+    d.scenarios = getSec('通過したシナリオ名').trim();
 
-    const entityMatch = text.match(/〈遭遇した超自然の存在〉([\s\S]*?)〈/);
-    if(entityMatch) d.entities = entityMatch[1].trim();
-    if(!entityMatch) {
-         const entStart = text.match(/〈遭遇した超自然の存在〉([\s\S]*)/);
-         if(entStart) {
-             const nextTag = entStart[1].search(/〈|【/);
-             d.entities = nextTag > -1 ? entStart[1].substring(0, nextTag).trim() : entStart[1].trim();
-         }
+    if(d.scenarios) {
+        const entries = d.scenarios.split(/\n(?=\[)/g);
+        d.scenarioList = entries.map(entry => {
+            const match = entry.match(/^\[(.*?)\]([\s\S]*)$/);
+            if (match) { return { title: match[1].trim(), desc: match[2].trim() }; }
+            return { title: entry.trim(), desc: '' };
+        }).filter(e => e.title);
     }
 
-    const scenMatch = text.match(/〈通過したシナリオ名〉([\s\S]*?)(\[|【|$)/);
-    d.scenarios = scenMatch ? scenMatch[1].trim() : '';
+    const wMatch = text.match(/【戦闘・武器・防具】([\s\S]*?)【/);
+    if(wMatch) d.weapons = wMatch[1].trim();
 
     const memoTag = text.match(/【メモ】([\s\S]*?)【経歴】/);
     const background = text.match(/【経歴】([\s\S]*?)【性格】/);
@@ -311,24 +350,6 @@ function renderProfile(d) {
     const sGrid = document.getElementById('rawStatsGrid'); sGrid.innerHTML='';
     Object.keys(d.stats).forEach(k => sGrid.innerHTML+=`<div class="stat-box"><small>${k}</small><span>${d.stats[k]}</span></div>`);
 
-    const fList = document.getElementById('statusFlavorList');
-    fList.innerHTML = '';
-    Object.keys(d.stats).forEach(key => {
-        const val = d.stats[key];
-        let text = "---";
-        if(STATUS_FLAVOR[key]) {
-            if(STATUS_FLAVOR[key][val]) text = STATUS_FLAVOR[key][val];
-            else {
-                const keys = Object.keys(STATUS_FLAVOR[key]).map(Number).sort((a,b)=>a-b);
-                if(val <= keys[0]) text = STATUS_FLAVOR[key][keys[0]];
-                else if(val >= keys[keys.length-1]) text = STATUS_FLAVOR[key][keys[keys.length-1]];
-            }
-        }
-        const li = document.createElement('li');
-        li.innerHTML = `<span class="flavor-label">${key}</span> <span class="flavor-text">${text}</span>`;
-        fList.appendChild(li);
-    });
-
     const ctx = document.getElementById('mainStatsChart').getContext('2d');
     if(charts.main) charts.main.destroy();
     charts.main = new Chart(ctx, {
@@ -346,6 +367,7 @@ function renderProfile(d) {
 
 function renderSimpleList(id, text, tagClass) {
     const box = document.getElementById(id);
+    if(!box) return;
     box.innerHTML = '';
     if(!text) { box.textContent = 'No records.'; return; }
     const lines = text.split('\n');
@@ -359,8 +381,10 @@ function renderSimpleList(id, text, tagClass) {
 }
 
 function setBar(id, v, m) {
-    document.getElementById(`val${id}`).textContent = `${v}/${m}`;
-    document.getElementById(`bar${id}`).style.width = Math.min(100, (v/m)*100) + '%';
+    const elVal = document.getElementById(`val${id}`);
+    const elBar = document.getElementById(`bar${id}`);
+    if(elVal) elVal.textContent = `${v}/${m}`;
+    if(elBar) elBar.style.width = Math.min(100, (v/m)*100) + '%';
 }
 
 function renderSkillSection(cat) {
@@ -416,19 +440,12 @@ function renderSkillSection(cat) {
         `;
 
         const tx = row.querySelector('textarea');
-        tx.addEventListener('input', (e) => {
-            s.desc = e.target.value;
-            adjustHeight(e.target);
-        });
+        tx.addEventListener('input', (e) => { s.desc = e.target.value; adjustHeight(e.target); });
         setTimeout(() => adjustHeight(tx), 0);
-
         els.listBody.appendChild(row);
     });
     
-    if(els.shortDescToggle.checked) {
-        els.listBody.classList.add('short-view');
-    }
-
+    if(els.shortDescToggle.checked) els.listBody.classList.add('short-view');
     renderTabChart(cat, skillsToRender);
 }
 
@@ -471,13 +488,8 @@ function renderTabChart(cat, skills) {
         data: {
             labels: labels,
             datasets: [{
-                label: 'VAL', 
-                data: data,
-                backgroundColor: chartColor + '33', 
-                borderColor: chartColor, 
-                borderWidth: 2, 
-                pointBackgroundColor: '#fff',
-                pointRadius: 3
+                label: 'VAL', data: data,
+                backgroundColor: chartColor + '33', borderColor: chartColor, borderWidth: 2, pointBackgroundColor: '#fff', pointRadius: 3
             }]
         },
         options: chartOpts(99) 
@@ -490,14 +502,9 @@ function renderItems(items) {
         const d = document.createElement('div');
         d.className = 'item-row';
         d.innerHTML = `<span class="item-name">${i.name}</span><textarea class="item-desc-inp" rows="1">${i.desc}</textarea>`;
-        
         const tx = d.querySelector('textarea');
-        tx.addEventListener('input', (e)=>{
-            i.desc=e.target.value; 
-            adjustHeight(e.target);
-        });
+        tx.addEventListener('input', (e)=>{ i.desc=e.target.value; adjustHeight(e.target); });
         setTimeout(() => adjustHeight(tx), 0);
-
         list.appendChild(d);
     });
 }
@@ -513,15 +520,13 @@ function chartOpts(max) {
         plugins: { legend: {display:false} }, maintainAspectRatio: false
     };
 }
-// ヘッダーの「保存」ボタンが押されたら、この関数が呼ばれます
+
 window.prepareSaveData = function() {
     if(!charData) {
         alert("データが読み込まれていません。");
         return null;
     }
-    // 画面のメモ欄の内容を最新データに反映
     const memo = document.getElementById('memoArea');
     if(memo) charData.memo = memo.value;
-    
-    return charData; // ヘッダーにデータを渡す
+    return charData; 
 };
