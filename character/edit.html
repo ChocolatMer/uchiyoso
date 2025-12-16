@@ -11,47 +11,32 @@
     <style>
         body { background-color: #202020; color: #ddd; font-family: 'Noto Sans JP', sans-serif; margin: 0; padding: 0; }
         .container { max-width: 900px; margin: 0 auto; padding: 80px 20px 100px; }
-
-        /* ツールバー */
         .toolbar { background: #333; padding: 20px; border-radius: 4px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #444; }
         select { padding: 10px; background: #111; color: #fff; border: 1px solid #555; width: 300px; border-radius: 4px; }
         .btn-new { background: #44ff44; color: #000; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; border-radius: 4px; }
         .btn-delete { background: #ff4444; color: #fff; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 0.8rem; }
-        
-        /* インポートエリア */
         .import-area { background: #2a2a2d; padding: 20px; border-radius: 4px; border: 1px dashed #666; margin-bottom: 30px; }
         .import-area textarea { height: 100px; font-size: 0.8rem; color: #aaa; }
         .btn-merge { background: #00f3ff; color: #000; border: none; padding: 8px 20px; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 10px; }
         .btn-merge:hover { background: #88ffff; }
-
-        /* レイアウト */
         h2 { border-bottom: 2px solid #555; padding-bottom: 10px; margin-top: 40px; color: #aaa; font-size: 1.1rem; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .form-row { margin-bottom: 15px; }
         .form-row.full { grid-column: span 2; }
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
         .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-
         label { display: block; color: #888; font-size: 0.75rem; margin-bottom: 5px; font-family: 'Roboto Mono', monospace; }
         input[type="text"], input[type="number"] { width: 100%; padding: 10px; box-sizing: border-box; background: #2a2a2a; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.95rem; }
         textarea { width: 100%; padding: 10px; box-sizing: border-box; background: #2a2a2a; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.9rem; line-height: 1.6; min-height: 80px; resize: vertical; }
-
-        /* 分析エリア */
         .analysis-box { background: #252525; padding: 15px; border-radius: 4px; border: 1px solid #444; margin-top: 5px; font-size: 0.85rem; color: #ccc; }
         .calc-val { color: #44ff44; font-weight: bold; margin-left: 5px; }
         .warn-text { color: #ffaa00; }
-
-        /* 画像エリア */
         .visual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; background: #252525; padding: 20px; border-radius: 4px; border: 1px solid #444; }
         .img-preview-box { width: 100%; height: 200px; background: #000; border: 1px solid #444; display: flex; align-items: center; justify-content: center; position: relative; }
         .img-preview { max-width: 100%; max-height: 100%; object-fit: contain; }
-
-        /* ステータス */
         .stats-container { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; background: #252525; padding: 15px; border-radius: 4px; }
         .stat-box { text-align: center; }
         .stat-box input { text-align: center; font-weight: bold; color: #44ff44; font-size: 1.1rem; }
-        .derived-val { color: #888; font-size: 0.7rem; margin-top: 4px; }
-
         .text-section { border-left: 3px solid #444; padding-left: 15px; margin-bottom: 20px; }
         .text-section h3 { font-size: 0.9rem; color: #44ff44; margin: 0 0 10px 0; opacity: 0.8; }
         .helper-text { font-size: 0.7rem; color: #666; margin-top: 2px; }
@@ -72,7 +57,6 @@
         </div>
 
         <div id="editorArea" style="opacity:0.3; pointer-events:none;">
-            
             <div class="import-area">
                 <h3 style="margin-top:0; color:#00f3ff;">SMART IMPORT (いあきゃらテキスト読込)</h3>
                 <p style="font-size:0.8rem; color:#888; margin-bottom:5px;">いあキャラのテキストデータを貼り付けて「不足を埋める」を押すと、<br>現在入力されているデータはそのままに、<strong>空欄の部分だけ</strong>を自動で補完します。</p>
@@ -219,8 +203,8 @@
 
     <script type="module">
         import { loadFromCloud, monitorAuth } from "./firestore.js";
-        // schema.js を利用
-        import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING } from "data/schema.js";
+        // ★場所を修正: dataフォルダから読み込む
+        import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING } from "./data/schema.js";
 
         const getEl = (id) => document.getElementById(id);
         const setVal = (id, v) => { const el = getEl(id); if(el) el.value = (v == null ? '' : v); };
@@ -312,7 +296,6 @@
                 const text = d.scenarioList.map(scn => `[${scn.title}]\n${scn.desc}`).join('\n\n');
                 setVal('txtScenarioDetails', text);
             } else {
-                // 旧形式からの変換
                 const simpleList = d.scenarios || "";
                 if (simpleList && !d.scenarioList) {
                     const converted = simpleList.split('\n')
