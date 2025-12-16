@@ -1,25 +1,32 @@
 import { login, logout, saveToCloud, loadFromCloud, monitorAuth } from "./firestore.js";
 
 export function initHeader() {
-    // ★ここがポイント！
-    // "header.css" とだけ書くことで、
-    // detail.html からは「detail/header.css」を、
-    // list.html からは「header.css（ルート）」を探しに行きます。
-    if (!document.querySelector('link[href*="header.css"]')) {
-        const link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'header.css'; 
-        document.head.appendChild(link);
+    // 1. CSS自動読み込み
+    // (detail.htmlなどのフォルダ内ページからは ../css/header.css を、ルートからは css/header.css を探す)
+    // ※今回はCSSのパス問題を防ぐため、HTML側で読み込んでいる前提の書き方にします
+
+    // 2. ページタイトルを自動判定するロジック
+    const path = window.location.pathname;
+    let pageTitle = "SYSTEM_V6.0"; // デフォルト
+
+    if (path.includes("list.html")) {
+        pageTitle = "SQUAD SELECTION"; // リスト画面
+    } else if (path.includes("detail.html")) {
+        pageTitle = "PERSONAL DATA";   // 詳細画面
+    } else if (path.includes("edit.html")) {
+        pageTitle = "DATA EDITOR";     // 編集画面
     }
 
-    // HTML生成
+    // 3. ヘッダーHTML生成
     const headerHTML = `
         <header id="sys-header">
-            <a href="/list.html"> <div class="header-logo">
-                    <span>CYBER_OS <span class="header-version">// SYSTEM_V6.0</span></span>
+            <a href="${path.includes('/detail/') ? '../list.html' : 'list.html'}">
+                <div class="header-logo">
+                    <span>CYBER_OS <span class="header-version">// ${pageTitle}</span></span>
                     <span id="headerInfo">OFFLINE</span>
                 </div>
             </a>
+
             <div class="header-controls">
                 <button id="globalSaveBtn" class="hdr-btn">SAVE</button>
                 <button id="headerLoginBtn" class="hdr-btn">LOGIN</button>
@@ -33,7 +40,7 @@ export function initHeader() {
         document.body.insertAdjacentHTML('afterbegin', headerHTML);
     }
 
-    // --- 機能設定（変更なし） ---
+    // --- 機能設定 ---
     const btnLogin = document.getElementById('headerLoginBtn');
     const btnLogout = document.getElementById('headerLogoutBtn');
     const btnSave = document.getElementById('globalSaveBtn');
