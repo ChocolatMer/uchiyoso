@@ -1,4 +1,3 @@
-// js/schema.js
 
 // ■ データ項目の定義マップ
 export const FIELD_MAPPING = [
