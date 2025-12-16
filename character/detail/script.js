@@ -109,12 +109,12 @@ els.shortDescToggle.addEventListener('change', (e) => {
 
 els.themeSwitcher.addEventListener('click', () => {
     const currentHref = els.mainStyle.getAttribute('href');
-    // パスが変わったのでファイル名だけで判定するように修正
+    
     if (currentHref.includes('style-cork.css')) {
-        els.mainStyle.setAttribute('href', 'style.css'); // 同階層ならファイル名だけでOK
+        els.mainStyle.setAttribute('href', 'detail/style.css');
         els.themeSwitcher.textContent = '◆ THEME: CYBER';
     } else {
-        els.mainStyle.setAttribute('href', 'style-cork.css');
+        els.mainStyle.setAttribute('href', 'detail/style-cork.css');
         els.themeSwitcher.textContent = '◆ THEME: ANALOG';
     }
 });
