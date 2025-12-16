@@ -309,4 +309,76 @@ tr.cat-knowledge { border-left: 3px solid var(--c-knowledge); background: linear
 .deck-tabs { display: flex; gap: 1px; overflow-x: auto; scrollbar-width: none; }
 .d-tab {
     flex: 1; min-width: 60px; background: #222; border: none; color: #666; padding: 8px 4px; font-size: 0.65rem;
-    font-family: var(--
+    font-family: var(--font-head); cursor: pointer; transition: 0.2s; border-top: 2px solid transparent;
+}
+.d-tab:hover { background: #333; color: #ddd; }
+.d-tab.active { background: transparent; color: var(--secondary); border-top-color: var(--secondary); font-weight: bold; }
+
+.deck-content { flex: 1; padding: 10px; position: relative; }
+.deck-pane { display: none; height: 100%; flex-direction: column; }
+.deck-pane.active { display: flex; }
+
+.cyber-input { width: 100%; height: 100%; background: transparent; border: none; color: #ccc; font-size: 0.9rem; line-height: 1.6; resize: none; font-family: var(--font-body); }
+.content-box { height: 100%; font-size: 0.85rem; line-height: 1.6; color: #ccc; white-space: pre-wrap; }
+.scenario-tag { display: inline-block; background: rgba(255, 0, 85, 0.1); border: 1px solid var(--primary); color: #fff; padding: 2px 8px; border-radius: 2px; margin: 2px 0; font-family: var(--font-body); font-size: 0.8rem; width: 100%; }
+
+.item-row { background: rgba(255,255,255,0.03); margin-bottom: 5px; padding: 8px; border-radius: 3px; border-left: 2px solid #444; transition: 0.2s; }
+.item-row:hover { 
+    background: rgba(255,255,255,0.08); border-left-color: var(--secondary); 
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.1);
+}
+.item-name { font-weight: bold; display: block; margin-bottom: 2px; color: #ddd; font-size: 0.85rem; }
+.item-desc-inp { width: 100%; background: transparent; border: none; color: #888; font-size: 0.8rem; resize: none; overflow: hidden; line-height: 1.4; min-height: 1.4em; padding: 0; }
+.item-desc-inp:focus { color: #fff; }
+
+/* --- COMPACT MODE FIX (When Skill Panel is in Narrow Column) --- */
+.dashboard-grid.swapped .val-row { display: none; } 
+.dashboard-grid.swapped .skill-table th:nth-child(3) { width: 40%; }
+.dashboard-grid.swapped .skill-table th:nth-child(1) { width: 45%; }
+.dashboard-grid.swapped .skill-table th:nth-child(2) { width: 15%; }
+.dashboard-grid.swapped .dist-bar-track { height: 8px; margin-top: 0; }
+.dashboard-grid.swapped .cyber-input { font-size: 1rem; line-height: 1.8; }
+
+.dashboard-grid.swapped .skill-desc-inp {
+    max-height: 5em; 
+    overflow-y: auto;
+    padding-right: 4px;
+    margin-top: 4px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.dashboard-grid.swapped .skill-desc-inp::-webkit-scrollbar { width: 3px; }
+.dashboard-grid.swapped .skill-desc-inp::-webkit-scrollbar-thumb { background: var(--secondary); border-radius: 2px; }
+
+/* --- SWAPPED DATABASE STYLE --- */
+.dashboard-grid.swapped .deck-content { padding: 20px; }
+.dashboard-grid.swapped .item-row {
+    background: rgba(10, 10, 12, 0.8);
+    border: 1px solid #333;
+    border-left: 4px solid var(--secondary);
+    margin-bottom: 15px;
+    padding: 15px;
+    border-radius: 4px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+}
+.dashboard-grid.swapped .item-name { font-family: var(--font-head); font-size: 1.1rem; color: #fff; margin-bottom: 8px; letter-spacing: 1px; }
+.dashboard-grid.swapped .item-desc-inp { font-size: 0.9rem; color: #aaa; line-height: 1.6; }
+
+
+/* MODAL */
+dialog { background: #111; border: 1px solid var(--secondary); color: #fff; width: 400px; padding: 20px; border-radius: 8px; }
+dialog::backdrop { background: rgba(0,0,0,0.8); }
+.modal-head { display: flex; justify-content: space-between; margin-bottom: 15px; color: var(--secondary); font-family: var(--font-head); }
+.close-btn { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
+#savedList li { padding: 10px; border-bottom: 1px solid #333; cursor: pointer; }
+#savedList li:hover { background: #222; color: var(--secondary); }
+
+/* RESPONSIVE */
+@media (max-width: 1200px) {
+    .dashboard-grid, .dashboard-grid.swapped { grid-template-columns: 280px 1fr; grid-template-rows: auto auto; height: auto; display: block; overflow-y: scroll; }
+    .col-left { height: auto; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .col-center { min-height: 600px; margin-bottom: 20px; }
+    .col-right { height: 500px; }
+}
+@media (max-width: 768px) {
+    .col-left { display: flex; flex-direction: column; }
+}
