@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Zen+Kaku+Gothic+New:wght@300;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
+    <link href="detail/header.css" rel="stylesheet">
+
     <link id="mainStyle" rel="stylesheet" href="detail/style.css">
     
     <script src="detail/data.js" defer></script>
@@ -30,19 +32,18 @@
                     <input type="file" id="fileInput" accept=".txt">
                 </label>
                 <div class="sub-actions">
-    <button id="btnLogin" class="cyber-btn text-btn">CONNECT NET (LOGIN)</button>
-    <button id="btnLogout" class="cyber-btn text-btn hidden">DISCONNECT</button>
-    
-    <button id="btnLocalLoad" class="cyber-btn text-btn">LOAD CLOUD</button>
-    <button id="btnLocalSave" class="cyber-btn text-btn">SAVE CLOUD</button>
-　　　　　　　</div>
+                    <button id="btnLogin" class="cyber-btn text-btn">CONNECT NET (LOGIN)</button>
+                    <button id="btnLogout" class="cyber-btn text-btn hidden">DISCONNECT</button>
+                    
+                    <button id="btnLocalLoad" class="cyber-btn text-btn">LOAD CLOUD</button>
+                    <button id="btnLocalSave" class="cyber-btn text-btn">SAVE CLOUD</button>
+                </div>
             </div>
             <p class="version-info">TARGET: IaChara Export Format</p>
         </div>
     </div>
 
     <div class="dashboard-grid" id="dashboard">
-        
         <aside class="col-left">
             <div class="panel profile-card">
                 <div class="img-frame">
@@ -164,7 +165,9 @@
                 <div class="deck-tabs" id="infoTabs">
                     <button class="d-tab active" data-target="panelMemo">MEMO</button>
                     <button class="d-tab" data-target="panelItem">ITEMS</button>
-                    <button class="d-tab" data-target="panelSpells">MAGIC/AF</button> <button class="d-tab" data-target="panelEntities">ENTITY</button> <button class="d-tab" data-target="panelHistory">LOGS</button>
+                    <button class="d-tab" data-target="panelSpells">MAGIC/AF</button> 
+                    <button class="d-tab" data-target="panelEntities">ENTITY</button> 
+                    <button class="d-tab" data-target="panelHistory">LOGS</button>
                 </div>
             </div>
 
@@ -190,7 +193,6 @@
                 </div>
             </div>
         </aside>
-
     </div>
 
     <dialog id="loadDialog">
@@ -203,15 +205,14 @@
         </div>
     </dialog>
 
-<script type="module">
-    // 正解:
-    import { initHeader } from "../header.js"; 
-    initHeader();
-</script>
+    <script type="module">
+        // "../header.js" だと「1つ上」を探してしまいますが、
+        // detail.html は外にあるので、header.js は「同じ場所（./）」にあります。
+        import { initHeader } from "./header.js"; 
+        initHeader();
+    </script>
 
     <script src="detail/script.js" type="module"></script>
-
-</body> </html>
 
 </body>
 </html>
