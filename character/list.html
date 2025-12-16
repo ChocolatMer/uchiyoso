@@ -60,7 +60,7 @@
             flex: 0 0 var(--card-width);
             height: var(--card-height);
             margin: 0 var(--gap);
-            position: relative; cursor: pointer;
+            position: relative; 
             transform-style: preserve-3d;
             transition: transform 0.3s ease, margin 0.3s ease;
             display: flex; flex-direction: column; justify-content: flex-end; 
@@ -72,6 +72,7 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.6);
             background: rgba(20, 20, 25, 0.9);
             border-top: 1px solid rgba(255,255,255,0.1);
+            pointer-events: none; /* クリックを透過 */
         }
         .card-bg-image {
             width: 100%; height: 100%;
@@ -86,6 +87,7 @@
             display: flex; align-items: center; justify-content: flex-start;
             padding-top: 10px; letter-spacing: 0.15em; font-family: 'Teko', sans-serif;
             font-size: 1rem; box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
+            pointer-events: none;
         }
         .banner-role { font-size: 0.6rem; margin-bottom: 8px; opacity: 0.8; writing-mode: horizontal-tb; }
 
@@ -95,6 +97,7 @@
             width: 90px; height: 30px;
             background: radial-gradient(ellipse at center, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, transparent 80%);
             z-index: 3; filter: blur(4px); opacity: 0.9;
+            pointer-events: none;
         }
 
         .char-figure {
@@ -102,7 +105,7 @@
             transform: translateX(-50%);
             height: 90%;
             width: auto; max-width: none;
-            z-index: 10; pointer-events: none;
+            z-index: 10; pointer-events: none; /* 画像自体はクリックさせない */
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             filter: drop-shadow(0px 5px 4px rgba(0,0,0,0.6));
             object-fit: contain;
@@ -112,6 +115,24 @@
         .char-card:hover .card-bg-image { transform: scale(1.1); filter: grayscale(0) opacity(0.8) blur(0); }
         .char-card:hover .char-figure { transform: translateX(-50%) scale(1.05); }
         .char-card:hover .card-bg-panel { box-shadow: 0 0 25px rgba(0, 243, 255, 0.3); border-color: rgba(0, 243, 255, 0.5); }
+
+        /* --- ★追加: カード全体をクリック可能にするための透明なカバー --- */
+        .card-click-area {
+            position: absolute; inset: 0; z-index: 30; cursor: pointer;
+        }
+
+        /* --- ★追加: 画像編集ボタン --- */
+        .edit-img-btn {
+            position: absolute; top: 10px; right: 10px;
+            width: 30px; height: 30px;
+            background: rgba(0,0,0,0.6); border: 1px solid #555; border-radius: 4px;
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            z-index: 40; cursor: pointer; font-size: 1.2rem;
+            opacity: 0; transition: opacity 0.2s;
+        }
+        .edit-img-btn:hover { background: #00f3ff; color: #000; border-color: #00f3ff; }
+        .char-card:hover .edit-img-btn { opacity: 1; }
+
 
         .nav-btn {
             position: absolute; top: 50%; transform: translateY(-50%);
@@ -143,6 +164,11 @@
     </style>
 </head>
 <body>
+    <script type="module">
+        import { initHeader } from "./js/header.js";
+        initHeader();
+    </script>
+
     <div class="sub-header">SQUAD SELECTION // DATABASE</div>
     
     <div id="particles"></div>
@@ -158,12 +184,7 @@
     <div class="sub-header" style="height: 30px; font-size: 0.7rem;">CONFIRM OPERATION</div>
 
     <script type="module">
-        import { initHeader } from "./js/header.js";
-        initHeader();
-    </script>
-
-    <script type="module">
-        import { loadFromCloud } from "./js/firestore.js";
+        import { loadFromCloud, saveToCloud } from "./js/firestore.js";
 
         const stage = document.getElementById('stage');
 
@@ -188,7 +209,6 @@
                 card.className = 'char-card';
                 
                 const imgSource = char.image || 'https://placehold.co/200x500/333/666?text=NO+IMG';
-                const roleText = char.job ? char.job.substring(0, 8) : 'UNKNOWN';
                 const colorClass = getColorByJob(char.job);
 
                 card.innerHTML = `
@@ -200,10 +220,31 @@
                     </div>
                     <div class="char-shadow-contact"></div>
                     <img src="${imgSource}" class="char-figure" onerror="this.style.opacity='0'">
+                    
+                    <div class="edit-img-btn" title="画像を登録/変更する">📷</div>
+                    
+                    <div class="card-click-area"></div>
                 `;
 
-                card.onclick = () => {
-                    // ★ 移動先を detail.html に修正済み
+                // 1. 画像編集ボタンを押した時
+                const editBtn = card.querySelector('.edit-img-btn');
+                editBtn.onclick = (e) => {
+                    e.stopPropagation(); // 詳細ページへの移動をキャンセル
+                    const newUrl = prompt("【立ち絵登録】\n画像のURLを入力してください：", char.image || "");
+                    
+                    if(newUrl !== null) { // キャンセル以外なら保存
+                        char.image = newUrl;
+                        // ここで保存！リスト画面から直接保存します
+                        saveToCloud(char).then(() => {
+                            // 保存完了後、自動的にリストを再描画（自分自身をリロード）
+                            window.renderCharacterList(data);
+                        });
+                    }
+                };
+
+                // 2. カード自体をクリックした時（詳細へ）
+                const clickArea = card.querySelector('.card-click-area');
+                clickArea.onclick = () => {
                     window.location.href = `detail.html?id=${char.id}`;
                 };
 
@@ -211,6 +252,7 @@
             });
         };
 
+        // 初期ロード
         loadFromCloud().then(data => {
             if(data) window.renderCharacterList(data);
         });
