@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DATA EDITOR</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    
+    <link href="edit/header.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #202020;
+            color: #ddd;
+            font-family: 'Noto Sans JP', sans-serif;
+            margin: 0; padding: 0;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 80px 20px 100px; /* ヘッダー分空ける */
+        }
+
+        /* ツールバー */
+        .toolbar {
+            background: #333; padding: 20px;
+            border-radius: 4px; margin-bottom: 30px;
+            display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid #444;
+        }
+        select {
+            padding: 10px; background: #111; color: #fff; border: 1px solid #555;
+            font-size: 1rem; width: 300px; border-radius: 4px;
+        }
+        .btn-new {
+            background: #44ff44; color: #000; border: none; padding: 10px 20px;
+            font-weight: bold; cursor: pointer; border-radius: 4px;
+        }
+        .btn-delete {
+            background: #ff4444; color: #fff; border: none; padding: 5px 10px;
+            cursor: pointer; border-radius: 4px; font-size: 0.8rem; margin-left: 10px;
+        }
+
+        /* フォームレイアウト */
+        h2 { border-bottom: 2px solid #555; padding-bottom: 10px; margin-top: 40px; color: #aaa; font-size: 1.2rem; }
+        
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-row { margin-bottom: 15px; }
+        .form-row.full { grid-column: span 2; }
+
+        label { display: block; color: #888; font-size: 0.8rem; margin-bottom: 5px; font-family: 'Roboto Mono', monospace; }
+        
+        input[type="text"], input[type="number"] {
+            width: 100%; padding: 10px; box-sizing: border-box;
+            background: #2a2a2a; border: 1px solid #444; color: #fff;
+            border-radius: 4px; font-size: 1rem;
+        }
+        input:focus, textarea:focus { border-color: #44ff44; outline: none; background: #333; }
+
+        textarea {
+            width: 100%; padding: 10px; box-sizing: border-box;
+            background: #2a2a2a; border: 1px solid #444; color: #fff;
+            border-radius: 4px; font-size: 0.9rem; line-height: 1.6;
+            min-height: 100px; resize: vertical;
+        }
+
+        /* --- 画像セクション（2カラム） --- */
+        .visual-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 30px;
+            background: #252525; padding: 20px; border-radius: 4px; border: 1px solid #444;
+        }
+        .visual-box {
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .img-preview-box {
+            width: 100%; height: 250px;
+            background: #000; border: 1px solid #444;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; position: relative;
+        }
+        .img-preview {
+            max-width: 100%; max-height: 100%; object-fit: contain;
+        }
+        .img-label {
+            position: absolute; top: 5px; left: 5px;
+            background: rgba(0,0,0,0.7); color: #aaa;
+            padding: 2px 6px; font-size: 0.7rem; border-radius: 2px;
+        }
+
+        /* ステータス入力欄 */
+        .stats-container {
+            display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px;
+            background: #252525; padding: 15px; border-radius: 4px;
+        }
+        .stat-box { text-align: center; }
+        .stat-box input { text-align: center; font-weight: bold; color: #44ff44; }
+
+        .helper-text { font-size: 0.75rem; color: #666; margin-top: 4px; }
+    </style>
+</head>
+<body>
+
+    <script type="module">
+        import { initHeader } from "./header.js"; 
+        initHeader();
+    </script>
+
+    <div class="container">
+        
+        <div class="toolbar">
+            <div>
+                <label>EDIT TARGET (編集対象)</label>
+                <select id="charSelect">
+                    <option value="">LOADING...</option>
+                </select>
+            </div>
+            <div>
+                <button id="btnCreateNew" class="btn-new">+ CREATE NEW</button>
+            </div>
+        </div>
+
+        <div id="editorArea" style="opacity:0.3; pointer-events:none;">
+            
+            <h2>BASIC INFO</h2>
+            <div class="form-grid">
+                <div class="form-row"><label>NAME (名前)</label><input type="text" id="inpName"></div>
+                <div class="form-row"><label>KANA (フリガナ)</label><input type="text" id="inpKana"></div>
+                <div class="form-row"><label>JOB (職業)</label><input type="text" id="inpJob"></div>
+                <div class="form-row"><label>AGE (年齢)</label><input type="text" id="inpAge"></div>
+                <div class="form-row full"><label>TAGS (スペース区切り)</label><input type="text" id="inpTags"></div>
+            </div>
+
+            <h2>VISUALS</h2>
+            <div class="visual-grid">
+                <div class="visual-box">
+                    <label>STANDING ART (全身立ち絵)</label>
+                    <div class="img-preview-box">
+                        <span class="img-label">BODY</span>
+                        <img id="previewBody" class="img-preview" src="">
+                    </div>
+                    <input type="text" id="inpImageBody" placeholder="https://... (URL)">
+                    <div class="helper-text">詳細画面やカードの背景に使われます</div>
+                </div>
+
+                <div class="visual-box">
+                    <label>FACE ICON (顔アイコン)</label>
+                    <div class="img-preview-box">
+                        <span class="img-label">ICON</span>
+                        <img id="previewIcon" class="img-preview" src="">
+                    </div>
+                    <input type="text" id="inpImageIcon" placeholder="https://... (URL)">
+                    <div class="helper-text">チャットやリストのサムネイル用</div>
+                </div>
+            </div>
+
+            <h2>STATS & VITALS</h2>
+            <div class="form-row">
+                <label>MAIN STATS</label>
+                <div class="stats-container">
+                    <div class="stat-box"><label>STR</label><input type="number" id="s_str"></div>
+                    <div class="stat-box"><label>CON</label><input type="number" id="s_con"></div>
+                    <div class="stat-box"><label>POW</label><input type="number" id="s_pow"></div>
+                    <div class="stat-box"><label>DEX</label><input type="number" id="s_dex"></div>
+                    <div class="stat-box"><label>APP</label><input type="number" id="s_app"></div>
+                    <div class="stat-box"><label>SIZ</label><input type="number" id="s_siz"></div>
+                    <div class="stat-box"><label>INT</label><input type="number" id="s_int"></div>
+                    <div class="stat-box"><label>EDU</label><input type="number" id="s_edu"></div>
+                </div>
+            </div>
+
+            <div class="form-grid" style="margin-top:20px;">
+                <div class="form-row"><label>HP</label><input type="number" id="v_hp"></div>
+                <div class="form-row"><label>MP</label><input type="number" id="v_mp"></div>
+                <div class="form-row"><label>SAN</label><input type="number" id="v_san"></div>
+                <div class="form-row"><label>DB</label><input type="text" id="v_db"></div>
+            </div>
+
+            <h2>DETAILS</h2>
+            <div class="form-row"><label>MEMO</label><textarea id="txtMemo"></textarea></div>
+            <div class="form-grid">
+                <div class="form-row"><label>ITEMS</label><textarea id="txtItems"></textarea></div>
+                <div class="form-row"><label>SPELLS / AF</label><textarea id="txtSpells"></textarea></div>
+                <div class="form-row full"><label>SCENARIO LOGS</label><textarea id="txtScenarios"></textarea></div>
+            </div>
+
+            <div style="margin-top:50px; text-align:right;">
+                <button id="btnDelete" class="btn-delete">DELETE CHARACTER</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { loadFromCloud, saveToCloud } from "./firestore.js";
+
+        const charSelect = document.getElementById('charSelect');
+        const editorArea = document.getElementById('editorArea');
+        const btnCreate = document.getElementById('btnCreateNew');
+        const btnDelete = document.getElementById('btnDelete');
+        
+        const inpBody = document.getElementById('inpImageBody');
+        const inpIcon = document.getElementById('inpImageIcon');
+        const preBody = document.getElementById('previewBody');
+        const preIcon = document.getElementById('previewIcon');
+
+        let allData = {};
+        let currentId = null;
+
+        async function init() {
+            try {
+                const data = await loadFromCloud();
+                allData = data || {};
+                renderSelect();
+            } catch (e) { console.error(e); }
+        }
+        init();
+
+        function renderSelect() {
+            charSelect.innerHTML = '<option value="">-- SELECT CHARACTER --</option>';
+            Object.values(allData).forEach(char => {
+                const opt = document.createElement('option');
+                opt.value = char.id;
+                opt.textContent = char.name;
+                charSelect.appendChild(opt);
+            });
+            if(currentId) charSelect.value = currentId;
+        }
+
+        charSelect.addEventListener('change', (e) => {
+            currentId = e.target.value;
+            if(!currentId) {
+                editorArea.style.opacity = '0.3';
+                editorArea.style.pointerEvents = 'none';
+                return;
+            }
+            loadCharacterToForm(allData[currentId]);
+        });
+
+        btnCreate.addEventListener('click', () => {
+            const newId = crypto.randomUUID();
+            const newChar = {
+                id: newId, name: "New Character",
+                stats: {STR:10, CON:10, POW:10, DEX:10, APP:10, SIZ:10, INT:10, EDU:10},
+                vitals: {hp:10, mp:10, san:50},
+                items: [], skills: {combat:[], explore:[], action:[], negotiate:[], knowledge:[]}
+            };
+            allData[newId] = newChar;
+            currentId = newId;
+            renderSelect();
+            loadCharacterToForm(newChar);
+        });
+
+        function loadCharacterToForm(d) {
+            editorArea.style.opacity = '1';
+            editorArea.style.pointerEvents = 'auto';
+
+            setVal('inpName', d.name);
+            setVal('inpKana', d.kana);
+            setVal('inpJob', d.job);
+            setVal('inpAge', d.age);
+            setVal('inpTags', d.tags);
+
+            // ★画像：立ち絵(image) と アイコン(icon) を読み分け
+            setVal('inpImageBody', d.image); // 従来のimageは立ち絵へ
+            setVal('inpImageIcon', d.icon);  // 新しいiconデータ
+
+            preBody.src = d.image || '';
+            preIcon.src = d.icon || '';
+
+            const s = d.stats || {};
+            setVal('s_str', s.STR); setVal('s_con', s.CON); setVal('s_pow', s.POW);
+            setVal('s_dex', s.DEX); setVal('s_app', s.APP); setVal('s_siz', s.SIZ);
+            setVal('s_int', s.INT); setVal('s_edu', s.EDU);
+
+            const v = d.vitals || {};
+            setVal('v_hp', v.hp); setVal('v_mp', v.mp); setVal('v_san', v.san);
+            setVal('v_db', d.db);
+
+            setVal('txtMemo', d.memo);
+            setVal('txtSpells', d.spells);
+            setVal('txtScenarios', d.scenarios);
+
+            if(Array.isArray(d.items)) {
+                document.getElementById('txtItems').value = d.items.map(i => i.name).join('\n');
+            } else {
+                setVal('txtItems', '');
+            }
+        }
+
+        // 保存処理
+        window.prepareSaveData = function() {
+            if(!currentId) return null;
+            const char = allData[currentId];
+            
+            char.name = getVal('inpName');
+            char.kana = getVal('inpKana');
+            char.job = getVal('inpJob');
+            char.age = getVal('inpAge');
+            char.tags = getVal('inpTags');
+
+            // ★画像保存
+            char.image = getVal('inpImageBody'); // 立ち絵
+            char.icon = getVal('inpImageIcon');  // アイコン
+
+            char.stats = {
+                STR: getNum('s_str'), CON: getNum('s_con'), POW: getNum('s_pow'),
+                DEX: getNum('s_dex'), APP: getNum('s_app'), SIZ: getNum('s_siz'),
+                INT: getNum('s_int'), EDU: getNum('s_edu')
+            };
+            char.vitals = char.vitals || {};
+            char.vitals.hp = getNum('v_hp');
+            char.vitals.mp = getNum('v_mp');
+            char.vitals.san = getNum('v_san');
+            char.db = getVal('v_db');
+
+            char.memo = getVal('txtMemo');
+            char.spells = getVal('txtSpells');
+            char.scenarios = getVal('txtScenarios');
+
+            const itemText = getVal('txtItems');
+            char.items = itemText.split('\n').filter(t => t.trim() !== '').map(t => ({name: t, desc: ''}));
+
+            alert("保存しました！");
+            return char;
+        };
+
+        // プレビュー連動
+        inpBody.addEventListener('input', (e)=>{ preBody.src = e.target.value; });
+        inpIcon.addEventListener('input', (e)=>{ preIcon.src = e.target.value; });
+
+        btnDelete.addEventListener('click', async () => {
+            if(!currentId) return;
+            if(confirm('本当に削除しますか？')) {
+                delete allData[currentId];
+                alert('リストから削除しました。データベースへの反映はページリロード後に自動同期されます。');
+                location.reload();
+            }
+        });
+
+        function setVal(id, val) { document.getElementById(id).value = val || ''; }
+        function getVal(id) { return document.getElementById(id).value; }
+        function getNum(id) { return parseInt(document.getElementById(id).value) || 0; }
+    </script>
+</body>
+</html>
