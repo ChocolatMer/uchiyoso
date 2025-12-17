@@ -1,8 +1,7 @@
-カラーコードなど保存できるようになりましたがほかのページでもカラーコードが読み取れるように情報を統一したいです。カラー情報もきちんと保存できるようになっていますか？髪の色などいあキャラからとれる情報も含め確認お願いします
-
 // data/schema.js
 
 // ■ データ項目の定義マップ (全ての保存対象データ)
+// ここに定義された項目は、collectFormDataで自動的に収集・保存されます
 export const FIELD_MAPPING = [
     // 基本情報
     { key: 'name',      id: 'inpName' },
@@ -15,9 +14,12 @@ export const FIELD_MAPPING = [
     { key: 'birthplace',id: 'inpOrigin' },
     { key: 'height',    id: 'inpHeight' },
     { key: 'weight',    id: 'inpWeight' },
-    { key: 'colorHair', id: 'inpHair' },
-    { key: 'colorEye',  id: 'inpEye' },
-    { key: 'colorSkin', id: 'inpSkin' },
+    
+    // ★カラー情報 (キー名を統一)
+    { key: 'colorHair', id: 'inpHair' },       // 髪色
+    { key: 'colorEye',  id: 'inpEye' },        // 瞳色
+    { key: 'colorSkin', id: 'inpSkin' },       // 肌色
+    { key: 'color',     id: 'inpThemeColor' }, // ★テーマカラー (新規追加)
     
     // 画像
     { key: 'image',     id: 'inpImageBody' },
@@ -55,17 +57,28 @@ export const VITALS_MAPPING = [
 
 /**
  * いあキャラ形式のテキストを解析して、全ての画面で使える共通データオブジェクトを作る
- * ★詳細画面のグラフ用データ、アイテム詳細、成長履歴なども全てここで抽出します
  */
 export function parseIaChara(text) {
     const d = { 
         id: crypto.randomUUID(), 
         stats:{}, vitals:{}, memo:{}, 
-        // ★詳細画面のグラフ描画に必須の構造
         skills: {combat:[], explore:[], action:[], negotiate:[], knowledge:[]},
-        items: [], scenarioList: []
+        items: [], scenarioList: [],
+        // カラー初期値
+        color: '#d9333f', colorHair: '', colorEye: '', colorSkin: ''
     };
-    const m = (regex) => (text.match(regex)||[])[1]||'';
+
+    // ★正規表現ヘルパー: 「/」や改行が来るまでを取得するように強化
+    const m = (regex) => {
+        const match = text.match(regex);
+        return match ? match[1].trim() : '';
+    };
+    // 「項目: 値 /」 のような区切りに対応する汎用マッチャー
+    const getProfileVal = (label) => {
+        // 例: "髪の色[:：]\s*(キャプチャ)(?:\s*\/|$)" -> スラッシュまたは行末まで
+        const regex = new RegExp(`${label}[:：]\\s*(.*?)(?:\\s*\\/|$)`, 'm');
+        return m(regex);
+    };
 
     // --- 基本情報 ---
     const nameLine = m(/名前[:：]\s*(.+)/) || 'Unknown';
@@ -73,26 +86,31 @@ export function parseIaChara(text) {
     if(nameMatch) { d.name = nameMatch[1].trim(); d.kana = nameMatch[2].trim(); } 
     else { d.name = nameLine; }
 
-    d.job = m(/職業[:：]\s*(.+?)(?=\s|$)/);
+    d.job = getProfileVal('職業');
     d.tags = m(/タグ[:：]\s*(.+)/);
-    d.age = m(/年齢[:：]\s*(\d+)/);
-    d.gender = m(/性別[:：]\s*(\S+)/);
-    d.height = m(/身長[:：]\s*(\d+)/);
-    d.weight = m(/体重[:：]\s*(\d+)/);
-    d.birthday = m(/誕生日[:：]\s*(\S+)/);
-    d.origin = m(/出身[:：]\s*(\S+)/);
-    d.hair = m(/髪の色[:：]\s*(\S+)/);
-    d.eye = m(/瞳の色[:：]\s*(\S+)/);
-    d.skin = m(/肌の色[:：]\s*(\S+)/);
     
-    // 画像URLの取得（旧形式にも対応）
+    // プロフィール詳細 (区切り文字 / に対応)
+    d.age = getProfileVal('年齢');
+    d.gender = getProfileVal('性別');
+    d.height = getProfileVal('身長');
+    d.weight = getProfileVal('体重');
+    d.birthday = getProfileVal('誕生日');
+    d.origin = getProfileVal('出身'); // あるいは "出身地"
+    d.birthplace = d.origin; // マッピング用エイリアス
+
+    // ★カラー情報の取得 (キー名をFIELD_MAPPINGと統一)
+    d.colorHair = getProfileVal('髪の色');
+    d.colorEye = getProfileVal('瞳の色');
+    d.colorSkin = getProfileVal('肌の色');
+    
+    // 画像URL
     d.image = m(/画像URL[:：]\s*(\S+)/) || m(/【画像】\n:(\S+)/) || m(/【立ち絵】\n:(\S+)/);
     d.icon = m(/アイコンURL[:：]\s*(\S+)/) || m(/【アイコン】\n:(\S+)/);
     
     d.money = m(/(?:現在の)?所持金[:：]\s*(.+)/);
     d.debt = m(/借金[:：]\s*(.+)/);
 
-    // --- ステータス (グラフ描画に必須) ---
+    // --- ステータス ---
     const getStat = (name) => {
         const reg = new RegExp(`${name}[\\s:：]+(\\d+)`);
         return parseInt(m(reg)) || 0;
@@ -115,7 +133,7 @@ export function parseIaChara(text) {
         });
     }
 
-    // --- ★技能配列の生成 (詳細画面のグラフ用) ---
+    // --- 技能配列の生成 ---
     const lines = text.split('\n');
     let cat = null;
     lines.forEach(l => {
@@ -128,7 +146,6 @@ export function parseIaChara(text) {
         else if(l.startsWith('【')) cat=null;
 
         if(cat) {
-            // "技能名 合計 初期値..." の並びを解析
             const match = l.match(/^([^\d]+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)/);
             if(match && match[1].trim()!=='技能名') {
                 const n = match[1].trim();
@@ -146,9 +163,8 @@ export function parseIaChara(text) {
         }
     });
 
-    // --- テキストセクションの抽出ヘルパー ---
+    // --- テキストセクション ---
     const getSec = (tag) => {
-        // [タグ] や 【タグ】 や 〈タグ〉 に対応
         const regex = new RegExp(`(?:\\[|【|〈)${tag}(?:\\]|】|〉)([\\s\\S]*?)(?:(?:\\[|【|〈)|$)`);
         const match = text.match(regex);
         return match ? match[1].trim() : '';
@@ -160,7 +176,6 @@ export function parseIaChara(text) {
     d.memo.relations = getSec('人間関係');
     d.memo.appearance = getSec('外見') || getSec('外見的特徴');
     d.memo.roleplay = getSec('RP補足') || getSec('RP用補足');
-    // 技能詳細（全体、または職業P/趣味Pの結合）
     d.memo.skillDetails = getSec('技能詳細') || [getSec('職業P振り分け詳細'), getSec('趣味P振り分け詳細')].filter(Boolean).join('\n\n');
     d.memo.memo = getSec('メモ');
 
@@ -170,7 +185,7 @@ export function parseIaChara(text) {
     d.growth = getSec('新たに得た知識・経験');
     d.scenarios = getSec('通過したシナリオ名') || getSec('通過シナリオ');
 
-    // シナリオ詳細変換（[タイトル] 形式）
+    // シナリオ詳細変換
     if (d.scenarios) {
         const titles = d.scenarios.match(/\[(.*?)\]/g);
         if(titles) {
@@ -178,7 +193,6 @@ export function parseIaChara(text) {
         } else {
             d.scenarioDetailsText = d.scenarios;
         }
-        // 詳細画面リスト用オブジェクト配列
         const entries = d.scenarios.split(/\n(?=\[)/g);
         d.scenarioList = entries.map(entry => {
             const match = entry.match(/^\[(.*?)\]([\s\S]*)$/);
@@ -187,7 +201,7 @@ export function parseIaChara(text) {
         }).filter(e => e.title);
     }
 
-    // 技能リスト表（編集画面のテキストエリア用、数値表そのもの）
+    // 技能リスト表
     const skillStart = text.indexOf('【技能値】');
     const nextSec = text.match(/【(戦闘|所持品|メモ)/);
     const skillEnd = nextSec ? nextSec.index : text.length;
@@ -199,7 +213,7 @@ export function parseIaChara(text) {
     const wMatch = text.match(/【戦闘・武器・防具】([\s\S]*?)【/);
     if(wMatch) d.weapons = wMatch[1].trim();
 
-    // 所持品 (配列化とテキスト化)
+    // 所持品
     const itemSection = getSec('所持品');
     if(itemSection) {
         const lines = itemSection.split('\n');
@@ -210,11 +224,9 @@ export function parseIaChara(text) {
             if(parts.length > 0) {
                 const name = parts[0];
                 let desc = "";
-                // 名称 単価 個数 価格 備考... の順
                 if(parts.length >= 5) desc = parts.slice(4).join(' ');
                 else if(parts.length > 1) desc = parts.slice(1).join(' ');
                 items.push(desc ? `${name} : ${desc}` : name);
-                
                 d.items.push({name: name, desc: desc});
             }
         });
@@ -226,12 +238,8 @@ export function parseIaChara(text) {
 
 /**
  * 編集画面用: フォームのデータを収集して保存用オブジェクトを作成する
- * @param {Object} currentData - 既存のデータ（Firebaseから読み込んだもの）
- * @param {boolean} overwriteEmpty - 空欄の場合に上書きするか？ (false=安全モード: 既存データを守る)
  */
 export function collectFormData(currentData = {}, overwriteEmpty = false) {
-    
-    // 既存データをベースにコピー (画面にない隠しデータも維持)
     const newData = { ...currentData };
     newData.stats = { ...(currentData.stats || {}) };
     newData.vitals = { ...(currentData.vitals || {}) };
@@ -241,25 +249,17 @@ export function collectFormData(currentData = {}, overwriteEmpty = false) {
         return el ? el.value : null; 
     };
 
-    // 1. 基本フィールド処理
+    // 1. 基本フィールド処理 (カラー情報含む)
     FIELD_MAPPING.forEach(field => {
         const inputVal = getVal(field.id);
-        
-        // HTML要素が存在しない場合はスキップ (データ保護)
         if (inputVal === null) return;
 
         if (inputVal !== "") {
-            // 入力があれば更新
             newData[field.key] = inputVal;
         } else {
-            // 入力が「空」の場合
             if (overwriteEmpty) {
-                // 上書きモードなら空にする (削除)
                 newData[field.key] = "";
             } else {
-                // ★安全モード (ここが重要)
-                // 既存データが undefined (未定義) の場合のみ空文字を入れる。
-                // すでにデータが入っている場合は、空欄であっても触らず維持する。
                 if (newData[field.key] === undefined) {
                     newData[field.key] = "";
                 }
@@ -267,7 +267,7 @@ export function collectFormData(currentData = {}, overwriteEmpty = false) {
         }
     });
 
-    // 2. ステータス・バイタル (数値系)
+    // 2. ステータス・バイタル
     const updateNum = (mapping, targetObj) => {
         mapping.forEach(field => {
             const val = getVal(field.id);
@@ -279,7 +279,7 @@ export function collectFormData(currentData = {}, overwriteEmpty = false) {
     updateNum(STATS_MAPPING, newData.stats);
     updateNum(VITALS_MAPPING, newData.vitals);
 
-    // 3. メモの結合 (画面の状態を正とする)
+    // 3. メモの結合
     const secs = [];
     const getMemo = (id) => getVal(id);
     const add = (t, val) => { if(val) secs.push(`[${t}]\n${val}`); };
@@ -293,7 +293,6 @@ export function collectFormData(currentData = {}, overwriteEmpty = false) {
     add('メモ', getMemo('txtMemo'));
     
     const newMemo = secs.join('\n\n');
-    // メモは「空欄上書きOK」か「入力がある場合」に更新
     if (newMemo || overwriteEmpty) {
         newData.memo = newMemo;
     }
