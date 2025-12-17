@@ -1,165 +1,263 @@
+--- START OF FILE list.html ---
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Character Select</title>
+    <title>Character Select // SQUAD</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Teko:wght@500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Teko:wght@300;500;700&display=swap" rel="stylesheet">
     
+    <!-- 既存のヘッダーCSSがあれば読み込み -->
     <link href="list/header.css" rel="stylesheet">
 
     <style>
-        /* --- デザイン設定 --- */
+        /* --- CORE DESIGN VARIABLES --- */
         :root {
-            --bg-color: #1a1a1d;
-            /* ...以下、既存のスタイルが続きます（消さないでください）... */
-            --card-width: 180px; 
-            --card-height: 55vh;
-            --gap: 15px;
-            --letterbox-height: 40px;
-            --accent-blue: #5b8ba8;
-            --accent-yellow: #d4b346;
-            --accent-gray: #555555;
+            --bg-dark: #0a0a0c;
+            --panel-width: 240px;
+            --panel-height: 60vh;
+            --gap: 60px; /* キャラクター間の距離 */
+            
+            --accent-blue: #00f3ff;
+            --accent-yellow: #ffd700;
+            --accent-red: #ff2a2a;
+            --accent-gray: #888888;
+            
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
         }
 
         body {
             margin: 0; padding: 0;
-            background-color: var(--bg-color);
-            background-image: 
-                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
-            background-position: center bottom;
+            background-color: var(--bg-dark);
             font-family: 'Noto Sans JP', sans-serif;
             overflow: hidden;
             height: 100vh;
             display: flex; flex-direction: column;
+            color: #fff;
         }
 
-        .sub-header {
-            width: 100%; height: var(--letterbox-height);
-            background-color: #000;
-            display: flex; align-items: center; justify-content: center;
-            color: #555; font-family: 'Teko', sans-serif; letter-spacing: 0.3em; font-size: 0.9rem;
-            z-index: 10; border-bottom: 1px solid #333;
+        /* --- DYNAMIC BACKGROUND --- */
+        /* 選択中のキャラが背景に大きく表示されるエリア */
+        #global-bg {
+            position: absolute; inset: -20px;
+            z-index: 0;
+            background-size: cover;
+            background-position: center 20%;
+            filter: blur(15px) brightness(0.4);
+            transition: background-image 0.6s ease-in-out, opacity 0.6s;
+            opacity: 0.8;
+        }
+        #global-bg::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(to bottom, var(--bg-dark) 0%, rgba(10,10,12,0.6) 50%, var(--bg-dark) 100%),
+                        radial-gradient(circle at center, transparent 0%, var(--bg-dark) 120%);
+        }
+        
+        /* --- FLOOR GRID --- */
+        .floor-grid {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 50%;
+            background: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 100px 50px;
+            transform: perspective(1000px) rotateX(60deg);
+            transform-origin: bottom;
+            pointer-events: none; z-index: 1;
+            mask-image: linear-gradient(to top, black 20%, transparent 100%);
         }
 
+        /* --- UI ELEMENTS --- */
+        .ui-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 100;
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+
+        .header-deco {
+            padding: 20px;
+            display: flex; justify-content: space-between; align-items: flex-end;
+            text-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+        .header-title {
+            font-family: 'Teko', sans-serif; font-weight: 700; font-size: 3rem; 
+            line-height: 1; letter-spacing: 0.05em;
+            background: linear-gradient(45deg, #fff, #aaa);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .header-sub { font-size: 0.8rem; letter-spacing: 0.3em; opacity: 0.7; color: var(--accent-blue); }
+
+        /* --- STAGE (CAROUSEL) --- */
         .stage-wrapper {
             flex: 1; position: relative; width: 100%;
             display: flex; align-items: center; justify-content: center;
             z-index: 10;
+            perspective: 1200px; /* 3D深度 */
         }
 
         .stage-container {
             display: flex; align-items: center;
-            padding: 0 5vw;
-            overflow-x: auto; scroll-behavior: smooth;
-            perspective: 1500px;
-            scrollbar-width: none; -ms-overflow-style: none;
+            padding: 0 50vw; /* 中央寄せのためのパディング */
+            overflow-x: auto; 
+            overflow-y: hidden;
+            scroll-behavior: smooth;
             height: 100%; width: 100%;
+            scrollbar-width: none;
+            scroll-snap-type: x mandatory; /* スナップ機能 */
         }
         .stage-container::-webkit-scrollbar { display: none; }
 
-        .char-card {
-            flex: 0 0 var(--card-width);
-            height: var(--card-height);
+        /* --- CHARACTER CARD UNIT --- */
+        .char-unit {
+            flex: 0 0 var(--panel-width);
+            height: var(--panel-height);
             margin: 0 var(--gap);
-            position: relative; 
+            position: relative;
+            scroll-snap-align: center;
             transform-style: preserve-3d;
-            transition: transform 0.3s ease, margin 0.3s ease;
-            display: flex; flex-direction: column; justify-content: flex-end; 
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            cursor: pointer;
         }
 
-        .card-bg-panel {
+        /* 背面のスクリーン（添付画像の縦長パネル） */
+        .char-screen {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #222; border-radius: 2px; overflow: hidden; z-index: 1;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-            background: rgba(20, 20, 25, 0.9);
-            border-top: 1px solid rgba(255,255,255,0.1);
-            pointer-events: none; /* クリックを透過 */
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 4px;
+            overflow: hidden;
+            transform: translateZ(-20px); /* キャラより奥に配置 */
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
         }
-        .card-bg-image {
+        /* スクリーンの画像（拡大・モノクロ） */
+        .screen-img {
             width: 100%; height: 100%;
             background-size: cover; background-position: center top;
-            opacity: 0.3; filter: grayscale(1) blur(2px);
+            filter: grayscale(1) contrast(1.2) brightness(0.6);
+            opacity: 0.5;
             transition: transform 0.5s ease;
         }
-
-        .card-banner {
-            position: absolute; top: 15px; left: 10px; width: 32px; height: 160px;
-            z-index: 2; color: #fff; writing-mode: vertical-rl; text-orientation: upright;
-            display: flex; align-items: center; justify-content: flex-start;
-            padding-top: 10px; letter-spacing: 0.15em; font-family: 'Teko', sans-serif;
-            font-size: 1rem; box-shadow: 2px 2px 5px rgba(0,0,0,0.4);
-            pointer-events: none;
-        }
-        .banner-role { font-size: 0.6rem; margin-bottom: 8px; opacity: 0.8; writing-mode: horizontal-tb; }
-
-        .char-shadow-contact {
-            position: absolute; bottom: -5px; left: 50%;
-            transform: translateX(-50%) scaleY(0.4); 
-            width: 90px; height: 30px;
-            background: radial-gradient(ellipse at center, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 50%, transparent 80%);
-            z-index: 3; filter: blur(4px); opacity: 0.9;
-            pointer-events: none;
+        /* スクリーンの装飾（テック風） */
+        .screen-deco {
+            position: absolute; top: 10px; left: -5px;
+            background: var(--accent-blue);
+            color: #000;
+            padding: 2px 8px;
+            font-family: 'Teko', sans-serif; font-size: 1.2rem;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+            z-index: 5;
         }
 
+        /* キャラクター立ち絵 */
         .char-figure {
-            position: absolute; bottom: -10px; left: 50%;
-            transform: translateX(-50%);
-            height: 90%;
+            position: absolute; 
+            bottom: 0; left: 50%;
+            transform: translateX(-50%) translateZ(20px) scale(1);
+            height: 115%; /* パネルより少しはみ出させる */
             width: auto; max-width: none;
-            z-index: 10; pointer-events: none; /* 画像自体はクリックさせない */
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            filter: drop-shadow(0px 5px 4px rgba(0,0,0,0.6));
-            object-fit: contain;
+            filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.3s;
+            pointer-events: none;
+            z-index: 10;
         }
 
-        .char-card:hover { z-index: 20; transform: translateY(-10px); }
-        .char-card:hover .card-bg-image { transform: scale(1.1); filter: grayscale(0) opacity(0.8) blur(0); }
-        .char-card:hover .char-figure { transform: translateX(-50%) scale(1.05); }
-        .char-card:hover .card-bg-panel { box-shadow: 0 0 25px rgba(0, 243, 255, 0.3); border-color: rgba(0, 243, 255, 0.5); }
+        /* リアルな足元の影 */
+        .char-shadow {
+            position: absolute; 
+            bottom: -15px; left: 50%;
+            width: 180px; height: 40px;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 40%, transparent 70%);
+            transform: translateX(-50%) rotateX(60deg) translateZ(-50px);
+            filter: blur(5px);
+            opacity: 0.8;
+            pointer-events: none;
+            z-index: 1;
+        }
 
-        /* --- クリックエリアとボタン --- */
-        .card-click-area { position: absolute; inset: 0; z-index: 30; cursor: pointer; }
+        /* テキスト情報（名前など） */
+        .char-info {
+            position: absolute; bottom: 20px; left: -20px;
+            z-index: 20;
+            text-align: left;
+            opacity: 0.6; transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+        .char-name {
+            font-family: 'Teko', sans-serif; font-size: 2.5rem; line-height: 0.8;
+            text-transform: uppercase; letter-spacing: 0.05em;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.8);
+        }
+        .char-job {
+            font-size: 0.8rem; background: #fff; color: #000;
+            display: inline-block; padding: 2px 6px; margin-bottom: 5px;
+            font-weight: bold; transform: skewX(-10deg);
+        }
 
-        .edit-img-btn {
+        /* --- ACTIVE / HOVER STATE --- */
+        /* 中央（アクティブ）またはホバー時のスタイル */
+        .char-unit:hover, .char-unit.is-active {
+            z-index: 50;
+        }
+        /* アクティブ時：スクリーンが光る */
+        .char-unit:hover .char-screen, .char-unit.is-active .char-screen {
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 30px var(--glow-color, rgba(0, 243, 255, 0.4));
+        }
+        /* アクティブ時：背景画像がカラーになり拡大 */
+        .char-unit:hover .screen-img, .char-unit.is-active .screen-img {
+            transform: scale(1.1);
+            filter: grayscale(0.2) contrast(1.1) brightness(0.8);
+            opacity: 0.8;
+        }
+        /* アクティブ時：立ち絵が手前にポップする */
+        .char-unit:hover .char-figure, .char-unit.is-active .char-figure {
+            transform: translateX(-50%) translateZ(60px) scale(1.08);
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));
+        }
+        /* アクティブ時：影を濃く */
+        .char-unit:hover .char-shadow, .char-unit.is-active .char-shadow {
+            opacity: 1; transform: translateX(-50%) rotateX(60deg) translateZ(-50px) scale(1.1);
+        }
+        /* アクティブ時：文字を表示 */
+        .char-unit:hover .char-info, .char-unit.is-active .char-info {
+            opacity: 1; transform: translateY(0);
+        }
+
+        /* 編集ボタン（右上） */
+        .btn-edit {
             position: absolute; top: 10px; right: 10px;
-            width: 30px; height: 30px;
-            background: rgba(0,0,0,0.6); border: 1px solid #555; border-radius: 4px;
-            color: #fff; display: flex; align-items: center; justify-content: center;
-            z-index: 40; cursor: pointer; font-size: 1.2rem;
+            width: 30px; height: 30px; border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(0,0,0,0.5); color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; cursor: pointer; z-index: 100;
             opacity: 0; transition: opacity 0.2s;
         }
-        .edit-img-btn:hover { background: #00f3ff; color: #000; border-color: #00f3ff; }
-        .char-card:hover .edit-img-btn { opacity: 1; }
+        .btn-edit:hover { background: #fff; color: #000; }
+        .char-unit:hover .btn-edit { opacity: 1; }
 
-        .nav-btn {
+        /* --- NAVIGATION ARROWS --- */
+        .nav-arrow {
             position: absolute; top: 50%; transform: translateY(-50%);
-            width: 50px; height: 50px; background: rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.2); border-radius: 50%;
-            color: #fff; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; z-index: 100; transition: all 0.3s;
+            width: 60px; height: 100px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; color: rgba(255,255,255,0.5);
+            cursor: pointer; z-index: 90;
+            transition: all 0.3s;
+            font-family: 'Teko', sans-serif;
+            background: linear-gradient(90deg, transparent, rgba(0,0,0,0.5));
         }
-        .nav-btn:hover { background: rgba(0, 243, 255, 0.3); border-color: #00f3ff; }
-        .nav-btn.prev { left: 20px; } .nav-btn.next { right: 20px; }
+        .nav-arrow:hover { color: #fff; background: linear-gradient(90deg, transparent, rgba(0,243,255,0.2)); text-shadow: 0 0 10px var(--accent-blue); }
+        .nav-arrow.prev { left: 0; background: linear-gradient(-90deg, transparent, rgba(0,0,0,0.5)); }
+        .nav-arrow.next { right: 0; }
 
-        #particles { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
-        .particle {
-            position: absolute; background: rgba(255, 255, 255, 0.8); border-radius: 50%;
-            filter: blur(1px); animation: floatUp linear forwards;
+        /* Loading */
+        .loading-msg {
+            position: absolute; width: 100%; text-align: center;
+            font-family: 'Teko', sans-serif; font-size: 2rem; letter-spacing: 0.2em;
+            animation: blink 1s infinite alternate;
         }
-        @keyframes floatUp {
-            from { transform: translateY(100vh) scale(0); opacity: 0; }
-            50% { opacity: 0.5; }
-            to { transform: translateY(-10vh) scale(1.5); opacity: 0; }
-        }
-
-        .color-blue { background: var(--accent-blue); }
-        .color-yellow { background: var(--accent-yellow); color: #222; }
-        .color-gray { background: var(--accent-gray); }
-        .color-red { background: #d9333f; }
-
-        .empty-msg { color: #888; font-family: 'Teko', sans-serif; font-size: 1.5rem; letter-spacing: 0.1em; }
+        @keyframes blink { from{opacity:0.3} to{opacity:1} }
     </style>
 </head>
 <body>
@@ -170,104 +268,190 @@
     initHeader();
 </script>
 
-    <div class="sub-header">SQUAD SELECTION // DATABASE</div>
-    
-    <div id="particles"></div>
+    <!-- 背景レイヤー -->
+    <div id="global-bg"></div>
+    <div class="floor-grid"></div>
 
-    <div class="stage-wrapper">
-        <div class="nav-btn prev" id="btnPrev">◀</div>
-        <div class="stage-container" id="stage">
-            <div class="empty-msg">CONNECTING TO NETWORK...</div>
+    <!-- UIレイヤー -->
+    <div class="ui-overlay">
+        <div class="header-deco">
+            <div>
+                <div class="header-sub">SYSTEM: READY</div>
+                <div class="header-title">CHARACTER SELECT</div>
+            </div>
+            <div style="text-align: right;">
+                <div class="header-sub">DATABASE // v2.0</div>
+            </div>
         </div>
-        <div class="nav-btn next" id="btnNext">▶</div>
+        <!-- 下部の装飾があればここに追加 -->
+        <div style="height: 50px;"></div> 
     </div>
 
-    <div class="sub-header" style="height: 30px; font-size: 0.7rem;">CONFIRM OPERATION</div>
+    <!-- メインステージ -->
+    <div class="stage-wrapper">
+        <div class="nav-arrow prev" id="btnPrev">❮</div>
+        
+        <div class="stage-container" id="stage">
+            <div class="loading-msg">CONNECTING TO DATABASE...</div>
+        </div>
+        
+        <div class="nav-arrow next" id="btnNext">❯</div>
+    </div>
 
     <script type="module">
         import { loadFromCloud, saveToCloud } from "./firestore.js";
 
         const stage = document.getElementById('stage');
+        const globalBg = document.getElementById('global-bg');
+        let charactersData = [];
+        let cards = [];
 
+        // 職業ごとのカラー定義
         function getColorByJob(job) {
-            if(!job) return 'color-gray';
-            if(job.includes('探偵') || job.includes('警官')) return 'color-blue';
-            if(job.includes('医') || job.includes('学者')) return 'color-yellow';
-            if(job.includes('戦') || job.includes('自衛')) return 'color-red';
-            return 'color-gray';
+            if(!job) return { code: '#888', name: 'UNKNOWN' };
+            if(job.includes('探偵') || job.includes('警官')) return { code: '#00f3ff', name: 'DETECTIVE' }; // Blue
+            if(job.includes('医') || job.includes('学者') || job.includes('教授')) return { code: '#ffd700', name: 'DOCTOR' }; // Yellow
+            if(job.includes('戦') || job.includes('自衛') || job.includes('兵')) return { code: '#ff2a2a', name: 'SOLDIER' }; // Red
+            if(job.includes('アイドル') || job.includes('芸術')) return { code: '#ff00ff', name: 'ARTIST' };
+            return { code: '#888', name: 'CITIZEN' }; // Gray
         }
 
         window.renderCharacterList = function(data) {
             stage.innerHTML = ''; 
+            cards = []; // 参照リセット
 
             if (!data || Object.keys(data).length === 0) {
-                stage.innerHTML = '<div class="empty-msg">NO DATA FOUND<br><span style="font-size:0.8rem">PLEASE CREATE NEW DATA</span></div>';
+                stage.innerHTML = '<div class="loading-msg">NO DATA FOUND</div>';
                 return;
             }
 
-            Object.values(data).forEach(char => {
-                const card = document.createElement('div');
-                card.className = 'char-card';
-                
-                const imgSource = char.image || 'https://placehold.co/200x500/333/666?text=NO+IMG';
-                const colorClass = getColorByJob(char.job);
+            // オブジェクトを配列化してID保持
+            charactersData = Object.values(data);
 
-                card.innerHTML = `
-                    <div class="card-bg-panel">
-                        <div class="card-bg-image" style="background-image: url('${imgSource}');"></div>
+            charactersData.forEach(char => {
+                // DOM生成
+                const unit = document.createElement('div');
+                unit.className = 'char-unit';
+                
+                const imgSource = char.image || 'https://placehold.co/400x800/222/555?text=No+Image';
+                const theme = getColorByJob(char.job);
+                
+                // CSS変数で発光色を制御
+                unit.style.setProperty('--glow-color', theme.code);
+
+                unit.innerHTML = `
+                    <!-- 背面スクリーン -->
+                    <div class="char-screen">
+                        <div class="screen-img" style="background-image: url('${imgSource}');"></div>
+                        <div class="screen-deco" style="background:${theme.code}">${theme.name}</div>
                     </div>
-                    <div class="card-banner ${colorClass}">
-                        <span class="banner-role">JOB</span>${char.name}
-                    </div>
-                    <div class="char-shadow-contact"></div>
-                    <img src="${imgSource}" class="char-figure" onerror="this.style.opacity='0'">
                     
-                    <div class="edit-img-btn" title="画像を登録/変更する">📷</div>
-                    <div class="card-click-area"></div>
+                    <!-- リアルな影 -->
+                    <div class="char-shadow"></div>
+                    
+                    <!-- キャラクター立ち絵 -->
+                    <img src="${imgSource}" class="char-figure" loading="lazy">
+                    
+                    <!-- 情報オーバーレイ -->
+                    <div class="char-info">
+                        <div class="char-job" style="color:${theme.code}">${char.job || 'UNKNOWN'}</div>
+                        <div class="char-name">${char.name}</div>
+                    </div>
+
+                    <!-- 編集ボタン -->
+                    <div class="btn-edit" title="画像URLを変更">✎</div>
                 `;
 
-                // 画像編集
-                const editBtn = card.querySelector('.edit-img-btn');
+                // イベントハンドラ: 詳細ページへ遷移
+                unit.onclick = (e) => {
+                    // 編集ボタンクリック時は遷移しない
+                    if(e.target.closest('.btn-edit')) return;
+                    window.location.href = `character/detail/detail.html?id=${char.id}`;
+                };
+
+                // イベントハンドラ: 画像編集
+                const editBtn = unit.querySelector('.btn-edit');
                 editBtn.onclick = (e) => {
                     e.stopPropagation();
-                    const newUrl = prompt("【立ち絵登録】\n画像のURLを入力してください：", char.image || "");
-                    
-                    if(newUrl !== null) {
+                    const newUrl = prompt("【立ち絵登録】\n新しい画像のURLを入力してください：", char.image || "");
+                    if(newUrl) {
                         char.image = newUrl;
                         saveToCloud(char).then(() => {
+                            // 再描画せずに画像だけ差し替えるとスムーズだが、今回は簡易的に再描画
                             window.renderCharacterList(data);
                         });
                     }
                 };
 
-                // 詳細へ移動
-                const clickArea = card.querySelector('.card-click-area');
-                clickArea.onclick = () => {
-                    // ★修正点：スクショに合わせて詳細画面の場所を指定
-                    window.location.href = `character/detail/detail.html?id=${char.id}`;
-                };
+                // ホバーで背景更新（マウス操作時用）
+                unit.onmouseenter = () => updateGlobalBackground(imgSource);
 
-                stage.appendChild(card);
+                stage.appendChild(unit);
+                cards.push({ element: unit, image: imgSource });
             });
+            
+            // 初期位置の調整と背景セット
+            setTimeout(detectCenterCard, 500);
         };
 
+        // --- 背景更新ロジック ---
+        function updateGlobalBackground(imgUrl) {
+            globalBg.style.backgroundImage = `url('${imgUrl}')`;
+        }
+
+        // --- スクロール制御と中心判定 ---
         const btnPrev = document.getElementById('btnPrev');
         const btnNext = document.getElementById('btnNext');
-        const SCROLL_AMOUNT = 210; 
-        btnNext.onclick = () => stage.scrollBy({ left: SCROLL_AMOUNT, behavior: 'smooth' });
-        btnPrev.onclick = () => stage.scrollBy({ left: -SCROLL_AMOUNT, behavior: 'smooth' });
+        
+        // カード幅 + gap (CSS変数と合わせる)
+        const SCROLL_STEP = 300; 
 
-        function createParticle() {
-            const p = document.createElement('div');
-            p.className = 'particle';
-            const size = Math.random() * 3 + 2;
-            p.style.width = size + 'px'; p.style.height = size + 'px';
-            p.style.left = Math.random() * 100 + '%';
-            p.style.animationDuration = (Math.random() * 5 + 5) + 's';
-            document.getElementById('particles').appendChild(p);
-            setTimeout(() => p.remove(), 10000);
+        btnNext.onclick = () => {
+            stage.scrollBy({ left: SCROLL_STEP, behavior: 'smooth' });
+        };
+        btnPrev.onclick = () => {
+            stage.scrollBy({ left: -SCROLL_STEP, behavior: 'smooth' });
+        };
+
+        // スクロール終了時や操作時に中心のカードを判定してハイライトする
+        let scrollTimeout;
+        stage.addEventListener('scroll', () => {
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(detectCenterCard, 100);
+        });
+
+        function detectCenterCard() {
+            const containerCenter = stage.getBoundingClientRect().width / 2;
+            let closestDist = Infinity;
+            let closestCard = null;
+
+            cards.forEach(item => {
+                const rect = item.element.getBoundingClientRect();
+                const cardCenter = rect.left + rect.width / 2;
+                // コンテナの左端からの相対位置で計算
+                const dist = Math.abs(containerCenter - cardCenter);
+
+                if (dist < closestDist) {
+                    closestDist = dist;
+                    closestCard = item;
+                }
+                
+                // クラスリセット
+                item.element.classList.remove('is-active');
+            });
+
+            if (closestCard) {
+                closestCard.element.classList.add('is-active');
+                updateGlobalBackground(closestCard.image);
+            }
         }
-        setInterval(createParticle, 200);
+
+        // キーボード操作対応
+        document.addEventListener('keydown', (e) => {
+            if(e.key === 'ArrowRight') btnNext.click();
+            if(e.key === 'ArrowLeft') btnPrev.click();
+        });
+
     </script>
 </body>
 </html>
