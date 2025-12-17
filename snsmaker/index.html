@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNS Maker v3.0 (Classic Tail)</title>
+    <title>SNS Maker v3.1 (Split Files & Padding Fix)</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- html2canvas -->
@@ -12,8 +12,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
-    <!-- Custom CSS -->
+    
+    <!-- Custom CSS Files -->
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="bubbles.css">
 </head>
 <body class="flex items-center justify-center p-4 min-h-screen">
 
@@ -135,11 +137,11 @@
 
                 <div id="capture-area" class="flex-1 chat-area-container overflow-y-auto p-5 space-y-1 no-scrollbar flex flex-col pb-6">
                     <div class="bg-overlay" id="bg-overlay-layer"></div>
-                    <div class="flex justify-center my-3 relative z-10">
+                    <div class="flex justify-center my-3 relative z-10 date-row">
                         <span class="bg-black/10 text-white text-[11px] px-3 py-1 rounded-full cursor-text date-label" contenteditable="true">今日</span>
                     </div>
                     
-                    <!-- Sample Message (Initial Style) -->
+                    <!-- Sample Message -->
                     <div class="flex justify-start items-end gap-2 relative z-10 message-row" data-sender-id="char1">
                         <img src="../images/icons/lineicon-syu.png" onerror="this.src='https://placehold.co/100x100/orange/white?text=S'" class="w-12 h-12 rounded-full mb-auto border border-gray-300 bg-white object-cover shrink-0">
                         <div>
@@ -296,7 +298,8 @@
 
     </div>
 
-    <!-- Main Logic -->
+    <!-- Main Logic Files -->
     <script src="script.js"></script>
+    <script src="capture.js"></script>
 </body>
 </html>

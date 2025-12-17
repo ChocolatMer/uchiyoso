@@ -248,7 +248,8 @@ function addDate(label) {
     if(!label) return;
     const container = document.getElementById('capture-area');
     const div = document.createElement('div');
-    div.className = "flex justify-center my-3 relative z-10";
+    // クラス date-row を追加
+    div.className = "flex justify-center my-3 relative z-10 date-row";
     div.innerHTML = `<span class="bg-black/10 text-white text-[11px] px-3 py-1 rounded-full cursor-text date-label" contenteditable="true">${label}</span>`;
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
@@ -258,8 +259,9 @@ function addSystemMsg(label) {
     if(!label) return;
     const container = document.getElementById('capture-area');
     const div = document.createElement('div');
-    div.className = "flex justify-center my-1 relative z-10";
-    div.innerHTML = `<span class="text-white text-[11px] px-2 py-0.5 cursor-text opacity-70" style="text-shadow:0 1px 1px rgba(0,0,0,0.2)" contenteditable="true">${label}</span>`;
+    // クラス system-msg-row を追加
+    div.className = "flex justify-center my-1 relative z-10 system-msg-row";
+    div.innerHTML = `<span class="text-white text-[11px] px-2 py-0.5 cursor-text opacity-70 system-msg-text" style="text-shadow:0 1px 1px rgba(0,0,0,0.2)" contenteditable="true">${label}</span>`;
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
 }
@@ -489,167 +491,6 @@ if(jsonUpload) {
             }
             reader.readAsText(e.target.files[0]);
         }
-    });
-}
-
-// --- CAPTURE ALIGNMENT FIX (Classic Style + Text Shift) ---
-function adjustTextPosition(clonedDoc) {
-    // 1. TEXT BUBBLES
-    const bubbles = clonedDoc.querySelectorAll('.bubble');
-    bubbles.forEach(b => {
-        b.style.alignItems = 'flex-start';
-        b.style.paddingTop = '1px';
-        b.style.paddingBottom = '15px';
-        b.style.lineHeight = '1.2';
-        b.style.transform = 'none';
-    });
-
-    // 2. DATE LABELS (Fixed Position)
-    const dateLabels = clonedDoc.querySelectorAll('.date-label');
-    dateLabels.forEach(l => {
-        l.style.display = 'inline-flex';
-        l.style.alignItems = 'center'; 
-        l.style.justifyContent = 'center';
-        // テキストを上に押し上げるため下パディングを増加
-        l.style.paddingTop = '0px';
-        l.style.paddingBottom = '10px'; 
-        l.style.transform = 'translateY(-6px)'; 
-    });
-
-    // 3. ICONS
-    const icons = clonedDoc.querySelectorAll('.chat-area-container img.w-12');
-    icons.forEach(icon => {
-        icon.style.transform = 'translateY(-5px)';
-    });
-    
-    // 4. CALL ICONS
-    const callIcons = clonedDoc.querySelectorAll('.call-icon-circle i, .call-active-widget i');
-    callIcons.forEach(icon => {
-        icon.style.transform = 'translateY(-8px)'; 
-    });
-
-    // 5. CALL TEXT
-    const callTexts = clonedDoc.querySelectorAll(
-        '.call-history-bubble .font-bold, ' + 
-        '.call-history-bubble .opacity-70, ' +
-        '.call-active-widget .font-bold'
-    );
-    callTexts.forEach(el => {
-        el.style.position = 'relative';
-        el.style.top = '-6px'; 
-    });
-    
-    try {
-        const durationTexts = clonedDoc.querySelectorAll('.call-active-widget .text-\\[10px\\]');
-        durationTexts.forEach(el => {
-            el.style.position = 'relative';
-            el.style.top = '-6px';
-        });
-    } catch(e) { console.log('Duration selector error', e); }
-
-    // 6. META TEXT (READ/TIME) - NEW ADJUSTMENT
-    const metaTexts = clonedDoc.querySelectorAll('.meta-text');
-    metaTexts.forEach(m => {
-        m.style.position = 'relative';
-        m.style.top = '-6px'; // 既読と時間を上に移動
-        m.style.display = 'inline-block';
-    });
-
-    // 7. FOOTER
-    const footerIcons = clonedDoc.querySelectorAll('.footer-icon, .fa-face-smile');
-    footerIcons.forEach(el => {
-        el.style.position = 'relative';
-        el.style.top = '-8px'; 
-    });
-}
-
-function downloadPhoneView() {
-    const target = document.querySelector('.phone-frame');
-    html2canvas(target, { 
-        scale: 3, 
-        backgroundColor: null, 
-        useCORS: true, 
-        allowTaint: false,
-        scrollX: 0, 
-        scrollY: 0,
-        imageTimeout: 15000,
-        onclone: (clonedDoc) => {
-            adjustTextPosition(clonedDoc);
-        }
-
-    }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = `SNS_PHONE_${Date.now()}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-    }).catch(err => {
-        console.error(err);
-        alert("保存に失敗しました。");
-    });
-}
-
-function downloadScreenShot() {
-    const target = document.querySelector('.phone-frame');
-    
-    html2canvas(target, { 
-        scale: 3, 
-        backgroundColor: null, 
-        useCORS: true, 
-        allowTaint: false,
-        scrollX: 0, 
-        scrollY: 0,
-        imageTimeout: 15000,
-        onclone: (clonedDoc) => {
-            adjustTextPosition(clonedDoc);
-
-            const clonedFrame = clonedDoc.querySelector('.phone-frame');
-            clonedFrame.style.border = 'none';
-            clonedFrame.style.borderRadius = '0';
-            clonedFrame.style.boxShadow = 'none';
-            
-            const notch = clonedDoc.querySelector('.notch');
-            if(notch) notch.style.display = 'none';
-        }
-    }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = `SNS_SCREEN_${Date.now()}.png`;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-    }).catch(err => {
-        console.error(err);
-        alert("保存に失敗しました。");
-    });
-}
-
-function downloadFullChat() {
-    const target = document.getElementById('capture-area');
-    html2canvas(target, {
-        backgroundColor: null,
-        scale: 3, 
-        useCORS: true, 
-        allowTaint: false,
-        scrollX: 0, 
-        scrollY: 0,
-        height: target.scrollHeight, 
-        windowHeight: target.scrollHeight, 
-        imageTimeout: 15000,
-        onclone: (clonedDoc) => {
-            const clonedNode = clonedDoc.getElementById('capture-area');
-            if (clonedNode) {
-                clonedNode.style.height = 'auto';
-                clonedNode.style.overflow = 'visible';
-                clonedNode.style.position = 'static';
-            }
-            adjustTextPosition(clonedDoc);
-        }
-    }).then(canvas => {
-        const link = document.createElement('a');
-        link.download = `SNS_FULLCHAT_${Date.now()}.png`;
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-    }).catch(err => {
-        console.error(err);
-        alert("保存に失敗しました。");
     });
 }
 
