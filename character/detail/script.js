@@ -48,7 +48,7 @@ function adjustHeight(el) {
     el.style.height = (el.scrollHeight + 5) + 'px';
 }
 
-// --- EVENTS ---
+// ... (EVENTS, Auth logic は変更なし) ...
 const btnLogin = document.getElementById('btnLogin');
 const btnLogout = document.getElementById('btnLogout');
 const btnCloudSave = document.getElementById('btnLocalSave');
@@ -152,14 +152,13 @@ document.querySelectorAll('.swap-btn-trigger').forEach(btn => {
 });
 
 
-// --- LOGIC ---
 function handleFile(e) {
     const f = e.target.files[0];
     if(!f) return;
     const r = new FileReader();
     r.onload = (ev) => {
         try {
-            rawTextData = ev.target.result; // 元テキストを保存
+            rawTextData = ev.target.result; 
             const d = parseIaChara(rawTextData);
             launchDashboard(d);
         } catch(err) { console.error(err); alert('Parse Error: ' + err.message); }
@@ -167,7 +166,6 @@ function handleFile(e) {
     r.readAsText(f);
 }
 
-// テキストから詳細プロフィールを抽出する関数
 function extractProfileData(text) {
     const getMatch = (regex) => {
         const match = text.match(regex);
@@ -196,18 +194,15 @@ function launchDashboard(data) {
     renderSkillSection('summary'); 
     renderItems(data.items);
     
-    // メモ欄の処理: parseIaCharaで取りきれなかった情報を追記
+    // メモ欄の処理
     const memoEl = document.getElementById('memoArea');
     let memoContent = data.memo || "";
     
-    // 元テキストから【メモ】以降や主要なセクションを取得して結合（重複しないように簡易チェック）
     if(rawTextData && !memoContent.includes("【性格】")) {
-        // 簡易的に後半部分を取得してみる
         const sections = ["【性格】", "【人間関係】", "【外見】", "【経歴】"];
         sections.forEach(sec => {
             const idx = rawTextData.indexOf(sec);
             if(idx !== -1 && !memoContent.includes(sec)) {
-                // セクションの終わり（次の【まで）を探す
                 const nextSecIdx = rawTextData.indexOf("【", idx + 1);
                 const content = nextSecIdx !== -1 
                     ? rawTextData.substring(idx, nextSecIdx) 
@@ -249,20 +244,18 @@ function renderCurrentTab() {
     renderSkillSection(activeCat);
 }
 
-// プロフィールとステータスの描画（改修）
 function renderProfile(d, extras = {}) {
     document.getElementById('charName').textContent = d.name;
     document.getElementById('charKana').textContent = d.kana;
     
-    // 画像
     document.getElementById('charImage').src = d.image || 'https://placehold.co/400x600/000/333?text=NO+IMAGE';
     document.getElementById('valDB').textContent = d.db; 
 
-    // ★ メタ情報エリアの書き換え（四角い枠に集約）
+    // ★ メタ情報エリア (IDカード風)
     const metaInfo = document.querySelector('.meta-info');
-    metaInfo.innerHTML = ''; // 一旦クリア
+    metaInfo.innerHTML = ''; 
 
-    // 定義データ
+    // 定義データ (未入力でも表示)
     const infoItems = [
         { label: "JOB", val: d.job },
         { label: "AGE", val: d.age },
@@ -275,27 +268,12 @@ function renderProfile(d, extras = {}) {
     infoItems.forEach(item => {
         const div = document.createElement('div');
         div.className = 'meta-item';
+        // 値がない場合も '??' で表示
         div.innerHTML = `<span class="meta-label">${item.label}</span><span class="meta-val">${item.val || '??'}</span>`;
         metaInfo.appendChild(div);
     });
 
-    // カラーピッカー
-    const colorDiv = document.createElement('div');
-    colorDiv.className = 'color-picker-container';
-    colorDiv.style.gridColumn = "1 / -1"; // 横幅いっぱい
-    colorDiv.innerHTML = `<label class="color-picker-label">THEME <input type="color" id="themeColorInput" value="${d.color || '#d9333f'}"></label>`;
-    metaInfo.appendChild(colorDiv);
-    
-    // カラー変更イベント
-    const picker = colorDiv.querySelector('#themeColorInput');
-    if(d.color) applyThemeColor(d.color);
-    picker.addEventListener('input', (e) => {
-        d.color = e.target.value;
-        applyThemeColor(d.color);
-    });
-
-
-    // ★ 新設: COLOR MODULEの生成と挿入
+    // ★ COLOR MODULE (テーマカラー含む)
     const existingColorMod = document.querySelector('.color-module');
     if(existingColorMod) existingColorMod.remove();
 
@@ -307,15 +285,28 @@ function renderProfile(d, extras = {}) {
             <div class="color-row"><span class="color-name">HAIR</span><span class="color-sample">${extras.hair || '??'}</span></div>
             <div class="color-row"><span class="color-name">EYES</span><span class="color-sample">${extras.eye || '??'}</span></div>
             <div class="color-row"><span class="color-name">SKIN</span><span class="color-sample">${extras.skin || '??'}</span></div>
+            <div class="theme-picker-row">
+                <span class="color-name">THEME COLOR</span>
+                <input type="color" id="themeColorInput" value="${d.color || '#d9333f'}">
+            </div>
         </div>
     `;
-    // VITAL MONITORの下あたりに挿入（DOM構造依存）
+    
+    // VITAL MONITORの下に挿入
     const vitalsMod = document.querySelector('.vitals-module');
     if(vitalsMod) {
         vitalsMod.after(colorMod);
     } else {
         document.querySelector('.profile-card').after(colorMod);
     }
+
+    // テーマカラー適用処理
+    if(d.color) applyThemeColor(d.color);
+    const picker = colorMod.querySelector('#themeColorInput');
+    picker.addEventListener('input', (e) => {
+        d.color = e.target.value;
+        applyThemeColor(d.color);
+    });
 
 
     const tags = document.getElementById('charTags'); tags.innerHTML='';
@@ -340,7 +331,6 @@ function renderProfile(d, extras = {}) {
     setBar('MP', d.vitals.mp, maxMP);
     setBar('SAN', d.vitals.san, maxSAN);
 
-    // Stats Grid & Chart
     const sGrid = document.getElementById('rawStatsGrid'); sGrid.innerHTML='';
     Object.keys(d.stats).forEach(k => sGrid.innerHTML+=`<div class="stat-box"><small>${k}</small><span>${d.stats[k]}</span></div>`);
 
@@ -392,6 +382,7 @@ function renderStatusFlavor(stats) {
     });
 }
 
+// ... (renderSimpleList, setBar, renderSkillSection, renderTabChart, renderItems, chartOpts, window.prepareSaveData は変更なし) ...
 function renderSimpleList(id, text, tagClass) {
     const box = document.getElementById(id);
     if(!box) return;
@@ -483,8 +474,6 @@ function renderSkillSection(cat) {
     }
     renderTabChart(cat, skillsToRender);
 }
-
-// ... (renderTabChart, renderItems, chartOpts, window.prepareSaveData は変更なし) ...
 
 function renderTabChart(cat, skills) {
     const ctx = document.getElementById('categoryChart').getContext('2d');
