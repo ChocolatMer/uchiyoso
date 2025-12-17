@@ -1,6 +1,6 @@
 // detail/script.js
 import { login, logout, monitorAuth, saveToCloud, loadFromCloud } from "../firestore.js";
-// ★共通の解析ロジック（schema.js）を使用
+// ★共通の解析ロジック
 import { parseIaChara } from "../data/schema.js";
 
 // --- GLOBAL STATE ---
@@ -26,7 +26,9 @@ const els = {
     dashboard: document.getElementById('dashboard'),
     themeSwitcher: document.getElementById('themeSwitcher'),
     mainStyle: document.getElementById('mainStyle'),
-    flavorList: document.getElementById('statusFlavorList')
+    flavorList: document.getElementById('statusFlavorList'),
+    // メモエリア取得用
+    memoArea: document.getElementById('memoArea')
 };
 
 const CAT_COLORS = {
@@ -45,10 +47,11 @@ function adjustHeight(el) {
         return;
     }
     el.style.height = 'auto';
-    el.style.height = (el.scrollHeight) + 'px';
+    el.style.height = (el.scrollHeight + 5) + 'px'; // +5pxで微調整
 }
 
 // --- EVENTS ---
+// (既存のイベントリスナーコードはそのまま維持...)
 const btnLogin = document.getElementById('btnLogin');
 const btnLogout = document.getElementById('btnLogout');
 const btnCloudSave = document.getElementById('btnLocalSave');
@@ -136,6 +139,7 @@ els.infoTabs.addEventListener('click', (e) => {
         document.querySelectorAll('.deck-pane').forEach(p => p.classList.remove('active'));
         const targetPane = document.getElementById(targetId);
         targetPane.classList.add('active');
+        // ★修正: タブ切り替え時にメモの高さも再調整
         targetPane.querySelectorAll('textarea').forEach(tx => adjustHeight(tx));
     }
 });
@@ -150,6 +154,7 @@ document.querySelectorAll('.swap-btn-trigger').forEach(btn => {
         }, 300); 
     });
 });
+
 
 // --- LOGIC ---
 function handleFile(e) {
@@ -174,7 +179,13 @@ function launchDashboard(data) {
     renderItems(data.items);
     
     // テキスト反映
-    document.getElementById('memoArea').value = data.memo || '';
+    const memoEl = document.getElementById('memoArea');
+    memoEl.value = data.memo || '';
+    
+    // ★修正: 初期ロード時にメモ欄の高さを調整 (少し遅らせて描画完了を待つ)
+    requestAnimationFrame(() => {
+        adjustHeight(memoEl);
+    });
     
     const histBox = document.getElementById('scenarioList');
     if(histBox) {
@@ -214,15 +225,40 @@ function renderProfile(d) {
     document.getElementById('charImage').src = d.image || 'https://placehold.co/400x600/000/333?text=NO+IMAGE';
     document.getElementById('valDB').textContent = d.db; 
 
+    // ★追加: カラーピッカーの設置と反映
+    const metaInfo = document.querySelector('.meta-info');
+    // 既存のカラーピッカーがあれば削除（再描画時用）
+    const existingPicker = document.getElementById('colorPickerBtn');
+    if(existingPicker) existingPicker.remove();
+
+    const colorLabel = document.createElement('label');
+    colorLabel.id = 'colorPickerBtn';
+    colorLabel.className = 'color-picker-label';
+    colorLabel.innerHTML = `THEME <input type="color" id="themeColorInput" value="${d.color || '#d9333f'}">`;
+    metaInfo.appendChild(colorLabel);
+
+    const picker = document.getElementById('themeColorInput');
+    
+    // 既に色が設定されていれば適用
+    if(d.color) {
+        applyThemeColor(d.color);
+    }
+
+    // 色変更時のイベント
+    picker.addEventListener('input', (e) => {
+        const newColor = e.target.value;
+        d.color = newColor; // データの保存用プロパティを更新
+        applyThemeColor(newColor);
+    });
+
     const tags = document.getElementById('charTags'); tags.innerHTML='';
     if(d.tags) d.tags.split(' ').forEach(t=>{if(t.trim()) tags.innerHTML+=`<span class="tag">${t}</span>`});
 
-    // ステータスから最大値を計算 (6版ルール)
+    // ステータス計算 (6版)
     const stats = d.stats || {};
     const maxHP = (stats.CON && stats.SIZ) ? Math.ceil((parseInt(stats.CON) + parseInt(stats.SIZ)) / 2) : (d.vitals.hp || 1);
     const maxMP = stats.POW ? parseInt(stats.POW) : (d.vitals.mp || 1);
     
-    // SAN最大値: 99 - クトゥルフ神話技能
     let mythosVal = 0;
     if(d.skills) {
         Object.values(d.skills).flat().forEach(s => {
@@ -255,22 +291,29 @@ function renderProfile(d) {
         options: chartOpts(18)
     });
 
-    // ★ ステータス評価の表示（修正済み: window.STATUS_FLAVORを参照）
     renderStatusFlavor(d.stats);
 }
+
+// ★テーマカラーをCSS変数に適用する関数
+function applyThemeColor(color) {
+    const root = document.documentElement;
+    // Corkテーマ用の赤インク色を上書き
+    root.style.setProperty('--ink-red', color);
+    root.style.setProperty('--primary', color);
+    
+    // スキルバッジやボーダーの色なども必要に応じて調整
+    // ここではメインのアクセントカラーとして適用
+}
+
+// ... (renderStatusFlavor, renderSimpleList, setBar は変更なし) ...
 
 function renderStatusFlavor(stats) {
     const list = els.flavorList;
     list.innerHTML = '';
-
-    // data.js で window.STATUS_FLAVOR に代入されている前提
     const flavorDB = window.STATUS_FLAVOR;
 
     if (!flavorDB) {
-        console.warn('STATUS_FLAVOR not loaded from data.js');
-        const li = document.createElement('li');
-        li.textContent = "Loading data...";
-        list.appendChild(li);
+        console.warn('STATUS_FLAVOR not loaded');
         return;
     }
 
@@ -368,7 +411,10 @@ function renderSkillSection(cat) {
 
         const tx = row.querySelector('textarea');
         tx.addEventListener('input', (e) => { s.desc = e.target.value; adjustHeight(e.target); });
-        requestAnimationFrame(() => adjustHeight(tx));
+        
+        // ★修正: 確実に描画後に高さを合わせる
+        setTimeout(() => adjustHeight(tx), 0);
+        
         els.listBody.appendChild(row);
     });
     
@@ -378,6 +424,8 @@ function renderSkillSection(cat) {
     }
     renderTabChart(cat, skillsToRender);
 }
+
+// ... (renderTabChart, renderItems, chartOpts, window.prepareSaveData は変更なし) ...
 
 function renderTabChart(cat, skills) {
     const ctx = document.getElementById('categoryChart').getContext('2d');

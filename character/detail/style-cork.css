@@ -1,5 +1,5 @@
 /* --- style-cork.css --- */
-/* THEME: ANALOG / INVESTIGATION BOARD (Final) */
+/* THEME: ANALOG / INVESTIGATION BOARD (Fixed) */
 
 @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Klee+One:wght@400;600&family=Shippori+Mincho:wght@400;700&display=swap');
 
@@ -9,6 +9,7 @@
     --paper-line: #aaccff;
     --ink-main: #2b2b2b;
     --ink-sub: #555;
+    /* この赤色がテーマカラーとしてJSで書き換えられます */
     --ink-red: #d9333f;    
     --ink-blue: #0044cc;   
     
@@ -34,7 +35,6 @@ body {
     color: var(--ink-main);
     font-family: 'Shippori Mincho', serif;
     
-    /* 画面からはみ出た場合のスクロール許可 */
     min-height: 100vh;
     overflow-y: auto; 
     overflow-x: auto; 
@@ -45,9 +45,7 @@ body {
 ::-webkit-scrollbar-track { background: rgba(0,0,0,0.05); }
 ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 5px; border: 2px solid transparent; background-clip: content-box; }
 
-/* =========================================
-   2. BOOT SCREEN
-   ========================================= */
+/* ... (BOOT SCREEN は変更なし) ... */
 #boot-screen.hidden { opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
 #boot-screen {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -66,14 +64,11 @@ body {
 }
 .upload-area .cyber-btn:hover { transform: translate(1px, 1px); box-shadow: 1px 1px 0 #bbb; }
 
-/* =========================================
-   3. LAYOUT & GRID
-   ========================================= */
+/* ... (LAYOUT & GRID は変更なし) ... */
 .dashboard-grid {
     display: grid;
     grid-template-columns: 320px minmax(500px, 1fr) 350px;
     gap: 20px;
-    /* ヘッダー分を確保してマージンを設定 */
     padding: 20px;
     margin: 60px auto 20px auto; 
     max-width: 1920px;
@@ -132,19 +127,35 @@ body {
 .meta-info {
     margin-top: 10px; font-family: 'Courier Prime', monospace;
     font-size: 0.9rem; border-top: 2px dotted #ccc; padding-top: 10px;
-    display: flex; justify-content: space-between;
+    display: flex; justify-content: space-between; align-items: center; /* カラーピッカー配置のため */
 }
+
+/* ★ カラーピッカー用スタイル */
+.color-picker-label {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 0.7rem; color: var(--ink-sub);
+    cursor: pointer;
+    background: #eee; padding: 2px 5px; border-radius: 4px;
+}
+.color-picker-label input[type="color"] {
+    width: 20px; height: 20px; padding: 0; border: none; background: none; cursor: pointer;
+}
+
 .tag-cloud { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
 .tag {
     background: #ffeb3b; color: #333; padding: 2px 8px; font-size: 0.8rem;
     font-family: 'Klee One', cursive; box-shadow: 1px 1px 2px rgba(0,0,0,0.2); transform: rotate(1deg);
 }
 
+/* 使う色が --ink-red になっているのでテーマカラー変更でここも変わる */
 .vitals-module { padding: 20px; background: #fffaf0; transform: rotate(1deg); }
 .vital-head { font-family: 'Courier Prime', monospace; font-weight: bold; }
 .bar-track { height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden; border: 1px solid #bbb; margin-top: 2px; }
 .bar-fill { height: 100%; position: static; animation: none; box-shadow: none; }
-.hp { background: #d9534f !important; } .mp { background: #5bc0de !important; } .san { background: #555 !important; }
+.hp { background: var(--ink-red) !important; } /* テーマカラー反映 */
+.mp { background: #5bc0de !important; } 
+.san { background: #555 !important; }
+
 .db-row { border-top: 1px solid #ccc; margin-top: 10px; padding-top: 10px; display: flex; justify-content: space-between; }
 .db-val { color: var(--ink-red); font-weight: bold; }
 
@@ -171,16 +182,15 @@ body {
 }
 .header-title-area h3 { font-family: 'Shippori Mincho', serif; font-size: 1.5rem; margin: 0; text-decoration: underline; text-underline-offset: 5px; }
 
+/* ... (SWAP BTN, TOGGLES は変更なし) ... */
 .swap-btn-trigger {
     background: transparent; border: 1px solid var(--ink-sub); color: var(--ink-sub);
     font-family: 'Courier Prime', monospace; padding: 2px 8px; cursor: pointer;
     font-size: 0.8rem; margin-left: 10px; border-radius: 4px;
 }
 .swap-btn-trigger:hover { background: #eee; color: #000; }
-
 .dashboard-grid:not(.swapped) .info-deck .swap-btn-trigger { display: none; }
 .dashboard-grid.swapped .skill-panel .swap-btn-trigger { display: none; }
-
 .toggles-area { margin-top: 10px; display: flex; gap: 15px; }
 .toggle-switch { display: inline-flex; align-items: center; cursor: pointer; }
 .toggle-switch input { display: none; }
@@ -219,17 +229,38 @@ body {
     border-bottom: 2px solid var(--ink-main); padding: 5px 15px; color: var(--ink-sub);
     position: sticky; top: 0; background: var(--paper-base); z-index: 5;
 }
-.skill-table td { padding: 0 15px; height: 60px; vertical-align: middle; border-bottom: none; }
+.skill-table td { padding: 5px 15px; vertical-align: top; border-bottom: none; }
 
 .skill-table td:nth-child(1) { font-family: 'Shippori Mincho', serif; font-weight: bold; font-size: 1.1rem; }
 .skill-table td:nth-child(2) { font-family: 'Courier Prime', monospace; font-size: 1.4rem; font-weight: bold; }
 
-.skill-desc-inp {
-    width: 100%; background: transparent; border: none; font-family: 'Klee One', cursive;
-    color: var(--ink-blue); font-size: 1rem; line-height: 1.5; resize: none; overflow: hidden; padding: 0;
+.skill-name-row {
+    border-bottom: 1px dotted #ccc;
+    padding-bottom: 2px;
+    margin-bottom: 5px;
+    display: inline-block;
+    width: 100%;
 }
-.skill-desc-inp:focus { outline: none; }
 
+/* ★ スキル説明文の修正: 全文表示と折り返し */
+.skill-desc-inp {
+    display: block;
+    width: 95%;
+    margin: 5px 0 10px 10px;
+    background: transparent; border: none; 
+    font-family: 'Klee One', cursive;
+    color: var(--ink-blue); 
+    font-size: 0.95rem; line-height: 1.6; 
+    resize: none; 
+    padding: 0;
+    min-height: 1.6em;
+    /* CSSで高さを強制しない（JSで制御するため）、ただしoverflowは隠してJS計算を助ける */
+    overflow: hidden; 
+    white-space: pre-wrap; /* 折り返しを有効に */
+}
+.skill-desc-inp:focus { outline: none; background: rgba(0, 68, 204, 0.03); }
+
+/* SHORT VIEW MODE */
 .short-view .skill-desc-inp {
     height: 1.5em !important;
     white-space: nowrap; text-overflow: ellipsis; display: block; overflow: hidden !important; opacity: 0.8;
@@ -245,14 +276,14 @@ body {
     height: 100%; opacity: 0.7; mix-blend-mode: multiply;
     border-radius: 2px 4px 4px 2px; transform: skewX(-10deg);
 }
-.d-init { background: #999; } .d-job { background: #333; } .d-int { background: #ff0055; } .d-grow { background: #00cc44; }
+.d-init { background: #999; } .d-job { background: #333; } .d-int { background: var(--ink-red); } .d-grow { background: #00cc44; }
 
+/* ... (SWAP MODE FIXES, DATABASE は変更なし) ... */
 .mastery-badge {
     border: 2px solid currentColor; border-radius: 50%; padding: 2px 4px;
     font-family: 'Courier Prime', monospace; font-size: 0.6rem;
     transform: rotate(-15deg); margin-left: 5px; display: inline-block;
 }
-
 .dashboard-grid.swapped .skill-table th:nth-child(3),
 .dashboard-grid.swapped .skill-table td:nth-child(3) .dist-bar-track,
 .dashboard-grid.swapped .skill-table td:nth-child(3) .val-row { display: none; }
@@ -284,13 +315,16 @@ body {
 .deck-pane { display: none; height: 100%; flex-direction: column; }
 .deck-pane.active { display: flex; }
 
+/* ★メモ欄の修正: 高さ制限を解除 */
 #memoArea {
-    width: 100%; height: 100%; min-height: 400px;
+    width: 100%; height: auto; min-height: 400px;
     background: transparent; border: none;
     font-family: 'Klee One', cursive; font-size: 1.1rem;
     color: var(--ink-main); line-height: 1.8rem;
     background-image: linear-gradient(transparent 1.7rem, #ccc 1.7rem);
     background-size: 100% 1.8rem; background-attachment: local;
+    overflow-y: hidden; /* JSでの調整用 */
+    resize: none;
 }
 #memoArea:focus { outline: none; }
 
@@ -321,10 +355,7 @@ body {
 .dashboard-grid.swapped .item-name { font-size: 1.2rem; border-left-width: 5px; }
 .dashboard-grid.swapped .item-desc-inp { font-size: 1rem; color: var(--ink-main); }
 
-/* =========================================
-   7. UTILITIES
-   ========================================= */
-/* ★ THEME SWITCHER FIX */
+/* ... (UTILITIES は変更なし) ... */
 #themeSwitcher {
     position: fixed; 
     top: 60px; /* Header下へ */
