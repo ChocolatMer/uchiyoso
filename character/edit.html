@@ -16,9 +16,8 @@
         .btn-new { background: #44ff44; color: #000; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; border-radius: 4px; }
         .btn-delete { background: #ff4444; color: #fff; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 0.8rem; }
         .import-area { background: #2a2a2d; padding: 20px; border-radius: 4px; border: 1px dashed #666; margin-bottom: 30px; }
-        .import-area textarea { height: 100px; font-size: 0.8rem; color: #aaa; }
+        .import-area textarea { height: 100px; font-size: 0.8rem; color: #aaa; width: 100%; box-sizing: border-box; background: #222; border: 1px solid #444; padding: 10px; }
         .btn-merge { background: #00f3ff; color: #000; border: none; padding: 8px 20px; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 10px; }
-        .btn-merge:hover { background: #88ffff; }
         h2 { border-bottom: 2px solid #555; padding-bottom: 10px; margin-top: 40px; color: #aaa; font-size: 1.1rem; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .form-row { margin-bottom: 15px; }
@@ -40,21 +39,15 @@
         .text-section { border-left: 3px solid #444; padding-left: 15px; margin-bottom: 20px; }
         .text-section h3 { font-size: 0.9rem; color: #44ff44; margin: 0 0 10px 0; opacity: 0.8; }
         .helper-text { font-size: 0.7rem; color: #666; margin-top: 2px; }
-        
-        /* テーブル・リスト用のスタイル追加 */
-        .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-        .data-table th { background: #333; color: #aaa; font-weight: normal; padding: 5px; text-align: left; }
-        .data-table td { padding: 5px; border-bottom: 1px solid #333; }
-        .data-table input { background: transparent; border: none; color: #fff; width: 100%; font-family: 'Roboto Mono', monospace; }
-        .data-table input:focus { background: #222; outline: 1px solid #555; }
-    
+
+        /* --- 新規追加スタイル (リスト・テーブル用) --- */
         .list-container { background: #252525; border: 1px solid #444; border-radius: 4px; padding: 10px; margin-top: 5px; }
         .list-row { display: grid; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #333; align-items: center; }
         .btn-add { background: #444; color: #fff; border: none; width: 100%; padding: 5px; cursor: pointer; font-size: 0.8rem; margin-top: 5px; }
         .btn-add:hover { background: #555; }
         .btn-remove { background: #552222; color: #ffaaaa; border: none; padding: 2px 8px; cursor: pointer; font-size: 0.7rem; border-radius: 2px; }
 
-       /* 武器テーブル用グリッド */
+        /* 武器テーブル用グリッド */
         .weapon-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr auto; gap: 5px; font-size: 0.7rem; color: #888; margin-bottom: 5px; padding: 0 5px; }
         .weapon-entry { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr auto; gap: 5px; margin-bottom: 5px; }
         .weapon-entry input { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 5px; font-size: 0.8rem; width: 100%; }
@@ -62,43 +55,15 @@
         /* 技能リスト用 */
         .skill-category { margin-bottom: 20px; }
         .skill-category h4 { margin: 5px 0; color: #44ff44; font-size: 0.9rem; border-bottom: 1px solid #444; }
-        .skill-table { width: 100%; font-size: 0.8rem; }
-        .skill-table th { color: #888; text-align: center; font-weight: normal; font-size: 0.7rem; }
+        .skill-table { width: 100%; font-size: 0.8rem; border-collapse: collapse; }
+        .skill-table th { color: #888; text-align: center; font-weight: normal; font-size: 0.7rem; padding: 4px; }
         .skill-table td { padding: 2px; }
-        .skill-table input[type="number"] { text-align: center; color: #44ff44; }
-        .skill-desc-input { width: 100%; color: #ddd; font-size: 0.8rem; }
-     </style>
-
-<div class="form-grid full-width-skills">
-    <div class="text-section full" style="grid-column: span 2;">
-        <h3>技能データ (SKILLS & DETAIL)</h3>
-        <div id="skillArea" class="list-container" style="max-height: 500px; overflow-y: auto;">
-            </div>
-    </div>
-</div>
-
-<div class="grid-3">
-    <div class="form-row full" style="grid-column:span 2;">
-        <label>所持品 (ITEMS)</label>
-        <div class="list-container">
-            <div id="itemList"></div>
-            <button type="button" class="btn-add" onclick="addItemRow()">+ ADD ITEM</button>
-        </div>
-    </div>
-    </div>
-
-<div class="form-row full" style="margin-top:15px;">
-    <label>戦闘・武器・防具 (WEAPONS)</label>
-    <div class="list-container">
-        <div class="weapon-header">
-            <div>名前</div><div>成功率</div><div>ダメ</div><div>射程</div><div>回数</div><div>装弾</div><div>HP</div><div>故障</div><div></div>
-        </div>
-        <div id="weaponList"></div>
-        <button type="button" class="btn-add" onclick="addWeaponRow()">+ ADD WEAPON</button>
-    </div>
-</div>
-
-<script type="module">import { initHeader } from "./header.js"; initHeader();</script>
+        .skill-table input[type="number"] { text-align: center; color: #44ff44; padding: 4px; }
+        .skill-desc-input { width: 100%; color: #ddd; font-size: 0.8rem; background: #1a1a1a; border: 1px solid #444; padding: 4px; }
+    </style>
+</head>
+<body>
+    <script type="module">import { initHeader } from "./header.js"; initHeader();</script>
 
     <div class="container">
         <div class="toolbar">
@@ -115,9 +80,9 @@
             
             <div class="import-area">
                 <h3 style="margin-top:0; color:#00f3ff;">SMART IMPORT (いあきゃらテキスト読込)</h3>
-                <p style="font-size:0.8rem; color:#888; margin-bottom:5px;">いあキャラのテキストデータを貼り付けて「不足を埋める」を押すと、<br>現在入力されているデータはそのままに、<strong>空欄の部分だけ</strong>を自動で補完します。</p>
+                <p style="font-size:0.8rem; color:#888; margin-bottom:5px;">テキストデータを貼り付けて「不足を埋める」を押すと、空欄部分を自動で補完します。</p>
                 <textarea id="txtImportSource" placeholder="ここにテキストデータを貼り付け..."></textarea>
-                <button id="btnMerge" class="btn-merge">✨ FILL MISSING INFO (不足を埋める)</button>
+                <button id="btnMerge" class="btn-merge">✨ FILL MISSING INFO (解析＆補完)</button>
             </div>
 
             <h2>BASIC PROFILE</h2>
@@ -203,30 +168,27 @@
                 </div>
             </div>
             
-            <div class="form-grid">
+            <div class="form-row full">
                 <div class="text-section">
-                    <h3>技能詳細 (FLAVOR TEXT)</h3>
-                    <textarea id="txtSkillDetails" style="height:150px;"></textarea>
-                    <div class="helper-text">※技能の「理由」や「設定」などの文章</div>
-                </div>
-                <div class="text-section">
-                    <h3>技能値リスト (NUMERICAL DATA)</h3>
-                    <textarea id="txtSkillList" style="height:150px; font-family:monospace; font-size:0.8rem;"></textarea>
-                    <div class="helper-text">※いあキャラの技能一覧表（数値）</div>
+                    <h3>技能データ (SKILLS & DETAIL)</h3>
+                    <div id="skillArea" class="list-container" style="max-height: 600px; overflow-y: auto;">
+                        </div>
                 </div>
             </div>
 
             <div class="text-section" style="margin-top:20px; border-left-color: #d4b346;">
                 <h3 style="color: #d4b346;">技能成長履歴 (GROWTH LOG)</h3>
                 <textarea id="txtGrowth" style="height:120px;" placeholder="例：&#13;シナリオA: 回避+5, 目星+3"></textarea>
-                <div class="helper-text">※どのシナリオで何が成長したかを自由に記録できます。</div>
             </div>
 
             <h2>INVENTORY & HISTORY</h2>
             <div class="grid-3">
                 <div class="form-row full" style="grid-column:span 2;">
                     <label>所持品 (ITEMS)</label>
-                    <textarea id="txtItems" style="height:200px;" placeholder="アイテム名 : 説明文"></textarea>
+                    <div class="list-container">
+                        <div id="itemList"></div>
+                        <button type="button" class="btn-add" onclick="addItemRow()">+ ADD ITEM</button>
+                    </div>
                 </div>
                 <div class="form-row">
                     <label>魔術/AF (SPELLS/ARTIFACTS)</label>
@@ -237,18 +199,24 @@
                 </div>
             </div>
 
+            <div class="form-row full" style="margin-top:15px;">
+                <label>戦闘・武器・防具 (WEAPONS)</label>
+                <div class="list-container">
+                    <div class="weapon-header">
+                        <div>名前</div><div>成功率</div><div>ダメ</div><div>射程</div><div>回数</div><div>装弾</div><div>HP</div><div>故障</div><div></div>
+                    </div>
+                    <div id="weaponList"></div>
+                    <button type="button" class="btn-add" onclick="addWeaponRow()">+ ADD WEAPON</button>
+                </div>
+            </div>
+
             <div class="form-row full" style="margin-top:20px;">
-                <label>通過シナリオ詳細 (SCENARIO LOGS & MEMORIES)</label>
+                <label>通過シナリオ詳細 (SCENARIO LOGS)</label>
                 <textarea id="txtScenarioDetails" style="height:200px;" placeholder="[シナリオタイトル]&#13;内容..."></textarea>
                 <div class="form-row">
                     <label>通過シナリオ(簡易一覧)</label>
                     <textarea id="txtScenarios" style="height:60px;" placeholder="シナリオ名..."></textarea>
                 </div>
-            </div>
-
-            <div class="form-row full" style="margin-top:15px;">
-                <label>戦闘・武器・防具 (WEAPONS)</label>
-                <textarea id="txtWeapons" style="height:100px; font-family:monospace;" placeholder="武器データ..."></textarea>
             </div>
 
             <div style="margin-top:50px; text-align:right;">
@@ -259,56 +227,53 @@
 
     <script type="module">
         import { loadFromCloud, monitorAuth } from "./firestore.js";
-        // dataフォルダのschema.jsから全てのロジックをインポート
         import { collectFormData, parseIaChara, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING } from "./data/schema.js";
 
         const getEl = (id) => document.getElementById(id);
         const setVal = (id, v) => { const el = getEl(id); if(el) el.value = (v == null ? '' : v); };
         const setSrc = (id, s) => { const el = getEl(id); if(el) el.src = s || ''; };
 
-        // ▼グローバル関数として定義してHTMLから呼べるようにする
-    window.addItemRow = (val={name:'', desc:''}) => {
-        const div = document.createElement('div');
-        div.className = 'list-row item-entry';
-        div.style.gridTemplateColumns = '1fr 2fr auto';
-        div.innerHTML = `
-            <input type="text" class="i-name" placeholder="名称" value="${val.name}">
-            <input type="text" class="i-desc" placeholder="効果・備考" value="${val.desc}">
-            <button class="btn-remove" onclick="this.parentElement.remove()">✕</button>
-        `;
-        document.getElementById('itemList').appendChild(div);
-    };
-
-    window.addWeaponRow = (val={name:'', rate:'', damage:'', range:'', attacks:'', capacity:'', hp:'', malfunction:''}) => {
-        const div = document.createElement('div');
-        div.className = 'weapon-entry';
-        div.innerHTML = `
-            <input type="text" class="w-name" value="${val.name}">
-            <input type="text" class="w-rate" value="${val.rate}">
-            <input type="text" class="w-dmg" value="${val.damage}">
-            <input type="text" class="w-range" value="${val.range}">
-            <input type="text" class="w-atk" value="${val.attacks}">
-            <input type="text" class="w-cap" value="${val.capacity}">
-            <input type="text" class="w-hp" value="${val.hp}">
-            <input type="text" class="w-mal" value="${val.malfunction}">
-            <button class="btn-remove" onclick="this.parentElement.remove()">✕</button>
-        `;
-        document.getElementById('weaponList').appendChild(div);
-    };
-
-        // メモ欄のマッピング（parseIaCharaの戻り値オブジェクトとHTML IDの対応）
         const MEMO_ID_MAP = {
             background: 'txtBackground',
             personality: 'txtPersonality',
             relations: 'txtRelations',
             appearance: 'txtAppearance',
             roleplay: 'txtRoleplay',
-            skillDetails: 'txtSkillDetails',
             memo: 'txtMemo'
         };
 
         let allData = {};
         let currentId = null;
+
+        // --- グローバル関数定義 (ボタン操作用) ---
+        window.addItemRow = (val={name:'', desc:''}) => {
+            const div = document.createElement('div');
+            div.className = 'list-row item-entry';
+            div.style.gridTemplateColumns = '1fr 2fr auto';
+            div.innerHTML = `
+                <input type="text" class="i-name" placeholder="名称" value="${val.name}">
+                <input type="text" class="i-desc" placeholder="効果・備考" value="${val.desc}">
+                <button class="btn-remove" onclick="this.parentElement.remove()">✕</button>
+            `;
+            getEl('itemList').appendChild(div);
+        };
+
+        window.addWeaponRow = (val={name:'', rate:'', damage:'', range:'', attacks:'', capacity:'', hp:'', malfunction:''}) => {
+            const div = document.createElement('div');
+            div.className = 'weapon-entry';
+            div.innerHTML = `
+                <input type="text" class="w-name" value="${val.name}">
+                <input type="text" class="w-rate" value="${val.rate}">
+                <input type="text" class="w-dmg" value="${val.damage}">
+                <input type="text" class="w-range" value="${val.range}">
+                <input type="text" class="w-atk" value="${val.attacks}">
+                <input type="text" class="w-cap" value="${val.capacity}">
+                <input type="text" class="w-hp" value="${val.hp}">
+                <input type="text" class="w-mal" value="${val.malfunction}">
+                <button class="btn-remove" onclick="this.parentElement.remove()">✕</button>
+            `;
+            getEl('weaponList').appendChild(div);
+        };
 
         monitorAuth((user) => {
             if(user) init();
@@ -346,26 +311,21 @@
             if(target) loadCharacterToForm(target);
         });
 
-        // データのロード処理
         function loadCharacterToForm(d) {
             getEl('editorArea').style.opacity='1';
             getEl('editorArea').style.pointerEvents='auto';
             
-            // 1. schema.jsのFIELD_MAPPINGを使用して基本データをセット
             FIELD_MAPPING.forEach(field => {
                 setVal(field.id, d[field.key]);
             });
             setSrc('previewBody', d.image);
             setSrc('previewIcon', d.icon);
 
-            // 2. ステータス・バイタルのセット
             const s = d.stats || {};
             STATS_MAPPING.forEach(f => setVal(f.id, s[f.key]));
             const v = d.vitals || {};
             VITALS_MAPPING.forEach(f => setVal(f.id, v[f.key]));
 
-            // 3. メモ（保存時は結合された文字列）を分解してセット
-            // schema.jsのcollectFormDataで結合された [タグ] 形式を分解
             const fullMemo = d.memo || '';
             const extract = (tag) => {
                 const regex = new RegExp(`\\[${tag}\\]\\n([\\s\\S]*?)(\\n\\[|$)`);
@@ -378,158 +338,150 @@
             setVal('txtRelations', extract('人間関係'));
             setVal('txtAppearance', extract('外見的特徴')||extract('外見'));
             setVal('txtRoleplay', extract('RP補足')||extract('RP用補足'));
-            setVal('txtSkillDetails', extract('技能詳細')||extract('職業P振り分け詳細'));
             
-            // "メモ"タグがある場合と、タグなしの生テキストの場合を考慮
             if(!fullMemo.includes('[')) setVal('txtMemo', fullMemo);
             else setVal('txtMemo', extract('メモ'));
 
-           // 4. アイテムリスト描画
-        document.getElementById('itemList').innerHTML = '';
-        if(Array.isArray(d.items)) d.items.forEach(i => addItemRow(i));
-        else addItemRow(); // 空行1つ
+            // 4. アイテムリスト
+            getEl('itemList').innerHTML = '';
+            if(Array.isArray(d.items)) d.items.forEach(i => addItemRow(i));
+            else addItemRow();
 
-        // 5. 武器リスト描画
-        document.getElementById('weaponList').innerHTML = '';
-        if(Array.isArray(d.weapons)) d.weapons.forEach(w => addWeaponRow(w));
-        else addWeaponRow(); 
+            // 5. 武器リスト
+            getEl('weaponList').innerHTML = '';
+            if(Array.isArray(d.weapons)) d.weapons.forEach(w => addWeaponRow(w));
+            else addWeaponRow();
 
-        // 6. 技能リスト描画
-        renderSkills(d.skills);
-        
-        runCalculations();
-    }
+            // 6. 技能リスト
+            renderSkills(d.skills);
 
-    // 技能描画関数
-    function renderSkills(skillsObj) {
-        const area = document.getElementById('skillArea');
-        area.innerHTML = '';
-        
-        // カテゴリ定義
-        const cats = [
-            {id:'combat', label:'戦闘技能'}, {id:'explore', label:'探索技能'}, 
-            {id:'action', label:'行動技能'}, {id:'negotiate', label:'交渉技能'}, 
-            {id:'knowledge', label:'知識技能'}
-        ];
+            // 7. シナリオ詳細
+            if(Array.isArray(d.scenarioList)) {
+                const text = d.scenarioList.map(scn => `[${scn.title}]\n${scn.desc}`).join('\n\n');
+                setVal('txtScenarioDetails', text);
+            } else {
+                const simpleList = d.scenarios || "";
+                if (simpleList && !d.scenarioList) {
+                    const converted = simpleList.split('\n')
+                        .filter(l => l.trim())
+                        .map(l => `[${l.replace(/[\[\]]/g, '')}]\n(詳細未記入)`).join('\n\n');
+                    setVal('txtScenarioDetails', converted);
+                } else {
+                    setVal('txtScenarioDetails', '');
+                }
+            }
 
-        cats.forEach(c => {
-            const list = skillsObj ? skillsObj[c.id] : [];
-            if(!list || list.length === 0) return;
+            runCalculations();
+        }
 
-            const box = document.createElement('div');
-            box.className = 'skill-category';
-            box.id = `skill-cat-${c.id}`;
+        // 技能テーブル描画
+        function renderSkills(skillsObj) {
+            const area = getEl('skillArea');
+            area.innerHTML = '';
             
-            // ヘッダー
-            let html = `<h4>${c.label}</h4>
-            <table class="skill-table">
-                <thead>
-                    <tr>
-                        <th style="width:120px; text-align:left;">技能名</th>
-                        <th style="width:40px;">合計</th>
-                        <th style="width:40px;">初期</th>
-                        <th style="width:40px;">職業</th>
-                        <th style="width:40px;">興味</th>
-                        <th style="width:40px;">成長</th>
-                        <th style="text-align:left; padding-left:10px;">技能詳細 (Flavor Text)</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-            
-            list.forEach(s => {
-                html += `
-                <tr class="skill-entry">
-                    <td class="s-name" style="font-weight:bold;">${s.name}</td>
-                    <td><input type="number" class="s-total" value="${s.total}" readonly tabindex="-1"></td>
-                    <td><input type="number" class="s-init" value="${s.init}" readonly tabindex="-1" style="color:#888;"></td>
-                    <td><input type="number" class="s-job" value="${s.job}"></td>
-                    <td><input type="number" class="s-interest" value="${s.interest}"></td>
-                    <td><input type="number" class="s-growth" value="${s.growth}"></td>
-                    <td style="padding-left:10px;"><input type="text" class="s-desc skill-desc-input" value="${s.desc || ''}" placeholder="設定や理由など..."></td>
-                </tr>`;
-            });
-            html += `</tbody></table>`;
-            box.innerHTML = html;
-            area.appendChild(box);
-            
-            // 合計値の自動計算イベント付与
-            box.querySelectorAll('input').forEach(inp => {
-                inp.addEventListener('input', (e) => {
-                    const row = e.target.closest('tr');
-                    const init = parseInt(row.querySelector('.s-init').value)||0;
-                    const job = parseInt(row.querySelector('.s-job').value)||0;
-                    const int = parseInt(row.querySelector('.s-interest').value)||0;
-                    const gro = parseInt(row.querySelector('.s-growth').value)||0;
-                    row.querySelector('.s-total').value = init + job + int + gro;
+            const cats = [
+                {id:'combat', label:'戦闘技能'}, {id:'explore', label:'探索技能'}, 
+                {id:'action', label:'行動技能'}, {id:'negotiate', label:'交渉技能'}, 
+                {id:'knowledge', label:'知識技能'}
+            ];
+
+            cats.forEach(c => {
+                const list = skillsObj ? skillsObj[c.id] : [];
+                if(!list || list.length === 0) return;
+
+                const box = document.createElement('div');
+                box.className = 'skill-category';
+                box.id = `skill-cat-${c.id}`;
+                
+                let html = `<h4>${c.label}</h4>
+                <table class="skill-table">
+                    <thead>
+                        <tr>
+                            <th style="width:120px; text-align:left;">技能名</th>
+                            <th style="width:40px;">合計</th>
+                            <th style="width:40px;">初期</th>
+                            <th style="width:40px;">職業</th>
+                            <th style="width:40px;">興味</th>
+                            <th style="width:40px;">成長</th>
+                            <th style="text-align:left; padding-left:10px;">技能詳細 (Flavor Text)</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+                
+                list.forEach(s => {
+                    html += `
+                    <tr class="skill-entry">
+                        <td class="s-name" style="font-weight:bold;">${s.name}</td>
+                        <td><input type="number" class="s-total" value="${s.total}" readonly tabindex="-1"></td>
+                        <td><input type="number" class="s-init" value="${s.init}" readonly tabindex="-1" style="color:#888;"></td>
+                        <td><input type="number" class="s-job" value="${s.job}"></td>
+                        <td><input type="number" class="s-interest" value="${s.interest}"></td>
+                        <td><input type="number" class="s-growth" value="${s.growth}"></td>
+                        <td style="padding-left:10px;"><input type="text" class="s-desc skill-desc-input" value="${s.desc || ''}" placeholder="設定や理由など..."></td>
+                    </tr>`;
+                });
+                html += `</tbody></table>`;
+                box.innerHTML = html;
+                area.appendChild(box);
+                
+                // 自動計算イベント
+                box.querySelectorAll('input').forEach(inp => {
+                    inp.addEventListener('input', (e) => {
+                        const row = e.target.closest('tr');
+                        const init = parseInt(row.querySelector('.s-init').value)||0;
+                        const job = parseInt(row.querySelector('.s-job').value)||0;
+                        const int = parseInt(row.querySelector('.s-interest').value)||0;
+                        const gro = parseInt(row.querySelector('.s-growth').value)||0;
+                        row.querySelector('.s-total').value = init + job + int + gro;
+                    });
                 });
             });
-        });
-    }
+        }
 
-        // ★保存処理: schema.js の collectFormData を使用してデータ収集
         window.prepareSaveData = function() {
             if(!currentId) return null;
             const originalData = Object.values(allData).find(c=>c.id==currentId);
             if(!originalData) return null;
-
-            // overwriteEmpty=false (安全モード) で保存データを生成
-            // これにより、画面上の空欄で既存データを誤って消すのを防ぎます
+            // 空欄保護モード(false)で保存
             const finalData = collectFormData(originalData, false);
-
             alert("保存しました！");
             return finalData;
         };
 
-        // ★スマートインポート: schema.js の parseIaChara を使用
         getEl('btnMerge').addEventListener('click', () => {
             const text = getEl('txtImportSource').value;
             if(!text) return;
             
-            // schema.jsのパーサーを利用
-           const p = parseIaChara(text);
-        
-        // 配列データの反映
-        if(p.items && p.items.length > 0) {
-            const list = document.getElementById('itemList');
-            // 既存に追加するか、置換するかはUX次第ですが、ここでは追記にします
-            p.items.forEach(i => addItemRow(i));
-        }
-        if(p.weapons && p.weapons.length > 0) {
-            p.weapons.forEach(w => addWeaponRow(w));
-        }
-        // スキルは全書き換えが安全
-        if(p.skills) renderSkills(p.skills);
+            const p = parseIaChara(text);
+            const fillIfEmpty = (id, val) => {
+                const current = getEl(id)?.value;
+                if(!current && val) setVal(id, val);
+            };
 
-            // 1. 基本フィールドの埋め込み
-            FIELD_MAPPING.forEach(f => {
-                if(p[f.key]) fillIfEmpty(f.id, p[f.key]);
-            });
-
-            // 2. ステータス・バイタルの埋め込み
+            FIELD_MAPPING.forEach(f => { if(p[f.key]) fillIfEmpty(f.id, p[f.key]); });
             STATS_MAPPING.forEach(f => fillIfEmpty(f.id, p.stats[f.key]));
             VITALS_MAPPING.forEach(f => fillIfEmpty(f.id, p.vitals[f.key]));
             
-            // 3. メモ項目の埋め込み (p.memoはオブジェクト形式で返ってくる)
             Object.keys(MEMO_ID_MAP).forEach(key => {
                 if(p.memo[key]) fillIfEmpty(MEMO_ID_MAP[key], p.memo[key]);
             });
 
-            // 4. アイテム
-            if(p.itemsStr) {
-                const currentItems = getEl('txtItems').value;
-                if(!currentItems) setVal('txtItems', p.itemsStr);
-                else setVal('txtItems', currentItems + '\n' + p.itemsStr);
+            // リストデータは追記or上書き（ここでは追記・更新）
+            if(p.items && p.items.length > 0) {
+                p.items.forEach(i => addItemRow(i));
             }
+            if(p.weapons && p.weapons.length > 0) {
+                p.weapons.forEach(w => addWeaponRow(w));
+            }
+            if(p.skills) renderSkills(p.skills);
 
-            // 5. 画像
             if(p.image && !getEl('previewBody').src) setSrc('previewBody', p.image);
             if(p.icon && !getEl('previewIcon').src) setSrc('previewIcon', p.icon);
 
-            alert("不足データを補完しました！(Using Schema Parser)");
+            alert("解析・補完しました！\n所持品・武器・技能表が更新されています。");
             runCalculations();
         });
 
-        // 自動計算ロジック（UI制御のためここはlocalに残す）
         function runCalculations() {
             const age = parseInt(getEl('inpAge')?.value)||0;
             const edu = parseInt(getEl('s_edu')?.value)||0;
@@ -553,8 +505,7 @@
 
         getEl('btnCreateNew').addEventListener('click', ()=>{
             const id=crypto.randomUUID();
-            // 新規作成時も基本構造はSchema準拠が望ましいが、空でよいので簡易初期化
-            allData[id]={id, name:"新規キャラ", stats:{}, vitals:{}, items:[], scenarioList:[]};
+            allData[id]={id, name:"新規キャラ", stats:{}, vitals:{}, items:[], weapons:[], scenarioList:[], skills:{}};
             currentId=id; renderSelect(); loadCharacterToForm(allData[id]);
         });
         getEl('btnDelete').addEventListener('click', async ()=>{

@@ -1,7 +1,8 @@
 // data/schema.js
 
-// ■ データ項目の定義マップ (基本的な単一項目)
+// ■ データ項目の定義マップ (全ての保存対象データ)
 export const FIELD_MAPPING = [
+    // 基本情報
     { key: 'name',      id: 'inpName' },
     { key: 'kana',      id: 'inpKana' },
     { key: 'job',       id: 'inpJob' },
@@ -16,9 +17,11 @@ export const FIELD_MAPPING = [
     { key: 'colorEye',  id: 'inpEye' },
     { key: 'colorSkin', id: 'inpSkin' },
     
+    // 画像
     { key: 'image',     id: 'inpImageBody' },
     { key: 'icon',      id: 'inpImageIcon' },
     
+    // 金銭・戦闘・DB
     { key: 'money',     id: 'inpMoney' },
     { key: 'debt',      id: 'inpDebt' },
     { key: 'db',        id: 'v_db' },
@@ -33,13 +36,15 @@ export const FIELD_MAPPING = [
     { key: 'scenarioDetailsText', id: 'txtScenarioDetails' }
 ];
 
-// ステータス・バイタル定義
+// ステータス定義
 export const STATS_MAPPING = [
     { key: 'STR', id: 's_str' }, { key: 'CON', id: 's_con' },
     { key: 'POW', id: 's_pow' }, { key: 'DEX', id: 's_dex' },
     { key: 'APP', id: 's_app' }, { key: 'SIZ', id: 's_siz' },
     { key: 'INT', id: 's_int' }, { key: 'EDU', id: 's_edu' }
 ];
+
+// バイタル定義
 export const VITALS_MAPPING = [
     { key: 'hp', id: 'v_hp' }, { key: 'mp', id: 'v_mp' }, { key: 'san', id: 'v_san' }
 ];
@@ -52,15 +57,16 @@ export function parseIaChara(text) {
         id: crypto.randomUUID(), 
         stats:{}, vitals:{}, memo:{}, 
         skills: {combat:[], explore:[], action:[], negotiate:[], knowledge:[]},
-        items: [], weapons: [], scenarioList: [] // weapons配列を追加
+        items: [], weapons: [], scenarioList: []
     };
-    
-    // ★修正1: 空文字も許容し、行末までを取得するように正規表現を強化 (mフラグ利用を想定)
+
+    // 正規表現ヘルパー: 行末まで安全に取得するよう改良
     const m = (regex) => {
         const match = text.match(regex);
         return match ? match[1].trim() : '';
     };
 
+    // --- 基本情報 ---
     const nameLine = m(/名前[:：]\s*(.+)/) || 'Unknown';
     const nameMatch = nameLine.match(/^(.+?)[\s　]*[(（](.+?)[)）]/);
     if(nameMatch) { d.name = nameMatch[1].trim(); d.kana = nameMatch[2].trim(); } 
@@ -81,11 +87,12 @@ export function parseIaChara(text) {
     d.image = m(/画像URL[:：]\s*(\S+)/) || m(/【画像】\n:(\S+)/) || m(/【立ち絵】\n:(\S+)/);
     d.icon = m(/アイコンURL[:：]\s*(\S+)/) || m(/【アイコン】\n:(\S+)/);
     
-    // ★修正1の適用: 改行の前までを取得するように変更 (.*)
-    d.money = m(/(?:現在の)?所持金[:：]\s*(.*)$/m);
-    d.debt = m(/借金[:：]\s*(.*)$/m);
+    // ★修正: 空文字も含めて行末まで取得 (mフラグ対応の正規表現)
+    // (?:\n|$) で改行または終端までをマッチさせる
+    d.money = m(/(?:現在の)?所持金[:：]\s*(.*)(?:\n|$)/);
+    d.debt = m(/借金[:：]\s*(.*)(?:\n|$)/);
 
-    // ステータス
+    // --- ステータス ---
     const getStat = (name) => {
         const reg = new RegExp(`${name}[\\s:：]+(\\d+)`);
         return parseInt(m(reg)) || 0;
@@ -98,17 +105,27 @@ export function parseIaChara(text) {
     d.vitals.san = parseInt(m(/SAN[:：\s]+(\d+)/)) || getStat('SAN');
     d.db = m(/DB[:：\s]+([+-]\S+)/);
 
-    // 技能詳細（説明文）のマッピング
+    // --- セクション取得ヘルパー ---
+    const getSec = (tag) => {
+        const regex = new RegExp(`(?:\\[|【|〈)${tag}(?:\\]|】|〉)([\\s\\S]*?)(?:(?:\\[|【|〈)|$)`);
+        const match = text.match(regex);
+        return match ? match[1].trim() : '';
+    };
+
+    // --- 技能詳細（説明文）のマッピング ---
     const descMap = {};
-    const detailSec = text.split('[技能詳細]')[1];
+    // "技能詳細" または "職業P振り分け詳細" などを統合して検索
+    const detailSec = getSec('技能詳細') + '\n' + getSec('職業P振り分け詳細') + '\n' + getSec('趣味P振り分け詳細');
+    
     if(detailSec) {
         detailSec.split('\n').forEach(l => {
-            const match = l.match(/^([^\s…]+)[…\s]+(.+)/);
+            // "技能名… 説明" または "技能名: 説明" の形式をキャッチ
+            const match = l.match(/^([^\s…:：]+)[…:：\s]+(.+)/);
             if(match) descMap[match[1].trim()] = match[2].trim();
         });
     }
 
-    // 技能配列の生成
+    // --- 技能配列の生成 ---
     const lines = text.split('\n');
     let cat = null;
     lines.forEach(l => {
@@ -121,6 +138,7 @@ export function parseIaChara(text) {
         else if(l.startsWith('【')) cat=null;
 
         if(cat) {
+            // "技能名 合計 初期値..." の並びを解析
             const match = l.match(/^([^\d]+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)/);
             if(match && match[1].trim()!=='技能名') {
                 const n = match[1].trim();
@@ -131,19 +149,14 @@ export function parseIaChara(text) {
                     job: parseInt(match[4]), 
                     interest: parseInt(match[5]), 
                     growth: parseInt(match[6]),
-                    desc: descMap[n]||'', // 詳細テキストもここで結合
+                    desc: descMap[n]||'', // ここで説明文を結合
                     category: cat
                 });
             }
         }
     });
 
-    const getSec = (tag) => {
-        const regex = new RegExp(`(?:\\[|【|〈)${tag}(?:\\]|】|〉)([\\s\\S]*?)(?:(?:\\[|【|〈)|$)`);
-        const match = text.match(regex);
-        return match ? match[1].trim() : '';
-    };
-    
+    // --- メモ系 ---
     d.memo.background = getSec('経歴');
     d.memo.personality = getSec('性格');
     d.memo.relations = getSec('人間関係');
@@ -171,17 +184,21 @@ export function parseIaChara(text) {
         }).filter(e => e.title);
     }
 
-    // ★修正2: 武器の解析 (配列化)
+    // --- 武器リスト解析 ---
     const wSection = getSec('戦闘・武器・防具');
     if(wSection) {
         const wLines = wSection.split('\n');
         wLines.forEach(wl => {
             wl = wl.trim();
-            if(!wl || wl.includes('名前') && wl.includes('成功率')) return;
-            // 複数の空白で区切られていることを想定して分割
-            const cols = wl.split(/\s{2,}/); 
-            // 名前 成功率 ダメージ 射程 攻撃回数 装弾数 耐久力 故障
+            // ヘッダー行や区切り線をスキップ
+            if(!wl || (wl.includes('名前') && wl.includes('成功率'))) return;
+            
+            // 空白区切りで要素を分解 (2つ以上のスペースを区切りとみなす)
+            const cols = wl.split(/\s{2,}/);
+            
+            // 最低でも名前と成功率くらいはある行を対象とする
             if(cols.length >= 2) {
+                // 名前 成功率 ダメージ 射程 攻撃回数 装弾数 耐久力 故障
                 d.weapons.push({
                     name: cols[0]||'', 
                     rate: cols[1]||'', 
@@ -196,18 +213,24 @@ export function parseIaChara(text) {
         });
     }
 
-    // ★修正3: アイテムの解析 (配列化を確実に)
+    // --- 所持品解析 ---
     const itemSection = getSec('所持品');
     if(itemSection) {
         const lines = itemSection.split('\n');
         lines.forEach(line => {
-            if(!line.trim() || line.includes('名称') && line.includes('単価')) return;
+            // ヘッダー行を除外
+            if(!line.trim() || (line.includes('名称') && line.includes('単価'))) return;
+            
+            // 空白区切り
             const parts = line.trim().split(/\s+/);
             if(parts.length > 0) {
                 const name = parts[0];
                 let desc = "";
-                if(parts.length >= 5) desc = parts.slice(4).join(' '); // いあキャラ標準形式の場合
-                else if(parts.length > 1) desc = parts.slice(1).join(' '); // 簡易形式の場合
+                // いあキャラ標準形式: 名称 単価 個数 価格 備考...
+                if(parts.length >= 5) desc = parts.slice(4).join(' ');
+                // 簡易形式: 名称 備考...
+                else if(parts.length > 1) desc = parts.slice(1).join(' ');
+                
                 d.items.push({name: name, desc: desc});
             }
         });
@@ -253,7 +276,7 @@ export function collectFormData(currentData = {}, overwriteEmpty = false) {
     updateNum(STATS_MAPPING, newData.stats);
     updateNum(VITALS_MAPPING, newData.vitals);
 
-    // 3. メモ系
+    // 3. メモの結合
     const secs = [];
     const getMemo = (id) => getVal(id);
     const add = (t, val) => { if(val) secs.push(`[${t}]\n${val}`); };
@@ -264,6 +287,8 @@ export function collectFormData(currentData = {}, overwriteEmpty = false) {
     add('RP補足', getMemo('txtRoleplay')); 
     add('メモ', getMemo('txtMemo'));
     
+    // ※技能詳細はテーブル化したが、互換性のためメモ末尾にも追記しておく場合
+    // ここでは画面上のメモ欄だけを信頼して結合する
     const newMemo = secs.join('\n\n');
     if (newMemo || overwriteEmpty) newData.memo = newMemo;
 
@@ -276,7 +301,7 @@ export function collectFormData(currentData = {}, overwriteEmpty = false) {
         newData.items = Array.from(itemRows).map(row => ({
             name: row.querySelector('.i-name').value,
             desc: row.querySelector('.i-desc').value
-        })).filter(i => i.name); // 名前がないものは除外
+        })).filter(i => i.name);
     }
 
     // (B) 武器リスト
@@ -296,8 +321,6 @@ export function collectFormData(currentData = {}, overwriteEmpty = false) {
     }
 
     // (C) 技能リスト (数値・詳細)
-    // 画面上で編集された値を skills オブジェクトに反映
-    // ※今回は簡易的に「全てのカテゴリをスキャンして再構築」します
     const skills = {combat:[], explore:[], action:[], negotiate:[], knowledge:[]};
     ['combat', 'explore', 'action', 'negotiate', 'knowledge'].forEach(cat => {
         const container = document.getElementById(`skill-cat-${cat}`);
@@ -312,15 +335,14 @@ export function collectFormData(currentData = {}, overwriteEmpty = false) {
                     job: parseInt(row.querySelector('.s-job').value)||0,
                     interest: parseInt(row.querySelector('.s-interest').value)||0,
                     growth: parseInt(row.querySelector('.s-growth').value)||0,
-                    desc: row.querySelector('.s-desc').value // 詳細テキスト
+                    desc: row.querySelector('.s-desc').value
                 });
             });
         }
     });
-    // もし画面にスキル表が展開されていれば更新、なければ既存維持
+    // 画面にスキル表があれば更新
     if(document.getElementById('skill-cat-combat')) {
         newData.skills = skills;
-        // 互換性のため、技能詳細はmemoにも結合テキストとして入れておくなどの処理が必要ならここで行う
     }
 
     // 5. シナリオリスト
