@@ -18,11 +18,6 @@ let state = {
 
 const randomEmojis = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐙'];
 
-// SVG Data URIs for Tails (Round Shape)
-const tailSvgWhite = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 20'%3E%3Cpath d='M12 0 L0 0 C0 0 4 10 12 14 Z' fill='%23ffffff'/%3E%3C/svg%3E";
-const tailSvgGreen = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 20'%3E%3Cpath d='M0 0 L12 0 C12 0 8 10 0 14 Z' fill='%238de055'/%3E%3C/svg%3E";
-
-
 function init() { 
     renderCharList(); 
     updateTime();
@@ -296,20 +291,11 @@ function sendTextMsg() {
     const children = Array.from(container.children);
     const lastMsgRow = children.reverse().find(el => el.classList.contains('message-row'));
     
-    let isTail = true;
     if (lastMsgRow && lastMsgRow.dataset.senderId === char.id) {
         bubbleClass += ' no-tail';
-        isTail = false;
     }
 
-    // Insert SVG Tail as IMG if tail is needed
-    let tailHtml = '';
-    if (isTail) {
-        const svgSrc = isMe ? tailSvgGreen : tailSvgWhite;
-        tailHtml = `<img src="${svgSrc}" class="tail-img">`;
-    }
-
-    const contentHtml = `<div class="bubble ${bubbleClass}" contenteditable="true">${tailHtml}${finalHtml}</div>`;
+    const contentHtml = `<div class="bubble ${bubbleClass}" contenteditable="true">${finalHtml}</div>`;
     msgInput.value = '';
 
     appendMessage(isMe, contentHtml, char, timeStr);
@@ -369,12 +355,9 @@ function addToChat() {
                 durationHtml = '';
             }
             const sideClass = isMe ? 'right' : 'left';
-            const svgSrc = isMe ? tailSvgGreen : tailSvgWhite;
-            const tailHtml = `<img src="${svgSrc}" class="tail-img">`;
 
             contentHtml = `
                 <div class="call-history-bubble ${sideClass}">
-                    ${tailHtml}
                     <div class="call-icon-circle"><i class="${iconClass}"></i></div>
                     <div class="flex flex-col justify-center">
                         <div class="text-sm font-bold leading-tight" contenteditable="true">${title}</div>

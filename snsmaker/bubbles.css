@@ -1,4 +1,4 @@
-/* --- BUBBLE STYLE (Rounded Tail) --- */
+/* --- BUBBLE STYLE --- */
 .bubble-wrapper {
     display: flex;
     align-items: flex-end;
@@ -22,41 +22,40 @@
     z-index: 1;
 }
 
-/* SVG Tail Image Style (絶対配置で重ねる) */
-.tail-img {
-    position: absolute;
-    top: 0;
-    width: 12px;
-    height: 20px;
-    z-index: 2;
-    pointer-events: none;
-}
-
 /* LEFT BUBBLE (White) */
 .bubble-left {
     background: #ffffff;
     color: var(--line-text);
-    margin-left: 8px; /* しっぽの分空ける */
-    border-top-left-radius: 2px; /* しっぽ接続部 */
+    margin-left: 6px;
+    border-top-left-radius: 0; 
 }
-.bubble-left .tail-img {
-    left: -8px; /* 外側に出す */
+.bubble-left::before {
+    content: ""; position: absolute; top: 0; left: -6px; width: 0; height: 0;
+    border-top: 0px solid transparent;
+    border-right: 6px solid #ffffff;
+    border-bottom: 6px solid transparent;
+    z-index: 2;
 }
 
 /* RIGHT BUBBLE (Green) */
 .bubble-right {
     background: var(--line-green);
     color: var(--line-text);
-    margin-right: 8px; /* しっぽの分空ける */
-    border-top-right-radius: 2px; /* しっぽ接続部 */
+    margin-right: 6px;
+    border-top-right-radius: 0;
 }
-.bubble-right .tail-img {
-    right: -8px; /* 外側に出す */
+.bubble-right::before {
+    content: ""; position: absolute; top: 0; right: -6px; width: 0; height: 0;
+    border-top: 0px solid transparent;
+    border-left: 6px solid var(--line-green);
+    border-bottom: 6px solid transparent;
+    z-index: 2;
 }
 
 /* --- No Tail Logic --- */
-.no-tail .tail-img {
+.no-tail::before {
     display: none !important;
+    content: none !important;
 }
 .bubble-left.no-tail {
     border-top-left-radius: 20px !important;
@@ -88,14 +87,20 @@
 }
 
 .call-history-bubble.left { 
-    background: #ffffff; color: #242424; margin-left: 8px; border-top-left-radius: 2px; 
+    background: #ffffff; color: #242424; margin-left: 6px; border-top-left-radius: 0; 
 }
-.call-history-bubble.left .tail-img { left: -8px; }
+.call-history-bubble.left::before {
+    content: ""; position: absolute; top: 0; left: -6px; width: 0; height: 0;
+    border-top: 0px solid transparent; border-right: 6px solid #ffffff; border-bottom: 6px solid transparent;
+}
 
 .call-history-bubble.right { 
-    background: var(--line-green); color: #242424; margin-right: 8px; border-top-right-radius: 2px; 
+    background: var(--line-green); color: #242424; margin-right: 6px; border-top-right-radius: 0; 
 }
-.call-history-bubble.right .tail-img { right: -8px; }
+.call-history-bubble.right::before {
+    content: ""; position: absolute; top: 0; right: -6px; width: 0; height: 0;
+    border-top: 0px solid transparent; border-left: 6px solid var(--line-green); border-bottom: 6px solid transparent;
+}
 
 .call-icon-circle {
     width: 42px;
