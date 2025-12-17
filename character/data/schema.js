@@ -70,13 +70,13 @@ export function parseIaChara(text) {
     d.job = getProfileVal('職業');
     d.tags = m(/タグ[:：]\s*(.+)/);
     
-    // ★修正: 年齢は数字だけを取り出す (24歳 -> 24)
-    const ageStr = getProfileVal('年齢');
-    d.age = parseInt(ageStr) || '';
-
+    // ★修正: 年齢・身長・体重は数字だけを取り出す
+    // parseIntは文字列の先頭から数字の部分だけを読み取るため、"152cm" -> 152 となります
+    d.age = parseInt(getProfileVal('年齢')) || '';
     d.gender = getProfileVal('性別');
-    d.height = getProfileVal('身長');
-    d.weight = getProfileVal('体重');
+    d.height = parseInt(getProfileVal('身長')) || '';
+    d.weight = parseInt(getProfileVal('体重')) || '';
+    
     d.birthday = getProfileVal('誕生日');
     d.origin = getProfileVal('出身'); 
     d.birthplace = d.origin; 
