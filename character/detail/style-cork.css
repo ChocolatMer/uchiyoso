@@ -1,5 +1,5 @@
 /* --- style-cork.css --- */
-/* THEME: ANALOG / INVESTIGATION BOARD (Final Fixed) */
+/* THEME: ANALOG / INVESTIGATION BOARD (Refined Design) */
 
 @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Klee+One:wght@400;600&family=Shippori+Mincho:wght@400;700&display=swap');
 
@@ -9,7 +9,7 @@
     --paper-line: #aaccff;
     --ink-main: #2b2b2b;
     --ink-sub: #555;
-    /* テーマカラー */
+    /* テーマカラー（JSで上書き可） */
     --ink-red: #d9333f;    
     --ink-blue: #0044cc;   
     
@@ -63,7 +63,7 @@ body {
 }
 .upload-area .cyber-btn:hover { transform: translate(1px, 1px); box-shadow: 1px 1px 0 #bbb; }
 
-/* LAYOUT & GRID */
+/* LAYOUT */
 .dashboard-grid {
     display: grid;
     grid-template-columns: 320px minmax(500px, 1fr) 350px;
@@ -74,14 +74,11 @@ body {
     min-height: calc(100vh - 80px);
     transition: all 0.5s ease;
 }
-
-.dashboard-grid.swapped {
-    grid-template-columns: 320px minmax(500px, 1fr) 380px;
-}
+.dashboard-grid.swapped { grid-template-columns: 320px minmax(500px, 1fr) 380px; }
 .dashboard-grid.swapped .col-center { order: 3; }
 .dashboard-grid.swapped .col-right { order: 2; }
 
-/* パネル共通スタイル */
+/* PANELS */
 .panel {
     background: var(--paper-base);
     box-shadow: var(--shadow-paper);
@@ -100,78 +97,39 @@ body {
     opacity: 0.8; z-index: 10;
 }
 
-/* =========================================
-   4. LEFT COLUMN: PROFILE
-   ========================================= */
+/* LEFT COLUMN */
 .col-left { display: flex; flex-direction: column; gap: 20px; height: fit-content; }
-
-.profile-card {
-    padding: 15px 15px 20px 15px; background: #fff;
-    transform: rotate(-1deg); border: 1px solid #ddd;
-}
-.profile-card::before {
-    top: -12px; transform: translateX(-50%) rotate(2deg);
-    background: rgba(220, 200, 100, 0.4);
-}
-.img-frame {
-    width: 100%; aspect-ratio: 1 / 1; background: #000; overflow: hidden;
-    margin-bottom: 15px; border: 1px solid #eee;
-    filter: sepia(0.3) contrast(1.1);
-}
+.profile-card { padding: 15px 15px 20px 15px; background: #fff; transform: rotate(-1deg); border: 1px solid #ddd; }
+.profile-card::before { top: -12px; transform: translateX(-50%) rotate(2deg); background: rgba(220, 200, 100, 0.4); }
+.img-frame { width: 100%; aspect-ratio: 1 / 1; background: #000; overflow: hidden; margin-bottom: 15px; border: 1px solid #eee; filter: sepia(0.3) contrast(1.1); }
 .img-frame img { width: 100%; height: 100%; object-fit: cover; }
 .scan-bar { display: none; }
-
 .name-box h2 { font-family: 'Klee One', cursive; font-size: 2rem; margin: 0; color: var(--ink-main); }
 .kana-text { font-family: 'Shippori Mincho', serif; font-size: 0.8rem; color: var(--ink-sub); display: block; margin-bottom: 10px; }
 
-/* ★ プロフィール情報の集約ボックス (IDカード風 -> タグ風アレンジ) */
+/* Profile ID Box */
 .meta-info {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px; /* 間隔を少し広げる */
-    border: 2px double #ccc;
-    padding: 15px 10px 10px 10px;
-    background: #fcfcfc;
-    margin-top: 10px;
-    font-family: 'Courier Prime', monospace;
-    font-size: 0.8rem;
-    text-align: left;
-    position: relative;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+    border: 2px double #ccc; padding: 15px 10px 10px 10px;
+    background: #fcfcfc; margin-top: 10px;
+    font-family: 'Courier Prime', monospace; font-size: 0.8rem;
+    text-align: left; position: relative;
 }
 .meta-info::before {
     content: 'ID DATA'; position: absolute; top: -8px; left: 10px; 
     background: #fff; padding: 0 5px; font-size: 0.6rem; color: #888;
 }
-
-/* 個別の情報セル */
 .meta-item { display: flex; flex-direction: column; gap: 2px; }
 .meta-label { font-size: 0.6rem; color: #888; margin-left: 2px; }
-
-/* ★ 要望の「小さい枠（タグ）」デザインをここに適用 */
 .meta-val {
-    font-size: 0.85rem; 
-    color: var(--ink-main); 
-    font-weight: bold;
-    
-    /* 黄色いタグ風デザイン */
-    background: #ffeb3b;
-    padding: 2px 8px;
-    border: 1px solid #ddd;
-    border-radius: 2px;
-    box-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-    display: inline-block;
-    
-    /* 文字がはみ出さないように */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 0.85rem; color: var(--ink-main); font-weight: bold;
+    background: #ffeb3b; padding: 2px 8px; border: 1px solid #ddd;
+    border-radius: 2px; box-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-
-/* 古い要素非表示 */
 #charJob, #charAge, .tag-cloud { display: none; }
 
-
-/* COLOR MODULE */
+/* Color Module */
 .color-module { padding: 20px; background: #fffaf0; transform: rotate(0.5deg); border: 1px solid #ddd; box-shadow: var(--shadow-paper); }
 .color-module h3 { font-family: 'Courier Prime', monospace; font-size: 0.85rem; color: var(--ink-sub); border-bottom: 1px dashed #aaa; padding-bottom: 5px; margin-bottom: 10px; }
 .color-grid { display: flex; flex-direction: column; gap: 8px; }
@@ -181,8 +139,7 @@ body {
 .theme-picker-row { margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 10px; }
 .theme-picker-row input[type="color"] { background: none; border: 1px solid #ccc; width: 100%; height: 25px; cursor: pointer; }
 
-
-/* VITAL MONITOR */
+/* Vitals & Stats */
 .vitals-module { padding: 20px; background: #fffaf0; transform: rotate(1deg); margin-top: 5px; }
 .vital-head { font-family: 'Courier Prime', monospace; font-weight: bold; }
 .bar-track { height: 10px; background: #e0e0e0; border-radius: 5px; overflow: hidden; border: 1px solid #bbb; margin-top: 2px; }
@@ -191,7 +148,6 @@ body {
 .db-row { border-top: 1px solid #ccc; margin-top: 10px; padding-top: 10px; display: flex; justify-content: space-between; }
 .db-val { color: var(--ink-red); font-weight: bold; }
 
-/* STATS */
 .stats-module { background: #fff; background-image: linear-gradient(#eee 1px, transparent 1px), linear-gradient(90deg, #eee 1px, transparent 1px); background-size: 10px 10px; padding: 15px; }
 .stat-box { background: transparent; border: 1px solid #aaa; color: var(--ink-main); font-family: 'Courier Prime', monospace; text-align: center; padding: 5px; }
 .status-flavor-container { border-top: 2px solid var(--ink-main); margin-top: 15px; padding-top: 10px; }
@@ -201,7 +157,7 @@ body {
 
 
 /* =========================================
-   5. SKILL PANEL
+   5. CENTER COLUMN: SKILL PANEL (REFINED)
    ========================================= */
 .col-center {
     background: linear-gradient(to bottom, transparent 29px, var(--paper-line) 30px), var(--paper-base);
@@ -220,6 +176,7 @@ body {
 .swap-btn-trigger:hover { background: #eee; color: #000; }
 .dashboard-grid:not(.swapped) .info-deck .swap-btn-trigger { display: none; }
 .dashboard-grid.swapped .skill-panel .swap-btn-trigger { display: none; }
+
 .toggles-area { margin-top: 10px; display: flex; gap: 15px; }
 .toggle-switch { display: inline-flex; align-items: center; cursor: pointer; }
 .toggle-switch input { display: none; }
@@ -229,49 +186,114 @@ body {
 .toggle-switch input:checked + .slider::after { transform: translateX(14px); }
 .label-text { font-family: 'Courier Prime', monospace; font-size: 0.7rem; }
 
-/* タブ右寄せ */
+/* Tabs Right Aligned */
 .tabs { display: flex; gap: 5px; margin-top: 15px; justify-content: flex-end; }
 .tab { background: #dcdcdc; border: 1px solid #bbb; border-bottom: none; padding: 5px 15px; border-radius: 5px 5px 0 0; font-family: 'Courier Prime', monospace; cursor: pointer; color: #666; min-width: 80px; }
 .tab.active { background: var(--paper-base); color: var(--ink-red); font-weight: bold; height: 40px; margin-top: -5px; box-shadow: 0 -2px 3px rgba(0,0,0,0.05); }
 
+/* Chart Area */
 .summary-viz { padding: 20px; background: rgba(255,255,255,0.7); margin: 20px; border: 1px dashed #aaa; display: flex; align-items: center; gap: 20px; }
-.skill-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-.skill-table th { text-align: left; font-family: 'Courier Prime', monospace; border-bottom: 2px solid var(--ink-main); padding: 5px 15px; color: var(--ink-sub); position: sticky; top: 0; background: var(--paper-base); z-index: 5; }
-.skill-table td { padding: 5px 15px; vertical-align: top; border-bottom: none; }
-.skill-table td:nth-child(1) { font-family: 'Shippori Mincho', serif; font-weight: bold; font-size: 1.1rem; }
 
-/* ★ VALの数値の色修正（白→黒） */
+/* ★ SKILL TABLE RE-DESIGN */
+.skill-table { width: 100%; border-collapse: separate; border-spacing: 0 10px; margin-top: 10px; }
+
+.skill-table th {
+    text-align: left; font-family: 'Courier Prime', monospace;
+    border-bottom: 3px double var(--ink-main); padding: 5px 15px; color: var(--ink-sub);
+    position: sticky; top: 0; background: var(--paper-base); z-index: 5;
+}
+
+/* 名前・説明列 */
+.skill-table td:nth-child(1) { 
+    width: 45%; 
+    vertical-align: top;
+    padding: 5px 10px;
+    border-bottom: 1px solid #ddd;
+}
+/* 合計値列 */
+.skill-table td:nth-child(2) { 
+    width: 10%; 
+    vertical-align: middle; 
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+/* 内訳・バー列 */
+.skill-table td:nth-child(3) { 
+    width: 45%; 
+    vertical-align: middle;
+    padding: 5px 15px;
+    border-bottom: 1px solid #ddd;
+}
+
+/* 技能名 */
+.skill-name-row {
+    font-family: 'Shippori Mincho', serif; 
+    font-weight: bold; 
+    font-size: 1.1rem;
+    border-bottom: 1px solid #ccc; /* 実線に変更 */
+    padding-bottom: 3px; 
+    margin-bottom: 5px; 
+    display: inline-block; width: 100%;
+    color: var(--ink-main);
+}
+
+/* 合計値 (スタンプ風) */
 .skill-val-cell { 
     font-family: 'Courier Prime', monospace; 
-    font-size: 1.4rem; 
+    font-size: 1.8rem; 
     font-weight: bold;
-    color: var(--ink-main) !important; /* 黒インク色を強制 */
+    color: var(--ink-red) !important; /* 赤インクで強調 */
+    transform: rotate(-2deg);
 }
 
-.skill-name-row { border-bottom: 1px dotted #ccc; padding-bottom: 2px; margin-bottom: 5px; display: inline-block; width: 100%; }
+/* 内訳数値の整列 */
+.val-row {
+    display: flex; 
+    justify-content: space-between;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.75rem;
+    color: var(--ink-sub);
+    margin-bottom: 3px;
+}
+.val-row span {
+    display: inline-block;
+}
 
-/* ★ スキル説明文: ノートの雰囲気を壊さないようスクロールバー削除 */
+/* マーカーバー */
+.dist-bar-track { height: 10px; display: flex; gap: 1px; margin-top: 2px; border: 1px solid #ccc; padding: 1px; background: #fff; }
+.dist-bar-track div { height: 100%; opacity: 0.8; mix-blend-mode: multiply; }
+.d-init { background: #bbb; } 
+.d-job { background: var(--ink-blue); } 
+.d-int { background: var(--ink-red); } 
+.d-grow { background: #00cc44; }
+
+/* 説明文 */
 .skill-desc-inp {
-    display: block; width: 95%; margin: 5px 0 10px 10px;
-    background: transparent; border: none; font-family: 'Klee One', cursive;
-    color: var(--ink-blue); font-size: 0.95rem; line-height: 1.6; 
-    resize: none; padding: 0; min-height: 1.6em; 
+    display: block; width: 98%; 
+    background: transparent; border: none; 
+    font-family: 'Klee One', cursive;
+    color: var(--ink-blue); 
+    font-size: 0.95rem; line-height: 1.5; 
+    resize: none; padding: 0; min-height: 1.5em; 
     overflow: hidden; /* スクロールバー削除 */
     white-space: pre-wrap;
+    margin-left: 5px;
 }
-.skill-desc-inp:focus { outline: none; background: rgba(0, 68, 204, 0.03); }
+.skill-desc-inp:focus { outline: none; background: rgba(0, 68, 204, 0.05); }
+
 .short-view .skill-desc-inp { height: 1.5em !important; white-space: nowrap; text-overflow: ellipsis; display: block; overflow: hidden !important; opacity: 0.8; }
 .short-view .skill-desc-inp:hover, .short-view .skill-desc-inp:focus { height: auto !important; white-space: normal; background: rgba(255,255,255,0.9); position: relative; z-index: 100; box-shadow: 2px 2px 5px rgba(0,0,0,0.2); padding: 5px; }
 
-.dist-bar-track { height: 12px; display: flex; gap: 2px; margin-top: 5px; }
-.dist-bar-track div { height: 100%; opacity: 0.7; mix-blend-mode: multiply; border-radius: 2px 4px 4px 2px; transform: skewX(-10deg); }
-.d-init { background: #999; } .d-job { background: #333; } .d-int { background: var(--ink-red); } .d-grow { background: #00cc44; }
-.mastery-badge { border: 2px solid currentColor; border-radius: 50%; padding: 2px 4px; font-family: 'Courier Prime', monospace; font-size: 0.6rem; transform: rotate(-15deg); margin-left: 5px; display: inline-block; }
-.dashboard-grid.swapped .skill-table th:nth-child(3), .dashboard-grid.swapped .skill-table td:nth-child(3) .dist-bar-track, .dashboard-grid.swapped .skill-table td:nth-child(3) .val-row { display: none; }
-.dashboard-grid.swapped .skill-table td { height: auto; padding: 10px 15px; border-bottom: 1px dashed #ccc; }
+.mastery-badge { border: 1px solid currentColor; border-radius: 3px; padding: 1px 3px; font-family: 'Courier Prime', monospace; font-size: 0.6rem; margin-left: 5px; display: inline-block; background: #fff; vertical-align: middle; }
+
+/* SWAP MODE Adjustment */
+.dashboard-grid.swapped .skill-table th:nth-child(3), 
+.dashboard-grid.swapped .skill-table td:nth-child(3) .dist-bar-track, 
+.dashboard-grid.swapped .skill-table td:nth-child(3) .val-row { display: none; }
 .dashboard-grid.swapped .summary-viz { flex-direction: column; text-align: center; }
 
-/* DATABASE */
+
+/* DATABASE COLUMN */
 .col-right { display: flex; flex-direction: column; height: fit-content; }
 .info-deck { height: 100%; background: #f4f0e6; border: 1px solid #d4c4a8; min-height: 600px; border-radius: 2px; }
 .deck-header { background: #eaddcf; padding: 15px; border-bottom: 1px solid #d4c4a8; }
