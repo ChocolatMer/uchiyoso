@@ -14,9 +14,10 @@ function adjustTextPosition(clonedDoc) {
     // 2. DATE LABELS (Adjustment + Spacing)
     const dateRows = clonedDoc.querySelectorAll('.date-row');
     dateRows.forEach(row => {
-        // 保存時に日付ラベルの上下に強制的にマージンを入れて間隔を空ける
-        row.style.marginTop = '20px';
-        row.style.marginBottom = '20px';
+        // 間隔を広げすぎないよう数値を小さく調整 (20px -> 2px)
+        // 元のTailwindクラス(my-3)が効いているため、補正は最小限でOK
+        row.style.marginTop = '2px';
+        row.style.marginBottom = '2px';
     });
 
     const dateLabels = clonedDoc.querySelectorAll('.date-label');
@@ -32,9 +33,9 @@ function adjustTextPosition(clonedDoc) {
     // 3. SYSTEM MESSAGES (Spacing)
     const sysRows = clonedDoc.querySelectorAll('.system-msg-row');
     sysRows.forEach(row => {
-        // 保存時にシステムメッセージの上下にマージンを入れる
-        row.style.marginTop = '15px';
-        row.style.marginBottom = '15px';
+        // こちらも間隔を調整 (15px -> 2px)
+        row.style.marginTop = '2px';
+        row.style.marginBottom = '2px';
     });
 
     // 4. ICONS
