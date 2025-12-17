@@ -15,7 +15,8 @@ function adjustTextPosition(clonedDoc) {
     const dateRows = clonedDoc.querySelectorAll('.date-row');
     dateRows.forEach(row => {
         row.style.marginTop = '2px';
-        row.style.marginBottom = '2px';
+        // 【修正箇所】日付ラベルの下マージンをなくして詰める
+        row.style.marginBottom = '0px'; 
     });
 
     const dateLabels = clonedDoc.querySelectorAll('.date-label');
@@ -23,6 +24,7 @@ function adjustTextPosition(clonedDoc) {
         l.style.display = 'inline-flex';
         l.style.alignItems = 'center'; 
         l.style.justifyContent = 'center';
+        // 文字ズレ補正のためにpaddingBottomがあるため、実体の高さが広がっている
         l.style.paddingTop = '0px';
         l.style.paddingBottom = '10px'; 
         l.style.transform = 'translateY(-6px)'; 
@@ -31,11 +33,10 @@ function adjustTextPosition(clonedDoc) {
     // 3. SYSTEM MESSAGES (Spacing Adjustment)
     const sysRows = clonedDoc.querySelectorAll('.system-msg-row');
     sysRows.forEach(row => {
-        // 【修正箇所】日付ラベルの視覚的なズレを考慮してマージンを再配分
-        // 上側：日付ラベルが上に逃げるため、マージンをマイナスにして詰める
-        row.style.marginTop = '-5px';
-        // 下側：次の日付ラベルが上に食い込んでくるため、マージンを広げる
-        row.style.marginBottom = '15px';
+        // 【修正箇所】日付ラベルの実体が広がっている分、強力に上に引き上げる
+        row.style.marginTop = '-15px'; 
+        // 下マージンは適度に確保
+        row.style.marginBottom = '10px'; 
     });
 
     // 4. ICONS
