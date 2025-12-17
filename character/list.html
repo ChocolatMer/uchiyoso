@@ -4,108 +4,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SQUAD SELECT - WHITE DATABASE</title>
+    <title>SQUAD SELECT - ARCHIVE</title>
     
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Teko:wght@400;600&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Teko:wght@300;500;700&family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     
     <link href="list/header.css" rel="stylesheet">
 
     <style>
         /* --- CORE VARIABLES --- */
         :root {
-            /* White Cyberpunk Theme */
-            --bg-color: #f0f4f8;
-            --grid-color: rgba(0, 168, 255, 0.15);
-            --text-main: #334;
+            /* Theme: White Laboratory */
+            --bg-base: #f4f7f9;
+            --bg-grad-start: #ffffff;
+            --bg-grad-end: #dde4ea;
+            --text-main: #2c3e50;
+            --text-sub: #7f8c8d;
             
-            --card-width: 280px; 
-            --card-height: 70vh; 
-            --gap: 40px;
+            --card-w: 320px;
+            --card-h: 75vh;
+            --gap: 60px;
             
-            /* Accent Colors */
-            --accent-cyan: #00d2ff;
-            --accent-gold: #ffb700;
-            --accent-red: #ff4757;
-            --accent-purple: #70a1ff;
+            /* Accents (Will be overridden by JS) */
+            --accent: #00d2ff; 
             
             /* 3D Depth */
-            --z-screen: -60px;
-            --z-figure: 20px;
+            --z-screen: -50px;
+            --z-ui: 20px;
+            --z-fig: 50px;
         }
 
         body {
             margin: 0; padding: 0;
-            background-color: var(--bg-color);
-            /* 明るく神秘的なグラデーション背景 */
+            background: var(--bg-base);
             background-image: 
-                radial-gradient(circle at 50% 0%, #ffffff 0%, #dde6f0 80%),
-                linear-gradient(90deg, rgba(255,255,255,0.8) 0%, transparent 50%, rgba(255,255,255,0.8) 100%);
-            font-family: 'Rajdhani', 'Noto Sans JP', sans-serif;
+                radial-gradient(circle at 50% 0%, #fff 20%, #eff2f5 80%),
+                linear-gradient(0deg, rgba(0,0,0,0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 40px;
+            font-family: 'Rajdhani', sans-serif;
             overflow: hidden;
             height: 100vh;
-            display: flex; flex-direction: column;
             color: var(--text-main);
-            user-select: none;
+            display: flex; flex-direction: column;
         }
 
-        /* --- UI ELEMENTS --- */
+        /* --- UI FRAME --- */
         .sub-header {
             flex-shrink: 0; height: 60px; width: 100%;
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 40px; box-sizing: border-box;
-            background: rgba(255, 255, 255, 0.7);
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(0,0,0,0.05);
-            backdrop-filter: blur(10px);
             z-index: 100;
         }
-        .header-title {
-            font-family: 'Teko', sans-serif; font-size: 1.6rem; letter-spacing: 0.2em;
-            color: #2c3e50;
+        .header-logo {
+            font-family: 'Teko', sans-serif; font-size: 1.8rem; letter-spacing: 0.1em;
             display: flex; align-items: center; gap: 10px;
         }
-        .header-title::before {
-            content: ''; display: block; width: 8px; height: 8px; background: var(--accent-cyan);
-            box-shadow: 0 0 10px var(--accent-cyan); transform: rotate(45deg);
-        }
+        .header-logo span { color: var(--accent); }
 
-        /* --- STAGE AREA --- */
+        /* --- STAGE --- */
         .stage-wrapper {
             flex: 1; position: relative; width: 100%;
             display: flex; align-items: center; justify-content: center;
-            perspective: 1200px;
+            perspective: 1500px; /* 奥行きを強調 */
             overflow: hidden;
         }
 
-        /* 流れる線の演出（白背景用） */
-        .cyber-lines {
-            position: absolute; inset: 0;
-            background: repeating-linear-gradient(90deg, 
-                transparent, 
-                transparent 100px, 
-                var(--grid-color) 100px, 
-                var(--grid-color) 101px
-            );
-            mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
-            -webkit-mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+        /* Background Effects */
+        .bg-circle {
+            position: absolute; width: 80vh; height: 80vh;
+            border: 1px solid rgba(0,0,0,0.03);
+            border-radius: 50%;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
             z-index: 0; pointer-events: none;
-            transform: perspective(1000px) rotateX(10deg) scale(1.2);
         }
-        
-        /* 浮遊する光の粒子（神秘的） */
-        .particles-container {
-            position: absolute; inset: 0; pointer-events: none; z-index: 1;
+        .bg-circle::before {
+            content:''; position: absolute; inset: -50px; border-radius: 50%;
+            border: 1px dashed rgba(0,0,0,0.05);
+            animation: rotateSlow 60s linear infinite;
         }
-        .light-particle {
-            position: absolute; background: white; border-radius: 50%;
-            box-shadow: 0 0 10px var(--accent-cyan);
-            opacity: 0; animation: floatUp 8s infinite ease-in;
-        }
-        @keyframes floatUp {
-            0% { transform: translateY(100vh) scale(0); opacity: 0; }
-            30% { opacity: 0.8; }
-            100% { transform: translateY(-20vh) scale(1.5); opacity: 0; }
-        }
+        @keyframes rotateSlow { to { transform: rotate(360deg); } }
 
         .stage-container {
             display: flex; align-items: center;
@@ -121,179 +101,220 @@
 
         /* --- CHARACTER UNIT --- */
         .char-unit {
-            flex: 0 0 var(--card-width);
-            height: var(--card-height);
+            flex: 0 0 var(--card-w);
+            height: var(--card-h);
             margin: 0 var(--gap);
             position: relative;
             transform-style: preserve-3d;
             scroll-snap-align: center;
             cursor: pointer;
-            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        /* 1. SCREEN (Back Layer) */
+        /* === 1. SCREEN LAYER (Back) === */
         .unit-screen {
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 15%; /* 足元を少し開ける */
+            top: 0; left: 0; right: 0; bottom: 15%;
             background: #fff;
-            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 2px;
+            border: 1px solid rgba(0,0,0,0.05);
             transform: translateZ(var(--z-screen));
             overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1); /* 柔らかい影 */
+            box-shadow: 0 20px 40px rgba(138, 149, 158, 0.2);
             transition: all 0.5s ease;
-            border-radius: 4px;
         }
-        
         .screen-img {
             width: 100%; height: 100%;
-            background-size: 250%; /* ★顔がドアップになるよう超拡大 */
-            background-position: center 15%; /* 顔の位置（上の方）に合わせる */
-            background-repeat: no-repeat;
-            opacity: 0.8; /* 白背景なので少し濃いめに */
-            filter: grayscale(0.2) contrast(1.1) brightness(1.05); /* 鮮やかに */
-            transition: all 0.5s ease;
+            background-size: 220%; /* 顔拡大 */
+            background-position: center 20%;
+            opacity: 0.8;
+            filter: grayscale(0.2) contrast(1.1) brightness(1.1);
+            transition: all 0.6s ease;
+        }
+        /* スクリーン上のデコレーション */
+        .screen-ui {
+            position: absolute; inset: 0; pointer-events: none;
+            background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 100%);
+            z-index: 2;
+        }
+        .screen-grid {
+            position: absolute; inset: 0;
+            background-image: linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.5; z-index: 1;
+        }
+
+        /* === 2. INFO PANEL (Left Wing) === */
+        /* はみ出すデザイン - ゲームパラメータ表示 */
+        .unit-panel-left {
+            position: absolute;
+            top: 30px; left: -40px; width: 100px; bottom: 100px;
+            display: flex; flex-direction: column;
+            align-items: flex-start;
+            z-index: 10; pointer-events: none;
+            transform: translateZ(var(--z-ui));
+        }
+
+        .tag-job {
+            background: var(--accent); color: #fff;
+            font-family: 'Teko', sans-serif; font-size: 1rem;
+            padding: 4px 12px; margin-bottom: 8px;
+            clip-path: polygon(0 0, 100% 0, 90% 100%, 0% 100%);
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+            text-transform: uppercase; letter-spacing: 0.1em;
         }
         
-        /* 白いデコレーションライン */
-        .screen-deco {
-            position: absolute; inset: 0;
-            border: 1px solid rgba(255,255,255,0.5);
-            z-index: 5; opacity: 0.6;
-            background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 20%);
+        .name-box {
+            background: rgba(255,255,255,0.95);
+            border-left: 4px solid var(--accent);
+            padding: 15px 5px;
+            margin-bottom: 20px;
+            box-shadow: 5px 5px 20px rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .name-vertical {
+            writing-mode: vertical-rl; text-orientation: upright;
+            font-family: 'Noto Sans JP', sans-serif; font-weight: 700; font-size: 1.4rem;
+            letter-spacing: 0.3em; color: #222;
         }
 
-        /* 2. INFO TAGS (Floating Left) - はみ出すデザイン復活 */
-        .unit-info-group {
-            position: absolute;
-            top: 40px; left: -20px; /* 左にはみ出す */
-            width: 100%;
-            z-index: 30;
-            display: flex; flex-direction: column; align-items: flex-start;
-            pointer-events: none;
-            transform: translateZ(10px);
-            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.15));
+        /* ステータスバー (HP/MP/SAN) */
+        .vitals-box {
+            width: 140px; /* パネルより幅広ではみ出させる */
+            margin-left: 10px;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .vital-row {
+            display: flex; align-items: center; gap: 5px;
+            font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; color: #555;
+        }
+        .vital-label { width: 25px; text-align: right; font-weight: bold; }
+        .vital-bar-bg {
+            flex: 1; height: 6px; background: #ddd; position: relative;
+            transform: skewX(-20deg); overflow: hidden;
+        }
+        .vital-bar-fill {
+            height: 100%; width: 0%; /* JSで設定 */
+            background: var(--accent);
+            transition: width 1s ease 0.2s;
         }
 
-        .info-tag {
-            background: var(--accent-cyan);
-            color: #fff;
-            font-family: 'Teko', sans-serif;
-            font-size: 1.1rem;
-            padding: 4px 16px;
-            margin-bottom: 8px;
-            clip-path: polygon(0 0, 100% 0, 95% 100%, 0 100%);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            display: flex; align-items: center;
+        /* === 3. STATS MATRIX (Right Deco) === */
+        /* 右側の下部に小さく表示される数値群 */
+        .unit-stats-matrix {
+            position: absolute; bottom: 140px; right: -20px;
+            width: 80px;
+            display: flex; flex-direction: column; gap: 2px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.65rem; color: #888;
+            z-index: 5; opacity: 0.7; transform: translateZ(-10px);
+            text-align: right;
         }
-        /* 縦書きの名前バー（画像左側の帯のようなイメージ） */
-        .info-name-vertical {
-            background: rgba(255, 255, 255, 0.95);
-            color: #222;
-            padding: 15px 8px;
-            font-weight: 700;
-            font-size: 1.4rem;
-            writing-mode: vertical-rl;
-            text-orientation: upright;
-            letter-spacing: 0.3em;
-            border-left: 4px solid var(--accent-cyan);
-            box-shadow: 5px 5px 15px rgba(0,0,0,0.05);
+        .stat-item {
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            display: flex; justify-content: space-between;
         }
+        .stat-val { color: var(--accent); font-weight: bold; }
 
-        /* 3. FIGURE (Front Layer) */
-        .unit-figure-wrapper {
-            position: absolute;
-            bottom: 0; left: 50%; width: 100%; height: 50%; /* 画面下半分を使用 */
-            transform: translateX(-50%) translateZ(var(--z-figure));
+        /* === 4. FIGURE LAYER (Front) === */
+        .unit-figure-group {
+            position: absolute; bottom: 0; left: 50%;
+            width: 100%; height: 55%; /* 画面下半分 */
+            transform: translateX(-50%) translateZ(var(--z-fig));
             display: flex; align-items: flex-end; justify-content: center;
-            pointer-events: none;
-            z-index: 20;
+            z-index: 20; pointer-events: none;
         }
         .char-figure {
-            max-height: 100%; max-width: 160%;
+            max-height: 100%; max-width: 180%;
             object-fit: contain;
-            filter: drop-shadow(0 15px 20px rgba(0,0,0,0.2)); /* 影を少し強めに */
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            transform-origin: bottom center;
+            filter: drop-shadow(0 15px 25px rgba(0,0,0,0.3));
+            transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+            mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
         }
 
-        /* 4. SHADOW & FLOOR (Base) */
-        .unit-shadow {
-            position: absolute;
-            bottom: 20px; /* 立ち絵の足元に合わせる */
-            left: 50%;
-            width: 140px; height: 30px;
-            background: rgba(0,0,0,0.2);
-            border-radius: 50%;
-            transform: translateX(-50%) translateZ(-10px);
-            filter: blur(8px);
-            z-index: 5;
+        /* === 5. BASE & SHADOW === */
+        .unit-base {
+            position: absolute; bottom: 20px; left: 50%;
+            width: 160px; height: 160px;
+            transform: translateX(-50%) rotateX(70deg) translateZ(-20px);
+            pointer-events: none;
         }
-        .unit-reflection {
-            position: absolute; bottom: 0; left: 50%;
-            width: 180px; height: 180px;
-            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 60%);
-            transform: translateX(-50%) rotateX(75deg) translateZ(-30px);
-            opacity: 0.5; mix-blend-mode: overlay;
+        .base-ring {
+            position: absolute; inset: 0; border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.5);
+            box-shadow: 0 0 15px var(--accent);
+            opacity: 0.4;
+        }
+        .base-id {
+            position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
+            font-family: 'Share Tech Mono'; font-size: 0.8rem; color: var(--accent);
+            text-shadow: 0 0 5px var(--accent);
+        }
+        .real-shadow {
+            position: absolute; top: 50%; left: 50%;
+            width: 100px; height: 100px;
+            background: #000; filter: blur(15px);
+            transform: translate(-50%, -50%); opacity: 0.4;
         }
 
-        /* --- HOVER EFFECTS --- */
+        /* --- HOVER ANIMATION --- */
         .char-unit:hover .unit-screen {
-            transform: translateZ(-80px) scale(1.02); /* スクリーンは少し奥へ */
-            box-shadow: 0 30px 50px rgba(0, 168, 255, 0.15);
+            transform: translateZ(-80px) scale(1.02);
+            border-color: var(--accent);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.15);
         }
         .char-unit:hover .screen-img {
-            background-size: 260%; /* さらにズーム */
-            filter: grayscale(0) contrast(1.1) brightness(1.1);
+            background-size: 230%; /* さらにズーム */
+            filter: grayscale(0) contrast(1.05);
         }
-        
-        .char-unit:hover .unit-figure-wrapper {
-            transform: translateX(-50%) translateZ(50px) scale(1.05); /* フィギュアは手前へ */
+        .char-unit:hover .unit-figure-group {
+            transform: translateX(-50%) translateZ(80px) scale(1.05); /* 飛び出す */
         }
-        
-        .char-unit:hover .info-tag {
-            padding-left: 25px; /* アニメーション */
-            background: #222; /* 色反転 */
-            transition: 0.3s;
+        .char-unit:hover .vital-bar-fill {
+            filter: brightness(1.2);
+            box-shadow: 0 0 10px var(--accent);
         }
-        .char-unit:hover .unit-shadow {
-            width: 120px; opacity: 0.1; /* 浮いた感じにするなら影を薄く小さく */
-            filter: blur(12px);
+        .char-unit:hover .unit-panel-left {
+            transform: translateZ(40px); /* UIも浮き出る */
         }
 
         /* --- CONTROLS --- */
         .nav-btn {
-            position: absolute; top: 50%; width: 60px; height: 60px;
-            border-radius: 50%;
-            background: white;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            position: absolute; top: 50%; width: 50px; height: 100px;
+            background: rgba(255,255,255,0.5); border: 1px solid rgba(255,255,255,0.8);
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem; color: #333; cursor: pointer;
-            z-index: 100; transition: all 0.3s;
-            border: 1px solid #eee;
+            font-size: 1.5rem; color: var(--text-main); cursor: pointer;
+            z-index: 200; transition: all 0.3s;
+            backdrop-filter: blur(5px);
+            clip-path: polygon(0 10%, 100% 0, 100% 90%, 0 100%);
         }
-        .nav-btn:hover {
-            background: var(--accent-cyan); color: white;
-            transform: scale(1.1); box-shadow: 0 0 20px var(--accent-cyan);
-        }
-        .prev { left: 40px; }
-        .next { right: 40px; }
+        .nav-btn:hover { background: #fff; box-shadow: 0 0 20px rgba(0,0,0,0.1); color: var(--accent); }
+        .prev { left: 20px; }
+        .next { right: 20px; }
 
-        .edit-btn {
+        .btn-edit {
             position: absolute; top: 10px; right: 10px;
-            width: 30px; height: 30px; border-radius: 50%;
-            background: #fff; border: 1px solid #ddd; color: #555;
+            width: 32px; height: 32px; border-radius: 4px;
+            background: #fff; border: 1px solid #eee; color: #555;
             display: flex; align-items: center; justify-content: center;
-            opacity: 0; transition: 0.2s; z-index: 200; cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            opacity: 0; z-index: 300; cursor: pointer; transition: 0.2s;
+            font-size: 1rem;
         }
-        .char-unit:hover .edit-btn { opacity: 1; }
+        .char-unit:hover .btn-edit { opacity: 1; }
+        .click-layer { position: absolute; inset: 0; z-index: 50; }
 
-        .click-overlay { position: absolute; inset: 0; z-index: 40; }
-
-        /* Initial Loading Text */
-        .loading {
-            font-size: 2rem; color: #ccc; font-family: 'Teko'; letter-spacing: 0.5em;
+        /* PARTICLES */
+        .particle {
+            position: absolute; background: #fff; border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent); opacity: 0; pointer-events: none;
+            animation: rise 10s infinite linear;
+        }
+        @keyframes rise {
+            0% { transform: translateY(110vh) scale(0); opacity: 0; }
+            20% { opacity: 0.6; }
+            100% { transform: translateY(-10vh) scale(1.5); opacity: 0; }
         }
 
     </style>
@@ -306,26 +327,31 @@
 </script>
 
     <div class="sub-header">
-        <div class="header-title">SQUAD DATABASE</div>
-        <div style="font-size: 0.8rem; color: #888; letter-spacing: 0.1em;">// ACCESS GRANTED</div>
+        <div class="header-logo">
+            SQUAD <span>//</span> ARCHIVE
+        </div>
+        <div style="font-family:'Share Tech Mono'; color:var(--text-sub); font-size:0.8rem;">
+            SYSTEM: ONLINE <span style="margin-left:10px; color:var(--accent);">●</span>
+        </div>
     </div>
     
     <div class="stage-wrapper">
-        <!-- 白い空間に流れるサイバーライン -->
-        <div class="cyber-lines"></div>
-        <div class="particles-container" id="particles"></div>
+        <div class="bg-circle"></div>
+        <div id="particles"></div>
 
-        <div class="nav-btn prev" id="btnPrev">←</div>
+        <div class="nav-btn prev" id="btnPrev">❮</div>
         
         <div class="stage-container" id="stage">
-            <div class="loading">INITIALIZING...</div>
+            <div style="font-family:'Teko'; font-size:2rem; color:#ccc; letter-spacing:0.3em;">LOADING...</div>
         </div>
         
-        <div class="nav-btn next" id="btnNext">→</div>
+        <div class="nav-btn next" id="btnNext">❯</div>
     </div>
 
-    <div style="position:fixed; bottom:0; width:100%; height:30px; background:rgba(255,255,255,0.8); border-top:1px solid #eee; display:flex; justify-content:center; align-items:center;">
-        <span style="font-size:0.7rem; color:#aaa; letter-spacing:0.3em;">SELECT CHARACTER TO DEPLOY</span>
+    <!-- Footer Status -->
+    <div style="position:fixed; bottom:0; width:100%; height:25px; background:#fff; border-top:1px solid #eee; display:flex; justify-content:space-between; padding:0 20px; box-sizing:border-box; align-items:center; z-index:200;">
+        <span style="font-size:0.7rem; font-family:'Share Tech Mono'; color:#aaa;">DATA_VER: 2.4.0</span>
+        <span style="font-size:0.7rem; font-family:'Share Tech Mono'; color:#aaa;">SELECT TARGET TO VIEW DETAILS</span>
     </div>
 
     <script type="module">
@@ -333,43 +359,46 @@
 
         const stage = document.getElementById('stage');
 
-        // パーティクル（白い光）
-        function createParticles() {
-            const container = document.getElementById('particles');
-            for(let i=0; i<20; i++){
-                const p = document.createElement('div');
-                p.className = 'light-particle';
-                const size = Math.random() * 6 + 2;
-                p.style.width = size + 'px'; p.style.height = size + 'px';
-                p.style.left = Math.random() * 100 + '%';
-                p.style.animationDelay = (Math.random() * 5) + 's';
-                p.style.animationDuration = (Math.random() * 5 + 5) + 's';
-                container.appendChild(p);
-            }
-        }
-        createParticles();
-
-        // 職業ごとのカラー
-        function getAccentColor(job) {
-            if(!job) return '#00d2ff'; // Default Cyan
+        // カラーパレット算出
+        function getThemeColor(job) {
+            if(!job) return '#00d2ff';
             const j = job;
-            if(j.includes('探偵') || j.includes('警')) return '#00d2ff';
-            if(j.includes('医') || j.includes('学')) return '#ffb700'; // Yellow/Gold
-            if(j.includes('戦') || j.includes('狩')) return '#ff4757'; // Red
-            if(j.includes('魔') || j.includes('ア')) return '#70a1ff'; // Purple/Blue
+            if(j.includes('探偵') || j.includes('警')) return '#00d2ff'; // Cyber Blue
+            if(j.includes('医') || j.includes('学')) return '#00b894'; // Teal Green
+            if(j.includes('戦') || j.includes('狩')) return '#ff4757'; // Crimson
+            if(j.includes('魔') || j.includes('占')) return '#a55eea'; // Purple
+            if(j.includes('アイドル') || j.includes('奏')) return '#ff9ff3'; // Pink
             return '#00d2ff';
         }
 
+        // パーティクル演出
+        function initParticles() {
+            const container = document.getElementById('particles');
+            const colors = ['#00d2ff', '#a55eea', '#ff4757'];
+            for(let i=0; i<30; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                const size = Math.random() * 5 + 2;
+                p.style.width = size+'px'; p.style.height = size+'px';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.animationDelay = (Math.random() * 5) + 's';
+                p.style.animationDuration = (Math.random() * 10 + 10) + 's';
+                // ランダムカラー
+                const col = colors[Math.floor(Math.random()*colors.length)];
+                p.style.setProperty('--accent', col);
+                container.appendChild(p);
+            }
+        }
+        initParticles();
+
         window.renderCharacterList = function(data) {
             stage.innerHTML = ''; 
-            
-            // センタリング用スペーサー
             const spacer = document.createElement('div');
             spacer.style.minWidth = "50vw";
             stage.appendChild(spacer);
 
             if (!data || Object.keys(data).length === 0) {
-                stage.innerHTML = '<div class="loading">NO DATA</div>';
+                stage.innerHTML = '<div style="color:#aaa; font-family:Teko; font-size:2rem;">NO ARCHIVE FOUND</div>';
                 return;
             }
 
@@ -377,57 +406,106 @@
                 const unit = document.createElement('div');
                 unit.className = 'char-unit';
                 
-                // 入場アニメーション
+                // アニメーション用スタイル
                 unit.style.opacity = '0';
-                unit.style.animation = `slideUp 0.6s ease forwards ${idx * 0.1}s`;
+                unit.style.animation = `cardEntry 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards ${idx * 0.1}s`;
+
+                const img = char.image || 'https://placehold.co/400x800/eee/bbb?text=NO+DATA';
+                const accent = getThemeColor(char.job);
                 
-                const img = char.image || 'https://placehold.co/400x800/eee/999?text=NO+IMG';
-                const color = getAccentColor(char.job);
+                // ステータス取得 (なければデフォルト値)
+                const stats = char.stats || {};
+                const vitals = char.vitals || {};
+                const hp = vitals.hp || 10;
+                const mp = vitals.mp || 10;
+                const san = vitals.san || 50;
+
+                // Max値の概算 (バーの長さ用)
+                const maxHp = Math.max(hp, 20);
+                const maxMp = Math.max(mp, 20);
+                const maxSan = 99;
+
+                // スタイル変数の注入
+                unit.style.setProperty('--accent', accent);
 
                 unit.innerHTML = `
-                    <!-- 1. INFO (はみ出しデザイン) -->
-                    <div class="unit-info-group">
-                        <div class="info-tag" style="background:${color};">
-                            ${char.job || 'UNKNOWN'}
+                    <!-- 1. LEFT PANEL (Info & Vitals) -->
+                    <div class="unit-panel-left">
+                        <div class="tag-job">${char.job || 'UNKNOWN'}</div>
+                        <div class="name-box">
+                            <div class="name-vertical">${char.name}</div>
                         </div>
-                        <div class="info-name-vertical" style="border-left-color:${color};">
-                            ${char.name}
+                        
+                        <!-- Vitals Bars -->
+                        <div class="vitals-box">
+                            <div class="vital-row">
+                                <div class="vital-label">HP</div>
+                                <div class="vital-bar-bg">
+                                    <div class="vital-bar-fill" style="width:${(hp/maxHp)*100}%; background:${accent};"></div>
+                                </div>
+                            </div>
+                            <div class="vital-row">
+                                <div class="vital-label">MP</div>
+                                <div class="vital-bar-bg">
+                                    <div class="vital-bar-fill" style="width:${(mp/maxMp)*100}%; background:#a55eea;"></div>
+                                </div>
+                            </div>
+                            <div class="vital-row">
+                                <div class="vital-label">SAN</div>
+                                <div class="vital-bar-bg">
+                                    <div class="vital-bar-fill" style="width:${(san/maxSan)*100}%; background:#ff9ff3;"></div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- 2. SCREEN (Background Face Zoom) -->
+                    <!-- 2. SCREEN (Back Face Zoom) -->
                     <div class="unit-screen">
-                        <div class="screen-deco"></div>
+                        <div class="screen-grid"></div>
+                        <div class="screen-ui"></div>
                         <div class="screen-img" style="background-image: url('${img}');"></div>
                     </div>
 
-                    <!-- 3. FIGURE (Standing) -->
-                    <div class="unit-figure-wrapper">
+                    <!-- 3. STATS MATRIX (Right Deco) -->
+                    <div class="unit-stats-matrix">
+                        <div class="stat-item"><span>STR</span> <span class="stat-val">${stats.STR || '-'}</span></div>
+                        <div class="stat-item"><span>DEX</span> <span class="stat-val">${stats.DEX || '-'}</span></div>
+                        <div class="stat-item"><span>POW</span> <span class="stat-val">${stats.POW || '-'}</span></div>
+                        <div class="stat-item"><span>APP</span> <span class="stat-val">${stats.APP || '-'}</span></div>
+                        <div class="stat-item"><span>INT</span> <span class="stat-val">${stats.INT || '-'}</span></div>
+                    </div>
+
+                    <!-- 4. FIGURE (Front) -->
+                    <div class="unit-figure-group">
                         <img src="${img}" class="char-figure" alt="${char.name}">
                     </div>
 
-                    <!-- 4. SHADOW & REFLECTION -->
-                    <div class="unit-shadow"></div>
-                    <div class="unit-reflection"></div>
+                    <!-- 5. BASE (ID & Shadow) -->
+                    <div class="unit-base">
+                        <div class="base-id">ID: ${(char.id || '0000').slice(0,4).toUpperCase()}</div>
+                        <div class="base-ring" style="border-color:${accent};"></div>
+                        <div class="real-shadow"></div>
+                    </div>
 
                     <!-- Controls -->
-                    <div class="edit-btn">✎</div>
-                    <div class="click-overlay"></div>
+                    <div class="btn-edit" title="Edit Image">📷</div>
+                    <div class="click-layer"></div>
                 `;
 
-                // イベント
-                const edit = unit.querySelector('.edit-btn');
-                edit.onclick = (e) => {
+                // Events
+                const btnEdit = unit.querySelector('.btn-edit');
+                btnEdit.onclick = (e) => {
                     e.stopPropagation();
-                    const newUrl = prompt('画像URLを変更:', char.image || "");
-                    if(newUrl) {
-                        char.image = newUrl;
+                    const url = prompt('新しい画像URLを入力:', char.image || "");
+                    if(url) {
+                        char.image = url;
                         saveToCloud(char).then(() => renderCharacterList(data));
                     }
                 };
-
-                const overlay = unit.querySelector('.click-overlay');
-                overlay.onclick = () => {
+                
+                const layer = unit.querySelector('.click-layer');
+                layer.onclick = () => {
+                    // 詳細画面への遷移
                     window.location.href = `character/detail/detail.html?id=${char.id}`;
                 };
 
@@ -440,27 +518,30 @@
         };
 
         // Scroll
-        document.getElementById('btnNext').onclick = () => {
-            const w = document.querySelector('.char-unit')?.offsetWidth || 300;
-            stage.scrollBy({ left: w + 40, behavior: 'smooth' });
+        const btnNext = document.getElementById('btnNext');
+        const btnPrev = document.getElementById('btnPrev');
+        btnNext.onclick = () => {
+            const w = document.querySelector('.char-unit')?.offsetWidth || 320;
+            stage.scrollBy({ left: w + 60, behavior: 'smooth' });
         };
-        document.getElementById('btnPrev').onclick = () => {
-            const w = document.querySelector('.char-unit')?.offsetWidth || 300;
-            stage.scrollBy({ left: -(w + 40), behavior: 'smooth' });
+        btnPrev.onclick = () => {
+            const w = document.querySelector('.char-unit')?.offsetWidth || 320;
+            stage.scrollBy({ left: -(w + 60), behavior: 'smooth' });
         };
 
-        // CSS Injection for Animation
-        const style = document.createElement('style');
-        style.innerHTML = `
-            @keyframes slideUp {
-                from { opacity: 0; transform: translateY(50px); }
-                to { opacity: 1; transform: translateY(0); }
+        // Inject Animation
+        const st = document.createElement('style');
+        st.innerText = `
+            @keyframes cardEntry {
+                from { opacity: 0; transform: translateY(100px) scale(0.9); }
+                to { opacity: 1; transform: translateY(0) scale(1); }
             }
         `;
-        document.head.appendChild(style);
-        
-        // Debug
+        document.head.appendChild(st);
+
+        // Debug Load (コメントアウト解除でテスト可能)
         // loadFromCloud().then(renderCharacterList);
+
     </script>
 </body>
 </html>
