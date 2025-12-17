@@ -48,7 +48,7 @@ function adjustHeight(el) {
     el.style.height = (el.scrollHeight + 5) + 'px';
 }
 
-// ... (EVENTS, Auth logic は変更なし) ...
+// --- EVENTS ---
 const btnLogin = document.getElementById('btnLogin');
 const btnLogout = document.getElementById('btnLogout');
 const btnCloudSave = document.getElementById('btnLocalSave');
@@ -186,15 +186,12 @@ function extractProfileData(text) {
 function launchDashboard(data) {
     charData = data;
     
-    // プロフィール詳細抽出
     const profileExtras = extractProfileData(rawTextData || "");
     
-    // 描画処理
     renderProfile(data, profileExtras);
     renderSkillSection('summary'); 
     renderItems(data.items);
     
-    // メモ欄の処理
     const memoEl = document.getElementById('memoArea');
     let memoContent = data.memo || "";
     
@@ -268,7 +265,6 @@ function renderProfile(d, extras = {}) {
     infoItems.forEach(item => {
         const div = document.createElement('div');
         div.className = 'meta-item';
-        // 値がない場合も '??' で表示
         div.innerHTML = `<span class="meta-label">${item.label}</span><span class="meta-val">${item.val || '??'}</span>`;
         metaInfo.appendChild(div);
     });
@@ -292,7 +288,6 @@ function renderProfile(d, extras = {}) {
         </div>
     `;
     
-    // VITAL MONITORの下に挿入
     const vitalsMod = document.querySelector('.vitals-module');
     if(vitalsMod) {
         vitalsMod.after(colorMod);
@@ -300,7 +295,6 @@ function renderProfile(d, extras = {}) {
         document.querySelector('.profile-card').after(colorMod);
     }
 
-    // テーマカラー適用処理
     if(d.color) applyThemeColor(d.color);
     const picker = colorMod.querySelector('#themeColorInput');
     picker.addEventListener('input', (e) => {
@@ -312,7 +306,6 @@ function renderProfile(d, extras = {}) {
     const tags = document.getElementById('charTags'); tags.innerHTML='';
     if(d.tags) d.tags.split(' ').forEach(t=>{if(t.trim()) tags.innerHTML+=`<span class="tag">${t}</span>`});
 
-    // ステータス計算
     const stats = d.stats || {};
     const maxHP = (stats.CON && stats.SIZ) ? Math.ceil((parseInt(stats.CON) + parseInt(stats.SIZ)) / 2) : (d.vitals.hp || 1);
     const maxMP = stats.POW ? parseInt(stats.POW) : (d.vitals.mp || 1);
@@ -382,7 +375,6 @@ function renderStatusFlavor(stats) {
     });
 }
 
-// ... (renderSimpleList, setBar, renderSkillSection, renderTabChart, renderItems, chartOpts, window.prepareSaveData は変更なし) ...
 function renderSimpleList(id, text, tagClass) {
     const box = document.getElementById(id);
     if(!box) return;
