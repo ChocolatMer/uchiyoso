@@ -1,0 +1,136 @@
+:root {
+    --bg-color: #2b1d1a;
+    --primary: #5D4037;
+    --accent: #FF7043;
+    --gold: #FFD54F;
+    --text: #4E342E;
+    --modal-bg: #fff8f0;
+    --font-main: "Zen Maru Gothic", sans-serif;
+    --font-pixel: "Pixelify Sans", sans-serif;
+}
+
+body {
+    margin: 0; padding: 0;
+    background-color: var(--bg-color);
+    font-family: var(--font-main);
+    display: flex; justify-content: center; align-items: center;
+    height: 100vh; overflow: hidden;
+    user-select: none;
+}
+
+#game-container {
+    position: relative;
+    width: 960px; height: 540px;
+    box-shadow: 0 0 50px rgba(0,0,0,0.5);
+    background: #000;
+}
+
+#game-stage {
+    width: 100%; height: 100%;
+    background-image: url('../images/background/gamebg-heya1.png'); /* 画像パス */
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    overflow: hidden;
+    cursor: crosshair;
+}
+
+/* ホットスポット（透明なクリックエリア） */
+.hotspot {
+    position: absolute; z-index: 20;
+    border-radius: 8px; cursor: pointer;
+    transition: background 0.2s;
+}
+.hotspot:hover { background: rgba(255,255,255,0.2); box-shadow: 0 0 15px rgba(255,255,255,0.3); }
+.hotspot::after {
+    content: attr(data-label);
+    position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
+    background: var(--text); color: #fff; padding: 2px 8px; border-radius: 4px;
+    font-size: 12px; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.hotspot:hover::after { opacity: 1; }
+
+/* 家具の位置調整 (画像に合わせて調整してください) */
+#zone-shelf { top: 10%; left: 5%; width: 20%; height: 30%; }
+#zone-display { top: 32%; left: 16%; width: 28%; height: 20%; }
+#zone-kitchen { top: 12%; left: 55%; width: 35%; height: 20%; }
+#zone-register { top: 60%; left: 58%; width: 12%; height: 20%; }
+
+/* エンティティ（キャラなど） */
+.entity {
+    position: absolute;
+    transform-origin: bottom center;
+    pointer-events: none; /* クリックは通過させる */
+    z-index: 10;
+    image-rendering: pixelated;
+}
+
+/* 吹き出し・エフェクト */
+.bubble {
+    position: absolute; background: #fff; border: 2px solid var(--text);
+    padding: 5px 10px; border-radius: 10px; font-size: 12px; font-weight: bold;
+    white-space: nowrap; z-index: 100; pointer-events: none;
+    animation: popUp 2s forwards;
+}
+.bubble::after {
+    content: ''; position: absolute; bottom: -6px; left: 50%; margin-left: -6px;
+    border-width: 6px 6px 0; border-style: solid; border-color: var(--text) transparent;
+}
+@keyframes popUp { 
+    0% { opacity:0; transform:translate(-50%, 10px); }
+    10% { opacity:1; transform:translate(-50%, 0); }
+    80% { opacity:1; transform:translate(-50%, 0); }
+    100% { opacity:0; transform:translate(-50%, -20px); }
+}
+
+/* UIレイヤー */
+#ui-layer { position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none; z-index: 50; }
+.ui-bar { position: absolute; display: flex; gap: 10px; pointer-events: auto; }
+.top-left { top: 15px; left: 15px; }
+.top-right { top: 15px; right: 15px; }
+.bottom-center { bottom: 15px; left: 50%; transform: translateX(-50%); background: var(--modal-bg); padding: 8px 20px; border-radius: 30px; border: 3px solid var(--primary); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+
+.stat-box { background: rgba(0,0,0,0.6); color: #fff; padding: 5px 12px; border-radius: 15px; font-family: var(--font-pixel); border: 2px solid rgba(255,255,255,0.3); }
+.stat-pill { color: var(--text); font-weight: bold; font-size: 14px; display: flex; align-items: center; gap: 5px; }
+button { font-family: var(--font-pixel); cursor: pointer; border: none; background: #fff; padding: 5px 10px; border-radius: 5px; box-shadow: 0 2px 0 #ccc; }
+button:active { transform: translateY(2px); box-shadow: none; }
+
+/* モーダル */
+#modal-overlay {
+    position: absolute; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.5); z-index: 200;
+    display: flex; justify-content: center; align-items: center;
+}
+.hidden { display: none !important; }
+
+.modal {
+    background: var(--modal-bg); width: 300px; padding: 20px; border-radius: 12px;
+    border: 4px solid var(--primary); text-align: center;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    animation: modalIn 0.2s ease-out;
+}
+@keyframes modalIn { from{transform:scale(0.8); opacity:0;} to{transform:scale(1); opacity:1;} }
+
+.modal-header { font-family: var(--font-pixel); font-size: 24px; color: var(--primary); border-bottom: 2px dashed #ccc; padding-bottom: 10px; margin-bottom: 15px; }
+.action-btn { width: 100%; padding: 12px; margin: 5px 0; background: var(--primary); color: #fff; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+.action-btn:hover { background: var(--accent); }
+.action-btn:disabled { background: #999; cursor: not-allowed; }
+
+.close-btn { background: transparent; color: #888; margin-top: 10px; font-size: 12px; text-decoration: underline; box-shadow: none; }
+
+/* 夜フィルター */
+#night-filter {
+    position: absolute; top:0; left:0; width:100%; height:100%; pointer-events: none; z-index: 30;
+    background: rgba(10, 5, 20, 0.5); mix-blend-mode: multiply;
+    opacity: 0; transition: opacity 1s;
+}
+#game-stage.night #night-filter { opacity: 1; }
+
+/* スタート画面 */
+#start-screen {
+    position: absolute; top:0; left:0; width:100%; height:100%;
+    background: #3E2723; z-index: 300;
+    display: flex; flex-direction: column; justify-content: center; align-items: center; color: #fff;
+}
+#start-screen h1 { font-family: var(--font-pixel); font-size: 60px; margin-bottom: 0; color: var(--gold); text-shadow: 4px 4px 0 #000; }
+#start-btn { padding: 15px 40px; font-size: 24px; background: var(--gold); border: 4px solid #fff; color: #3E2723; border-radius: 50px; margin-top: 30px; }

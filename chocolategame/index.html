@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Chocolaterie Remastered</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="game-container">
+    <div id="game-stage">
+        <!-- クリック判定用のホットスポット -->
+        <div id="zone-shelf" class="hotspot" data-label="Ingredients"></div>
+        <div id="zone-display" class="hotspot" data-label="Showcase"></div>
+        <div id="zone-kitchen" class="hotspot" data-label="Kitchen"></div>
+        <div id="zone-register" class="hotspot" data-label="Register"></div>
+        
+        <!-- キャラクター等はJSで生成されます -->
+        <div id="entities-layer"></div>
+
+        <!-- 視覚効果レイヤー -->
+        <div id="fx-layer"></div>
+        
+        <!-- 夜フィルター -->
+        <div id="night-filter"></div>
+    </div>
+
+    <!-- UIオーバーレイ -->
+    <div id="ui-layer">
+        <div class="ui-bar top-left">
+            <div class="stat-box">💰 <span id="ui-money">0</span></div>
+            <div class="stat-box">⭐ Lv.<span id="ui-level">1</span></div>
+        </div>
+        
+        <div class="ui-bar top-right">
+             <button onclick="game.toggleNight()">🌙</button>
+             <button onclick="game.toggleAudio()">🔊</button>
+        </div>
+
+        <div class="ui-bar bottom-center">
+            <div class="stat-pill" title="カカオ在庫">🍫 <span id="ui-ing">0</span></div>
+            <div class="stat-pill" title="商品在庫">🧁 <span id="ui-stock">0</span></div>
+            <div class="stat-pill" title="陳列数">📦 <span id="ui-display">0</span></div>
+            <div class="stat-pill" title="体力">⚡ <span id="ui-energy">100</span>%</div>
+        </div>
+    </div>
+
+    <!-- モーダル群 -->
+    <div id="modal-overlay" class="hidden">
+        
+        <!-- キッチンメニュー -->
+        <div id="modal-kitchen" class="modal hidden">
+            <div class="modal-header">🍫 Kitchen</div>
+            <div class="modal-content">
+                <p>何を作りますか？</p>
+                <div id="recipe-list">
+                    <!-- JSでリスト生成 -->
+                </div>
+            </div>
+            <button class="close-btn" onclick="game.ui.closeModals()">閉じる</button>
+        </div>
+
+        <!-- 仕入れメニュー -->
+        <div id="modal-shelf" class="modal hidden">
+            <div class="modal-header">📦 Supply</div>
+            <div class="modal-content">
+                <button class="action-btn" onclick="game.logic.buyIngredients(1)">
+                    <span>少量仕入れ (+1)</span><small>20💰</small>
+                </button>
+                <button class="action-btn" onclick="game.logic.buyIngredients(5)">
+                    <span>まとめ買い (+5)</span><small>90💰</small>
+                </button>
+            </div>
+            <button class="close-btn" onclick="game.ui.closeModals()">閉じる</button>
+        </div>
+
+        <!-- 陳列メニュー -->
+        <div id="modal-display" class="modal hidden">
+            <div class="modal-header">🧁 Showcase</div>
+            <div class="modal-content">
+                <p>在庫: <span id="mod-stock">0</span>個</p>
+                <button class="action-btn" onclick="game.logic.stockShowcase()">
+                    <span>全て並べる</span>
+                </button>
+            </div>
+            <button class="close-btn" onclick="game.ui.closeModals()">閉じる</button>
+        </div>
+
+    </div>
+
+    <!-- スタート画面 -->
+    <div id="start-screen">
+        <h1>Pixel Chocolaterie</h1>
+        <p>- Remastered -</p>
+        <button id="start-btn" onclick="game.start()">OPEN SHOP</button>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
