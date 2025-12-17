@@ -4,7 +4,7 @@ import { parseIaChara } from "../data/schema.js";
 
 // --- GLOBAL STATE ---
 let charData = null;
-let rawTextData = ""; // 元テキスト保持用
+// rawTextData は削除（保存されたデータを正とするため不要）
 let charts = { main: null, category: null };
 
 // DOM Elements
@@ -158,60 +158,28 @@ function handleFile(e) {
     const r = new FileReader();
     r.onload = (ev) => {
         try {
-            rawTextData = ev.target.result; 
-            const d = parseIaChara(rawTextData);
+            // テキスト読み込み時も schema.js の統一ロジックを通す
+            const d = parseIaChara(ev.target.result);
             launchDashboard(d);
         } catch(err) { console.error(err); alert('Parse Error: ' + err.message); }
     };
     r.readAsText(f);
 }
 
-function extractProfileData(text) {
-    const getMatch = (regex) => {
-        const match = text.match(regex);
-        return match ? match[1].trim() : "??";
-    };
-    return {
-        hair: getMatch(/髪の色[:：]\s*(.*?)(?:\s*\/|$)/),
-        eye: getMatch(/瞳の色[:：]\s*(.*?)(?:\s*\/|$)/),
-        skin: getMatch(/肌の色[:：]\s*(.*?)(?:\s*\/|$)/),
-        gender: getMatch(/性別[:：]\s*(.*?)(?:\s*\/|$)/),
-        height: getMatch(/身長[:：]\s*(.*?)(?:\s*\/|$)/),
-        weight: getMatch(/体重[:：]\s*(.*?)(?:\s*\/|$)/),
-        birth: getMatch(/誕生日[:：]\s*(.*?)(?:\s*\/|$)/),
-        origin: getMatch(/出身[:：]\s*(.*?)(?:\s*\/|$)/)
-    };
-}
-
 function launchDashboard(data) {
     charData = data;
     
-    const profileExtras = extractProfileData(rawTextData || "");
-    
-    renderProfile(data, profileExtras);
+    // ★修正: テキスト再解析処理を廃止し、保存されたデータをそのまま使用
+    renderProfile(data);
     renderSkillSection('summary'); 
     renderItems(data.items);
     
+    // メモ欄
     const memoEl = document.getElementById('memoArea');
-    let memoContent = data.memo || "";
-    
-    if(rawTextData && !memoContent.includes("【性格】")) {
-        const sections = ["【性格】", "【人間関係】", "【外見】", "【経歴】"];
-        sections.forEach(sec => {
-            const idx = rawTextData.indexOf(sec);
-            if(idx !== -1 && !memoContent.includes(sec)) {
-                const nextSecIdx = rawTextData.indexOf("【", idx + 1);
-                const content = nextSecIdx !== -1 
-                    ? rawTextData.substring(idx, nextSecIdx) 
-                    : rawTextData.substring(idx);
-                memoContent += "\n\n" + content.trim();
-            }
-        });
-    }
-    
-    memoEl.value = memoContent;
+    memoEl.value = data.memo || "";
     requestAnimationFrame(() => adjustHeight(memoEl));
     
+    // シナリオ一覧
     const histBox = document.getElementById('scenarioList');
     if(histBox) {
         histBox.innerHTML = '';
@@ -241,24 +209,28 @@ function renderCurrentTab() {
     renderSkillSection(activeCat);
 }
 
-function renderProfile(d, extras = {}) {
+function renderProfile(d) {
     document.getElementById('charName').textContent = d.name;
     document.getElementById('charKana').textContent = d.kana;
     
-    document.getElementById('charImage').src = d.image || 'https://placehold.co/400x600/000/333?text=NO+IMAGE';
+    // ★修正: アイコン(d.icon)を優先、なければ立ち絵(d.image)
+    const displayImage = d.icon || d.image || 'https://placehold.co/400x600/000/333?text=NO+IMAGE';
+    document.getElementById('charImage').src = displayImage;
+    
     document.getElementById('valDB').textContent = d.db; 
 
-    // ★ メタ情報エリア
+    // メタ情報エリア
     const metaInfo = document.querySelector('.meta-info');
     metaInfo.innerHTML = ''; 
 
+    // ★修正: 保存されたデータ(d.gender等)を直接使用して表示
     const infoItems = [
         { label: "JOB", val: d.job },
         { label: "AGE", val: d.age },
-        { label: "GENDER", val: extras.gender },
-        { label: "BIRTH", val: extras.birth },
-        { label: "HEIGHT", val: extras.height },
-        { label: "WEIGHT", val: extras.weight }
+        { label: "GENDER", val: d.gender },
+        { label: "BIRTH", val: d.birthday },
+        { label: "HEIGHT", val: d.height },
+        { label: "WEIGHT", val: d.weight }
     ];
 
     infoItems.forEach(item => {
@@ -268,18 +240,19 @@ function renderProfile(d, extras = {}) {
         metaInfo.appendChild(div);
     });
 
-    // ★ COLOR MODULE
+    // COLOR MODULE
     const existingColorMod = document.querySelector('.color-module');
     if(existingColorMod) existingColorMod.remove();
 
     const colorMod = document.createElement('div');
     colorMod.className = 'panel color-module';
+    // ★修正: 保存されたカラー情報(d.colorHair等)を使用
     colorMod.innerHTML = `
         <h3>COLOR DATA</h3>
         <div class="color-grid">
-            <div class="color-row"><span class="color-name">HAIR</span><span class="color-sample">${extras.hair || '??'}</span></div>
-            <div class="color-row"><span class="color-name">EYES</span><span class="color-sample">${extras.eye || '??'}</span></div>
-            <div class="color-row"><span class="color-name">SKIN</span><span class="color-sample">${extras.skin || '??'}</span></div>
+            <div class="color-row"><span class="color-name">HAIR</span><span class="color-sample">${d.colorHair || '??'}</span></div>
+            <div class="color-row"><span class="color-name">EYES</span><span class="color-sample">${d.colorEye || '??'}</span></div>
+            <div class="color-row"><span class="color-name">SKIN</span><span class="color-sample">${d.colorSkin || '??'}</span></div>
             <div class="theme-picker-row">
                 <span class="color-name">THEME COLOR</span>
                 <input type="color" id="themeColorInput" value="${d.color || '#d9333f'}">
@@ -306,6 +279,7 @@ function renderProfile(d, extras = {}) {
     if(d.tags) d.tags.split(' ').forEach(t=>{if(t.trim()) tags.innerHTML+=`<span class="tag">${t}</span>`});
 
     const stats = d.stats || {};
+    // HP/MPの最大値計算
     const maxHP = (stats.CON && stats.SIZ) ? Math.ceil((parseInt(stats.CON) + parseInt(stats.SIZ)) / 2) : (d.vitals.hp || 1);
     const maxMP = stats.POW ? parseInt(stats.POW) : (d.vitals.mp || 1);
     
@@ -326,7 +300,7 @@ function renderProfile(d, extras = {}) {
     const sGrid = document.getElementById('rawStatsGrid'); sGrid.innerHTML='';
     Object.keys(d.stats).forEach(k => sGrid.innerHTML+=`<div class="stat-box"><small>${k}</small><span>${d.stats[k]}</span></div>`);
 
-    // ★ チャート描画遅延（ズレ対策）
+    // チャート描画
     setTimeout(() => {
         const ctx = document.getElementById('mainStatsChart').getContext('2d');
         if(charts.main) charts.main.destroy();
@@ -437,7 +411,6 @@ function renderSkillSection(cat) {
                 <div class="skill-name-row">${s.name}${badge}</div>
                 <textarea class="skill-desc-inp" placeholder="..." rows="1">${s.desc || ''}</textarea>
             </td>
-            <!-- ★ 文字色指定を削除しクラスで管理 -->
             <td class="skill-val-cell">${s.total}</td>
             <td>
                 <div class="val-row">
@@ -505,7 +478,6 @@ function renderTabChart(cat, skills) {
     els.chartTitle.textContent = labelText;
     els.chartDesc.textContent = descText;
 
-    // ★ チャート描画遅延（ズレ対策）
     setTimeout(() => {
         charts.category = new Chart(ctx, {
             type: 'radar',
