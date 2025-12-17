@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SNS Maker v2.8 Chocolat Mer (Curved Tail & Reply)</title>
+    <title>SNS Maker v2.9 Chocolat Mer (Save Fix & Tail img)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -87,7 +87,7 @@
             z-index: 0;
         }
 
-        /* --- BUBBLE STYLE (UPDATED v2.8) --- */
+        /* --- BUBBLE STYLE (v2.9 Save Fix) --- */
         .bubble-wrapper {
             display: flex;
             align-items: flex-end;
@@ -102,7 +102,7 @@
             line-height: 1.4;
             min-height: 40px;
             display: flex;
-            flex-direction: column; /* Changed for reply content */
+            flex-direction: column;
             justify-content: center;
             max-width: 300px;
             word-wrap: break-word;
@@ -111,27 +111,25 @@
             z-index: 1;
         }
 
+        /* SVG Tail Image Style (絶対配置で重ねる) */
+        .tail-img {
+            position: absolute;
+            top: 0;
+            width: 12px;
+            height: 20px;
+            z-index: 2;
+            pointer-events: none; /* 選択の邪魔にならないように */
+        }
+
         /* LEFT BUBBLE (White) */
         .bubble-left {
             background: #ffffff;
             color: var(--line-text);
-            margin-left: 8px; /* Slightly increased for tail space */
-            border-top-left-radius: 2px; /* Pointy top-left */
+            margin-left: 8px; 
+            border-top-left-radius: 2px;
         }
-        
-        /* New SVG Tail for Left */
-        .bubble-left::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            left: -8px; /* Position outside */
-            width: 12px;
-            height: 20px;
-            /* SVG Path mimicking LINE's white tail */
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 20'%3E%3Cpath d='M12 0 L0 0 C0 0 4 10 12 14 Z' fill='%23ffffff'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-size: contain;
-            z-index: 2; /* Ensure it covers border artifacts */
+        .bubble-left .tail-img {
+            left: -8px; /* 外側に出す */
         }
 
         /* RIGHT BUBBLE (Green) */
@@ -139,36 +137,21 @@
             background: var(--line-green);
             color: var(--line-text);
             margin-right: 8px;
-            border-top-right-radius: 2px; /* Pointy top-right */
+            border-top-right-radius: 2px;
         }
-
-        /* New SVG Tail for Right */
-        .bubble-right::before {
-            content: "";
-            position: absolute;
-            top: 0;
-            right: -8px;
-            width: 12px;
-            height: 20px;
-            /* SVG Path mimicking LINE's green tail (#8de055) */
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 20'%3E%3Cpath d='M0 0 L12 0 C12 0 8 10 0 14 Z' fill='%238de055'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-size: contain;
-            z-index: 2;
+        .bubble-right .tail-img {
+            right: -8px; /* 外側に出す */
         }
 
         /* --- No Tail Logic --- */
-        .no-tail::before {
+        .no-tail .tail-img {
             display: none !important;
-            content: none !important;
         }
         .bubble-left.no-tail {
             border-top-left-radius: 20px !important;
-            margin-left: 8px !important; /* Keep alignment */
         }
         .bubble-right.no-tail {
             border-top-right-radius: 20px !important;
-            margin-right: 8px !important; /* Keep alignment */
         }
 
         /* --- CALL & PHOTO STYLES --- */
@@ -194,24 +177,15 @@
             z-index: 1;
         }
         
-        /* Updated Call Tails to match new style */
         .call-history-bubble.left { 
             background: #ffffff; color: #242424; margin-left: 8px; border-top-left-radius: 2px; 
         }
-        .call-history-bubble.left::before {
-            content: ""; position: absolute; top: 0; left: -8px; width: 12px; height: 20px;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 20'%3E%3Cpath d='M12 0 L0 0 C0 0 4 10 12 14 Z' fill='%23ffffff'/%3E%3C/svg%3E");
-            background-repeat: no-repeat; background-size: contain;
-        }
-        
+        .call-history-bubble.left .tail-img { left: -8px; }
+
         .call-history-bubble.right { 
             background: var(--line-green); color: #242424; margin-right: 8px; border-top-right-radius: 2px; 
         }
-        .call-history-bubble.right::before {
-            content: ""; position: absolute; top: 0; right: -8px; width: 12px; height: 20px;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 20'%3E%3Cpath d='M0 0 L12 0 C12 0 8 10 0 14 Z' fill='%238de055'/%3E%3C/svg%3E");
-            background-repeat: no-repeat; background-size: contain;
-        }
+        .call-history-bubble.right .tail-img { right: -8px; }
         
         .call-icon-circle {
             width: 42px;
@@ -380,11 +354,13 @@
                     <div class="flex justify-center my-3 relative z-10">
                         <span class="bg-black/10 text-white text-[11px] px-3 py-1 rounded-full cursor-text date-label" contenteditable="true">今日</span>
                     </div>
+                    <!-- Sample Message -->
                     <div class="flex justify-start items-end gap-2 relative z-10 message-row" data-sender-id="char1">
                         <img src="../images/icons/lineicon-syu.png" onerror="this.src='https://placehold.co/100x100/orange/white?text=S'" class="w-12 h-12 rounded-full mb-auto border border-gray-300 bg-white object-cover shrink-0">
                         <div>
                             <div class="bubble-wrapper">
                                 <div class="bubble bubble-left" contenteditable="true">
+                                    <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 20'%3E%3Cpath d='M12 0 L0 0 C0 0 4 10 12 14 Z' fill='%23ffffff'/%3E%3C/svg%3E" class="tail-img">
                                     サンプル
                                 </div>
                                 <div class="flex flex-col justify-end min-w-[30px] ml-1 pb-1">
@@ -537,7 +513,7 @@
     </div>
 
     <script>
-        // Init Data with defaultIcon property for Reset fix
+        // Init Data
         let characters = [
             { id: 'me', name: '自分', type: 'me', icon: '', defaultIcon: '' },
             { id: 'char1', name: '鱸', type: 'other', icon: '../images/icons/lineicon-syu.png', defaultIcon: 'images/icons/lineicon-syu.png' },
@@ -546,7 +522,6 @@
             { id: 'char4', name: '雨蓮', type: 'other', icon: '../images/icons/lineicon-uren.png', defaultIcon: 'images/icons/lineicon-uren.png' },
         ];
 
-        // Default set to 'call' as requested
         let state = { 
             selectedCharId: 'me', 
             mode: 'call', 
@@ -557,11 +532,15 @@
         };
 
         const randomEmojis = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐙'];
+        
+        // SVG Data URIs for Tails
+        const tailSvgWhite = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 20'%3E%3Cpath d='M12 0 L0 0 C0 0 4 10 12 14 Z' fill='%23ffffff'/%3E%3C/svg%3E";
+        const tailSvgGreen = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 20'%3E%3Cpath d='M0 0 L12 0 C12 0 8 10 0 14 Z' fill='%238de055'/%3E%3C/svg%3E";
 
         function init() { 
             renderCharList(); 
             updateTime();
-            updateTabUI(); // Ensure tab UI reflects default state
+            updateTabUI(); 
             setInterval(updateTime, 1000);
             document.getElementById('header-name-input').value = document.getElementById('header-name').innerText;
         }
@@ -730,7 +709,6 @@
                 btn.className = "w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2";
             }
             else {
-                // If tabs are closed, main button acts as generic sender (fallback)
                 btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> 送信';
                 btn.className = "w-full bg-gradient-to-r from-gray-500 to-gray-600 text-white font-bold py-3 rounded-xl shadow-lg hover:shadow-xl transition transform active:scale-95 flex items-center justify-center gap-2";
             }
@@ -781,7 +759,7 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        // --- Dedicated Text Sender ---
+        // --- Text Sender ---
         function sendTextMsg() {
             const container = document.getElementById('capture-area');
             const char = characters.find(c => c.id === state.selectedCharId);
@@ -796,29 +774,35 @@
             let finalHtml = text;
             if(isReply) {
                 finalHtml = `<span class="reply-block" contenteditable="false">Reply to...</span>${text}`;
-                document.getElementById('reply-check').checked = false; // Reset
+                document.getElementById('reply-check').checked = false; 
             }
             
-            // Logic for continuous messages (hide tail)
+            // Logic for continuous messages
             let bubbleClass = isMe ? 'bubble-right' : 'bubble-left';
-            
-            // Check previous message
             const children = Array.from(container.children);
             const lastMsgRow = children.reverse().find(el => el.classList.contains('message-row'));
             
+            let isTail = true;
             if (lastMsgRow && lastMsgRow.dataset.senderId === char.id) {
                 bubbleClass += ' no-tail';
+                isTail = false;
             }
 
-            const contentHtml = `<div class="bubble ${bubbleClass}" contenteditable="true">${finalHtml}</div>`;
+            // Insert SVG Tail as IMG if tail is needed
+            let tailHtml = '';
+            if (isTail) {
+                const svgSrc = isMe ? tailSvgGreen : tailSvgWhite;
+                tailHtml = `<img src="${svgSrc}" class="tail-img">`;
+            }
+
+            const contentHtml = `<div class="bubble ${bubbleClass}" contenteditable="true">${tailHtml}${finalHtml}</div>`;
             document.getElementById('message-input').value = '';
 
             appendMessage(isMe, contentHtml, char, timeStr);
         }
 
-        // --- Tab Content Sender (Sticker/Photo/Call) ---
+        // --- Tab Content Sender ---
         function addToChat() {
-            // If tabs are closed (mode='text'), treat main button as text sender fallback
             if(state.mode === 'text') {
                 sendTextMsg();
                 return;
@@ -843,6 +827,7 @@
                 const duration = document.getElementById('call-duration').value;
                 
                 if (status === 'active') {
+                    // Active call has no tail in design usually, or just rounded box
                     contentHtml = `
                         <div class="call-active-widget flex items-center justify-between z-10">
                              <div class="flex items-center gap-3 z-10">
@@ -871,8 +856,12 @@
                         durationHtml = '';
                     }
                     const sideClass = isMe ? 'right' : 'left';
+                    const svgSrc = isMe ? tailSvgGreen : tailSvgWhite;
+                    const tailHtml = `<img src="${svgSrc}" class="tail-img">`;
+
                     contentHtml = `
                         <div class="call-history-bubble ${sideClass}">
+                            ${tailHtml}
                             <div class="call-icon-circle"><i class="${iconClass}"></i></div>
                             <div class="flex flex-col justify-center">
                                 <div class="text-sm font-bold leading-tight" contenteditable="true">${title}</div>
@@ -889,7 +878,6 @@
             const container = document.getElementById('capture-area');
             const msgRow = document.createElement('div');
             
-            // Add class 'message-row' and data-sender-id for continuous check
             msgRow.className = isMe ? "flex justify-end items-end gap-1 mb-1 group relative z-10 message-row" : "flex justify-start items-end gap-2 mb-1 group relative z-10 message-row";
             msgRow.setAttribute('data-sender-id', char.id);
 
@@ -914,14 +902,12 @@
                     `;
                 }
             } else {
-                 // UPDATED: Always show icon for 'Other', even if call active
                 const isEmoji = char.icon && !char.icon.includes('/') && !char.icon.includes('data:image');
                 const iconHtml = isEmoji 
                     ? `<div class="w-12 h-12 rounded-full bg-white border border-gray-300 flex items-center justify-center text-2xl mb-auto shrink-0">${char.icon}</div>`
                     : `<img src="${char.icon}" onerror="this.src='https://placehold.co/100x100/gray/white?text=${char.name.charAt(0)}'" class="w-12 h-12 rounded-full mb-auto border border-gray-300 bg-white object-cover shrink-0">`;
 
                  if(isCallActive) {
-                     // For 'Other' active call, keep standard structure so icon shows
                      msgRow.innerHTML = `
                         ${iconHtml}
                         <div>
@@ -1001,7 +987,7 @@
             }
         });
 
-        // --- CAPTURE ALIGNMENT FIX (V2.8 Logic - SVG Safe) ---
+        // --- CAPTURE ALIGNMENT FIX (V2.9 Save Logic) ---
         function adjustTextPosition(clonedDoc) {
              // 1. TEXT BUBBLES
              const bubbles = clonedDoc.querySelectorAll('.bubble');
@@ -1013,7 +999,7 @@
                  b.style.transform = 'none';
              });
 
-             // 2. DATE LABELS (Text Only Adjustment)
+             // 2. DATE LABELS
              const dateLabels = clonedDoc.querySelectorAll('.date-label');
              dateLabels.forEach(l => {
                  l.style.display = 'inline-flex';
@@ -1023,19 +1009,19 @@
                  l.style.transform = 'translateY(-6px)'; 
              });
 
-             // 3. ICON FIX
+             // 3. ICONS
              const icons = clonedDoc.querySelectorAll('.chat-area-container img.w-12');
              icons.forEach(icon => {
                  icon.style.transform = 'translateY(-5px)';
              });
              
-             // 4. CALL ICON FIX 
+             // 4. CALL ICONS
              const callIcons = clonedDoc.querySelectorAll('.call-icon-circle i, .call-active-widget i');
              callIcons.forEach(icon => {
                  icon.style.transform = 'translateY(-8px)'; 
              });
 
-             // 5. CALL TEXT FIX (Safe Approach)
+             // 5. CALL TEXT
              const callTexts = clonedDoc.querySelectorAll(
                  '.call-history-bubble .font-bold, ' + 
                  '.call-history-bubble .opacity-70, ' +
@@ -1054,7 +1040,7 @@
                  });
              } catch(e) { console.log('Duration selector error', e); }
 
-             // 6. FOOTER ICONS FIX
+             // 6. FOOTER
              const footerIcons = clonedDoc.querySelectorAll('.footer-icon, .fa-face-smile');
              footerIcons.forEach(el => {
                  el.style.position = 'relative';
@@ -1101,7 +1087,6 @@
                 onclone: (clonedDoc) => {
                     adjustTextPosition(clonedDoc);
 
-                    // Frame Removal for Screenshot mode
                     const clonedFrame = clonedDoc.querySelector('.phone-frame');
                     clonedFrame.style.border = 'none';
                     clonedFrame.style.borderRadius = '0';
