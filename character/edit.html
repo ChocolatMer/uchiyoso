@@ -1,294 +1,614 @@
-// data/schema.js
-
-// ■ データ項目の定義マップ (全ての保存対象データ)
-export const FIELD_MAPPING = [
-    { key: 'name',      id: 'inpName' },
-    { key: 'kana',      id: 'inpKana' },
-    { key: 'job',       id: 'inpJob' },
-    { key: 'tags',      id: 'inpTags' },
-    { key: 'age',       id: 'inpAge' },
-    { key: 'gender',    id: 'inpGender' },
-    { key: 'birthday',  id: 'inpBirthday' },
-    { key: 'birthplace',id: 'inpOrigin' },
-    { key: 'height',    id: 'inpHeight' },
-    { key: 'weight',    id: 'inpWeight' },
-    { key: 'colorHair', id: 'inpHair' },       
-    { key: 'colorEye',  id: 'inpEye' },        
-    { key: 'colorSkin', id: 'inpSkin' },       
-    { key: 'color',     id: 'inpThemeColor' }, 
-    { key: 'image',     id: 'inpImageBody' },
-    { key: 'icon',      id: 'inpImageIcon' },
-    { key: 'money',     id: 'inpMoney' },
-    { key: 'debt',      id: 'inpDebt' },
-    { key: 'db',        id: 'v_db' },
-    { key: 'spells',    id: 'txtSpells' },
-    { key: 'growth',    id: 'txtGrowth' },         
-    { key: 'encountered', id: 'txtEncountered' },  
-    { key: 'weapons',   id: 'txtWeapons' },        
-    { key: 'skillList', id: 'txtSkillList' },      
-    { key: 'scenarios', id: 'txtScenarios' },                
-    { key: 'scenarioDetailsText', id: 'txtScenarioDetails' } 
-];
-
-export const STATS_MAPPING = [
-    { key: 'STR', id: 's_str' }, { key: 'CON', id: 's_con' },
-    { key: 'POW', id: 's_pow' }, { key: 'DEX', id: 's_dex' },
-    { key: 'APP', id: 's_app' }, { key: 'SIZ', id: 's_siz' },
-    { key: 'INT', id: 's_int' }, { key: 'EDU', id: 's_edu' }
-];
-
-export const VITALS_MAPPING = [
-    { key: 'hp', id: 'v_hp' }, { key: 'mp', id: 'v_mp' }, { key: 'san', id: 'v_san' }
-];
-
-/**
- * いあキャラ形式のテキストを解析して、全ての画面で使える共通データオブジェクトを作る
- */
-export function parseIaChara(text) {
-    const d = { 
-        id: crypto.randomUUID(), 
-        stats:{}, vitals:{}, memo:{}, 
-        skills: {combat:[], explore:[], action:[], negotiate:[], knowledge:[]},
-        items: [], scenarioList: [],
-        color: '#d9333f', colorHair: '', colorEye: '', colorSkin: ''
-    };
-
-    // ★正規表現ヘルパー
-    const m = (regex) => {
-        const match = text.match(regex);
-        return match ? match[1].trim() : '';
-    };
-    const getProfileVal = (label) => {
-        // 例: "髪の色[:：]\s*(キャプチャ)(?:\s*\/|$)"
-        const regex = new RegExp(`${label}[:：]\\s*(.*?)(?:\\s*\\/|$)`, 'm');
-        return m(regex);
-    };
-
-    const nameLine = m(/名前[:：]\s*(.+)/) || 'Unknown';
-    const nameMatch = nameLine.match(/^(.+?)[\s　]*[(（](.+?)[)）]/);
-    if(nameMatch) { d.name = nameMatch[1].trim(); d.kana = nameMatch[2].trim(); } 
-    else { d.name = nameLine; }
-
-    d.job = getProfileVal('職業');
-    d.tags = m(/タグ[:：]\s*(.+)/);
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DATA EDITOR</title>
     
-    d.age = getProfileVal('年齢');
-    d.gender = getProfileVal('性別');
-    d.height = getProfileVal('身長');
-    d.weight = getProfileVal('体重');
-    d.birthday = getProfileVal('誕生日');
-    d.origin = getProfileVal('出身'); 
-    d.birthplace = d.origin; 
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <link href="edit/header.css" rel="stylesheet">
 
-    d.colorHair = getProfileVal('髪の色');
-    d.colorEye = getProfileVal('瞳の色');
-    d.colorSkin = getProfileVal('肌の色');
-    
-    d.image = m(/画像URL[:：]\s*(\S+)/) || m(/【画像】\n:(\S+)/) || m(/【立ち絵】\n:(\S+)/);
-    d.icon = m(/アイコンURL[:：]\s*(\S+)/) || m(/【アイコン】\n:(\S+)/);
-    
-    // ★修正: 所持金や借金がラベルを含まないように厳密化 (数値や通貨記号などを想定)
-    d.money = m(/(?:現在の)?所持金[:：]\s*([^()\n]+)/);
-    d.debt = m(/借金[:：]\s*([^()\n]+)/);
+    <style>
+        body { background-color: #202020; color: #ddd; font-family: 'Noto Sans JP', sans-serif; margin: 0; padding: 0; }
+        .container { max-width: 900px; margin: 0 auto; padding: 80px 20px 100px; }
+        .toolbar { background: #333; padding: 20px; border-radius: 4px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #444; }
+        select { padding: 10px; background: #111; color: #fff; border: 1px solid #555; width: 300px; border-radius: 4px; }
+        .btn-new { background: #44ff44; color: #000; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; border-radius: 4px; }
+        .btn-delete { background: #ff4444; color: #fff; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 0.8rem; }
+        
+        .import-area { background: #2a2a2d; padding: 20px; border-radius: 4px; border: 2px dashed #666; margin-bottom: 30px; transition: 0.3s; }
+        .import-area.dragover { background: #3a3a40; border-color: #00f3ff; box-shadow: 0 0 10px rgba(0, 243, 255, 0.3); }
+        .import-area textarea { height: 100px; font-size: 0.8rem; color: #aaa; width: 100%; box-sizing: border-box; background: #222; border: 1px solid #444; padding: 10px; margin-top: 10px; }
+        .btn-merge { background: #00f3ff; color: #000; border: none; padding: 8px 20px; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 10px; }
+        
+        h2 { border-bottom: 2px solid #555; padding-bottom: 10px; margin-top: 40px; color: #aaa; font-size: 1.1rem; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-row { margin-bottom: 15px; }
+        .form-row.full { grid-column: span 2; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
+        label { display: block; color: #888; font-size: 0.75rem; margin-bottom: 5px; font-family: 'Roboto Mono', monospace; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 10px; box-sizing: border-box; background: #2a2a2a; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.95rem; }
+        textarea { width: 100%; padding: 10px; box-sizing: border-box; background: #2a2a2a; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.9rem; line-height: 1.6; min-height: 80px; resize: vertical; }
+        .analysis-box { background: #252525; padding: 15px; border-radius: 4px; border: 1px solid #444; margin-top: 5px; font-size: 0.85rem; color: #ccc; }
+        .calc-val { color: #44ff44; font-weight: bold; margin-left: 5px; }
+        .warn-text { color: #ffaa00; }
+        
+        .visual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; background: #252525; padding: 20px; border-radius: 4px; border: 1px solid #444; }
+        .img-preview-box { width: 100%; height: 200px; background: #000; border: 1px solid #444; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        .img-preview { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .drop-msg { position: absolute; color: #666; font-size: 0.8rem; pointer-events: none; }
+        
+        .stats-container { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; background: #252525; padding: 15px; border-radius: 4px; }
+        .stat-box { text-align: center; }
+        .stat-box input { text-align: center; font-weight: bold; color: #44ff44; font-size: 1.1rem; }
+        .text-section { border-left: 3px solid #444; padding-left: 15px; margin-bottom: 20px; }
+        .text-section h3 { font-size: 0.9rem; color: #44ff44; margin: 0 0 10px 0; opacity: 0.8; }
+        
+        .list-container { background: #252525; border: 1px solid #444; border-radius: 4px; padding: 10px; margin-top: 5px; }
+        .list-row { display: grid; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #333; align-items: center; }
+        .btn-add { background: #444; color: #fff; border: none; width: 100%; padding: 5px; cursor: pointer; font-size: 0.8rem; margin-top: 5px; }
+        .btn-add:hover { background: #555; }
+        .btn-remove { background: #552222; color: #ffaaaa; border: none; padding: 2px 8px; cursor: pointer; font-size: 0.7rem; border-radius: 2px; }
 
-    const getStat = (name) => {
-        const reg = new RegExp(`${name}[\\s:：]+(\\d+)`);
-        return parseInt(m(reg)) || 0;
-    };
-    d.stats.STR = getStat('STR'); d.stats.CON = getStat('CON');
-    d.stats.POW = getStat('POW'); d.stats.DEX = getStat('DEX');
-    d.stats.APP = getStat('APP'); d.stats.SIZ = getStat('SIZ');
-    d.stats.INT = getStat('INT'); d.stats.EDU = getStat('EDU');
-    d.vitals.hp = getStat('HP'); d.vitals.mp = getStat('MP');
-    d.vitals.san = parseInt(m(/SAN[:：\s]+(\d+)/)) || getStat('SAN');
-    d.db = m(/DB[:：\s]+([+-]\S+)/);
+        .weapon-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr auto; gap: 5px; font-size: 0.7rem; color: #888; margin-bottom: 5px; padding: 0 5px; }
+        .weapon-entry { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr auto; gap: 5px; margin-bottom: 5px; }
+        .weapon-entry input { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 5px; font-size: 0.8rem; width: 100%; }
 
-    const descMap = {};
-    const detailSec = text.split('[技能詳細]')[1];
-    if(detailSec) {
-        detailSec.split('\n').forEach(l => {
-            const match = l.match(/^([^\s…]+)[…\s]+(.+)/);
-            if(match) descMap[match[1].trim()] = match[2].trim();
+        .skill-category { margin-bottom: 20px; }
+        .skill-category h4 { margin: 5px 0; color: #44ff44; font-size: 0.9rem; border-bottom: 1px solid #444; }
+        .skill-table { width: 100%; font-size: 0.8rem; border-collapse: collapse; }
+        .skill-table th { color: #888; text-align: center; font-weight: normal; font-size: 0.7rem; padding: 4px; }
+        .skill-table td { padding: 2px; }
+        .skill-table input[type="number"] { text-align: center; color: #44ff44; padding: 4px; width: 100%; box-sizing: border-box; background: #1a1a1a; border: 1px solid #333; }
+        .skill-desc-input { width: 100%; color: #ddd; font-size: 0.8rem; background: #1a1a1a; border: 1px solid #444; padding: 4px; box-sizing: border-box; }
+        
+        input[type="color"] { width: 100%; height: 40px; padding: 2px; background: #2a2a2a; border: 1px solid #444; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <script type="module">import { initHeader } from "./header.js"; initHeader();</script>
+
+    <div class="container">
+        <div class="toolbar">
+            <div>
+                <label>EDIT TARGET</label>
+                <select id="charSelect"><option value="">LOADING...</option></select>
+            </div>
+            <div>
+                <button id="btnCreateNew" class="btn-new">+ NEW</button>
+            </div>
+        </div>
+
+        <div id="editorArea" style="opacity:0.3; pointer-events:none;">
+            
+            <div id="dropZone" class="import-area">
+                <h3 style="margin-top:0; color:#00f3ff;">SMART IMPORT (Drop .txt File Here)</h3>
+                <p style="font-size:0.8rem; color:#888; margin-bottom:5px;">いあきゃらのテキストファイル(.txt)をここにドロップするか、テキストを貼り付けてください。</p>
+                <textarea id="txtImportSource" placeholder="テキストデータを貼り付け..."></textarea>
+                <button id="btnMerge" class="btn-merge">✨ FILL MISSING INFO (解析＆補完)</button>
+            </div>
+
+            <h2>BASIC PROFILE</h2>
+            <div class="form-grid">
+                <div class="form-row"><label>NAME</label><input type="text" id="inpName"></div>
+                <div class="form-row"><label>KANA</label><input type="text" id="inpKana"></div>
+            </div>
+            <div class="form-grid">
+                <div class="form-row"><label>JOB</label><input type="text" id="inpJob"></div>
+                <div class="form-row"><label>TAGS</label><input type="text" id="inpTags"></div>
+            </div>
+
+            <div class="grid-4" style="margin-top:15px;">
+                <div class="form-row"><label>AGE</label><input type="number" id="inpAge"></div>
+                <div class="form-row"><label>GENDER</label><input type="text" id="inpGender"></div>
+                <div class="form-row"><label>MONEY</label><input type="text" id="inpMoney"></div>
+                <div class="form-row"><label>DEBT</label><input type="text" id="inpDebt"></div>
+            </div>
+            
+            <div class="grid-4" style="margin-top:15px;">
+                <div class="form-row"><label>BIRTHDAY</label><input type="text" id="inpBirthday"></div>
+                <div class="form-row"><label>BIRTHPLACE</label><input type="text" id="inpOrigin"></div>
+                <div class="form-row"><label>THEME COLOR</label><input type="color" id="inpThemeColor" value="#d9333f"></div>
+            </div>
+
+            <div id="eduCheckArea" class="analysis-box" style="display:none;"><span>🎓 EDU分析:</span><span id="eduMsg"></span></div>
+
+            <div class="grid-3" style="margin-top:20px; background:#2b2b2b; padding:15px; border-radius:4px;">
+                <div class="form-row"><label>HEIGHT (cm)</label><input type="number" id="inpHeight"></div>
+                <div class="form-row"><label>WEIGHT (kg)</label><input type="number" id="inpWeight"></div>
+                <div class="form-row"><label>HAIR / EYE / SKIN</label>
+                    <input type="text" id="inpHair" placeholder="髪色" style="margin-bottom:5px;">
+                    <input type="text" id="inpEye" placeholder="瞳の色" style="margin-bottom:5px;">
+                    <input type="text" id="inpSkin" placeholder="肌の色">
+                </div>
+            </div>
+            <div id="bodyCheckArea" class="analysis-box">
+                <div style="margin-bottom:5px;">📊 <b>BMI:</b> <span id="outBMI" class="calc-val">--</span></div>
+            </div>
+
+            <h2>VISUALS (Drag & Drop Image)</h2>
+            <div class="visual-grid">
+                <div>
+                    <label>STANDING ART (立ち絵)</label>
+                    <div class="img-preview-box" id="dropBody">
+                        <span class="drop-msg">Drop Image Here</span>
+                        <img id="previewBody" class="img-preview">
+                    </div>
+                    <input type="text" id="inpImageBody" placeholder="URL or Base64..." style="margin-top:5px;">
+                </div>
+                <div>
+                    <label>FACE ICON (顔アイコン)</label>
+                    <div class="img-preview-box" id="dropIcon">
+                        <span class="drop-msg">Drop Image Here</span>
+                        <img id="previewIcon" class="img-preview">
+                    </div>
+                    <input type="text" id="inpImageIcon" placeholder="URL or Base64..." style="margin-top:5px;">
+                </div>
+            </div>
+
+            <h2>STATS & VITALS</h2>
+            <div class="stats-container">
+                <div class="stat-box"><label>STR</label><input type="number" id="s_str"></div>
+                <div class="stat-box"><label>CON</label><input type="number" id="s_con"></div>
+                <div class="stat-box"><label>POW</label><input type="number" id="s_pow"></div>
+                <div class="stat-box"><label>DEX</label><input type="number" id="s_dex"></div>
+                <div class="stat-box"><label>APP</label><input type="number" id="s_app"></div>
+                <div class="stat-box"><label>SIZ</label><input type="number" id="s_siz"></div>
+                <div class="stat-box"><label>INT</label><input type="number" id="s_int"></div>
+                <div class="stat-box"><label>EDU</label><input type="number" id="s_edu"></div>
+            </div>
+            <div class="grid-4" style="margin-top:20px;">
+                <div class="form-row"><label>HP</label><input type="number" id="v_hp"></div>
+                <div class="form-row"><label>MP</label><input type="number" id="v_mp"></div>
+                <div class="form-row"><label>SAN</label><input type="number" id="v_san"></div>
+                <div class="form-row"><label>DB</label><input type="text" id="v_db"></div>
+            </div>
+
+            <h2>DETAILS</h2>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <div>
+                    <div class="text-section"><h3>経歴</h3><textarea id="txtBackground"></textarea></div>
+                    <div class="text-section"><h3>性格</h3><textarea id="txtPersonality"></textarea></div>
+                    <div class="text-section"><h3>人間関係</h3><textarea id="txtRelations"></textarea></div>
+                </div>
+                <div>
+                    <div class="text-section"><h3>外見的特徴</h3><textarea id="txtAppearance"></textarea></div>
+                    <div class="text-section"><h3>RP補足</h3><textarea id="txtRoleplay"></textarea></div>
+                    <div class="text-section"><h3>メモ</h3><textarea id="txtMemo"></textarea></div>
+                </div>
+            </div>
+            
+            <div class="form-row full">
+                <div class="text-section">
+                    <h3>技能データ (SKILLS & DETAIL)</h3>
+                    <div id="skillArea" class="list-container" style="max-height: 600px; overflow-y: auto;">
+                        </div>
+                </div>
+            </div>
+
+            <div class="text-section" style="margin-top:20px; border-left-color: #d4b346;">
+                <h3 style="color: #d4b346;">技能成長履歴 (GROWTH LOG)</h3>
+                <textarea id="txtGrowth" style="height:120px;" placeholder="例：&#13;シナリオA: 回避+5, 目星+3"></textarea>
+            </div>
+
+            <h2>INVENTORY & HISTORY</h2>
+            <div class="grid-3">
+                <div class="form-row full" style="grid-column:span 2;">
+                    <label>所持品 (ITEMS)</label>
+                    <div class="list-container">
+                        <div id="itemList"></div>
+                        <button type="button" class="btn-add" onclick="addItemRow()">+ ADD ITEM</button>
+                        <!-- 互換性のため隠しtextareaを残す -->
+                        <textarea id="txtItems" style="display:none;"></textarea>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label>魔術/AF (SPELLS/ARTIFACTS)</label>
+                    <textarea id="txtSpells" style="height:90px;"></textarea>
+                    
+                    <label style="margin-top:10px;">遭遇した存在 (ENTITIES)</label>
+                    <textarea id="txtEncountered" style="height:90px;"></textarea>
+                </div>
+            </div>
+
+            <div class="form-row full" style="margin-top:15px;">
+                <label>戦闘・武器・防具 (WEAPONS)</label>
+                <div class="list-container">
+                    <div class="weapon-header">
+                        <div>名前</div><div>成功率</div><div>ダメ</div><div>射程</div><div>回数</div><div>装弾</div><div>HP</div><div>故障</div><div></div>
+                    </div>
+                    <div id="weaponList"></div>
+                    <button type="button" class="btn-add" onclick="addWeaponRow()">+ ADD WEAPON</button>
+                </div>
+            </div>
+
+            <div class="form-row full" style="margin-top:20px;">
+                <label>通過シナリオ詳細 (SCENARIO LOGS)</label>
+                <textarea id="txtScenarioDetails" style="height:200px;" placeholder="[シナリオタイトル]&#13;内容..."></textarea>
+                <div class="form-row">
+                    <label>通過シナリオ(簡易一覧)</label>
+                    <textarea id="txtScenarios" style="height:60px;" placeholder="シナリオ名..."></textarea>
+                </div>
+            </div>
+
+            <div style="margin-top:50px; text-align:right;">
+                <button id="btnDelete" class="btn-delete">DELETE CHARACTER</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { loadFromCloud, monitorAuth } from "./firestore.js";
+        import { collectFormData, parseIaChara, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING } from "./data/schema.js";
+
+        const getEl = (id) => document.getElementById(id);
+        const setVal = (id, v) => { const el = getEl(id); if(el) el.value = (v == null ? '' : v); };
+        const setSrc = (id, s) => { const el = getEl(id); if(el) el.src = s || ''; };
+
+        const MEMO_ID_MAP = {
+            background: 'txtBackground',
+            personality: 'txtPersonality',
+            relations: 'txtRelations',
+            appearance: 'txtAppearance',
+            roleplay: 'txtRoleplay',
+            memo: 'txtMemo'
+        };
+
+        let allData = {};
+        let currentId = null;
+
+        // --- グローバル関数定義 (リスト操作) ---
+        window.addItemRow = (val={name:'', desc:''}) => {
+            const div = document.createElement('div');
+            div.className = 'list-row item-entry';
+            div.style.gridTemplateColumns = '1fr 2fr auto';
+            div.innerHTML = `
+                <input type="text" class="i-name" placeholder="名称" value="${val.name}">
+                <input type="text" class="i-desc" placeholder="効果・備考" value="${val.desc}">
+                <button class="btn-remove" onclick="this.parentElement.remove()">✕</button>
+            `;
+            getEl('itemList').appendChild(div);
+        };
+
+        window.addWeaponRow = (val={name:'', rate:'', damage:'', range:'', attacks:'', capacity:'', hp:'', malfunction:''}) => {
+            const div = document.createElement('div');
+            div.className = 'weapon-entry';
+            div.innerHTML = `
+                <input type="text" class="w-name" value="${val.name}">
+                <input type="text" class="w-rate" value="${val.rate}">
+                <input type="text" class="w-dmg" value="${val.damage}">
+                <input type="text" class="w-range" value="${val.range}">
+                <input type="text" class="w-atk" value="${val.attacks}">
+                <input type="text" class="w-cap" value="${val.capacity}">
+                <input type="text" class="w-hp" value="${val.hp}">
+                <input type="text" class="w-mal" value="${val.malfunction}">
+                <button class="btn-remove" onclick="this.parentElement.remove()">✕</button>
+            `;
+            getEl('weaponList').appendChild(div);
+        };
+
+        // --- ★ヘッダーのSAVEボタンから呼ばれる関数 ---
+        window.prepareSaveData = function() {
+            if(!currentId) return null;
+            const originalData = Object.values(allData).find(c=>c.id==currentId);
+            if(!originalData) return null;
+            
+            // アイテムリストを隠しテキストエリアに同期 (schema.jsのcollectFormData用)
+            const itemRows = document.querySelectorAll('.item-entry');
+            const itemsArr = [];
+            itemRows.forEach(row => {
+                const n = row.querySelector('.i-name').value;
+                const d = row.querySelector('.i-desc').value;
+                if(n) itemsArr.push(d ? `${n} : ${d}` : n);
+            });
+            getEl('txtItems').value = itemsArr.join('\n');
+
+            // データ収集
+            const finalData = collectFormData(originalData, false);
+            alert("保存準備完了 (Cloud保存を実行します)");
+            return finalData;
+        };
+
+        monitorAuth((user) => {
+            if(user) init();
+            else getEl('charSelect').innerHTML = '<option>LOGIN REQUIRED</option>';
         });
-    }
 
-    const lines = text.split('\n');
-    let cat = null;
-    lines.forEach(l => {
-        l = l.trim();
-        if(l.includes('『戦闘技能』')) cat='combat';
-        else if(l.includes('『探索技能』')) cat='explore';
-        else if(l.includes('『行動技能』')) cat='action';
-        else if(l.includes('『交渉技能』')) cat='negotiate';
-        else if(l.includes('『知識技能』')) cat='knowledge';
-        else if(l.startsWith('【')) cat=null;
-
-        if(cat) {
-            const match = l.match(/^([^\d]+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)/);
-            if(match && match[1].trim()!=='技能名') {
-                const n = match[1].trim();
-                d.skills[cat].push({
-                    name: n, 
-                    total: parseInt(match[2]), 
-                    init: parseInt(match[3]), 
-                    job: parseInt(match[4]), 
-                    interest: parseInt(match[5]), 
-                    growth: parseInt(match[6]),
-                    desc: descMap[n]||'',
-                    category: cat
-                });
-            }
+        async function init() {
+            try {
+                const data = await loadFromCloud();
+                allData = data || {};
+                renderSelect();
+            } catch(e) { console.error(e); }
         }
-    });
 
-    // ★修正: セクション取得ロジックの厳密化（次のタグの手前で止める）
-    const getSec = (tag) => {
-        // 次の 【 [ 〈 または 行末まで
-        const regex = new RegExp(`(?:\\[|【|〈)${tag}(?:\\]|】|〉)([\\s\\S]*?)(?=(?:\\[|【|〈)|$)`);
-        const match = text.match(regex);
-        return match ? match[1].trim() : '';
-    };
-    
-    d.memo.background = getSec('経歴');
-    d.memo.personality = getSec('性格');
-    d.memo.relations = getSec('人間関係');
-    d.memo.appearance = getSec('外見') || getSec('外見的特徴');
-    d.memo.roleplay = getSec('RP補足') || getSec('RP用補足');
-    d.memo.skillDetails = getSec('技能詳細') || [getSec('職業P振り分け詳細'), getSec('趣味P振り分け詳細')].filter(Boolean).join('\n\n');
-    d.memo.memo = getSec('メモ');
-
-    d.spells = getSec('魔導書、呪文、アーティファクト') || getSec('魔術');
-    d.encountered = getSec('遭遇した超自然の存在') || getSec('遭遇した神話生物');
-    d.growth = getSec('新たに得た知識・経験');
-    d.scenarios = getSec('通過したシナリオ名') || getSec('通過シナリオ');
-
-    if (d.scenarios) {
-        const titles = d.scenarios.match(/\[(.*?)\]/g);
-        if(titles) {
-            d.scenarioDetailsText = titles.map(t => `${t}\n(詳細未記入)`).join('\n\n');
-        } else {
-            d.scenarioDetailsText = d.scenarios;
+        function renderSelect() {
+            const sel = getEl('charSelect');
+            sel.innerHTML = '<option value="">-- SELECT CHARACTER --</option>';
+            Object.values(allData).forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name;
+                sel.appendChild(opt);
+            });
+            if(currentId) sel.value = currentId;
         }
-        const entries = d.scenarios.split(/\n(?=\[)/g);
-        d.scenarioList = entries.map(entry => {
-            const match = entry.match(/^\[(.*?)\]([\s\S]*)$/);
-            if (match) return { title: match[1].trim(), desc: match[2].trim() };
-            return { title: entry.trim(), desc: '' };
-        }).filter(e => e.title);
-    }
 
-    const skillStart = text.indexOf('【技能値】');
-    const nextSec = text.match(/【(戦闘|所持品|メモ)/);
-    const skillEnd = nextSec ? nextSec.index : text.length;
-    if (skillStart !== -1) {
-        d.skillList = text.substring(skillStart + 5, skillEnd).trim();
-    }
-
-    const wMatch = text.match(/【戦闘・武器・防具】([\s\S]*?)【/);
-    if(wMatch) d.weapons = wMatch[1].trim();
-
-    const itemSection = getSec('所持品');
-    if(itemSection) {
-        const lines = itemSection.split('\n');
-        const items = [];
-        lines.forEach(line => {
-            if(!line.trim() || line.includes('名称') && line.includes('単価')) return;
-            const parts = line.trim().split(/\s+/);
-            if(parts.length > 0) {
-                const name = parts[0];
-                let desc = "";
-                if(parts.length >= 5) desc = parts.slice(4).join(' ');
-                else if(parts.length > 1) desc = parts.slice(1).join(' ');
-                items.push(desc ? `${name} : ${desc}` : name);
-                d.items.push({name: name, desc: desc});
+        getEl('charSelect').addEventListener('change', (e) => {
+            currentId = e.target.value;
+            if(!currentId) {
+                getEl('editorArea').style.opacity='0.3';
+                getEl('editorArea').style.pointerEvents='none';
+                return;
             }
+            const target = Object.values(allData).find(c => c.id == currentId);
+            if(target) loadCharacterToForm(target);
         });
-        d.itemsStr = items.join('\n');
-    }
 
-    return d;
-}
+        function loadCharacterToForm(d) {
+            getEl('editorArea').style.opacity='1';
+            getEl('editorArea').style.pointerEvents='auto';
+            
+            FIELD_MAPPING.forEach(field => {
+                setVal(field.id, d[field.key]);
+            });
+            setSrc('previewBody', d.image);
+            setSrc('previewIcon', d.icon);
 
-/**
- * 編集画面用: フォームのデータを収集して保存用オブジェクトを作成する
- */
-export function collectFormData(currentData = {}, overwriteEmpty = false) {
-    const newData = { ...currentData };
-    newData.stats = { ...(currentData.stats || {}) };
-    newData.vitals = { ...(currentData.vitals || {}) };
+            // 追加項目
+            setVal('inpThemeColor', d.color || '#d9333f');
 
-    const getVal = (id) => {
-        const el = document.getElementById(id);
-        return el ? el.value : null; 
-    };
+            const s = d.stats || {};
+            STATS_MAPPING.forEach(f => setVal(f.id, s[f.key]));
+            const v = d.vitals || {};
+            VITALS_MAPPING.forEach(f => setVal(f.id, v[f.key]));
 
-    FIELD_MAPPING.forEach(field => {
-        const inputVal = getVal(field.id);
-        if (inputVal === null) return;
+            const fullMemo = d.memo || '';
+            const extract = (tag) => {
+                const regex = new RegExp(`\\[${tag}\\]\\n([\\s\\S]*?)(\\n\\[|$)`);
+                const m = fullMemo.match(regex);
+                return m ? m[1].trim() : '';
+            };
+            
+            setVal('txtBackground', extract('経歴'));
+            setVal('txtPersonality', extract('性格'));
+            setVal('txtRelations', extract('人間関係'));
+            setVal('txtAppearance', extract('外見')||extract('外見的特徴'));
+            setVal('txtRoleplay', extract('RP補足')||extract('RP用補足'));
+            
+            if(!fullMemo.includes('[')) setVal('txtMemo', fullMemo);
+            else setVal('txtMemo', extract('メモ'));
 
-        if (inputVal !== "") {
-            newData[field.key] = inputVal;
-        } else {
-            if (overwriteEmpty) {
-                newData[field.key] = "";
+            getEl('itemList').innerHTML = '';
+            if(Array.isArray(d.items)) d.items.forEach(i => addItemRow(i));
+            else addItemRow();
+
+            getEl('weaponList').innerHTML = '';
+            if(Array.isArray(d.weapons)) d.weapons.forEach(w => addWeaponRow(w));
+            else addWeaponRow();
+
+            renderSkills(d.skills);
+
+            if(Array.isArray(d.scenarioList)) {
+                const text = d.scenarioList.map(scn => `[${scn.title}]\n${scn.desc}`).join('\n\n');
+                setVal('txtScenarioDetails', text);
             } else {
-                if (newData[field.key] === undefined) {
-                    newData[field.key] = "";
+                const simpleList = d.scenarios || "";
+                if (simpleList && !d.scenarioList) {
+                    const converted = simpleList.split('\n')
+                        .filter(l => l.trim())
+                        .map(l => `[${l.replace(/[\[\]]/g, '')}]\n(詳細未記入)`).join('\n\n');
+                    setVal('txtScenarioDetails', converted);
+                } else {
+                    setVal('txtScenarioDetails', '');
                 }
             }
+
+            runCalculations();
         }
-    });
 
-    const updateNum = (mapping, targetObj) => {
-        mapping.forEach(field => {
-            const val = getVal(field.id);
-            if (val !== null && val !== "") {
-                targetObj[field.key] = parseInt(val) || 0;
+        function renderSkills(skillsObj) {
+            const area = getEl('skillArea');
+            area.innerHTML = '';
+            
+            const cats = [
+                {id:'combat', label:'戦闘技能'}, {id:'explore', label:'探索技能'}, 
+                {id:'action', label:'行動技能'}, {id:'negotiate', label:'交渉技能'}, 
+                {id:'knowledge', label:'知識技能'}
+            ];
+
+            cats.forEach(c => {
+                const list = skillsObj ? skillsObj[c.id] : [];
+                if(!list || list.length === 0) return;
+
+                const box = document.createElement('div');
+                box.className = 'skill-category';
+                box.id = `skill-cat-${c.id}`;
+                
+                let html = `<h4>${c.label}</h4>
+                <table class="skill-table">
+                    <thead>
+                        <tr>
+                            <th style="width:120px; text-align:left;">技能名</th>
+                            <th style="width:40px;">合計</th>
+                            <th style="width:40px;">初期</th>
+                            <th style="width:40px;">職業</th>
+                            <th style="width:40px;">興味</th>
+                            <th style="width:40px;">成長</th>
+                            <th style="text-align:left; padding-left:10px;">技能詳細 (Flavor Text)</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+                
+                list.forEach(s => {
+                    html += `
+                    <tr class="skill-entry">
+                        <td class="s-name" style="font-weight:bold;">${s.name}</td>
+                        <td><input type="number" class="s-total" value="${s.total}" readonly tabindex="-1"></td>
+                        <td><input type="number" class="s-init" value="${s.init}" readonly tabindex="-1" style="color:#888;"></td>
+                        <td><input type="number" class="s-job" value="${s.job}"></td>
+                        <td><input type="number" class="s-interest" value="${s.interest}"></td>
+                        <td><input type="number" class="s-growth" value="${s.growth}"></td>
+                        <td style="padding-left:10px;"><input type="text" class="s-desc skill-desc-input" value="${s.desc || ''}" placeholder="設定や理由など..."></td>
+                    </tr>`;
+                });
+                html += `</tbody></table>`;
+                box.innerHTML = html;
+                area.appendChild(box);
+                
+                box.querySelectorAll('input').forEach(inp => {
+                    inp.addEventListener('input', (e) => {
+                        const row = e.target.closest('tr');
+                        const init = parseInt(row.querySelector('.s-init').value)||0;
+                        const job = parseInt(row.querySelector('.s-job').value)||0;
+                        const int = parseInt(row.querySelector('.s-interest').value)||0;
+                        const gro = parseInt(row.querySelector('.s-growth').value)||0;
+                        row.querySelector('.s-total').value = init + job + int + gro;
+                    });
+                });
+            });
+        }
+
+        // --- ドラッグ＆ドロップ (テキスト) ---
+        const dropZone = getEl('dropZone');
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
+            dropZone.addEventListener(e, (ev) => { ev.preventDefault(); ev.stopPropagation(); });
+        });
+        dropZone.addEventListener('dragover', () => dropZone.classList.add('dragover'));
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', (e) => {
+            dropZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if(file && file.type.match('text.*')) {
+                const reader = new FileReader();
+                reader.onload = (ev) => getEl('txtImportSource').value = ev.target.result;
+                reader.readAsText(file);
             }
         });
-    };
-    updateNum(STATS_MAPPING, newData.stats);
-    updateNum(VITALS_MAPPING, newData.vitals);
 
-    const secs = [];
-    const getMemo = (id) => getVal(id);
-    const add = (t, val) => { if(val) secs.push(`[${t}]\n${val}`); };
-    
-    add('経歴', getMemo('txtBackground')); 
-    add('性格', getMemo('txtPersonality'));
-    add('人間関係', getMemo('txtRelations')); 
-    add('外見的特徴', getMemo('txtAppearance'));
-    add('RP補足', getMemo('txtRoleplay')); 
-    add('技能詳細', getMemo('txtSkillDetails'));
-    add('メモ', getMemo('txtMemo'));
-    
-    const newMemo = secs.join('\n\n');
-    if (newMemo || overwriteEmpty) {
-        newData.memo = newMemo;
-    }
+        // --- ★ドラッグ＆ドロップ (画像 + リサイズ機能) ---
+        // 画像を自動リサイズしてBase64化する関数
+        const resizeImage = (file, maxWidth, maxHeight, callback) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    let w = img.width;
+                    let h = img.height;
+                    // アスペクト比を維持してリサイズ
+                    if (w > maxWidth || h > maxHeight) {
+                        const ratio = Math.min(maxWidth / w, maxHeight / h);
+                        w *= ratio;
+                        h *= ratio;
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    // 品質0.8のJPEGとして出力
+                    callback(canvas.toDataURL('image/jpeg', 0.8));
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
 
-    const itemText = getVal('txtItems');
-    if (itemText !== null && (itemText !== "" || overwriteEmpty)) {
-         const itemLines = itemText.split('\n');
-         newData.items = itemLines.filter(l=>l.trim()).map(line => {
-            const parts = line.split(/[:：]/);
-            if(parts.length > 1) return { name: parts[0].trim(), desc: parts.slice(1).join(':').trim() };
-            return { name: line.trim(), desc: '' };
-        });
-    }
+        const setupImgDrop = (zoneId, inputId, imgId) => {
+            const zone = getEl(zoneId);
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
+                zone.addEventListener(e, (ev) => { ev.preventDefault(); ev.stopPropagation(); });
+            });
+            zone.addEventListener('drop', (e) => {
+                const file = e.dataTransfer.files[0];
+                if(file && file.type.match('image.*')) {
+                    // ★リサイズ実行 (最大800x800)
+                    resizeImage(file, 800, 800, (resizedDataUrl) => {
+                        getEl(inputId).value = resizedDataUrl;
+                        getEl(imgId).src = resizedDataUrl;
+                    });
+                }
+            });
+        };
+        setupImgDrop('dropBody', 'inpImageBody', 'previewBody');
+        setupImgDrop('dropIcon', 'inpImageIcon', 'previewIcon');
 
-    const scnText = getVal('txtScenarioDetails');
-    if (scnText !== null && (scnText !== "" || overwriteEmpty)) {
-        const entries = scnText.split(/\n(?=\[)/g);
-        newData.scenarioList = entries.map(entry => {
-            const match = entry.match(/^\[(.*?)\]([\s\S]*)$/);
-            if (match) {
-                return { title: match[1].trim(), desc: match[2].trim() };
+
+        getEl('btnMerge').addEventListener('click', () => {
+            const text = getEl('txtImportSource').value;
+            if(!text) return;
+            
+            const p = parseIaChara(text);
+            const fillIfEmpty = (id, val) => {
+                const current = getEl(id)?.value;
+                if(!current && val) setVal(id, val);
+            };
+
+            FIELD_MAPPING.forEach(f => { if(p[f.key]) fillIfEmpty(f.id, p[f.key]); });
+            STATS_MAPPING.forEach(f => fillIfEmpty(f.id, p.stats[f.key]));
+            VITALS_MAPPING.forEach(f => fillIfEmpty(f.id, p.vitals[f.key]));
+            
+            // カラー
+            if(p.colorHair) fillIfEmpty('inpHair', p.colorHair);
+            if(p.colorEye) fillIfEmpty('inpEye', p.colorEye);
+            if(p.colorSkin) fillIfEmpty('inpSkin', p.colorSkin);
+
+            Object.keys(MEMO_ID_MAP).forEach(key => {
+                if(p.memo[key]) fillIfEmpty(MEMO_ID_MAP[key], p.memo[key]);
+            });
+
+            if(p.items && p.items.length > 0) {
+                p.items.forEach(i => addItemRow(i));
             }
-            const trimmed = entry.trim();
-            return trimmed ? { title: trimmed, desc: "" } : null;
-        }).filter(e => e);
-    }
+            if(p.weapons && p.weapons.length > 0) {
+                p.weapons.forEach(w => addWeaponRow(w));
+            }
+            if(p.skills) renderSkills(p.skills);
 
-    return newData;
-}
+            if(p.image && !getEl('previewBody').src) {
+                setVal('inpImageBody', p.image);
+                setSrc('previewBody', p.image);
+            }
+            if(p.icon && !getEl('previewIcon').src) {
+                setVal('inpImageIcon', p.icon);
+                setSrc('previewIcon', p.icon);
+            }
+
+            alert("解析・補完しました！\n所持品・武器・技能表が更新されています。");
+            runCalculations();
+        });
+
+        function runCalculations() {
+            const age = parseInt(getEl('inpAge')?.value)||0;
+            const edu = parseInt(getEl('s_edu')?.value)||0;
+            const eduArea = getEl('eduCheckArea');
+            const eduMsg = getEl('eduMsg');
+            if(eduArea) {
+                if(edu>0 && age>0) {
+                    const minAge=edu+6;
+                    eduArea.style.display='block';
+                    if(age<minAge){ eduMsg.className='warn-text'; eduMsg.textContent=`⚠️ 年齢不足 (EDU${edu}なら最低${minAge}歳)`; }
+                    else { eduMsg.className='calc-val'; eduMsg.textContent=`✅ OK (最低${minAge}歳)`; }
+                } else eduArea.style.display='none';
+            }
+            const h = parseFloat(getEl('inpHeight')?.value), w = parseFloat(getEl('inpWeight')?.value);
+            if(h>0 && w>0) {
+                const bmi = w/((h/100)**2);
+                getEl('outBMI').textContent = `${bmi.toFixed(1)}`;
+            }
+        }
+        ['inpAge','inpHeight','inpWeight','s_edu'].forEach(id=>getEl(id)?.addEventListener('input', runCalculations));
+
+        getEl('btnCreateNew').addEventListener('click', ()=>{
+            const id=crypto.randomUUID();
+            allData[id]={id, name:"新規キャラ", stats:{}, vitals:{}, items:[], weapons:[], scenarioList:[], skills:{}};
+            currentId=id; renderSelect(); loadCharacterToForm(allData[id]);
+        });
+        getEl('btnDelete').addEventListener('click', async ()=>{
+            if(!currentId)return;
+            if(confirm('削除しますか？')) { delete allData[currentId]; location.reload(); }
+        });
+    </script>
+</body>
+</html>
