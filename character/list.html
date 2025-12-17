@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SQUAD SELECT - DATABASE</title>
+    <title>SQUAD SELECT - WHITE DATABASE</title>
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Teko:wght@400;600&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
@@ -14,34 +14,38 @@
     <style>
         /* --- CORE VARIABLES --- */
         :root {
-            --bg-color: #050505;
-            --card-width: 300px; 
-            --card-height: 75vh; 
-            --gap: 50px;
+            /* White Cyberpunk Theme */
+            --bg-color: #f0f4f8;
+            --grid-color: rgba(0, 168, 255, 0.15);
+            --text-main: #334;
             
-            /* Colors */
-            --neon-cyan: #00f3ff;
-            --neon-gold: #ffd700;
-            --neon-crimson: #ff2a2a;
-            --glass-panel: rgba(10, 15, 20, 0.85);
+            --card-width: 280px; 
+            --card-height: 70vh; 
+            --gap: 40px;
             
-            /* 3D Depth Config */
-            --z-screen: -50px;
-            --z-figure: 30px;
+            /* Accent Colors */
+            --accent-cyan: #00d2ff;
+            --accent-gold: #ffb700;
+            --accent-red: #ff4757;
+            --accent-purple: #70a1ff;
+            
+            /* 3D Depth */
+            --z-screen: -60px;
+            --z-figure: 20px;
         }
 
         body {
             margin: 0; padding: 0;
             background-color: var(--bg-color);
+            /* 明るく神秘的なグラデーション背景 */
             background-image: 
-                radial-gradient(circle at 50% 120%, #203a43 0%, #000 60%),
-                linear-gradient(0deg, rgba(0,243,255,0.02) 1px, transparent 1px);
-            background-size: 100% 100%, 100% 40px;
+                radial-gradient(circle at 50% 0%, #ffffff 0%, #dde6f0 80%),
+                linear-gradient(90deg, rgba(255,255,255,0.8) 0%, transparent 50%, rgba(255,255,255,0.8) 100%);
             font-family: 'Rajdhani', 'Noto Sans JP', sans-serif;
             overflow: hidden;
             height: 100vh;
             display: flex; flex-direction: column;
-            color: #fff;
+            color: var(--text-main);
             user-select: none;
         }
 
@@ -50,11 +54,19 @@
             flex-shrink: 0; height: 60px; width: 100%;
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 40px; box-sizing: border-box;
-            background: linear-gradient(90deg, rgba(0,0,0,0.8) 0%, rgba(0,20,30,0.5) 50%, rgba(0,0,0,0.8) 100%);
-            border-bottom: 1px solid rgba(255,255,255,0.15);
-            font-family: 'Teko', sans-serif; letter-spacing: 0.2em; font-size: 1.4rem;
+            background: rgba(255, 255, 255, 0.7);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            backdrop-filter: blur(10px);
             z-index: 100;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+        }
+        .header-title {
+            font-family: 'Teko', sans-serif; font-size: 1.6rem; letter-spacing: 0.2em;
+            color: #2c3e50;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .header-title::before {
+            content: ''; display: block; width: 8px; height: 8px; background: var(--accent-cyan);
+            box-shadow: 0 0 10px var(--accent-cyan); transform: rotate(45deg);
         }
 
         /* --- STAGE AREA --- */
@@ -65,23 +77,39 @@
             overflow: hidden;
         }
 
-        /* 背景のアニメーショングリッド */
-        .bg-grid {
-            position: absolute; width: 200%; height: 200%;
-            top: -50%; left: -50%;
-            background: 
-                linear-gradient(rgba(0,243,255,0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0,243,255,0.05) 1px, transparent 1px);
-            background-size: 100px 100px;
-            transform: perspective(500px) rotateX(60deg);
-            animation: moveGrid 20s linear infinite;
+        /* 流れる線の演出（白背景用） */
+        .cyber-lines {
+            position: absolute; inset: 0;
+            background: repeating-linear-gradient(90deg, 
+                transparent, 
+                transparent 100px, 
+                var(--grid-color) 100px, 
+                var(--grid-color) 101px
+            );
+            mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+            -webkit-mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
             z-index: 0; pointer-events: none;
+            transform: perspective(1000px) rotateX(10deg) scale(1.2);
         }
-        @keyframes moveGrid { from { transform: perspective(500px) rotateX(60deg) translateY(0); } to { transform: perspective(500px) rotateX(60deg) translateY(100px); } }
+        
+        /* 浮遊する光の粒子（神秘的） */
+        .particles-container {
+            position: absolute; inset: 0; pointer-events: none; z-index: 1;
+        }
+        .light-particle {
+            position: absolute; background: white; border-radius: 50%;
+            box-shadow: 0 0 10px var(--accent-cyan);
+            opacity: 0; animation: floatUp 8s infinite ease-in;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            30% { opacity: 0.8; }
+            100% { transform: translateY(-20vh) scale(1.5); opacity: 0; }
+        }
 
         .stage-container {
             display: flex; align-items: center;
-            padding: 0 50vw; /* 最初のアイテムを中央にするため */
+            padding: 0 50vw; 
             overflow-x: auto; overflow-y: visible;
             scroll-behavior: smooth;
             height: 100%; width: 100%;
@@ -100,185 +128,172 @@
             transform-style: preserve-3d;
             scroll-snap-align: center;
             cursor: pointer;
-            transition: transform 0.4s ease;
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
-        /* 1. SCREEN (Top Back) */
+        /* 1. SCREEN (Back Layer) */
         .unit-screen {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 65%; /* 上部65%を使用 */
-            background: #000;
-            border: 1px solid rgba(255,255,255,0.2);
+            top: 0; left: 0; right: 0; bottom: 15%; /* 足元を少し開ける */
+            background: #fff;
+            border: 1px solid rgba(0,0,0,0.1);
             transform: translateZ(var(--z-screen));
             overflow: hidden;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1); /* 柔らかい影 */
             transition: all 0.5s ease;
+            border-radius: 4px;
         }
         
         .screen-img {
             width: 100%; height: 100%;
-            background-size: 180%; /* 顔が見えるよう超拡大 */
-            background-position: center 20%; /* 上の方（顔）を表示 */
-            opacity: 0.5;
-            filter: grayscale(1) contrast(1.2) brightness(0.6);
+            background-size: 250%; /* ★顔がドアップになるよう超拡大 */
+            background-position: center 15%; /* 顔の位置（上の方）に合わせる */
+            background-repeat: no-repeat;
+            opacity: 0.8; /* 白背景なので少し濃いめに */
+            filter: grayscale(0.2) contrast(1.1) brightness(1.05); /* 鮮やかに */
             transition: all 0.5s ease;
         }
         
-        /* 走査線とノイズ */
-        .scanlines {
+        /* 白いデコレーションライン */
+        .screen-deco {
             position: absolute; inset: 0;
-            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.5) 3px);
-            pointer-events: none; z-index: 5;
-        }
-        .screen-glitch {
-            position: absolute; inset: 0;
-            background: rgba(0,243,255,0.1);
-            opacity: 0; pointer-events: none; mix-blend-mode: overlay;
+            border: 1px solid rgba(255,255,255,0.5);
+            z-index: 5; opacity: 0.6;
+            background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 20%);
         }
 
-        /* 2. INFO (Top of Screen) */
-        .screen-header {
-            position: absolute; top: 0; left: 0; width: 100%;
-            height: 50px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent);
-            z-index: 10;
-            display: flex; flex-direction: column; justify-content: flex-start;
-            padding: 10px 15px; box-sizing: border-box;
-        }
-        .info-job {
-            font-size: 0.7rem; color: var(--neon-cyan); letter-spacing: 0.2em;
-            text-transform: uppercase; font-weight: bold;
-            display: flex; align-items: center; gap: 5px;
-        }
-        .info-job::before { content: ''; display: block; width: 8px; height: 8px; background: currentColor; border-radius: 50%; box-shadow: 0 0 5px currentColor; }
-        .info-name {
-            font-size: 1.6rem; font-weight: 700; color: #fff;
-            line-height: 1; margin-top: 2px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        /* 2. INFO TAGS (Floating Left) - はみ出すデザイン復活 */
+        .unit-info-group {
+            position: absolute;
+            top: 40px; left: -20px; /* 左にはみ出す */
+            width: 100%;
+            z-index: 30;
+            display: flex; flex-direction: column; align-items: flex-start;
+            pointer-events: none;
+            transform: translateZ(10px);
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,0.15));
         }
 
-        /* 3. FIGURE (Bottom Front) */
+        .info-tag {
+            background: var(--accent-cyan);
+            color: #fff;
+            font-family: 'Teko', sans-serif;
+            font-size: 1.1rem;
+            padding: 4px 16px;
+            margin-bottom: 8px;
+            clip-path: polygon(0 0, 100% 0, 95% 100%, 0 100%);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            display: flex; align-items: center;
+        }
+        /* 縦書きの名前バー（画像左側の帯のようなイメージ） */
+        .info-name-vertical {
+            background: rgba(255, 255, 255, 0.95);
+            color: #222;
+            padding: 15px 8px;
+            font-weight: 700;
+            font-size: 1.4rem;
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            letter-spacing: 0.3em;
+            border-left: 4px solid var(--accent-cyan);
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.05);
+        }
+
+        /* 3. FIGURE (Front Layer) */
         .unit-figure-wrapper {
             position: absolute;
-            bottom: 0; left: 50%; width: 100%; height: 45%; /* 下部45%を使用（小さく） */
+            bottom: 0; left: 50%; width: 100%; height: 50%; /* 画面下半分を使用 */
             transform: translateX(-50%) translateZ(var(--z-figure));
             display: flex; align-items: flex-end; justify-content: center;
             pointer-events: none;
             z-index: 20;
         }
         .char-figure {
-            max-height: 100%; max-width: 150%;
+            max-height: 100%; max-width: 160%;
             object-fit: contain;
-            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8));
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            /* 少し足元を暗くして設置感を出す */
-            mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+            filter: drop-shadow(0 15px 20px rgba(0,0,0,0.2)); /* 影を少し強めに */
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-origin: bottom center;
         }
 
-        /* 4. BASE & SHADOW */
-        .unit-base {
+        /* 4. SHADOW & FLOOR (Base) */
+        .unit-shadow {
+            position: absolute;
+            bottom: 20px; /* 立ち絵の足元に合わせる */
+            left: 50%;
+            width: 140px; height: 30px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 50%;
+            transform: translateX(-50%) translateZ(-10px);
+            filter: blur(8px);
+            z-index: 5;
+        }
+        .unit-reflection {
             position: absolute; bottom: 0; left: 50%;
             width: 180px; height: 180px;
-            transform: translateX(-50%) rotateX(70deg) translateZ(-20px);
-            pointer-events: none;
+            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 60%);
+            transform: translateX(-50%) rotateX(75deg) translateZ(-30px);
+            opacity: 0.5; mix-blend-mode: overlay;
         }
-        /* 回転するホログラム台座 */
-        .base-ring {
-            position: absolute; inset: 0; border-radius: 50%;
-            border: 2px dashed var(--neon-cyan);
-            opacity: 0.3;
-            animation: spin 10s linear infinite;
-        }
-        .base-glow {
-            position: absolute; inset: 20%; border-radius: 50%;
-            background: radial-gradient(circle, var(--neon-cyan) 0%, transparent 70%);
-            opacity: 0.2; filter: blur(10px);
-            animation: pulseGlow 2s ease-in-out infinite alternate;
-        }
-        /* リアルな影 */
-        .base-shadow {
-            position: absolute; inset: 25%;
-            background: #000; border-radius: 50%;
-            filter: blur(8px); opacity: 0.9;
-        }
-        
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-        @keyframes pulseGlow { from { opacity: 0.2; transform: scale(1); } to { opacity: 0.5; transform: scale(1.2); } }
 
-        /* --- HOVER ANIMATION --- */
+        /* --- HOVER EFFECTS --- */
         .char-unit:hover .unit-screen {
-            border-color: var(--neon-cyan);
-            box-shadow: 0 0 40px rgba(0,243,255,0.15);
+            transform: translateZ(-80px) scale(1.02); /* スクリーンは少し奥へ */
+            box-shadow: 0 30px 50px rgba(0, 168, 255, 0.15);
         }
         .char-unit:hover .screen-img {
-            opacity: 1; filter: grayscale(0);
-            background-size: 190%; /* さらにズーム */
-        }
-        .char-unit:hover .info-job {
-            text-shadow: 0 0 8px currentColor;
-        }
-        .char-unit:hover .char-figure {
-            transform: scale(1.1) translateY(-10px); /* 浮き上がる */
-            filter: drop-shadow(0 20px 20px rgba(0,0,0,0.8)) brightness(1.1);
-        }
-        .char-unit:hover .base-ring {
-            opacity: 0.8; border-style: solid; box-shadow: 0 0 15px var(--neon-cyan);
-            animation-duration: 3s; /* 高速回転 */
+            background-size: 260%; /* さらにズーム */
+            filter: grayscale(0) contrast(1.1) brightness(1.1);
         }
         
-        /* スクリーン上のグリッチ演出（ホバー時） */
-        .char-unit:hover .screen-glitch {
-            animation: glitchEffect 2s infinite;
+        .char-unit:hover .unit-figure-wrapper {
+            transform: translateX(-50%) translateZ(50px) scale(1.05); /* フィギュアは手前へ */
         }
-        @keyframes glitchEffect {
-            0% { opacity: 0; transform: translate(0); }
-            2% { opacity: 0.8; transform: translate(-2px, 2px); }
-            4% { opacity: 0; transform: translate(0); }
-            95% { opacity: 0; }
-            96% { opacity: 0.8; transform: translate(2px, -2px); }
-            98% { opacity: 0; }
+        
+        .char-unit:hover .info-tag {
+            padding-left: 25px; /* アニメーション */
+            background: #222; /* 色反転 */
+            transition: 0.3s;
+        }
+        .char-unit:hover .unit-shadow {
+            width: 120px; opacity: 0.1; /* 浮いた感じにするなら影を薄く小さく */
+            filter: blur(12px);
         }
 
         /* --- CONTROLS --- */
-        .nav-arrow {
-            position: absolute; top: 50%; 
-            width: 50px; height: 50px;
-            border: 2px solid rgba(255,255,255,0.2);
-            color: var(--neon-cyan);
+        .nav-btn {
+            position: absolute; top: 50%; width: 60px; height: 60px;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem; cursor: pointer; z-index: 100;
-            background: rgba(0,0,0,0.5); backdrop-filter: blur(5px);
-            transition: 0.3s;
-            clip-path: polygon(20% 0, 100% 0, 100% 80%, 80% 100%, 0 100%, 0 20%);
+            font-size: 1.5rem; color: #333; cursor: pointer;
+            z-index: 100; transition: all 0.3s;
+            border: 1px solid #eee;
         }
-        .nav-arrow:hover { 
-            background: rgba(0,243,255,0.1); border-color: var(--neon-cyan);
-            box-shadow: 0 0 15px var(--neon-cyan);
+        .nav-btn:hover {
+            background: var(--accent-cyan); color: white;
+            transform: scale(1.1); box-shadow: 0 0 20px var(--accent-cyan);
         }
         .prev { left: 40px; }
         .next { right: 40px; }
 
         .edit-btn {
-            position: absolute; top: 10px; right: 10px; z-index: 200;
-            width: 30px; height: 30px; background: #222; border: 1px solid #444; color: #fff;
+            position: absolute; top: 10px; right: 10px;
+            width: 30px; height: 30px; border-radius: 50%;
+            background: #fff; border: 1px solid #ddd; color: #555;
             display: flex; align-items: center; justify-content: center;
-            opacity: 0; cursor: pointer; transition: 0.2s;
+            opacity: 0; transition: 0.2s; z-index: 200; cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         .char-unit:hover .edit-btn { opacity: 1; }
 
-        .click-layer { position: absolute; inset: 0; z-index: 50; }
+        .click-overlay { position: absolute; inset: 0; z-index: 40; }
 
-        /* PARTICLES */
-        #particles { position: absolute; inset: 0; pointer-events: none; z-index: 1; }
-        .particle {
-            position: absolute; background: white; border-radius: 50%;
-            animation: floatUp linear infinite;
-        }
-        @keyframes floatUp {
-            0% { transform: translateY(100vh) scale(0); opacity: 0; }
-            20% { opacity: 0.5; }
-            100% { transform: translateY(-20vh) scale(1); opacity: 0; }
+        /* Initial Loading Text */
+        .loading {
+            font-size: 2rem; color: #ccc; font-family: 'Teko'; letter-spacing: 0.5em;
         }
 
     </style>
@@ -291,30 +306,26 @@
 </script>
 
     <div class="sub-header">
-        <div style="display: flex; flex-direction: column;">
-            <span style="line-height: 1; font-size: 1.2rem; color:#fff;">CHARACTER SELECT</span>
-            <span style="font-size: 0.7rem; color: var(--neon-cyan); letter-spacing: 0.1em;">// DATABASE CONNECTED</span>
-        </div>
-        <div style="font-family:'Rajdhani'; font-size: 0.9rem; opacity: 0.7;">SELECT TARGET > DEPLOY</div>
+        <div class="header-title">SQUAD DATABASE</div>
+        <div style="font-size: 0.8rem; color: #888; letter-spacing: 0.1em;">// ACCESS GRANTED</div>
     </div>
     
     <div class="stage-wrapper">
-        <div class="bg-grid"></div>
-        <div id="particles"></div>
+        <!-- 白い空間に流れるサイバーライン -->
+        <div class="cyber-lines"></div>
+        <div class="particles-container" id="particles"></div>
 
-        <div class="nav-arrow prev" id="btnPrev">◀</div>
+        <div class="nav-btn prev" id="btnPrev">←</div>
         
         <div class="stage-container" id="stage">
-            <!-- JSでここにキャラカードが生成されます -->
-            <div style="width:100%; text-align:center; color:#555; font-size:2rem; font-family:'Teko'; letter-spacing:5px;">INITIALIZING...</div>
+            <div class="loading">INITIALIZING...</div>
         </div>
         
-        <div class="nav-arrow next" id="btnNext">▶</div>
+        <div class="nav-btn next" id="btnNext">→</div>
     </div>
 
-    <!-- Footer -->
-    <div style="height:30px; background:#000; border-top:1px solid #222; display:flex; align-items:center; justify-content:center;">
-        <span style="color:#444; font-size:0.7rem; letter-spacing:0.2em;">SYSTEM STABLE // READY FOR INPUT</span>
+    <div style="position:fixed; bottom:0; width:100%; height:30px; background:rgba(255,255,255,0.8); border-top:1px solid #eee; display:flex; justify-content:center; align-items:center;">
+        <span style="font-size:0.7rem; color:#aaa; letter-spacing:0.3em;">SELECT CHARACTER TO DEPLOY</span>
     </div>
 
     <script type="module">
@@ -322,139 +333,133 @@
 
         const stage = document.getElementById('stage');
 
-        // パーティクル生成
-        function spawnParticles() {
+        // パーティクル（白い光）
+        function createParticles() {
             const container = document.getElementById('particles');
-            const count = 40;
-            for(let i=0; i<count; i++) {
+            for(let i=0; i<20; i++){
                 const p = document.createElement('div');
-                p.className = 'particle';
-                const size = Math.random() * 3 + 1;
+                p.className = 'light-particle';
+                const size = Math.random() * 6 + 2;
                 p.style.width = size + 'px'; p.style.height = size + 'px';
                 p.style.left = Math.random() * 100 + '%';
-                p.style.opacity = Math.random() * 0.5;
-                p.style.boxShadow = `0 0 ${size*2}px rgba(0,243,255,0.5)`;
-                const duration = Math.random() * 10 + 5;
-                p.style.animation = `floatUp ${duration}s linear infinite`;
-                p.style.animationDelay = `-${Math.random() * 10}s`;
+                p.style.animationDelay = (Math.random() * 5) + 's';
+                p.style.animationDuration = (Math.random() * 5 + 5) + 's';
                 container.appendChild(p);
             }
         }
-        spawnParticles();
+        createParticles();
 
-        function getColor(job) {
-            if(!job) return '#00f3ff';
-            if(job.includes('探偵') || job.includes('警')) return '#00f3ff'; // Cyan
-            if(job.includes('医') || job.includes('学')) return '#ffd700'; // Gold
-            if(job.includes('戦') || job.includes('狩')) return '#ff2a2a'; // Red
-            if(job.includes('魔') || job.includes('ア')) return '#d000ff'; // Purple
-            return '#00f3ff';
+        // 職業ごとのカラー
+        function getAccentColor(job) {
+            if(!job) return '#00d2ff'; // Default Cyan
+            const j = job;
+            if(j.includes('探偵') || j.includes('警')) return '#00d2ff';
+            if(j.includes('医') || j.includes('学')) return '#ffb700'; // Yellow/Gold
+            if(j.includes('戦') || j.includes('狩')) return '#ff4757'; // Red
+            if(j.includes('魔') || j.includes('ア')) return '#70a1ff'; // Purple/Blue
+            return '#00d2ff';
         }
 
         window.renderCharacterList = function(data) {
             stage.innerHTML = ''; 
             
-            // 余白用スペーサー（中央寄せのため）
-            const spacerStart = document.createElement('div');
-            spacerStart.style.minWidth = "50vw";
-            stage.appendChild(spacerStart);
+            // センタリング用スペーサー
+            const spacer = document.createElement('div');
+            spacer.style.minWidth = "50vw";
+            stage.appendChild(spacer);
 
             if (!data || Object.keys(data).length === 0) {
-                stage.innerHTML = '<div style="color:white; text-align:center;">NO DATA</div>';
+                stage.innerHTML = '<div class="loading">NO DATA</div>';
                 return;
             }
 
-            Object.values(data).forEach((char, index) => {
+            Object.values(data).forEach((char, idx) => {
                 const unit = document.createElement('div');
                 unit.className = 'char-unit';
                 
-                // 登場アニメーション用の遅延
+                // 入場アニメーション
                 unit.style.opacity = '0';
-                unit.style.animation = `fadeInUp 0.6s ease forwards ${index * 0.1}s`;
-
-                const imgUrl = char.image || 'https://placehold.co/400x800/222/555?text=NO+IMG';
-                const accent = getColor(char.job);
+                unit.style.animation = `slideUp 0.6s ease forwards ${idx * 0.1}s`;
+                
+                const img = char.image || 'https://placehold.co/400x800/eee/999?text=NO+IMG';
+                const color = getAccentColor(char.job);
 
                 unit.innerHTML = `
-                    <!-- 1. SCREEN (Background/Top) -->
-                    <div class="unit-screen" style="border-color: ${accent}44;">
-                        <div class="screen-img" style="background-image: url('${imgUrl}');"></div>
-                        <div class="scanlines"></div>
-                        <div class="screen-glitch"></div>
-                        
-                        <!-- Header Info Inside Screen -->
-                        <div class="screen-header">
-                            <div class="info-job" style="color:${accent};">${char.job || 'UNKNOWN'}</div>
-                            <div class="info-name">${char.name}</div>
+                    <!-- 1. INFO (はみ出しデザイン) -->
+                    <div class="unit-info-group">
+                        <div class="info-tag" style="background:${color};">
+                            ${char.job || 'UNKNOWN'}
+                        </div>
+                        <div class="info-name-vertical" style="border-left-color:${color};">
+                            ${char.name}
                         </div>
                     </div>
 
-                    <!-- 2. BASE (Shadow & Light) -->
-                    <div class="unit-base">
-                        <div class="base-shadow"></div>
-                        <div class="base-ring" style="border-color:${accent}; box-shadow:0 0 10px ${accent};"></div>
-                        <div class="base-glow" style="background: radial-gradient(circle, ${accent} 0%, transparent 70%);"></div>
+                    <!-- 2. SCREEN (Background Face Zoom) -->
+                    <div class="unit-screen">
+                        <div class="screen-deco"></div>
+                        <div class="screen-img" style="background-image: url('${img}');"></div>
                     </div>
 
-                    <!-- 3. FIGURE (Foreground/Bottom) -->
+                    <!-- 3. FIGURE (Standing) -->
                     <div class="unit-figure-wrapper">
-                        <img src="${imgUrl}" class="char-figure" alt="${char.name}">
+                        <img src="${img}" class="char-figure" alt="${char.name}">
                     </div>
+
+                    <!-- 4. SHADOW & REFLECTION -->
+                    <div class="unit-shadow"></div>
+                    <div class="unit-reflection"></div>
 
                     <!-- Controls -->
-                    <div class="edit-btn">📷</div>
-                    <div class="click-layer"></div>
+                    <div class="edit-btn">✎</div>
+                    <div class="click-overlay"></div>
                 `;
-                
-                // イベント設定
-                const editBtn = unit.querySelector('.edit-btn');
-                editBtn.onclick = (e) => {
+
+                // イベント
+                const edit = unit.querySelector('.edit-btn');
+                edit.onclick = (e) => {
                     e.stopPropagation();
-                    const newUrl = prompt('画像URLを入力してください:', char.image || "");
+                    const newUrl = prompt('画像URLを変更:', char.image || "");
                     if(newUrl) {
                         char.image = newUrl;
                         saveToCloud(char).then(() => renderCharacterList(data));
                     }
                 };
 
-                const clickLayer = unit.querySelector('.click-layer');
-                clickLayer.onclick = () => {
+                const overlay = unit.querySelector('.click-overlay');
+                overlay.onclick = () => {
                     window.location.href = `character/detail/detail.html?id=${char.id}`;
                 };
 
                 stage.appendChild(unit);
             });
 
-            // 終了スペーサー
             const spacerEnd = document.createElement('div');
             spacerEnd.style.minWidth = "50vw";
             stage.appendChild(spacerEnd);
         };
 
-        // Scroll Logic
-        const btnNext = document.getElementById('btnNext');
-        const btnPrev = document.getElementById('btnPrev');
-        
-        btnNext.onclick = () => {
-            const unitW = document.querySelector('.char-unit')?.offsetWidth || 300;
-            stage.scrollBy({ left: unitW + 50, behavior: 'smooth' });
+        // Scroll
+        document.getElementById('btnNext').onclick = () => {
+            const w = document.querySelector('.char-unit')?.offsetWidth || 300;
+            stage.scrollBy({ left: w + 40, behavior: 'smooth' });
         };
-        btnPrev.onclick = () => {
-            const unitW = document.querySelector('.char-unit')?.offsetWidth || 300;
-            stage.scrollBy({ left: -(unitW + 50), behavior: 'smooth' });
+        document.getElementById('btnPrev').onclick = () => {
+            const w = document.querySelector('.char-unit')?.offsetWidth || 300;
+            stage.scrollBy({ left: -(w + 40), behavior: 'smooth' });
         };
 
-        // CSS Animation Keyframes for entry
-        const styleSheet = document.createElement("style");
-        styleSheet.innerText = `
-            @keyframes fadeInUp {
-                from { opacity: 0; transform: translateY(50px) rotateX(10deg); }
-                to { opacity: 1; transform: translateY(0) rotateX(0); }
+        // CSS Injection for Animation
+        const style = document.createElement('style');
+        style.innerHTML = `
+            @keyframes slideUp {
+                from { opacity: 0; transform: translateY(50px); }
+                to { opacity: 1; transform: translateY(0); }
             }
         `;
-        document.head.appendChild(styleSheet);
-
-        // Debug Load
+        document.head.appendChild(style);
+        
+        // Debug
         // loadFromCloud().then(renderCharacterList);
     </script>
 </body>
