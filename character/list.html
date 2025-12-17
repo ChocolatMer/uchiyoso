@@ -212,4 +212,233 @@
             background: radial-gradient(circle, rgba(0, 243, 255, 0.1) 0%, transparent 60%);
             border: 1px solid rgba(0, 243, 255, 0.2);
             transform: rotateX(75deg) translateZ(40px); /* 地面に倒して手前に配置 */
-            box-shadow: 0 0 20px rgba(0, 24
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+            transition: 0.4s;
+        }
+        /* 回転する内側のリング */
+        .holo-ring {
+            position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px;
+            border-radius: 50%; border: 1px dashed var(--cyan);
+            opacity: 0.5;
+            animation: spinRing 10s linear infinite;
+        }
+
+        /* 立ち絵本体 */
+        .char-figure {
+            position: relative; 
+            bottom: 40px; /* 台座の上に乗る位置 */
+            height: 380px; /* カードに対して適切な比率 */
+            width: auto; object-fit: contain;
+            filter: drop-shadow(0 15px 15px rgba(0,0,0,0.7));
+            transform: translateZ(60px); /* 台座よりさらに手前 */
+            transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .char-card:hover .holo-base {
+            background: radial-gradient(circle, rgba(0, 243, 255, 0.3) 0%, transparent 70%);
+            box-shadow: 0 0 50px var(--cyan);
+            border-color: var(--cyan);
+            transform: rotateX(75deg) translateZ(40px) scale(1.1);
+        }
+        .char-card:hover .char-figure {
+            transform: translateZ(80px) scale(1.08) translateY(-10px);
+            filter: drop-shadow(0 20px 30px rgba(0,0,0,0.9));
+        }
+
+        /* --- UIパーツ --- */
+        .nav-arrow {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            width: 80px; height: 120px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3rem; color: rgba(255,255,255,0.2);
+            cursor: pointer; z-index: 200; transition: 0.3s;
+            text-shadow: 0 0 10px #000;
+        }
+        .nav-arrow:hover { color: var(--cyan); transform: translateY(-50%) scale(1.2); text-shadow: 0 0 20px var(--cyan); }
+        .nav-arrow.prev { left: 20px; }
+        .nav-arrow.next { right: 20px; }
+
+        .overlay-link { position: absolute; inset: 0; z-index: 100; transform: translateZ(100px); cursor: pointer; }
+
+        /* 画像編集ボタン */
+        .btn-edit {
+            position: absolute; top: 15px; right: 15px;
+            font-family: var(--font-ui); letter-spacing: 0.1em;
+            background: #000; border: 1px solid #444; color: #aaa;
+            padding: 4px 10px; font-size: 0.8rem;
+            transform: translateZ(80px); opacity: 0; transition: 0.3s; z-index: 110;
+        }
+        .char-card:hover .btn-edit { opacity: 1; }
+        .btn-edit:hover { border-color: var(--cyan); color: var(--cyan); cursor: pointer; }
+
+        /* --- アニメーション --- */
+        @keyframes blink { from { opacity: 0.3; } to { opacity: 1; } }
+        @keyframes spinRing { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes floatCard { 
+            0%, 100% { transform: translateY(0); } 
+            50% { transform: translateY(-15px); } 
+        }
+
+        /* ローディングメッセージ */
+        .loading-text {
+            font-family: var(--font-tech); font-size: 2rem; letter-spacing: 0.3em;
+            color: var(--cyan); animation: pulseText 1.5s infinite;
+        }
+        @keyframes pulseText { 0% { opacity: 0.4; } 100% { opacity: 1; text-shadow: 0 0 20px var(--cyan); } }
+    </style>
+</head>
+<body>
+
+    <script type="module">
+        import { initHeader } from "./header.js"; 
+        initHeader();
+    </script>
+
+    <header class="cyber-header">
+        <div class="ch-title">SQUAD // DATABASE</div>
+        <div class="ch-status">
+            <div class="blink-dot"></div>
+            ONLINE
+        </div>
+    </header>
+
+    <div class="stage-wrapper">
+        <!-- 無限スクロールする床グリッド -->
+        <div class="moving-grid"></div>
+
+        <div class="nav-arrow prev" id="btnPrev">‹</div>
+        
+        <div class="scroll-track" id="stage">
+            <div class="loading-text">INITIALIZING DATA STREAM...</div>
+        </div>
+        
+        <div class="nav-arrow next" id="btnNext">›</div>
+    </div>
+
+    <script type="module">
+        // Firebase関連の関数をインポート
+        // ※パスは環境に合わせて確認してください
+        import { loadFromCloud, saveToCloud } from "./firestore.js";
+
+        const stage = document.getElementById('stage');
+
+        // ★重要: データ読み込みの実行
+        // ページロード時に自動でデータを取得しに行きます
+        document.addEventListener('DOMContentLoaded', () => {
+            // もし loadFromCloud が非同期なら .then でつなぐ
+            if (typeof loadFromCloud === 'function') {
+                loadFromCloud()
+                    .then(data => {
+                        window.renderCharacterList(data);
+                    })
+                    .catch(err => {
+                        console.error("Data Load Error:", err);
+                        stage.innerHTML = '<div class="loading-text" style="color:red">CONNECTION FAILED</div>';
+                    });
+            } else {
+                console.error("loadFromCloud function not found.");
+            }
+        });
+
+        // 役割による色分け
+        function getRoleColorClass(job) {
+            if(!job) return ''; 
+            const j = job.toLowerCase();
+            if(j.includes('医') || j.includes('学者')) return 'style="border-left-color: var(--yellow); color: var(--yellow);"';
+            if(j.includes('戦') || j.includes('自衛')) return 'style="border-left-color: var(--magenta); color: var(--magenta);"';
+            return 'style="border-left-color: var(--cyan); color: var(--cyan);"';
+        }
+
+        // メイン描画関数
+        window.renderCharacterList = function(data) {
+            stage.innerHTML = ''; 
+
+            if (!data || Object.keys(data).length === 0) {
+                stage.innerHTML = '<div class="loading-text" style="color:#555">NO DATA FOUND</div>';
+                return;
+            }
+
+            const chars = Object.values(data);
+            
+            chars.forEach((char, index) => {
+                const card = document.createElement('div');
+                card.className = 'char-card';
+                // 浮遊アニメーションのタイミングをずらす（ランダム性）
+                card.style.animationDelay = `${Math.random() * 2}s`;
+                
+                const imgSource = char.image || 'https://placehold.co/300x600/111/333?text=NO+IMG';
+                const jobText = char.job || 'UNKNOWN';
+                const roleStyle = getRoleColorClass(jobText);
+
+                card.innerHTML = `
+                    <!-- 1. 背景モニター -->
+                    <div class="monitor-panel">
+                        <div class="monitor-img" style="background-image: url('${imgSource}');"></div>
+                        <div class="glitch-overlay"></div>
+                    </div>
+
+                    <!-- 2. ステータスタグ -->
+                    <div class="status-tag" ${roleStyle}>
+                        <span class="tag-role">${jobText}</span>
+                        <span class="tag-name">${char.name}</span>
+                    </div>
+
+                    <!-- 3. フィギュアコンテナ -->
+                    <div class="figure-container">
+                        <!-- ホログラム台座 -->
+                        <div class="holo-base">
+                            <div class="holo-ring"></div>
+                        </div>
+                        <!-- 立ち絵 -->
+                        <img src="${imgSource}" class="char-figure" alt="${char.name}" onerror="this.style.opacity='0'">
+                    </div>
+
+                    <!-- 4. オーバーレイ・操作 -->
+                    <div class="btn-edit">EDIT IMG</div>
+                    <div class="overlay-link"></div>
+                `;
+
+                // 編集機能
+                const editBtn = card.querySelector('.btn-edit');
+                editBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    const newUrl = prompt("【IMAGE UPDATE】\nEnter new URL:", char.image || "");
+                    if(newUrl) {
+                        char.image = newUrl;
+                        saveToCloud(char).then(() => location.reload());
+                    }
+                };
+
+                // 詳細遷移
+                const link = card.querySelector('.overlay-link');
+                link.onclick = () => {
+                    window.location.href = `character/detail/detail.html?id=${char.id}`;
+                };
+
+                stage.appendChild(card);
+
+                // ドミノ倒しのような出現アニメーション
+                // 少しずつ遅れて visible クラスを付与
+                setTimeout(() => {
+                    card.classList.add('visible');
+                }, index * 120 + 100); 
+            });
+        };
+
+        // スクロールボタン制御
+        const btnPrev = document.getElementById('btnPrev');
+        const btnNext = document.getElementById('btnNext');
+        const SCROLL_STEP = 340; // カード幅 + gap
+
+        btnNext.onclick = () => stage.scrollBy({ left: SCROLL_STEP, behavior: 'smooth' });
+        btnPrev.onclick = () => stage.scrollBy({ left: -SCROLL_STEP, behavior: 'smooth' });
+
+        // マウスホイールでの横スクロール対応
+        stage.addEventListener('wheel', (evt) => {
+            evt.preventDefault();
+            stage.scrollLeft += evt.deltaY;
+        });
+
+    </script>
+</body>
+</html>
