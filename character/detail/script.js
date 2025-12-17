@@ -1,11 +1,13 @@
 // detail/script.js
 import { login, logout, monitorAuth, saveToCloud, loadFromCloud } from "../firestore.js";
-// ★共通の解析ロジックを読み込む
+// ★共通の解析ロジック（schema.js）を使用
 import { parseIaChara } from "../data/schema.js";
 
 // --- GLOBAL STATE ---
 let charData = null;
 let charts = { main: null, category: null };
+
+// DOM Elements
 const els = {
     boot: document.getElementById('boot-screen'),
     file: document.getElementById('fileInput'),
@@ -23,7 +25,9 @@ const els = {
     chartDesc: document.getElementById('chartDesc'),
     dashboard: document.getElementById('dashboard'),
     themeSwitcher: document.getElementById('themeSwitcher'),
-    mainStyle: document.getElementById('mainStyle')
+    mainStyle: document.getElementById('mainStyle'),
+    // 追加: ステータス評価表示用
+    flavorList: document.getElementById('statusFlavorList') 
 };
 
 const CAT_COLORS = {
@@ -149,8 +153,7 @@ function handleFile(e) {
     const r = new FileReader();
     r.onload = (ev) => {
         try {
-            // ★schema.js の共通解析ロジックを使用
-            // これにより編集画面と同じデータを取得できます
+            // ★ schema.js の共通解析ロジックを使用
             const d = parseIaChara(ev.target.result);
             launchDashboard(d);
         } catch(err) { console.error(err); alert('Parse Error: ' + err.message); }
@@ -161,13 +164,13 @@ function handleFile(e) {
 function launchDashboard(data) {
     charData = data;
     
-    // 描画処理（チャート含む）
+    // 描画処理
     renderProfile(data);
     renderSkillSection('summary'); 
     renderItems(data.items);
     
     // テキスト反映
-    document.getElementById('memoArea').value = data.memo;
+    document.getElementById('memoArea').value = data.memo || '';
     
     const histBox = document.getElementById('scenarioList');
     if(histBox) {
@@ -188,15 +191,10 @@ function launchDashboard(data) {
     const setTxt = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val || 'No records.'; };
     setTxt('spellsList', data.spells);
     setTxt('entitiesList', data.encountered);
-    setTxt('growthList', data.growth);
-    setTxt('weaponList', data.weapons);
-
-    const moneyEl = document.getElementById('valMoney');
-    if(moneyEl) {
-        const m = data.money || '0';
-        const d = data.debt || '0';
-        moneyEl.textContent = `Money: ${m} / Debt: ${d}`;
-    }
+    
+    // Data not explicitly in DOM for these IDs but kept for safety
+    // setTxt('growthList', data.growth);
+    // setTxt('weaponList', data.weapons);
 
     els.boot.classList.add('hidden');
     document.body.classList.add('loaded');
@@ -207,10 +205,7 @@ function renderCurrentTab() {
     renderSkillSection(activeCat);
 }
 
-// -----------------------------------------------------------
-// ★以下、グラフ描画などの詳細画面固有ロジックはそのまま維持
-// -----------------------------------------------------------
-
+// プロフィールとステータスの描画
 function renderProfile(d) {
     document.getElementById('charName').textContent = d.name;
     document.getElementById('charKana').textContent = d.kana;
@@ -222,10 +217,11 @@ function renderProfile(d) {
     const tags = document.getElementById('charTags'); tags.innerHTML='';
     if(d.tags) d.tags.split(' ').forEach(t=>{if(t.trim()) tags.innerHTML+=`<span class="tag">${t}</span>`});
 
-    setBar('HP', d.vitals.hp, 15);
+    setBar('HP', d.vitals.hp, 15); // ※最大値は概算またはデータにあればそちらを使用
     setBar('MP', d.vitals.mp, 18);
     setBar('SAN', d.vitals.san, 99);
 
+    // Stats Grid & Chart
     const sGrid = document.getElementById('rawStatsGrid'); sGrid.innerHTML='';
     Object.keys(d.stats).forEach(k => sGrid.innerHTML+=`<div class="stat-box"><small>${k}</small><span>${d.stats[k]}</span></div>`);
 
@@ -241,6 +237,35 @@ function renderProfile(d) {
             }]
         },
         options: chartOpts(18)
+    });
+
+    // ★ ステータス評価（フレーバーテキスト）の復元
+    renderStatusFlavor(d.stats);
+}
+
+// ★ 新規追加: data.jsのSTATUS_FLAVORを使って評価を表示
+function renderStatusFlavor(stats) {
+    const list = els.flavorList;
+    list.innerHTML = '';
+
+    // data.jsが読み込まれていれば window.STATUS_FLAVOR があるはず
+    if (typeof STATUS_FLAVOR === 'undefined') {
+        console.warn('STATUS_FLAVOR is not defined in data.js');
+        return;
+    }
+
+    Object.keys(stats).forEach(key => {
+        const val = parseInt(stats[key], 10);
+        const flavorObj = STATUS_FLAVOR[key];
+        
+        if (flavorObj && flavorObj[val]) {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <span class="flavor-label">${key} (${val})</span>
+                <span class="flavor-text">${flavorObj[val]}</span>
+            `;
+            list.appendChild(li);
+        }
     });
 }
 
@@ -262,6 +287,8 @@ function renderSimpleList(id, text, tagClass) {
 function setBar(id, v, m) {
     const elVal = document.getElementById(`val${id}`);
     const elBar = document.getElementById(`bar${id}`);
+    // ※ ここでは暫定的にm(最大値)を固定値や引数で渡しているが、
+    // 将来的にはschemaからmaxHPなどを取得して渡すのが望ましい
     if(elVal) elVal.textContent = `${v}/${m}`;
     if(elBar) elBar.style.width = Math.min(100, (v/m)*100) + '%';
 }
@@ -272,7 +299,9 @@ function renderSkillSection(cat) {
     
     if(cat === 'summary') {
         ['combat','explore','action','negotiate','knowledge'].forEach(c => {
-            skillsToRender = skillsToRender.concat(charData.skills[c]);
+            if(charData.skills[c]) {
+                skillsToRender = skillsToRender.concat(charData.skills[c]);
+            }
         });
     } else {
         skillsToRender = charData.skills[cat] || [];
@@ -299,7 +328,7 @@ function renderSkillSection(cat) {
         row.innerHTML = `
             <td>
                 <div style="font-weight:bold; color:var(--text-main); font-size:0.9rem;">${s.name}${badge}</div>
-                <textarea class="skill-desc-inp" placeholder="..." rows="1">${s.desc}</textarea>
+                <textarea class="skill-desc-inp" placeholder="..." rows="1">${s.desc || ''}</textarea>
             </td>
             <td style="font-family:var(--font-head); font-size:1.2rem; text-align:center; color:#fff">${s.total}</td>
             <td>
@@ -343,6 +372,7 @@ function renderTabChart(cat, skills) {
         const catLabels = ['戦闘','探索','行動','交渉','知識'];
         labels = catLabels;
         data = cats.map(c => {
+            if(!charData.skills[c]) return 0;
             const sorted = [...charData.skills[c]].sort((a,b)=>b.total-a.total);
             if(sorted.length === 0) return 0;
             const top = sorted.slice(0, 3);
@@ -377,10 +407,11 @@ function renderTabChart(cat, skills) {
 
 function renderItems(items) {
     const list = document.getElementById('itemList'); list.innerHTML='';
+    if(!items) return;
     items.forEach(i => {
         const d = document.createElement('div');
         d.className = 'item-row';
-        d.innerHTML = `<span class="item-name">${i.name}</span><textarea class="item-desc-inp" rows="1">${i.desc}</textarea>`;
+        d.innerHTML = `<span class="item-name">${i.name}</span><textarea class="item-desc-inp" rows="1">${i.desc || ''}</textarea>`;
         const tx = d.querySelector('textarea');
         tx.addEventListener('input', (e)=>{ i.desc=e.target.value; adjustHeight(e.target); });
         setTimeout(() => adjustHeight(tx), 0);

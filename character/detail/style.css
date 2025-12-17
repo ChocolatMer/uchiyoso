@@ -30,7 +30,10 @@ body {
     background: var(--bg-dark);
     color: var(--text-main);
     font-family: var(--font-body);
-    height: 100vh; overflow: hidden;
+    /* ★スクロール可能に変更 (min-heightで高さを保証しつつ、overflow-y: auto) */
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
     background-image: radial-gradient(circle at 50% 50%, #101015 0%, #000 100%);
 }
 
@@ -44,6 +47,35 @@ body {
 .scroller::-webkit-scrollbar { width: 5px; }
 .scroller::-webkit-scrollbar-thumb { background: var(--secondary); }
 .scroller::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+
+/* --- THEME SWITCHER (Restore & Fix) --- */
+#themeSwitcher {
+    position: fixed;
+    /* ヘッダー(50px)の下に来るように調整 */
+    top: 60px; 
+    right: 20px;
+    /* ヘッダー(9999)やBootScreen(2000)との兼ね合い調整。
+       ヘッダーより上にしたい場合は10000以上にするが、
+       デザイン的にはヘッダーの下に浮いている方が自然なので1000でOK。
+       ただしheader.cssのheaderがfixedなので重ならないようtopを調整 */
+    z-index: 1000;
+    
+    background: rgba(0, 0, 0, 0.8);
+    color: var(--secondary);
+    border: 1px solid var(--secondary);
+    padding: 8px 16px;
+    font-family: var(--font-head);
+    font-size: 0.8rem;
+    cursor: pointer;
+    border-radius: 4px;
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+    transition: 0.3s;
+}
+#themeSwitcher:hover {
+    background: var(--secondary);
+    color: #000;
+    box-shadow: 0 0 20px var(--secondary);
+}
 
 /* --- BOOT SCREEN --- */
 #boot-screen {
@@ -77,7 +109,13 @@ input[type="file"] { display: none; }
     display: grid;
     grid-template-columns: 300px 1fr 350px; 
     gap: 15px;
-    width: 98vw; height: 96vh; margin: 2vh auto;
+    /* ★高さ固定をやめ、コンテンツに合わせて伸びるように修正 */
+    width: 98vw;
+    /* margin: 2vh auto; を修正してHeader(50px)分の余白を確保 */
+    margin: 60px auto 20px auto; 
+    min-height: calc(100vh - 80px);
+    height: auto;
+    
     opacity: 0; transform: scale(0.98); transition: all 1s ease;
 }
 .loaded .dashboard-grid { opacity: 1; transform: scale(1); }
@@ -94,6 +132,9 @@ input[type="file"] { display: none; }
     background: var(--panel-bg); border: 1px solid var(--border); border-radius: 4px;
     display: flex; flex-direction: column; backdrop-filter: blur(5px);
     position: relative; overflow: hidden;
+    /* パネルの高さも自然に任せる */
+    height: auto; 
+    max-height: 100%; /* scrollerが効くように */
 }
 .panel::before {
     content: ''; position: absolute; top: 0; left: 0; width: 10px; height: 10px;
@@ -106,7 +147,8 @@ h3 {
 }
 
 /* --- COLUMN 1: LEFT (Identity) --- */
-.col-left { display: flex; flex-direction: column; gap: 15px; height: 100%; overflow-y: auto; padding-right: 2px;}
+/* height: 100% を削除またはautoに変更 */
+.col-left { display: flex; flex-direction: column; gap: 15px; height: auto; padding-right: 2px;}
 
 .profile-card { padding: 15px; text-align: center; flex-shrink: 0; }
 .img-frame {
@@ -140,14 +182,14 @@ h3 {
 .db-label { font-family: var(--font-head); font-size: 0.75rem; color: #888; }
 .db-val { font-family: var(--font-head); font-size: 1.2rem; color: var(--primary); font-weight: bold; text-shadow: 0 0 5px var(--primary); }
 
-.stats-module { padding: 15px; flex-grow: 1; }
+.stats-module { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
 .chart-container-sq { width: 100%; height: 180px; margin-bottom: 10px; }
 .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 15px; }
 .stat-box { background: rgba(255,255,255,0.03); text-align: center; padding: 4px; font-family: var(--font-head); }
 .stat-box small { display: block; color: #666; font-size: 0.6rem; }
 .stat-box span { font-size: 0.9rem; color: #fff; }
 
-.status-flavor-container { border-top: 1px dashed #333; padding-top: 10px; flex-grow: 1; overflow-y: auto; }
+.status-flavor-container { border-top: 1px dashed #333; padding-top: 10px; flex-grow: 1; overflow-y: auto; max-height: 300px; }
 .status-flavor-container h4 { font-family: var(--font-head); font-size: 0.7rem; color: var(--accent); margin-bottom: 8px; }
 .flavor-list { list-style: none; }
 .flavor-list li {
@@ -165,6 +207,8 @@ h3 {
 .sticky-header, .deck-header {
     background: rgba(12, 14, 18, 0.98); padding: 15px; z-index: 10;
     border-bottom: 1px solid var(--border);
+    /* Stickyを機能させるため */
+    position: sticky; top: 0;
 }
 
 .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -230,7 +274,7 @@ input:checked + .slider::before { transform: translateX(18px); background: var(-
 .tab[data-cat="knowledge"].active { background: var(--c-knowledge); color: #000; border-color: var(--c-knowledge); }
 
 
-.skill-content-area { display: flex; flex-direction: column; height: 100%; overflow: hidden; padding-bottom: 0; }
+.skill-content-area { display: flex; flex-direction: column; height: 100%; overflow: hidden; padding-bottom: 0; min-height: 500px; }
 .summary-viz {
     display: flex; align-items: center; padding: 15px; gap: 30px;
     height: 250px; flex-shrink: 0; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border);
@@ -286,7 +330,7 @@ tr.cat-knowledge { border-left: 3px solid var(--c-knowledge); background: linear
     background: rgba(0, 243, 255, 0.05);
 }
 
-/* ★ SHORT DESC MODE (Active via class on parent) */
+/* ★ SHORT DESC MODE */
 .short-view .skill-desc-inp {
     height: 1.5em !important; /* Force single line height */
     overflow-y: hidden !important;
@@ -314,7 +358,7 @@ tr.cat-knowledge { border-left: 3px solid var(--c-knowledge); background: linear
 .d-tab:hover { background: #333; color: #ddd; }
 .d-tab.active { background: transparent; color: var(--secondary); border-top-color: var(--secondary); font-weight: bold; }
 
-.deck-content { flex: 1; padding: 10px; position: relative; }
+.deck-content { flex: 1; padding: 10px; position: relative; min-height: 500px; }
 .deck-pane { display: none; height: 100%; flex-direction: column; }
 .deck-pane.active { display: flex; }
 
@@ -331,7 +375,7 @@ tr.cat-knowledge { border-left: 3px solid var(--c-knowledge); background: linear
 .item-desc-inp { width: 100%; background: transparent; border: none; color: #888; font-size: 0.8rem; resize: none; overflow: hidden; line-height: 1.4; min-height: 1.4em; padding: 0; }
 .item-desc-inp:focus { color: #fff; }
 
-/* --- COMPACT MODE FIX (When Skill Panel is in Narrow Column) --- */
+/* --- COMPACT MODE FIX --- */
 .dashboard-grid.swapped .val-row { display: none; } 
 .dashboard-grid.swapped .skill-table th:nth-child(3) { width: 40%; }
 .dashboard-grid.swapped .skill-table th:nth-child(1) { width: 45%; }
