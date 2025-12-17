@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Chocolaterie</title>
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;700&family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #3E2723;
+            --ui-bg: rgba(255, 248, 240, 0.95);
+            --primary: #5D4037;
+            --accent: #FF7043;
+            --gold: #FFB300;
+            --text: #4E342E;
+            --font-pixel: "Pixelify Sans", sans-serif;
+            --font-jp: "Zen Maru Gothic", sans-serif;
+        }
+
+        body {
+            margin: 0; padding: 0;
+            background-color: var(--bg-color);
+            font-family: var(--font-jp);
+            overflow: hidden;
+            width: 100vw; height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+            color: var(--text);
+            user-select: none;
+        }
+
+        /* ゲームステージ */
+        #game-stage {
+            position: relative;
+            background-repeat: no-repeat;
+            background-size: cover; /* 画像に合わせて調整 */
+            background-position: center;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            border: 8px solid #281815;
+            border-radius: 4px;
+            width: 960px; height: 540px; /* 画像のアスペクト比16:9に近い設定 */
+            background-image: url('../images/background/gamebg-shop.png'); /* ★ここに画像を保存してください */
+            transition: filter 0.5s;
+        }
+        
+        /* 画像読み込みエラー時のフォールバック */
+        #game-stage.no-bg { background-color: #5D4037; }
+
+        /* 夜フィルター */
+        #game-stage.night-mode::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(20, 10, 5, 0.4);
+            pointer-events: none; z-index: 12;
+            mix-blend-mode: multiply;
+        }
+        /* 夜の明かり（暖色） */
+        .light-source {
+            position: absolute; border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 200, 100, 0.6) 0%, rgba(255, 200, 100, 0) 70%);
+            mix-blend-mode: screen; opacity: 0; transition: opacity 1s; pointer-events: none; z-index: 13;
+        }
+        #game-stage.night-mode .light-source { opacity: 1; }
+
+        /* キャラクター */
+        #character {
+            position: absolute;
+            width: 48px; height: 64px; /* デフォルトサイズ */
+            background-repeat: no-repeat;
+            image-rendering: pixelated; 
+            transform-origin: bottom center;
+            z-index: 10; cursor: pointer; pointer-events: auto; 
+        }
+
+        /* エフェクト・吹き出し */
+        .emote {
+            position: absolute; top: -90px; left: 50%; transform: translateX(-50%);
+            width: 60px; height: 60px; background: #fff; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 40px; border: 3px solid var(--primary);
+            opacity: 0; pointer-events: none; z-index: 20;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .show-pop { animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes popUp { 0% { transform: translateX(-50%) scale(0); opacity:0; } 100% { transform: translateX(-50%) scale(1); opacity:1; } }
+
+        /* 独り言バルーン */
+        #speech-bubble {
+            position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
+            background: var(--ui-bg); border: 3px solid var(--primary);
+            padding: 8px 16px; border-radius: 12px; 
+            font-size: 16px; font-weight: bold; white-space: nowrap;
+            opacity: 0; pointer-events: none; z-index: 21; transition: opacity 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        #speech-bubble::after {
+            content: ''; position: absolute; bottom: -8px; left: 50%; margin-left: -8px;
+            border-width: 8px 8px 0; border-style: solid; border-color: var(--primary) transparent;
+        }
+
+        /* 浮き出るテキスト (Money etc) */
+        .floating-text {
+            position: absolute; font-family: var(--font-pixel); font-weight: bold;
+            color: var(--gold); text-shadow: 2px 2px 0 #000; font-size: 24px;
+            pointer-events: none; z-index: 100;
+            animation: floatUp 1.5s ease-out forwards;
+        }
+        @keyframes floatUp { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-50px); opacity: 0; } }
+
+        /* ホットスポット (クリック判定エリア) */
+        .hotspot { 
+            position: absolute; cursor: pointer; z-index: 5; border-radius: 8px;
+            transition: background 0.2s;
+        }
+        .hotspot:hover { background-color: rgba(255, 255, 255, 0.2); box-shadow: 0 0 15px rgba(255,255,255,0.3); }
+        .hotspot::before {
+            content: attr(data-label);
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #fff; font-weight: bold; text-shadow: 1px 1px 2px #000;
+            opacity: 0; pointer-events: none; transition: opacity 0.2s; font-size: 14px;
+        }
+        .hotspot:hover::before { opacity: 1; }
+
+        /* --- エリア配置 (画像の遠近感に合わせる) --- */
+        /* 左上：材料棚 */
+        #zone-shelf { top: 12%; left: 6%; width: 22%; height: 25%; }
+        /* 中央左：ショーケース */
+        #zone-display { top: 32%; left: 16%; width: 28%; height: 22%; }
+        /* 右奥：キッチン（コンロ・ミキサー） */
+        #zone-kitchen { top: 12%; left: 54%; width: 35%; height: 22%; }
+        /* 右中：作業台（ボウルがあるあたり） */
+        #zone-work { top: 38%; left: 50%; width: 28%; height: 15%; }
+        /* 右下：レジ */
+        #zone-register { top: 65%; left: 58%; width: 10%; height: 20%; }
+        /* 左下：観葉植物（飾り） */
+        #zone-plant { top: 75%; left: 3%; width: 8%; height: 20%; }
+
+        /* モーダル */
+        .modal {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(40, 20, 10, 0.7); z-index: 500;
+            display: none; justify-content: center; align-items: center;
+            backdrop-filter: blur(2px);
+        }
+        .card { 
+            background: var(--ui-bg); padding: 25px; border-radius: 16px; 
+            text-align: center; border: 4px solid var(--primary); width: 320px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5); position: relative;
+        }
+        .card h3 { margin: 0 0 10px; color: var(--primary); font-family: var(--font-pixel); font-size: 24px; border-bottom: 2px dashed #ccc; padding-bottom: 10px;}
+        .close-btn { position: absolute; top: 10px; right: 15px; cursor: pointer; font-weight: bold; color: #888; }
+        
+        .resource-row { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 14px; background: #fff; padding: 8px; border-radius: 8px;}
+        
+        .action-btn {
+            width: 100%; padding: 12px; margin: 8px 0; border: none; border-radius: 8px;
+            background: var(--primary); color: #fff; font-family: var(--font-jp); font-weight: bold;
+            cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+            transition: transform 0.1s, filter 0.1s;
+        }
+        .action-btn:hover { filter: brightness(1.1); }
+        .action-btn:active { transform: scale(0.98); }
+        .action-btn:disabled { background: #ccc; cursor: not-allowed; }
+        .action-btn span { pointer-events: none; }
+        .sub-text { font-size: 0.8em; opacity: 0.8; }
+
+        /* UIバー */
+        #ui-bar {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            width: 92%; background: var(--ui-bg); border-radius: 50px; padding: 8px 25px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 100;
+            border: 4px solid var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .status-group { display: flex; gap: 20px; align-items: center; font-family: var(--font-pixel); font-size: 18px; color: var(--text); }
+        .icon { font-size: 22px; margin-right: 5px; }
+        .bgm-controls button {
+            background: none; border: 2px solid var(--primary); padding: 5px 10px; border-radius: 20px;
+            cursor: pointer; color: var(--primary); font-weight: bold; font-family: var(--font-pixel);
+            transition: all 0.2s;
+        }
+        .bgm-controls button:hover { background: var(--primary); color: #fff; }
+
+        /* スタート画面 */
+        #start-screen {
+            position: absolute; top:0; left:0; width:100%; height:100%; z-index: 1000;
+            background: linear-gradient(135deg, #3E2723, #5D4037);
+            display: flex; flex-direction: column; justify-content: center; align-items: center; color: #fff;
+        }
+        #start-screen h1 { font-family: var(--font-pixel); font-size: 60px; margin-bottom: 10px; text-shadow: 4px 4px 0 #000; }
+        #start-screen p { margin-bottom: 30px; opacity: 0.9; }
+        #start-btn { 
+            padding: 15px 40px; font-size: 24px; background: var(--gold); border: 4px solid #fff; 
+            color: #3E2723; border-radius: 50px; cursor: pointer; font-family: var(--font-pixel); 
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+    </style>
+</head>
+<body>
+
+<div id="game-stage">
+    <!-- ライト光源（夜用） -->
+    <div class="light-source" style="top: 10%; left: 50%; width: 400px; height: 400px;"></div>
+    <div class="light-source" style="top: 10%; left: 10%; width: 300px; height: 300px;"></div>
+
+    <!-- ホットスポット -->
+    <div id="zone-shelf" class="hotspot" data-label="Ingredients" onclick="game.openMenu('shelf')"></div>
+    <div id="zone-display" class="hotspot" data-label="Showcase" onclick="game.openMenu('display')"></div>
+    <div id="zone-kitchen" class="hotspot" data-label="Kitchen" onclick="game.openMenu('kitchen')"></div>
+    <div id="zone-work" class="hotspot" data-label="Work Table" onclick="game.handleInput('work')"></div>
+    <div id="zone-register" class="hotspot" data-label="Register" onclick="game.openMenu('register')"></div>
+    <div id="zone-plant" class="hotspot" data-label="" onclick="game.handleInput('relax')"></div>
+
+    <!-- キャラクター -->
+    <div id="character" style="display: none;" onclick="game.pet()">
+        <div id="emote" class="emote">❗</div>
+        <div id="speech-bubble"></div>
+    </div>
+
+    <!-- UIバー -->
+    <div id="ui-bar">
+        <div class="status-group">
+            <div title="Money"><span class="icon">💰</span><span id="disp-money">0</span></div>
+            <div title="Ingredients"><span class="icon">🍫</span><span id="disp-ing">0</span></div>
+            <div title="Stock"><span class="icon">🧁</span><span id="disp-stock">0</span></div>
+            <div title="Energy" style="margin-left:10px; font-size:14px; opacity:0.8;">⚡ <span id="disp-energy">100</span>%</div>
+        </div>
+        <div class="bgm-controls">
+            <button onclick="game.toggleNight()">🌙 Light</button>
+            <button onclick="game.toggleBGM()">🎵 BGM</button>
+        </div>
+    </div>
+
+    <!-- モーダル：キッチン -->
+    <div id="modal-kitchen" class="modal">
+        <div class="card">
+            <span class="close-btn" onclick="game.closeModals()">✕</span>
+            <h3>Kitchen</h3>
+            <p>チョコレートを作ります</p>
+            <div class="resource-row">
+                <span>所持カカオ: <b id="k-ing">0</b></span>
+                <span>体力: <b id="k-ene">0</b>%</span>
+            </div>
+            <button class="action-btn" onclick="game.makeChoco('simple')">
+                <span>定番チョコ</span>
+                <span class="sub-text">-1🍫 / -10⚡</span>
+            </button>
+            <button class="action-btn" onclick="game.makeChoco('luxury')">
+                <span>高級トリュフ</span>
+                <span class="sub-text">-3🍫 / -25⚡</span>
+            </button>
+            <button class="action-btn" style="background:#8D6E63" onclick="game.handleInput('relax')">
+                <span>休憩する</span>
+                <span class="sub-text">+20⚡</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- モーダル：棚（仕入れ） -->
+    <div id="modal-shelf" class="modal">
+        <div class="card">
+            <span class="close-btn" onclick="game.closeModals()">✕</span>
+            <h3>Supply</h3>
+            <p>材料を仕入れます</p>
+            <div class="resource-row">
+                <span>所持金: <b id="s-money">0</b></span>
+            </div>
+            <button class="action-btn" onclick="game.buyIngredients(1)">
+                <span>少し仕入れる (+1)</span>
+                <span class="sub-text">20💰</span>
+            </button>
+            <button class="action-btn" onclick="game.buyIngredients(5)">
+                <span>まとめ買い (+5)</span>
+                <span class="sub-text">90💰 (お得)</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- モーダル：ショーケース -->
+    <div id="modal-display" class="modal">
+        <div class="card">
+            <span class="close-btn" onclick="game.closeModals()">✕</span>
+            <h3>Showcase</h3>
+            <p>商品を並べます</p>
+            <div class="resource-row">
+                <span>在庫: <b id="d-stock">0</b>個</span>
+                <span>陳列中: <b id="d-display">0</b>個</span>
+            </div>
+            <button class="action-btn" onclick="game.stockShowcase('all')">
+                <span>全部並べる</span>
+                <span class="sub-text">売上が発生します</span>
+            </button>
+            <p style="font-size:12px; color:#666; margin-top:10px;">
+                ※陳列しておくと自動でお客さんが買ってくれます
+            </p>
+        </div>
+    </div>
+
+    <!-- モーダル：レジ -->
+    <div id="modal-register" class="modal">
+        <div class="card">
+            <span class="close-btn" onclick="game.closeModals()">✕</span>
+            <h3>Register</h3>
+            <p>売上確認</p>
+            <div style="font-size:40px; color:var(--gold); font-family:var(--font-pixel); margin:20px 0;">
+                <span style="font-size:20px">Total:</span> <span id="r-sales">0</span>
+            </div>
+            <button class="action-btn" onclick="game.collectSales()">
+                <span>売上を回収する</span>
+                <span class="sub-text">レジ締め</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- スタート画面 -->
+    <div id="start-screen">
+        <h1>Pixel Chocolaterie</h1>
+        <p>こだわりのチョコレート屋さんをはじめよう</p>
+        <button id="start-btn" onclick="game.start()">OPEN SHOP</button>
+        <p style="font-size:12px; margin-top:20px;">※音が出ます</p>
+    </div>
+</div>
+
+<script>
+    // --- コンフィグ & ステート ---
+    const CONFIG = {
+        walkSpeed: 3,
+        wallY: 0.35, // 部屋の奥行き制限（0〜1）
+        charScale: 2.5
+    };
+
+    class Game {
+        constructor() {
+            this.stage = document.getElementById('game-stage');
+            this.char = document.getElementById('character');
+            
+            // ゲーム状態
+            this.state = {
+                money: 1000,
+                ingredients: 5,
+                stock: 0,     // バックヤード在庫
+                display: 0,   // 陳列在庫
+                totalSales: 0,
+                energy: 100
+            };
+
+            this.pos = { x: 0, y: 0 };
+            this.target = { x: 0, y: 0 };
+            this.isMoving = false;
+            this.isBusy = false;
+            this.isNight = false;
+            this.pendingAction = null;
+            
+            // 音声コンテキスト
+            this.audioCtx = null;
+            this.bgmPlaying = false;
+
+            // キャラクターアニメ用
+            this.sprite = { 
+                w: 32, h: 32, // 元画像の1コマサイズ(仮)
+                frame: 1, dir: 0, lastTime: 0 
+            };
+            
+            // 自動販売ループ
+            setInterval(() => this.autoSell(), 3000);
+            // 独り言ループ
+            setInterval(() => this.randomChatter(), 8000);
+            
+            this.resize();
+            window.addEventListener('resize', () => this.resize());
+            
+            // クリック移動
+            this.stage.addEventListener('pointerdown', (e) => {
+                if(e.target === this.stage || e.target.classList.contains('hotspot')) {
+                    const rect = this.stage.getBoundingClientRect();
+                    this.setTarget(e.clientX - rect.left, e.clientY - rect.top);
+                }
+            });
+
+            // 背景画像の読み込みチェック
+            const bgImg = new Image();
+            bgImg.src = "./shop_bg.png";
+            bgImg.onerror = () => {
+                console.log("背景画像が見つかりません。デフォルト色を使用します。");
+                this.stage.classList.add('no-bg');
+            };
+        }
+
+        start() {
+            this.initAudio();
+            document.getElementById('start-screen').style.display = 'none';
+            this.loadCharacter();
+            this.updateUI();
+            requestAnimationFrame((t) => this.loop(t));
+        }
+
+        initAudio() {
+            this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        playSE(type) {
+            if(!this.audioCtx) return;
+            if(this.audioCtx.state === 'suspended') this.audioCtx.resume();
+            
+            const osc = this.audioCtx.createOscillator();
+            const gain = this.audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(this.audioCtx.destination);
+            
+            const now = this.audioCtx.currentTime;
+            
+            switch(type) {
+                case 'click':
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(800, now);
+                    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now); osc.stop(now + 0.1);
+                    break;
+                case 'money':
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(1200, now);
+                    osc.frequency.setValueAtTime(1800, now + 0.1);
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.3);
+                    osc.start(now); osc.stop(now + 0.3);
+                    break;
+                case 'cook':
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(200, now);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.linearRampToValueAtTime(0, now + 0.2);
+                    osc.start(now); osc.stop(now + 0.2);
+                    break;
+            }
+        }
+        
+        // 簡易BGM生成（ループ再生）
+        toggleBGM() {
+            // 簡易的な実装のため、今回はSEのみで構成しますが、枠組みだけ残します
+            this.bgmPlaying = !this.bgmPlaying;
+            this.playSE('click');
+        }
+
+        loadCharacter() {
+            // 汎用的なドット絵キャラ（Base64などで埋め込むか、外部参照）
+            // ここでは仮のパスを指定。ユーザーは任意の画像に差し替え可能
+            const img = new Image();
+            // フリー素材の歩行グラフィックを想定 (3x4)
+            img.src = "https://raw.githubusercontent.com/osoramen/pixel-art-assets/main/character_maid.png"; 
+            
+            // フォールバック: 画像がない場合は四角形で表示しないようにするが、
+            // 実際はユーザーが差し替える前提。
+            img.onload = () => {
+                this.char.style.backgroundImage = `url(${img.src})`;
+                this.char.style.display = 'block';
+                // 画像サイズから1コマを推測
+                this.sprite.w = img.width / 3;
+                this.sprite.h = img.height / 4;
+                this.char.style.width = this.sprite.w + 'px';
+                this.char.style.height = this.sprite.h + 'px';
+                this.char.style.transform = `scale(${CONFIG.charScale})`;
+                
+                // 初期位置
+                const sw = this.stage.clientWidth;
+                const sh = this.stage.clientHeight;
+                this.pos = { x: sw/2, y: sh/2 };
+                this.target = { ...this.pos };
+            };
+            img.onerror = () => {
+                // 画像読み込み失敗時のダミー
+                this.char.style.display = 'block';
+                this.char.style.backgroundColor = '#FF7043';
+                this.char.style.borderRadius = '50%';
+            };
+        }
+
+        resize() {
+            // レスポンシブ対応（アスペクト比維持）
+            const w = window.innerWidth;
+            const h = window.innerHeight;
+            const ratio = 16/9;
+            
+            let stageW, stageH;
+            if (w / h > ratio) {
+                stageH = h * 0.9;
+                stageW = stageH * ratio;
+            } else {
+                stageW = w * 0.95;
+                stageH = stageW / ratio;
+            }
+            this.stage.style.width = `${stageW}px`;
+            this.stage.style.height = `${stageH}px`;
+        }
+
+        // --- ゲームロジック ---
+
+        handleInput(type) {
+            if(this.isBusy) return;
+            
+            // 場所への移動
+            const zone = document.getElementById(`zone-${type}`);
+            if(zone) {
+                const zRect = zone.getBoundingClientRect();
+                const sRect = this.stage.getBoundingClientRect();
+                
+                // ゾーンの下端中心を目指す
+                const tx = (zRect.left - sRect.left) + zRect.width/2;
+                const ty = (zRect.top - sRect.top) + zRect.height; // 足元へ
+                
+                this.setTarget(tx, ty);
+                this.pendingAction = type;
+                this.playSE('click');
+                this.showEmote("🐾");
+            }
+        }
+
+        setTarget(x, y) {
+            const h = this.stage.clientHeight;
+            const w = this.stage.clientWidth;
+            // 壁の向こうには行けない制限
+            const minY = h * CONFIG.wallY;
+            
+            this.target.x = Math.max(20, Math.min(w - 20, x));
+            this.target.y = Math.max(minY, Math.min(h - 20, y));
+            this.isMoving = true;
+        }
+
+        openMenu(type) {
+            this.handleInput(type);
+            // 移動完了を待たずに開くか、到着してから開くか。
+            // ここでは「到着後に開く」ように pendingAction で処理する
+        }
+
+        arriveAtTarget() {
+            this.isMoving = false;
+            this.sprite.frame = 1; // 立ち絵に戻す
+
+            if(this.pendingAction) {
+                const act = this.pendingAction;
+                this.pendingAction = null;
+
+                // メニューを開く系
+                if(['shelf', 'kitchen', 'display', 'register'].includes(act)) {
+                    this.updateUI(); // 最新値を反映
+                    document.getElementById(`modal-${act}`).style.display = 'flex';
+                }
+                // 即時アクション系
+                else if(act === 'work') {
+                    this.doWorkAction();
+                }
+                else if(act === 'relax') {
+                    this.recoverEnergy();
+                }
+            }
+        }
+
+        // アクション: 作業台
+        doWorkAction() {
+            this.isBusy = true;
+            this.showFx("ラッピング...", this.pos.x, this.pos.y - 80);
+            setTimeout(() => {
+                this.isBusy = false;
+                this.showChat("よし、綺麗にできた！");
+            }, 1500);
+        }
+
+        // アクション: 休憩
+        recoverEnergy() {
+            this.closeModals();
+            this.isBusy = true;
+            this.showFx("休憩中...🍵", this.pos.x, this.pos.y - 80);
+            setTimeout(() => {
+                this.state.energy = Math.min(100, this.state.energy + 30);
+                this.updateUI();
+                this.isBusy = false;
+                this.showChat("ふぅ、落ち着く〜");
+            }, 2000);
+        }
+
+        // キッチン: チョコ作り
+        makeChoco(type) {
+            let costIng = 0, costEne = 0, gainStock = 0;
+            if(type === 'simple') { costIng=1; costEne=10; gainStock=3; }
+            if(type === 'luxury') { costIng=3; costEne=25; gainStock=10; }
+
+            if(this.state.ingredients < costIng) { alert("材料が足りません！棚から仕入れてください。"); return; }
+            if(this.state.energy < costEne) { alert("疲れています。少し休憩しましょう。"); return; }
+
+            this.state.ingredients -= costIng;
+            this.state.energy -= costEne;
+            
+            this.closeModals();
+            this.isBusy = true;
+            this.playSE('cook');
+            this.showEmote("🍳");
+            this.showFx("調理中...", this.pos.x, this.pos.y - 80);
+
+            setTimeout(() => {
+                this.state.stock += gainStock;
+                this.isBusy = false;
+                this.showChat("いい香り！");
+                this.showFloatingText(`+${gainStock} Stock`, this.pos.x, this.pos.y - 100);
+                this.updateUI();
+            }, 2000);
+        }
+
+        // 棚: 仕入れ
+        buyIngredients(amount) {
+            const price = amount === 1 ? 20 : 90;
+            if(this.state.money < price) { alert("お金が足りません！"); return; }
+
+            this.state.money -= price;
+            this.state.ingredients += amount;
+            this.playSE('money');
+            this.updateUI();
+            this.showFloatingText(`+${amount}🍫`, this.pos.x, this.pos.y - 100);
+        }
+
+        // ディスプレイ: 陳列
+        stockShowcase() {
+            if(this.state.stock <= 0) { alert("在庫がありません。キッチンで作ってください。"); return; }
+            
+            const moveAmt = this.state.stock;
+            this.state.stock = 0;
+            this.state.display += moveAmt;
+            
+            this.closeModals();
+            this.playSE('action');
+            this.showChat("並べました！");
+            this.updateUI();
+        }
+
+        // 自動販売ロジック
+        autoSell() {
+            if(this.state.display > 0) {
+                // 確率で売れる
+                if(Math.random() > 0.3) {
+                    const sold = Math.min(this.state.display, Math.ceil(Math.random() * 2));
+                    this.state.display -= sold;
+                    const earnings = sold * 40; // 単価40
+                    this.state.money += earnings;
+                    this.state.totalSales += earnings;
+                    
+                    // レジ付近にエフェクト
+                    const reg = document.getElementById('zone-register').getBoundingClientRect();
+                    const stage = this.stage.getBoundingClientRect();
+                    const rx = (reg.left - stage.left) + reg.width/2;
+                    const ry = (reg.top - stage.top);
+                    
+                    this.showFloatingText(`+${earnings}¥`, rx, ry);
+                    this.playSE('money');
+                    this.updateUI();
+                }
+            }
+        }
+
+        // レジ: 回収（今は自動加算にしているので、総売上確認用）
+        collectSales() {
+            this.closeModals();
+            this.showChat("今日も順調♪");
+        }
+
+        // --- 描画・演出 ---
+        
+        loop(t) {
+            // 移動処理
+            if(this.isMoving) {
+                const dx = this.target.x - this.pos.x;
+                const dy = this.target.y - this.pos.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                
+                if(dist > CONFIG.walkSpeed) {
+                    const angle = Math.atan2(dy, dx);
+                    this.pos.x += Math.cos(angle) * CONFIG.walkSpeed;
+                    this.pos.y += Math.sin(angle) * CONFIG.walkSpeed;
+                    
+                    // 向き判定
+                    const deg = angle * (180/Math.PI);
+                    // 0:下, 1:左, 2:右, 3:上 (画像チップの並び順に合わせる)
+                    // ここでは一般的な 3x4: 下, 左, 右, 上 の順と仮定
+                    if(deg > -45 && deg <= 45) this.sprite.dir = 2; // 右
+                    else if(deg > 45 && deg <= 135) this.sprite.dir = 0; // 下
+                    else if(deg > 135 || deg <= -135) this.sprite.dir = 1; // 左
+                    else this.sprite.dir = 3; // 上
+
+                    // アニメーション更新
+                    if(t - this.sprite.lastTime > 150) {
+                        this.sprite.frame = (this.sprite.frame + 1) % 3; // 3コマアニメ
+                        this.sprite.lastTime = t;
+                    }
+                } else {
+                    this.arriveAtTarget();
+                }
+            }
+
+            // キャラ描画
+            this.char.style.left = (this.pos.x - (this.sprite.w * CONFIG.charScale)/2) + 'px';
+            this.char.style.top = (this.pos.y - (this.sprite.h * CONFIG.charScale) + 10) + 'px'; // 足元合わせ
+            this.char.style.zIndex = Math.floor(this.pos.y); // 奥行き表現
+            
+            // 背景位置変更 (スプライトシートの場合)
+            // 単一画像の場合は変更不要だが、歩行グラフィック用に設定
+            // character_maid.png は 3x4 (横3, 縦4) を想定
+            const bgX = this.sprite.frame * this.sprite.w;
+            const bgY = this.sprite.dir * this.sprite.h;
+            this.char.style.backgroundPosition = `-${bgX}px -${bgY}px`;
+
+            requestAnimationFrame(ts => this.loop(ts));
+        }
+
+        updateUI() {
+            document.getElementById('disp-money').innerText = this.state.money;
+            document.getElementById('disp-ing').innerText = this.state.ingredients;
+            document.getElementById('disp-stock').innerText = this.state.stock;
+            document.getElementById('disp-energy').innerText = this.state.energy;
+
+            // モーダル内更新
+            document.getElementById('k-ing').innerText = this.state.ingredients;
+            document.getElementById('k-ene').innerText = this.state.energy;
+            document.getElementById('s-money').innerText = this.state.money;
+            document.getElementById('d-stock').innerText = this.state.stock;
+            document.getElementById('d-display').innerText = this.state.display;
+            document.getElementById('r-sales').innerText = "¥" + this.state.totalSales;
+        }
+
+        closeModals() {
+            document.querySelectorAll('.modal').forEach(m => m.style.display = 'none');
+            this.playSE('click');
+        }
+
+        toggleNight() {
+            this.isNight = !this.isNight;
+            this.stage.classList.toggle('night-mode', this.isNight);
+            this.playSE('click');
+        }
+
+        showEmote(emoji) {
+            const el = document.getElementById('emote');
+            el.innerText = emoji;
+            el.classList.remove('show-pop');
+            void el.offsetWidth; // リフロー
+            el.classList.add('show-pop');
+            setTimeout(()=> el.classList.remove('show-pop'), 1000);
+        }
+
+        showChat(text) {
+            const el = document.getElementById('speech-bubble');
+            el.innerText = text;
+            el.style.opacity = 1;
+            setTimeout(() => el.style.opacity = 0, 3000);
+        }
+
+        showFx(text, x, y) {
+            // 簡易エフェクト
+            const el = document.createElement('div');
+            el.className = 'floating-text';
+            el.innerText = text;
+            el.style.left = (x || this.pos.x) + 'px';
+            el.style.top = (y || this.pos.y - 50) + 'px';
+            this.stage.appendChild(el);
+            setTimeout(() => el.remove(), 1500);
+        }
+        
+        showFloatingText(text, x, y) {
+            this.showFx(text, x, y);
+        }
+
+        pet() {
+            this.playSE('click');
+            this.showEmote("❤️");
+            this.state.energy = Math.min(100, this.state.energy + 5);
+            this.updateUI();
+        }
+
+        randomChatter() {
+            if(this.isBusy || this.isMoving) return;
+            if(Math.random() > 0.3) return;
+            
+            const msgs = [
+                "いらっしゃいませ", "いい香り...", "チョコ食べたい", "掃除しなきゃ", "平和だなぁ"
+            ];
+            const msg = msgs[Math.floor(Math.random() * msgs.length)];
+            this.showChat(msg);
+        }
+    }
+
+    const game = new Game();
+
+</script>
+</body>
+</html>
