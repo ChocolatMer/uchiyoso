@@ -23,7 +23,7 @@
         
         h2 { border-bottom: 2px solid #555; padding-bottom: 10px; margin-top: 40px; color: #aaa; font-size: 1.1rem; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .form-row { margin-bottom: 15px; }
+        .form-row { margin-bottom: 15px; position: relative; }
         .form-row.full { grid-column: span 2; }
         .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
         .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
@@ -42,9 +42,17 @@
         .stats-container { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; background: #252525; padding: 15px; border-radius: 4px; }
         .stat-box { text-align: center; }
         .stat-box input { text-align: center; font-weight: bold; color: #44ff44; font-size: 1.1rem; }
-        .text-section { border-left: 3px solid #444; padding-left: 15px; margin-bottom: 20px; }
-        .text-section h3 { font-size: 0.9rem; color: #44ff44; margin: 0 0 10px 0; opacity: 0.8; }
+        .text-section { border-left: 3px solid #444; padding-left: 15px; margin-bottom: 20px; position: relative; }
+        .text-section h3 { font-size: 0.9rem; color: #44ff44; margin: 0 0 10px 0; opacity: 0.8; display: inline-block; }
         
+        /* Clear Button (×) */
+        .btn-clear-text {
+            position: absolute; top: 0; right: 0;
+            background: transparent; border: 1px solid #555; color: #888;
+            font-size: 0.7rem; cursor: pointer; padding: 2px 6px; border-radius: 4px;
+        }
+        .btn-clear-text:hover { background: #442222; color: #ff8888; border-color: #ff4444; }
+
         .list-container { background: #252525; border: 1px solid #444; border-radius: 4px; padding: 10px; margin-top: 5px; }
         .list-row { display: grid; gap: 10px; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #333; align-items: center; }
         .btn-add { background: #444; color: #fff; border: none; width: 100%; padding: 5px; cursor: pointer; font-size: 0.8rem; margin-top: 5px; }
@@ -102,8 +110,8 @@
             <div class="grid-4" style="margin-top:15px;">
                 <div class="form-row"><label>AGE</label><input type="number" id="inpAge"></div>
                 <div class="form-row"><label>GENDER</label><input type="text" id="inpGender"></div>
-                <div class="form-row"><label>MONEY</label><input type="text" id="inpMoney"></div>
-                <div class="form-row"><label>DEBT</label><input type="text" id="inpDebt"></div>
+                <div class="form-row"><label>MONEY (所持金)</label><input type="text" id="inpMoney"></div>
+                <div class="form-row"><label>DEBT (借金)</label><input type="text" id="inpDebt"></div>
             </div>
             
             <div class="grid-4" style="margin-top:15px;">
@@ -166,16 +174,35 @@
             </div>
 
             <h2>DETAILS</h2>
+            <!-- ★ Clear Button付きのレイアウトに変更 -->
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
                 <div>
-                    <div class="text-section"><h3>経歴</h3><textarea id="txtBackground"></textarea></div>
-                    <div class="text-section"><h3>性格</h3><textarea id="txtPersonality"></textarea></div>
-                    <div class="text-section"><h3>人間関係</h3><textarea id="txtRelations"></textarea></div>
+                    <div class="text-section">
+                        <h3>経歴</h3><button class="btn-clear-text" onclick="document.getElementById('txtBackground').value=''">× CLEAR</button>
+                        <textarea id="txtBackground"></textarea>
+                    </div>
+                    <div class="text-section">
+                        <h3>性格</h3><button class="btn-clear-text" onclick="document.getElementById('txtPersonality').value=''">× CLEAR</button>
+                        <textarea id="txtPersonality"></textarea>
+                    </div>
+                    <div class="text-section">
+                        <h3>人間関係</h3><button class="btn-clear-text" onclick="document.getElementById('txtRelations').value=''">× CLEAR</button>
+                        <textarea id="txtRelations"></textarea>
+                    </div>
                 </div>
                 <div>
-                    <div class="text-section"><h3>外見的特徴</h3><textarea id="txtAppearance"></textarea></div>
-                    <div class="text-section"><h3>RP補足</h3><textarea id="txtRoleplay"></textarea></div>
-                    <div class="text-section"><h3>メモ</h3><textarea id="txtMemo"></textarea></div>
+                    <div class="text-section">
+                        <h3>外見的特徴</h3><button class="btn-clear-text" onclick="document.getElementById('txtAppearance').value=''">× CLEAR</button>
+                        <textarea id="txtAppearance"></textarea>
+                    </div>
+                    <div class="text-section">
+                        <h3>RP補足</h3><button class="btn-clear-text" onclick="document.getElementById('txtRoleplay').value=''">× CLEAR</button>
+                        <textarea id="txtRoleplay"></textarea>
+                    </div>
+                    <div class="text-section">
+                        <h3>メモ</h3><button class="btn-clear-text" onclick="document.getElementById('txtMemo').value=''">× CLEAR</button>
+                        <textarea id="txtMemo"></textarea>
+                    </div>
                 </div>
             </div>
             
@@ -189,6 +216,7 @@
 
             <div class="text-section" style="margin-top:20px; border-left-color: #d4b346;">
                 <h3 style="color: #d4b346;">技能成長履歴 (GROWTH LOG)</h3>
+                <button class="btn-clear-text" onclick="document.getElementById('txtGrowth').value=''">× CLEAR</button>
                 <textarea id="txtGrowth" style="height:120px;" placeholder="例：&#13;シナリオA: 回避+5, 目星+3"></textarea>
             </div>
 
@@ -199,7 +227,6 @@
                     <div class="list-container">
                         <div id="itemList"></div>
                         <button type="button" class="btn-add" onclick="addItemRow()">+ ADD ITEM</button>
-                        <!-- 互換性のため隠しtextareaを残す -->
                         <textarea id="txtItems" style="display:none;"></textarea>
                     </div>
                 </div>
@@ -239,7 +266,7 @@
     </div>
 
     <script type="module">
-        import { loadFromCloud, monitorAuth } from "./firestore.js";
+        import { loadFromCloud, monitorAuth, saveToCloud } from "./firestore.js";
         import { collectFormData, parseIaChara, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING } from "./data/schema.js";
 
         const getEl = (id) => document.getElementById(id);
@@ -294,7 +321,6 @@
             const originalData = Object.values(allData).find(c=>c.id==currentId);
             if(!originalData) return null;
             
-            // アイテムリストを隠しテキストエリアに同期 (schema.jsのcollectFormData用)
             const itemRows = document.querySelectorAll('.item-entry');
             const itemsArr = [];
             itemRows.forEach(row => {
@@ -304,8 +330,8 @@
             });
             getEl('txtItems').value = itemsArr.join('\n');
 
-            // データ収集
-            const finalData = collectFormData(originalData, false);
+            // ★ ここを true (空白上書き許可) に変更しました
+            const finalData = collectFormData(originalData, true);
             alert("保存準備完了 (Cloud保存を実行します)");
             return finalData;
         };
@@ -356,7 +382,6 @@
             setSrc('previewBody', d.image);
             setSrc('previewIcon', d.icon);
 
-            // 追加項目
             setVal('inpThemeColor', d.color || '#d9333f');
 
             const s = d.stats || {};
@@ -470,7 +495,6 @@
             });
         }
 
-        // --- ドラッグ＆ドロップ (テキスト) ---
         const dropZone = getEl('dropZone');
         ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
             dropZone.addEventListener(e, (ev) => { ev.preventDefault(); ev.stopPropagation(); });
@@ -487,8 +511,6 @@
             }
         });
 
-        // --- ★ドラッグ＆ドロップ (画像 + リサイズ機能) ---
-        // 画像を自動リサイズしてBase64化する関数
         const resizeImage = (file, maxWidth, maxHeight, callback) => {
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -496,7 +518,6 @@
                 img.onload = () => {
                     let w = img.width;
                     let h = img.height;
-                    // アスペクト比を維持してリサイズ
                     if (w > maxWidth || h > maxHeight) {
                         const ratio = Math.min(maxWidth / w, maxHeight / h);
                         w *= ratio;
@@ -507,7 +528,6 @@
                     canvas.height = h;
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, w, h);
-                    // 品質0.8のJPEGとして出力
                     callback(canvas.toDataURL('image/jpeg', 0.8));
                 };
                 img.src = e.target.result;
@@ -523,7 +543,6 @@
             zone.addEventListener('drop', (e) => {
                 const file = e.dataTransfer.files[0];
                 if(file && file.type.match('image.*')) {
-                    // ★リサイズ実行 (最大800x800)
                     resizeImage(file, 800, 800, (resizedDataUrl) => {
                         getEl(inputId).value = resizedDataUrl;
                         getEl(imgId).src = resizedDataUrl;
@@ -549,7 +568,6 @@
             STATS_MAPPING.forEach(f => fillIfEmpty(f.id, p.stats[f.key]));
             VITALS_MAPPING.forEach(f => fillIfEmpty(f.id, p.vitals[f.key]));
             
-            // カラー
             if(p.colorHair) fillIfEmpty('inpHair', p.colorHair);
             if(p.colorEye) fillIfEmpty('inpEye', p.colorEye);
             if(p.colorSkin) fillIfEmpty('inpSkin', p.colorSkin);

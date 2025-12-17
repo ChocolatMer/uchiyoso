@@ -53,13 +53,11 @@ export function parseIaChara(text) {
         color: '#d9333f', colorHair: '', colorEye: '', colorSkin: ''
     };
 
-    // ★正規表現ヘルパー
     const m = (regex) => {
         const match = text.match(regex);
         return match ? match[1].trim() : '';
     };
     const getProfileVal = (label) => {
-        // 例: "髪の色[:：]\s*(キャプチャ)(?:\s*\/|$)"
         const regex = new RegExp(`${label}[:：]\\s*(.*?)(?:\\s*\\/|$)`, 'm');
         return m(regex);
     };
@@ -72,7 +70,10 @@ export function parseIaChara(text) {
     d.job = getProfileVal('職業');
     d.tags = m(/タグ[:：]\s*(.+)/);
     
-    d.age = getProfileVal('年齢');
+    // ★修正: 年齢は数字だけを取り出す (24歳 -> 24)
+    const ageStr = getProfileVal('年齢');
+    d.age = parseInt(ageStr) || '';
+
     d.gender = getProfileVal('性別');
     d.height = getProfileVal('身長');
     d.weight = getProfileVal('体重');
@@ -87,7 +88,6 @@ export function parseIaChara(text) {
     d.image = m(/画像URL[:：]\s*(\S+)/) || m(/【画像】\n:(\S+)/) || m(/【立ち絵】\n:(\S+)/);
     d.icon = m(/アイコンURL[:：]\s*(\S+)/) || m(/【アイコン】\n:(\S+)/);
     
-    // ★修正: 所持金や借金がラベルを含まないように厳密化 (数値や通貨記号などを想定)
     d.money = m(/(?:現在の)?所持金[:：]\s*([^()\n]+)/);
     d.debt = m(/借金[:：]\s*([^()\n]+)/);
 
@@ -141,9 +141,7 @@ export function parseIaChara(text) {
         }
     });
 
-    // ★修正: セクション取得ロジックの厳密化（次のタグの手前で止める）
     const getSec = (tag) => {
-        // 次の 【 [ 〈 または 行末まで
         const regex = new RegExp(`(?:\\[|【|〈)${tag}(?:\\]|】|〉)([\\s\\S]*?)(?=(?:\\[|【|〈)|$)`);
         const match = text.match(regex);
         return match ? match[1].trim() : '';
