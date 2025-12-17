@@ -1,24 +1,29 @@
 /* --- 設定とデータ --- */
 const CONFIG = {
-    // 画像パス
+    // 画像パス (指定のものに更新)
     charSrc: '../images/hoko/mahiru.png', 
     
     // キャラクター設定
-    charSize: 48,  // ゲーム上の表示サイズ(px)
-    walkSpeed: 3,  // 歩行速度
+    charSize: 48,  // 表示サイズ
+    walkSpeed: 4,  // 少し速くしました
     
-    // スプライトシート設定 (3列 x 4行 を想定)
-    spriteW: 32,   // 画像1コマの元の幅
-    spriteH: 32,   // 画像1コマの元の高さ
-    cols: 3,
-    
-    // 障害物 (x, y, w, h) - 座標は画像に合わせて調整が必要
+    // 障害物 (x, y, w, h) - 960x540のキャンバスに対する座標
+    // ここに入るとキャラクターは止まります
     obstacles: [
-        { x: 0, y: 0, w: 280, h: 220 },   // 左上の棚エリア
-        { x: 180, y: 250, w: 300, h: 100 }, // 中央ショーケース
-        { x: 550, y: 0, w: 410, h: 180 },   // 右上キッチン奥
-        { x: 600, y: 320, w: 200, h: 200 }, // 右下レジ・テーブル
-    ]
+        { x: 0, y: 0, w: 260, h: 220 },     // 左上の棚周辺
+        { x: 170, y: 250, w: 320, h: 100 }, // 中央のショーケース
+        { x: 550, y: 0, w: 300, h: 180 },   // 右上のキッチンカウンター（右端の階段への通路を空けるために幅を縮小）
+        { x: 600, y: 320, w: 180, h: 220 }, // 右下のレジ・テーブル
+        // 画面端の壁判定（少し内側まで行けないように）
+        { x: -50, y: 0, w: 70, h: 540 },    // 左壁
+        { x: 940, y: 0, w: 50, h: 540 },    // 右壁
+        { x: 0, y: -50, w: 960, h: 70 },    // 上壁
+        { x: 0, y: 520, w: 960, h: 50 }     // 下壁
+    ],
+
+    // 初期出現位置 (階段の下あたり、安全な場所)
+    spawnX: 880,
+    spawnY: 220
 };
 
 const RECIPES = [
@@ -30,15 +35,16 @@ const RECIPES = [
 /* --- ゲームエンジン --- */
 class Game {
     constructor() {
+        this.container = document.getElementById('game-container');
         this.stage = document.getElementById('game-stage');
-        this.container = document.getElementById('entities-layer');
+        this.entityLayer = document.getElementById('entities-layer');
         
         // 状態
         this.state = {
-            money: 500,
+            money: 900,
             ingredients: 5,
-            stock: 0,     // バックヤード在庫
-            display: 0,   // 陳列在庫
+            stock: 0,
+            display: 0,
             energy: 100,
             xp: 0,
             level: 1,
@@ -48,15 +54,30 @@ class Game {
         this.audioCtx = null;
         this.isPlaying = false;
         
-        // インスタンス
         this.player = null;
         this.customers = [];
         this.ui = new UI(this);
         this.logic = new GameLogic(this);
         
-        // ループ
         this.lastTime = 0;
         this.customerTimer = 0;
+
+        // リサイズ監視
+        window.addEventListener('resize', () => this.resize());
+        this.resize();
+    }
+
+    // 画面サイズに合わせてゲーム画面を拡大縮小
+    resize() {
+        const winW = window.innerWidth;
+        const winH = window.innerHeight;
+        const baseW = 960;
+        const baseH = 540;
+
+        // 比率を計算（画面に収まるように）
+        const scale = Math.min(winW / baseW, winH / baseH);
+        
+        this.container.style.transform = `scale(${scale})`;
     }
 
     start() {
@@ -64,54 +85,54 @@ class Game {
         this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         this.isPlaying = true;
 
-        // プレイヤー生成 (初期位置: 右上階段付近)
-        this.player = new Actor(this, 'player', CONFIG.charSrc, 850, 100);
+        // プレイヤー生成（修正した安全な位置に出現）
+        this.player = new Actor(this, 'player', CONFIG.charSrc, CONFIG.spawnX, CONFIG.spawnY);
         
-        // 初期描画
         this.ui.updateAll();
         
-        // クリックイベント
+        // クリック移動
         this.stage.addEventListener('pointerdown', (e) => this.handleClick(e));
         
-        // ゲームループ開始
         requestAnimationFrame((t) => this.loop(t));
     }
 
     handleClick(e) {
         if (!this.isPlaying || this.player.isBusy) return;
 
-        // クリック座標の取得
+        // 拡大縮小されているため、getBoundingClientRectで正確な座標を取得
         const rect = this.stage.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
-        const clickY = e.clientY - rect.top;
+        // scaleの影響を打ち消すために比率で計算
+        const scaleX = 960 / rect.width;
+        const scaleY = 540 / rect.height;
 
-        // 音再生
+        const clickX = (e.clientX - rect.left) * scaleX;
+        const clickY = (e.clientY - rect.top) * scaleY;
+
         this.playSound('click');
 
-        // ホットスポットクリック判定
         if (e.target.classList.contains('hotspot')) {
             const id = e.target.id;
-            // ターゲット座標はそのエリアの手前あたりに設定
-            const targetPos = this.getTargetPosition(e.target);
+            const targetPos = this.getTargetPosition(e.target, scaleX, scaleY);
+            
             this.player.walkTo(targetPos.x, targetPos.y, () => {
                 this.logic.interact(id);
             });
         } else {
-            // ただの移動
             this.player.walkTo(clickX, clickY);
-            // エフェクト
             this.ui.createSparkle(clickX, clickY);
         }
     }
 
-    getTargetPosition(el) {
-        // 要素の下端中心より少し手前を計算
-        const r = el.getBoundingClientRect();
-        const sr = this.stage.getBoundingClientRect();
-        return {
-            x: (r.left - sr.left) + r.width / 2,
-            y: (r.bottom - sr.top) + 10
-        };
+    getTargetPosition(el, sx, sy) {
+        // ホットスポットの手前(下方向)の座標を計算
+        const elRect = el.getBoundingClientRect();
+        const stageRect = this.stage.getBoundingClientRect();
+        
+        // stage内での相対座標を元の960x540スケールに戻して計算
+        const centerX = ((elRect.left - stageRect.left) + elRect.width / 2) * sx;
+        const bottomY = ((elRect.bottom - stageRect.top)) * sy + 10; // 少し下
+        
+        return { x: centerX, y: bottomY };
     }
 
     loop(timestamp) {
@@ -119,23 +140,22 @@ class Game {
         const dt = timestamp - this.lastTime;
         this.lastTime = timestamp;
 
-        // プレイヤー更新
         this.player.update(dt);
 
-        // お客さん更新
-        this.customers.forEach((c, i) => {
+        // お客さん
+        for (let i = this.customers.length - 1; i >= 0; i--) {
+            const c = this.customers[i];
             c.update(dt);
             if (c.isDead) {
                 c.element.remove();
                 this.customers.splice(i, 1);
             }
-        });
+        }
 
-        // お客さん出現ロジック
+        // 来店ロジック
         if (this.state.display > 0 && !this.state.isNight) {
             this.customerTimer += dt;
-            // 在庫があるほど来店しやすい（最大3秒に1回）
-            if (this.customerTimer > 3000 + Math.random() * 5000) {
+            if (this.customerTimer > 4000 + Math.random() * 4000) {
                 this.spawnCustomer();
                 this.customerTimer = 0;
             }
@@ -145,21 +165,22 @@ class Game {
     }
 
     spawnCustomer() {
-        if(this.customers.length >= 3) return; // 同時来店は3人まで
+        if(this.customers.length >= 3) return;
         
-        // お客さんは影のようなシルエット（色はランダム）
-        const customer = new Actor(this, 'customer', null, 480, 550); // 下中央（入り口）から
+        // 入り口（下中央）から出現
+        const customer = new Actor(this, 'customer', null, 480, 550);
+        // 色をランダムに
         customer.element.style.filter = `hue-rotate(${Math.random()*360}deg)`;
         
-        // 行動スクリプト
-        customer.walkTo(480, 400, () => { // レジ前へ
+        // レジへ向かう
+        customer.walkTo(580, 450, () => {
             setTimeout(() => {
                 if(this.state.display > 0) {
                     this.logic.sellItem();
                     customer.showBubble("おいしい！");
                     this.playSound('money');
                 } else {
-                    customer.showBubble("売り切れか...");
+                    customer.showBubble("売り切れ...");
                 }
                 // 帰る
                 setTimeout(() => {
@@ -207,7 +228,7 @@ class Game {
     }
 }
 
-/* --- キャラクター・アクター --- */
+/* --- アクター（キャラ） --- */
 class Actor {
     constructor(game, type, imgSrc, x, y) {
         this.game = game;
@@ -221,8 +242,8 @@ class Actor {
         this.frame = 1;
         this.dir = 0; // 0:下, 1:左, 2:右, 3:上
         this.animTimer = 0;
-        
-        // DOM生成
+        this.isDead = false;
+
         this.element = document.createElement('div');
         this.element.className = 'entity';
         this.element.style.width = CONFIG.charSize + 'px';
@@ -230,23 +251,25 @@ class Actor {
         
         if (type === 'player' && imgSrc) {
             this.element.style.backgroundImage = `url(${imgSrc})`;
+            // 3列4行の画像を想定してサイズ調整
             this.element.style.backgroundSize = `${CONFIG.charSize * 3}px ${CONFIG.charSize * 4}px`;
         } else {
-            // お客さん（簡易表示: 色付きの四角/丸）
-            this.element.style.background = '#666';
-            this.element.style.borderRadius = '50% 50% 0 0';
+            // 客 (簡易シルエット)
+            this.element.style.background = '#5D4037';
+            this.element.style.borderRadius = '50% 50% 10% 10%';
             this.element.style.width = '32px';
             this.element.style.height = '48px';
             this.element.style.border = '2px solid #fff';
+            this.element.style.boxShadow = '0 2px 5px rgba(0,0,0,0.3)';
         }
         
-        this.game.container.appendChild(this.element);
+        this.game.entityLayer.appendChild(this.element);
         this.updatePos();
     }
 
     walkTo(x, y, callback) {
-        this.targetX = Math.max(20, Math.min(940, x));
-        this.targetY = Math.max(20, Math.min(520, y));
+        this.targetX = x;
+        this.targetY = y;
         this.isMoving = true;
         this.onArrive = callback || null;
     }
@@ -258,29 +281,26 @@ class Actor {
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             if (dist > this.speed) {
-                // 移動計算
                 let vx = (dx / dist) * this.speed;
                 let vy = (dy / dist) * this.speed;
 
-                // 簡易衝突判定 (次の位置が障害物なら止まる or 滑る)
-                if (!this.checkCollision(this.x + vx, this.y + vy)) {
+                // 衝突判定: X軸移動チェック
+                if (!this.checkCollision(this.x + vx, this.y)) {
                     this.x += vx;
+                }
+                // 衝突判定: Y軸移動チェック
+                if (!this.checkCollision(this.x, this.y + vy)) {
                     this.y += vy;
-                } else {
-                    // X軸だけなら行ける？
-                    if(!this.checkCollision(this.x + vx, this.y)) this.x += vx;
-                    // Y軸だけなら行ける？
-                    else if(!this.checkCollision(this.x, this.y + vy)) this.y += vy;
-                    else this.isMoving = false; // 完全にスタックしたら停止
                 }
 
-                // 向きとアニメーション
+                // 向き決定
                 const angle = Math.atan2(dy, dx) * 180 / Math.PI;
                 if (angle > -45 && angle <= 45) this.dir = 2; // 右
                 else if (angle > 45 && angle <= 135) this.dir = 0; // 下
                 else if (angle > 135 || angle <= -135) this.dir = 1; // 左
                 else this.dir = 3; // 上
 
+                // アニメーション
                 this.animTimer += dt;
                 if (this.animTimer > 150) {
                     this.frame = (this.frame + 1) % 3;
@@ -291,7 +311,7 @@ class Actor {
                 this.x = this.targetX;
                 this.y = this.targetY;
                 this.isMoving = false;
-                this.frame = 1; // 棒立ち
+                this.frame = 1; 
                 if (this.onArrive) {
                     const cb = this.onArrive;
                     this.onArrive = null;
@@ -303,7 +323,7 @@ class Actor {
     }
 
     checkCollision(x, y) {
-        // 足元のポイント(x, y)が障害物矩形に入っているか
+        // 画像は足元が基準座標なので、足元の1点をチェック
         for (let obs of CONFIG.obstacles) {
             if (x > obs.x && x < obs.x + obs.w &&
                 y > obs.y && y < obs.y + obs.h) {
@@ -315,10 +335,9 @@ class Actor {
 
     updatePos() {
         this.element.style.left = (this.x - CONFIG.charSize/2) + 'px';
-        this.element.style.top = (this.y - CONFIG.charSize) + 'px'; // 足元基準
-        this.element.style.zIndex = Math.floor(this.y); // 奥行き
+        this.element.style.top = (this.y - CONFIG.charSize) + 'px'; 
+        this.element.style.zIndex = Math.floor(this.y);
         
-        // スプライト更新
         const bx = this.frame * CONFIG.charSize;
         const by = this.dir * CONFIG.charSize;
         this.element.style.backgroundPosition = `-${bx}px -${by}px`;
@@ -335,12 +354,12 @@ class Actor {
     }
 }
 
-/* --- ゲームロジック --- */
+/* --- ロジック & UI --- */
 class GameLogic {
     constructor(game) { this.game = game; }
 
     interact(zoneId) {
-        this.game.player.dir = 3; // 上を向く
+        this.game.player.dir = 3; 
         this.game.player.updatePos();
 
         if (zoneId === 'zone-kitchen') {
@@ -356,7 +375,6 @@ class GameLogic {
     }
 
     openKitchen() {
-        // レシピリスト生成
         const list = document.getElementById('recipe-list');
         list.innerHTML = '';
         RECIPES.forEach(r => {
@@ -415,31 +433,32 @@ class GameLogic {
             this.game.ui.closeModals();
             this.game.ui.updateAll();
             this.game.player.showBubble("並べました！");
+        } else {
+             this.game.ui.closeModals();
+             this.game.player.showBubble("在庫がないよ");
         }
     }
 
     sellItem() {
         this.game.state.display--;
-        // 平均的な売上（簡易）
         const earnings = 50 + (this.game.state.level * 5);
         this.game.state.money += earnings;
+        this.game.ui.createSparkle(600, 350); // レジ付近
         this.game.ui.updateAll();
     }
 
     gainXp(val) {
         this.game.state.xp += val;
-        // レベルアップ簡易計算 (Lv * 100 xp必要)
         if(this.game.state.xp >= this.game.state.level * 100) {
             this.game.state.xp = 0;
             this.game.state.level++;
-            this.game.state.energy = 100; // 全回復
+            this.game.state.energy = 100;
             this.game.playSound('money');
             this.game.player.showBubble("Level Up!!");
         }
     }
 }
 
-/* --- UI管理 --- */
 class UI {
     constructor(game) { this.game = game; }
 
@@ -471,13 +490,16 @@ class UI {
         d.style.left = x + 'px';
         d.style.top = y + 'px';
         d.style.color = '#FFD54F';
+        d.style.fontSize = '20px';
+        d.style.fontWeight = 'bold';
         d.style.pointerEvents = 'none';
+        d.style.zIndex = 100;
         d.animate([
-            { transform: 'scale(0.5)', opacity: 1 },
-            { transform: 'scale(1.5) rotate(90deg)', opacity: 0 }
-        ], { duration: 500 });
+            { transform: 'translate(0,0) scale(0.5)', opacity: 1 },
+            { transform: 'translate(0,-30px) scale(1.5)', opacity: 0 }
+        ], { duration: 600 });
         this.game.stage.appendChild(d);
-        setTimeout(() => d.remove(), 500);
+        setTimeout(() => d.remove(), 600);
     }
 }
 
