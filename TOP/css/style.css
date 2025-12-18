@@ -1,0 +1,319 @@
+@charset "UTF-8";
+
+/* === 基本設定 === */
+:root {
+    --text-main: #5a3d35;
+    --text-sub: #8b6b61;
+    --accent-pink: #ff9ebb;
+    --accent-gradient: linear-gradient(135deg, #ff9ebb 0%, #ffc3d6 100%);
+    --glass-bg: rgba(255, 255, 255, 0.15);
+    --glass-border: rgba(255, 255, 255, 0.4);
+    --glass-shine: rgba(255, 255, 255, 0.6);
+    --glass-shadow: 0 8px 32px 0 rgba(90, 61, 53, 0.1);
+    --walker-size: 64px;
+    --ticker-height: 44px; /* テロップを少し高くして目立たせる */
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; text-decoration: none; -webkit-tap-highlight-color: transparent; }
+
+body {
+    font-family: "Zen Maru Gothic", sans-serif;
+    background-color: #fce4ec;
+    background-image: url('../images/background/fur-texture-pink.jpg');
+    background-size: cover;
+    background-position: center;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    color: var(--text-main);
+    perspective: 1500px;
+    padding-bottom: var(--ticker-height);
+}
+
+.ambient-light {
+    position: absolute;
+    width: 100%; height: 100%;
+    background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.1) 100%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* === PC用 3Dグリッド === */
+.bento-container {
+    position: relative;
+    z-index: 10;
+    width: 1000px;
+    max-width: 90%;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: auto auto auto;
+    gap: 24px;
+    transform: rotateX(5deg) translateY(-20px);
+    transform-style: preserve-3d;
+    transition: transform 0.5s ease;
+}
+
+/* === グラスモーフィズムカード === */
+.glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow), inset 0 0 0 1px rgba(255, 255, 255, 0.2), inset 0 1px 0 0 rgba(255, 255, 255, 0.5);
+    border-radius: 36px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transform: translateZ(0px);
+    transform-style: preserve-3d;
+    /* パフォーマンス改善: レイヤーを分ける */
+    will-change: transform;
+}
+
+.glass-card:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: var(--glass-shine);
+    transform: translateZ(50px) scale(1.02);
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.1), inset 0 0 20px rgba(255, 255, 255, 0.5);
+    z-index: 20;
+}
+
+/* プロフィールエリア */
+.area-profile {
+    grid-column: span 2; grid-row: span 2; align-items: flex-start; text-align: left; padding: 40px;
+    background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 100%);
+}
+.profile-header { display: flex; align-items: center; gap: 24px; margin-bottom: 24px; transform: translateZ(20px); }
+.avatar {
+    width: 90px; height: 90px; border-radius: 50%;
+    background-color: #eee;
+    background-image: url('../images/background/fur-texture-pink.jpg');
+    background-size: cover; border: 4px solid rgba(255,255,255,0.8);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    flex-shrink: 0;
+}
+.site-title { font-size: 2.2rem; font-weight: 900; letter-spacing: 0.05em; color: var(--text-main); text-shadow: 0 2px 10px rgba(255,255,255,0.5); line-height: 1.2; }
+.site-desc { font-size: 1rem; color: var(--text-main); opacity: 0.8; font-weight: 700; margin-top: 5px; }
+.profile-text { font-size: 0.95rem; line-height: 1.8; color: var(--text-main); transform: translateZ(10px); }
+
+/* 中央の飾りティッカー */
+.area-ticker {
+    grid-column: span 2; padding: 0; position: relative;
+    background: rgba(255, 255, 255, 0.25); overflow: hidden;
+    box-shadow: var(--glass-shadow), inset 0 0 20px rgba(255, 158, 187, 0.1);
+}
+.ticker-wrap {
+    width: 100%; height: 100%; overflow: hidden; white-space: nowrap;
+    mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
+    display: flex; align-items: center;
+}
+.ticker-content { display: inline-flex; align-items: center; animation: marquee 25s linear infinite; will-change: transform; }
+.ticker-item {
+    display: inline-flex; align-items: center; margin: 0 15px; font-weight: 900; font-size: 1.6rem;
+    color: var(--accent-pink); text-transform: uppercase; letter-spacing: 0.1em;
+    animation: dance 3s ease-in-out infinite;
+}
+.ticker-item:nth-child(even) { animation-name: dance-reverse; animation-delay: -1.5s; color: #ffc3d6; }
+.ticker-item.hollow { color: transparent; -webkit-text-stroke: 2px rgba(139, 107, 97, 0.4); opacity: 0.8; }
+.ticker-item span { margin-right: 8px; }
+
+/* ツールボタン */
+.area-tool { grid-column: span 1; aspect-ratio: 1 / 1; cursor: pointer; text-align: center; }
+.area-tool-wide { grid-column: span 2; aspect-ratio: auto; flex-direction: row; gap: 20px; justify-content: flex-start; padding-left: 40px; }
+.icon-circle {
+    width: 64px; height: 64px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 32px; color: var(--accent-pink); margin-bottom: 12px;
+    box-shadow: 0 10px 25px rgba(255, 158, 187, 0.2); transition: 0.3s; transform: translateZ(20px);
+    flex-shrink: 0;
+}
+.area-tool:hover .icon-circle { background: var(--accent-pink); color: white; transform: translateZ(40px) scale(1.15) rotate(-10deg); }
+.tool-info { transform: translateZ(10px); }
+.tool-label { font-weight: 800; font-size: 1.1rem; color: var(--text-main); }
+.tool-sub { font-size: 0.8rem; color: var(--text-sub); margin-top: 4px; }
+.badge {
+    position: absolute; top: 20px; right: 20px; background: var(--accent-gradient); color: white;
+    font-size: 0.75rem; padding: 6px 14px; border-radius: 50px; font-weight: bold;
+    box-shadow: 0 5px 15px rgba(255, 158, 187, 0.5); animation: bounce 2s infinite; transform: translateZ(30px); border: 2px solid #fff;
+}
+
+/* シェアボタン */
+.area-share { grid-column: span 4; background: transparent; border: none; box-shadow: none; backdrop-filter: none; padding: 10px; display: flex; justify-content: center; }
+.btn-share-pill {
+    padding: 14px 40px; background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); border: 1px solid #fff; border-radius: 50px;
+    font-weight: 800; color: var(--text-main); transition: 0.3s; display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05); transform: translateZ(0);
+}
+.btn-share-pill:hover { background: #fff; color: var(--accent-pink); transform: translateY(-5px) scale(1.05); }
+
+/* 各種アニメーション */
+@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+@keyframes dance { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes dance-reverse { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+@keyframes bounce { 0%, 100% { transform: translateZ(30px) translateY(0); } 50% { transform: translateZ(30px) translateY(-5px); } }
+@keyframes entranceFadeUp { 0% { opacity: 0; transform: translateY(60px) scale(0.9); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+
+.glass-card, .area-share { opacity: 0; animation: entranceFadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.glass-card:nth-of-type(1) { animation-delay: 0.1s; } 
+.glass-card:nth-of-type(2) { animation-delay: 0.2s; } 
+.glass-card:nth-of-type(3) { animation-delay: 0.3s; }
+.glass-card:nth-of-type(4) { animation-delay: 0.4s; } 
+.glass-card:nth-of-type(5) { animation-delay: 0.5s; }
+.glass-card:nth-of-type(6) { animation-delay: 0.6s; } 
+.glass-card:nth-of-type(7) { animation-delay: 0.7s; } 
+.area-share { animation-delay: 0.9s; }
+
+/* 背景浮遊パーティクル */
+.floating-particle {
+    position: absolute; border-radius: 50%; filter: blur(8px); opacity: 0.6; animation: floatUp 15s linear infinite; z-index: -1; pointer-events: none; will-change: transform;
+}
+@keyframes floatUp { 0% { transform: translateY(110vh) rotate(0deg); opacity: 0; } 10% { opacity: 0.6; } 90% { opacity: 0.6; } 100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; } }
+
+/* マスコット */
+.floating-mascot {
+    position: fixed; bottom: 60px; right: 40px; width: 140px; height: auto; z-index: 95; cursor: pointer;
+    animation: playful-float 7s ease-in-out infinite; transition: 0.3s;
+    will-change: transform;
+}
+.floating-mascot img { width: 100%; display: block; filter: drop-shadow(0 8px 20px rgba(90, 61, 53, 0.25)); }
+.floating-mascot:hover { transform: scale(1.15) rotate(10deg); }
+@keyframes playful-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px) rotate(3deg); } }
+
+/* Pixel Walker (修正版: leftではなくtransformを使用) */
+.pixel-walker {
+    position: fixed;
+    bottom: 45px; 
+    z-index: 90;
+    width: var(--walker-size);
+    height: var(--walker-size);
+    left: 0; /* 初期位置は0で固定し、transformで動かす */
+    pointer-events: none;
+    /* transitionはJSで制御します */
+    will-change: transform;
+}
+.pixel-walker .sprite {
+    width: 100%; height: 100%; background-image: url('../images/hoko/mahiru.png'); 
+    background-size: 300% 400%; background-repeat: no-repeat; image-rendering: pixelated;
+    animation: walk-cycle 0.8s step-start infinite;
+}
+.pixel-walker[data-facing="front"] .sprite { background-position-y: 0%; animation: none; }
+.pixel-walker[data-facing="left"] .sprite  { background-position-y: 33.33%; }
+.pixel-walker[data-facing="right"] .sprite { background-position-y: 66.66%; }
+@keyframes walk-cycle { 0% { background-position-x: 0%; } 33% { background-position-x: 50%; } 66% { background-position-x: 100%; } }
+
+/* === ▼▼▼ 下部固定ニュースバー (デザインリニューアル: リボン風) ▼▼▼ === */
+.bottom-news-ribbon {
+    position: fixed;
+    bottom: 0; left: 0;
+    width: 100%; height: var(--ticker-height);
+    background: #fffafa; /* ほんのりピンクがかった白 */
+    border-top: 4px solid var(--accent-pink); /* リボン感を出す太めの線 */
+    z-index: 999;
+    display: flex; align-items: center;
+    box-shadow: 0 -4px 15px rgba(255, 158, 187, 0.2);
+    font-size: 0.95rem; font-weight: 700; color: var(--text-main);
+}
+/* ステッチ（縫い目）の飾り */
+.ribbon-stitch {
+    position: absolute; top: 2px; left: 0; width: 100%; height: calc(100% - 4px);
+    border-top: 2px dotted rgba(255, 158, 187, 0.5);
+    border-bottom: 2px dotted rgba(255, 158, 187, 0.5);
+    pointer-events: none;
+}
+
+.news-label-container {
+    height: 100%; padding: 0 15px;
+    display: flex; align-items: center; justify-content: center;
+    background: #fffafa; /* 線を隠す */
+    z-index: 2;
+    position: relative;
+}
+.news-label-badge {
+    background: var(--accent-gradient);
+    color: #fff;
+    padding: 4px 16px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 900;
+    display: flex; align-items: center; gap: 6px;
+    box-shadow: 0 2px 8px rgba(255, 158, 187, 0.6);
+    transform: rotate(-2deg); /* 可愛く少し傾ける */
+}
+.news-label-badge span { font-size: 1.1em; }
+
+.news-scroller {
+    flex-grow: 1; overflow: hidden; position: relative;
+    white-space: nowrap; height: 100%; display: flex; align-items: center;
+    mask-image: linear-gradient(to right, transparent 0%, black 20px); /* 左端をふわっと消す */
+}
+.news-content {
+    display: inline-block; white-space: nowrap;
+    animation: news-scroll 40s linear infinite; /* 少しゆっくりにして読みやすく */
+    padding-left: 100%;
+    will-change: transform;
+}
+.news-item {
+    display: inline-block; margin-right: 60px;
+    position: relative;
+    color: var(--text-main);
+}
+/* ニュースの頭につけるアイコン */
+.news-item::before {
+    content: '★';
+    color: var(--accent-pink);
+    margin-right: 8px;
+    font-size: 0.8em;
+}
+
+@keyframes news-scroll { 0% { transform: translate3d(0,0,0); } 100% { transform: translate3d(-100%,0,0); } }
+
+/* === ▼▼▼ スマホ最適化 (レスポンシブ) ▼▼▼ === */
+@media (max-width: 768px) {
+    body {
+        display: block; overflow-y: auto; overflow-x: hidden;
+        height: auto; perspective: none;
+        padding-top: 40px;
+        padding-bottom: calc(var(--ticker-height) + 60px);
+    }
+    
+    .bento-container {
+        width: 94%; margin: 0 auto;
+        display: flex; flex-direction: column; gap: 16px;
+        transform: none !important;
+    }
+    .glass-card {
+        width: 100%; transform: none !important; margin-bottom: 0; padding: 20px;
+        will-change: auto; /* スマホではメモリ節約のため解除 */
+    }
+    .glass-card:hover { transform: translateY(-3px) !important; }
+
+    .profile-header { flex-direction: column; text-align: center; margin-bottom: 15px; }
+    .area-profile { text-align: center; align-items: center; padding: 30px 20px; }
+    .site-title { font-size: 1.8rem; }
+    .area-ticker { height: 60px; order: 2; }
+    
+    .area-tool {
+        aspect-ratio: auto; flex-direction: row; justify-content: flex-start;
+        text-align: left; padding: 15px 20px; gap: 15px;
+    }
+    .area-tool .icon-circle {
+        width: 44px; height: 44px; font-size: 24px; margin-bottom: 0; transform: none !important;
+    }
+    .area-tool-wide { padding-left: 20px; }
+    .badge { top: 50%; right: 20px; transform: translateY(-50%); animation: none; }
+
+    .area-share { display: block; width: 100%; padding: 0; margin-top: 10px; }
+    .btn-share-pill { width: 100%; justify-content: center; }
+
+    /* スマホでのキャラ位置調整 */
+    .floating-mascot { width: 90px; bottom: calc(var(--ticker-height) + 15px); right: 10px; }
+    .pixel-walker { bottom: calc(var(--ticker-height) + 10px); }
+    :root { --walker-size: 48px; }
+}
