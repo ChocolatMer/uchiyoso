@@ -1,6 +1,6 @@
 // detail/script.js
 import { login, logout, monitorAuth, saveToCloud, loadFromCloud } from "../firestore.js";
-import { parseIaChara } from "../data/schema.js";
+import { parseIaChara } from "../data/parser_ia.js";
 
 // --- GLOBAL STATE ---
 let charData = null;
