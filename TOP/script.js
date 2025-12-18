@@ -108,22 +108,21 @@ document.addEventListener('DOMContentLoaded', () => {
             const reportEl = document.getElementById('report-text');
             if (!data || data.length === 0) return;
 
-            // 表示更新関数
             const updateReport = () => {
-                // ランダムに1つ選ぶ
                 const text = data[Math.floor(Math.random() * data.length)];
                 
-                // アニメーションのリセット（再着火させるため）
+                // アニメーション再着火
                 reportEl.style.animation = 'none';
-                reportEl.offsetHeight; /* trigger reflow */
-                reportEl.style.animation = 'fadeReport 6s infinite';
+                reportEl.offsetHeight; 
+                // CSSに合わせて12秒周期
+                reportEl.style.animation = 'fadeReport 12s infinite';
                 
                 reportEl.textContent = text;
             };
 
             updateReport();
-            // 6秒ごとに切り替え（アニメーション周期に合わせる）
-            setInterval(updateReport, 6000);
+            // 12秒ごとに切り替え
+            setInterval(updateReport, 12000);
         })
         .catch(err => console.error('Report Error:', err));
 });

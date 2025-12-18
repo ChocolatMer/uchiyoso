@@ -11,7 +11,7 @@
     --glass-shine: rgba(255, 255, 255, 0.6);
     --glass-shadow: 0 8px 32px 0 rgba(90, 61, 53, 0.1);
     --walker-size: 64px;
-    --ticker-height: 48px; /* 少し高さを確保 */
+    --ticker-height: 54px; /* バーを少し高くしてレポートを見やすく */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; text-decoration: none; -webkit-tap-highlight-color: transparent; }
@@ -55,7 +55,7 @@ body {
     transition: transform 0.5s ease;
 }
 
-/* === グラスモーフィズムカード === */
+/* === 【復活】こだわりのグラスモーフィズムカード === */
 .glass-card {
     background: var(--glass-bg);
     backdrop-filter: blur(40px) saturate(180%);
@@ -70,18 +70,37 @@ body {
     align-items: center;
     position: relative;
     overflow: hidden;
+    /* アニメーション設定 */
     transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     transform: translateZ(0px);
     transform-style: preserve-3d;
-    will-change: transform;
 }
 
+/* 光沢エフェクト（キラリと光る演出）の復活 */
+.glass-card::before {
+    content: ''; 
+    position: absolute; 
+    top: 0; left: -100%; 
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    transform: skewX(-25deg); 
+    transition: 0.5s; 
+    pointer-events: none;
+    z-index: 2;
+}
+
+/* ホバー時のリッチな動き */
 .glass-card:hover {
     background: rgba(255, 255, 255, 0.25);
     border-color: var(--glass-shine);
     transform: translateZ(50px) scale(1.02);
     box-shadow: 0 30px 60px rgba(0, 0, 0, 0.1), inset 0 0 20px rgba(255, 255, 255, 0.5);
     z-index: 20;
+}
+
+.glass-card:hover::before {
+    left: 100%; 
+    transition: 0.7s ease-in-out;
 }
 
 /* プロフィールエリア */
@@ -130,10 +149,12 @@ body {
 .icon-circle {
     width: 64px; height: 64px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center;
     font-size: 32px; color: var(--accent-pink); margin-bottom: 12px;
-    box-shadow: 0 10px 25px rgba(255, 158, 187, 0.2); transition: 0.3s; transform: translateZ(20px);
+    box-shadow: 0 10px 25px rgba(255, 158, 187, 0.2); 
+    transition: 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* 初期のバウンス感を復活 */
+    transform: translateZ(20px);
     flex-shrink: 0;
 }
-.area-tool:hover .icon-circle { background: var(--accent-pink); color: white; transform: translateZ(40px) scale(1.15) rotate(-10deg); }
+.area-tool:hover .icon-circle { background: var(--accent-pink); color: white; transform: translateZ(40px) scale(1.15) rotate(-10deg); box-shadow: 0 15px 30px rgba(255, 158, 187, 0.5); }
 .tool-info { transform: translateZ(10px); }
 .tool-label { font-weight: 800; font-size: 1.1rem; color: var(--text-main); }
 .tool-sub { font-size: 0.8rem; color: var(--text-sub); margin-top: 4px; }
@@ -150,12 +171,20 @@ body {
     font-weight: 800; color: var(--text-main); transition: 0.3s; display: flex; align-items: center; gap: 10px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.05); transform: translateZ(0);
 }
-.btn-share-pill:hover { background: #fff; color: var(--accent-pink); transform: translateY(-5px) scale(1.05); }
+.btn-share-pill:hover { background: #fff; color: var(--accent-pink); transform: translateY(-5px) scale(1.05); box-shadow: 0 15px 40px rgba(255, 158, 187, 0.3); }
 
 /* アニメーション */
 @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-@keyframes dance { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
-@keyframes dance-reverse { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+@keyframes dance {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(-6px) rotate(-3deg); }
+    75% { transform: translateY(2px) rotate(2deg); }
+}
+@keyframes dance-reverse {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    25% { transform: translateY(6px) rotate(3deg); }
+    75% { transform: translateY(-2px) rotate(-2deg); }
+}
 @keyframes bounce { 0%, 100% { transform: translateZ(30px) translateY(0); } 50% { transform: translateZ(30px) translateY(-5px); } }
 @keyframes entranceFadeUp { 0% { opacity: 0; transform: translateY(60px) scale(0.9); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
 
@@ -177,7 +206,7 @@ body {
 
 /* マスコット */
 .floating-mascot {
-    position: fixed; bottom: 65px; right: 20px; width: 140px; height: auto; z-index: 95; cursor: pointer;
+    position: fixed; bottom: 70px; right: 20px; width: 140px; height: auto; z-index: 95; cursor: pointer;
     animation: playful-float 7s ease-in-out infinite; transition: 0.3s;
     will-change: transform;
 }
@@ -188,7 +217,7 @@ body {
 /* Pixel Walker */
 .pixel-walker {
     position: fixed;
-    bottom: 50px; 
+    bottom: 55px; 
     z-index: 90;
     width: var(--walker-size);
     height: var(--walker-size);
@@ -245,7 +274,9 @@ body {
 }
 .news-content {
     display: inline-block; white-space: nowrap;
-    animation: news-scroll 40s linear infinite; padding-left: 100%;
+    /* 速度変更：80秒にして非常にゆっくりに */
+    animation: news-scroll 80s linear infinite; 
+    padding-left: 100%;
     will-change: transform;
 }
 .news-item {
@@ -262,11 +293,30 @@ body {
     gap: 15px;
 }
 .honobono-report {
-    font-size: 0.85rem; color: var(--text-sub);
-    animation: fadeReport 6s infinite; /* ふんわり切り替え */
+    font-size: 0.85rem; 
+    color: var(--text-main);
     white-space: nowrap;
     max-width: 200px; overflow: hidden; text-overflow: ellipsis;
+    
+    /* 【目立たせるデザイン】吹き出し風に変更 */
+    background: #fff;
+    padding: 6px 14px;
+    border-radius: 12px;
+    border: 1px solid #ffe4ea;
+    box-shadow: 0 2px 5px rgba(255, 158, 187, 0.15);
+    position: relative;
+    
+    /* 速度変更：12秒周期にしてゆっくり表示 */
+    animation: fadeReport 12s infinite; 
 }
+/* 吹き出しのしっぽ */
+.honobono-report::after {
+    content: ''; position: absolute; right: -6px; top: 50%; transform: translateY(-50%);
+    border-left: 6px solid #ffe4ea;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+}
+
 .digital-clock {
     font-family: 'Zen Maru Gothic', monospace;
     font-weight: 900; color: var(--accent-pink);
@@ -277,72 +327,82 @@ body {
 }
 
 @keyframes news-scroll { 0% { transform: translate3d(0,0,0); } 100% { transform: translate3d(-100%,0,0); } }
+
+/* レポートのアニメーション: ふんわり出て、長く留まり、消える */
 @keyframes fadeReport {
-    0%, 10% { opacity: 0; transform: translateY(2px); }
-    20%, 90% { opacity: 1; transform: translateY(0); }
-    100% { opacity: 0; transform: translateY(-2px); }
+    0% { opacity: 0; transform: translateY(4px); }
+    5% { opacity: 1; transform: translateY(0); }
+    85% { opacity: 1; transform: translateY(0); } /* 長く表示 */
+    100% { opacity: 0; transform: translateY(-4px); }
 }
 
-/* === スマホ最適化 (PCの見た目に近づける) === */
+/* === スマホ最適化 (PCの質感を維持する) === */
 @media (max-width: 768px) {
     body {
         display: block; overflow-y: auto; overflow-x: hidden;
         height: auto; perspective: none;
         padding-top: 40px;
-        padding-bottom: calc(var(--ticker-height) + 80px); /* マスコット分余白確保 */
+        padding-bottom: calc(var(--ticker-height) + 80px);
     }
     
     .bento-container {
         width: 94%; margin: 0 auto;
-        /* スマホでもグリッド表示にする */
+        /* グリッドレイアウトは維持 */
         display: grid;
-        grid-template-columns: 1fr 1fr; /* 2列 */
-        gap: 12px; /* 隙間を少し詰める */
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
         transform: none !important;
     }
     
-    /* カード共通設定 */
+    /* 【修正】質感はPCと同じにするため、フラット化のコードを削除 */
     .glass-card {
-        width: 100%; transform: none !important; margin-bottom: 0;
-        padding: 16px; /* パディングを小さく */
-        border-radius: 24px; /* 角丸を少し小さく */
-        will-change: auto;
+        width: 100%; 
+        transform: none !important; 
+        margin-bottom: 0;
+        /* paddingなどは調整するが、backgroundやborderはPC版を継承 */
     }
-    .glass-card:hover { transform: translateY(-2px) !important; }
+    /* スマホでも少しホバー感（タップ感）を出す */
+    .glass-card:active {
+        transform: scale(0.98) !important;
+        background: rgba(255, 255, 255, 0.25);
+    }
 
     /* 各エリアの配置調整 */
     .area-profile {
-        grid-column: span 2; /* 横幅いっぱい */
+        grid-column: span 2;
         text-align: center; align-items: center; padding: 24px;
     }
     .profile-header { flex-direction: column; gap: 12px; margin-bottom: 12px; }
-    .avatar { width: 70px; height: 70px; } /* アバター少し小さく */
-    .site-title { font-size: 1.5rem; }
+    .avatar { width: 80px; height: 80px; } 
+    .site-title { font-size: 1.6rem; }
     
     .area-ticker {
-        grid-column: span 2; /* 横幅いっぱい */
-        height: 48px; order: 2;
+        grid-column: span 2; 
+        height: 50px; order: 2;
     }
     
     /* ツールボタン */
     .area-tool {
-        /* 正方形に近い比率を維持 */
         aspect-ratio: 1 / 1;
         flex-direction: column; justify-content: center; text-align: center;
         padding: 10px; gap: 8px;
     }
     .area-tool-wide {
-        grid-column: span 2; /* ワイドボタンは2列分 */
+        grid-column: span 2;
         aspect-ratio: auto;
         flex-direction: row; justify-content: flex-start;
-        padding: 16px 20px;
+        padding: 16px 24px;
     }
     .area-tool .icon-circle {
-        width: 48px; height: 48px; font-size: 24px; margin-bottom: 0; transform: none !important;
+        width: 54px; height: 54px; font-size: 26px; margin-bottom: 0; 
+        transform: none !important;
+        /* スマホでもバウンスアニメーションなどは残す */
     }
-    .tool-label { font-size: 0.9rem; }
-    .tool-sub { font-size: 0.7rem; display: none; /* スマホの小さいボタンではサブテキスト隠す */ }
-    .area-tool-wide .tool-sub { display: block; /* ワイドボタンなら表示 */ }
+    
+    /* スマホ用に文字サイズ調整 */
+    .tool-label { font-size: 1rem; }
+    .tool-sub { font-size: 0.75rem; display: none; }
+    .area-tool-wide .tool-sub { display: block; }
     
     .badge { top: 10px; right: 10px; padding: 4px 10px; font-size: 0.65rem; animation: none; }
 
@@ -350,12 +410,12 @@ body {
 
     /* 下部固定バー調整 */
     .news-label-badge { padding: 4px 8px; font-size: 0.7rem; }
-    .honobono-report { display: none; /* スマホ幅ではレポート非表示（狭いため） */ }
+    .honobono-report { display: none; } /* スペース的に非表示 */
     .honobono-container { padding-left: 5px; gap: 5px; }
     .digital-clock { font-size: 0.9rem; padding: 2px 6px; }
 
     /* キャラクター位置 */
-    .floating-mascot { width: 80px; bottom: calc(var(--ticker-height) + 10px); right: 10px; }
-    .pixel-walker { bottom: calc(var(--ticker-height) + 5px); }
-    :root { --walker-size: 40px; }
+    .floating-mascot { width: 85px; bottom: calc(var(--ticker-height) + 15px); right: 10px; }
+    .pixel-walker { bottom: calc(var(--ticker-height) + 10px); }
+    :root { --walker-size: 42px; }
 }
