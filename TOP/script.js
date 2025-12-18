@@ -19,7 +19,6 @@ function createParticles() {
 }
 createParticles();
 
-// --- メイン処理 ---
 document.addEventListener('DOMContentLoaded', () => {
     
     // 1. キャラクターの歩行制御
@@ -43,7 +42,10 @@ document.addEventListener('DOMContentLoaded', () => {
         walker.style.transform = `translate3d(${startX}px, 0, 0)`;
         walker.setAttribute('data-facing', fromRight ? 'left' : 'right');
         void walker.offsetWidth;
-        walker.style.transition = `transform ${walkSpeed}ms linear`;
+        
+        // CSS側でtransition: bottomを設定しているため、transformのみのtransitionをJSで上書き指定
+        walker.style.transition = `transform ${walkSpeed}ms linear, bottom 0.5s cubic-bezier(0.4, 0, 0.2, 1)`;
+        
         walker.style.transform = `translate3d(${targetX}px, 0, 0)`;
 
         setTimeout(() => {
@@ -101,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch(err => console.error('News Error:', err));
 
-    // 4. キャラクターレポート(report.json)の読み込みと表示
+    // 4. キャラクターレポートの読み込み
     fetch('TOP/report.json')
         .then(res => res.json())
         .then(data => {
@@ -110,19 +112,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const updateReport = () => {
                 const text = data[Math.floor(Math.random() * data.length)];
-                
-                // アニメーション再着火
                 reportEl.style.animation = 'none';
                 reportEl.offsetHeight; 
-                // CSSに合わせて12秒周期
                 reportEl.style.animation = 'fadeReport 12s infinite';
-                
                 reportEl.textContent = text;
             };
 
             updateReport();
-            // 12秒ごとに切り替え
             setInterval(updateReport, 12000);
         })
         .catch(err => console.error('Report Error:', err));
+
+    // 5. ▼▼▼ リボン収納機能 ▼▼▼
+    const ribbonToggle = document.getElementById('ribbon-toggle');
+    const bottomRibbon = document.getElementById('bottom-ribbon');
+    
+    ribbonToggle.addEventListener('click', () => {
+        bottomRibbon.classList.toggle('hidden');
+        document.body.classList.toggle('ribbon-hidden');
+        
+        // キャラクターも一緒に下げる/戻す
+        const isHidden = bottomRibbon.classList.contains('hidden');
+        const ribbonHeight = 40; // CSSと合わせる
+        
+        if (isHidden) {
+            // 隠すとき：リボンの高さ分だけ下げる（画面外へ）
+            walker.style.bottom = '5px'; // 地面付近へ
+        } else {
+            // 戻すとき：リボンの上へ
+            walker.style.bottom = '35px'; // 元の位置
+        }
+    });
 });
