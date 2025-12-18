@@ -58,43 +58,45 @@ if(btnLogin) btnLogin.addEventListener('click', login);
 if(btnLogout) btnLogout.addEventListener('click', logout);
 
 monitorAuth(
-    (user) => {
+    async (user) => { // asyncを追加
+        // 1. UIの切り替え
         if(btnLogin) btnLogin.classList.add('hidden');
         if(btnLogout) {
             btnLogout.classList.remove('hidden');
             btnLogout.textContent = "DISCONNECT (" + user.displayName + ")";
         }
+
+        // 2. 自動読み込みロジック (URLパラメータ判定)
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetId = urlParams.get('id');
+
+        if (targetId) {
+            // ID指定がある場合、自動でクラウドからロードを試みる
+            try {
+                // 必要であればローディング表示のテキストを変更するなど
+                // console.log("Auto-loading character:", targetId);
+                
+                const cloudStore = await loadFromCloud();
+                
+                if (cloudStore && cloudStore[targetId]) {
+                    // データが見つかったらダッシュボードを起動
+                    launchDashboard(cloudStore[targetId]);
+                } else {
+                    console.warn("Character ID not found in your cloud storage.");
+                    alert("指定されたキャラクターデータが見つかりませんでした。\n(ID: " + targetId + ")");
+                }
+            } catch (e) {
+                console.error("Auto load failed:", e);
+                alert("データの読み込みに失敗しました。");
+            }
+        }
     },
     () => {
+        // ログアウト時
         if(btnLogin) btnLogin.classList.remove('hidden');
         if(btnLogout) btnLogout.classList.add('hidden');
     }
 );
-
-if(btnCloudSave) {
-    btnCloudSave.addEventListener('click', () => {
-        if(!charData) return;
-        charData.memo = document.getElementById('memoArea').value;
-        saveToCloud(charData);
-    });
-}
-
-if(btnCloudLoad) {
-    btnCloudLoad.addEventListener('click', async () => {
-        const cloudStore = await loadFromCloud();
-        if(cloudStore) {
-            const list = document.getElementById('savedList'); 
-            list.innerHTML='';
-            Object.keys(cloudStore).forEach(k => {
-                const li = document.createElement('li');
-                li.textContent = "☁️ " + (cloudStore[k].name || "No Name");
-                li.onclick = () => { launchDashboard(cloudStore[k]); document.getElementById('loadDialog').close(); };
-                list.appendChild(li);
-            });
-            document.getElementById('loadDialog').showModal();
-        }
-    });
-}
 
 els.file.addEventListener('change', handleFile);
 els.hideToggle.addEventListener('change', () => renderCurrentTab());
