@@ -20,14 +20,12 @@ export function parseIaChara(text) {
 
     // 行末までの値を取得 (改行は含まない)
     const getLineVal = (label) => {
-        // [ :：] の後の空白を飛ばして行末まで取得
         const regex = new RegExp(`^.*${label}[:：][ \\t]*([^\\n]*)`, 'm');
         return m(regex);
     };
 
     // プロフィール値を取得 (スラッシュ / または 改行 \n まで)
     const getProfileVal = (label) => {
-        // [^/\n]* : スラッシュも改行も含まない文字列
         const regex = new RegExp(`${label}[:：][ \\t]*([^/\\n]*)`);
         return m(regex);
     };
@@ -50,7 +48,7 @@ export function parseIaChara(text) {
     d.height = parseInt(getProfileVal('身長')) || '';
     d.weight = parseInt(getProfileVal('体重')) || '';
     
-    // 誕生日の処理 ('/' を含む可能性があるため特別扱い)
+    // 誕生日
     const rawBirthday = getLineVal('誕生日');
     if(rawBirthday.includes(' / ')) {
         d.birthday = rawBirthday.split(' / ')[0].trim();
@@ -107,47 +105,67 @@ export function parseIaChara(text) {
     };
 
     lines.forEach(l => {
-        l = l.trim();
-        if(!l) return;
+        const line = l.trim();
+        if(!line) return;
 
-        // カテゴリヘッダー検出 (『』 [] 【】 などに対応)
-        const catMatch = l.match(/[『\[【](.*?)[』\]】]/);
+        // カテゴリヘッダー検出
+        const catMatch = line.match(/[『\[【](.*?)[』\]】]/);
         if(catMatch) {
             const catName = catMatch[1];
-            // 既知のカテゴリならセット、そうでなければnull（後でoriginalに）
             if(catMap[catName]) {
                 currentCat = catMap[catName];
                 return;
             }
         }
         
-        // セクション区切りが来たら技能エリア終了
-        if(l.startsWith('【') && !l.includes('技能')) {
+        // セクション終了判定
+        if(line.startsWith('【') && !line.includes('技能')) {
             currentCat = null;
             return;
         }
 
-        // 技能行のパターン (行末から数字を探す)
-        // 対応形式: 名前 [SP] 合計 [SP] 初期 [SP] 職業 [SP] 興味 [SP] 成長 [SP] その他(任意)
-        // ※空白は [ \t　] (全角スペース含む)
-        const sp = '[ \\t　]+';
-        // 少なくとも5つの数字が並んでいる行を探す
-        const skillRegex = new RegExp(`^(.*?)${sp}(\\d+)${sp}(\\d+)${sp}(\\d+)${sp}(\\d+)${sp}(\\d+)(?:${sp}(\\d+))?.*$`);
-        const skillMatch = l.match(skillRegex);
+        // ★修正: 技能行の解析ロジック（空白区切りで後ろから数字をカウントする方式）
+        // これにより正規表現の不一致による取りこぼしを防ぎます
+        const parts = line.split(/[ \t　]+/); // スペース、タブ、全角スペースで分割
         
-        if(skillMatch) {
-            const name = skillMatch[1].trim();
-            if(name === '技能名' || name.includes('------')) return;
+        // 後ろから連続する数字の数を数える
+        let numCount = 0;
+        for (let i = parts.length - 1; i >= 0; i--) {
+            if (/^\d+$/.test(parts[i])) {
+                numCount++;
+            } else {
+                break; // 数字以外が来たらストップ
+            }
+        }
+
+        // 数字が5個以上並んでいれば技能行とみなす
+        // (合計, 初期, 職業, 興味, 成長) + (その他)
+        if (numCount >= 5) {
+            // 数字部分と名前部分を分離
+            const nums = parts.slice(parts.length - numCount).map(n => parseInt(n));
+            const nameParts = parts.slice(0, parts.length - numCount);
+            const name = nameParts.join(' ').trim();
+
+            // ヘッダー行や区切り線を除外
+            if (name === '技能名' || name.match(/^-+$/) || !name) return;
+
+            // 数字の割り当て (標準形式: Total, Init, Job, Interest, Growth, Other)
+            let total = nums[0];
+            let init = nums[1];
+            let job = nums[2];
+            let interest = nums[3];
+            let growth = nums[4];
+            let other = nums[5] || 0; // 6列目がなければ0
 
             const sData = {
                 name: name,
-                total: parseInt(skillMatch[2]),
-                init: parseInt(skillMatch[3]),
-                job: parseInt(skillMatch[4]),
-                interest: parseInt(skillMatch[5]),
-                growth: parseInt(skillMatch[6]),
+                total: total,
+                init: init,
+                job: job,
+                interest: interest,
+                growth: growth,
                 desc: descMap[name] || '',
-                // カテゴリ未定なら 'original' に入れる
+                // カテゴリが不明なら original に入れる
                 category: currentCat || 'original'
             };
             d.skills[sData.category].push(sData);
