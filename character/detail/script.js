@@ -58,41 +58,55 @@ if(btnLogin) btnLogin.addEventListener('click', login);
 if(btnLogout) btnLogout.addEventListener('click', logout);
 
 monitorAuth(
-    async (user) => { // asyncを追加
-        // 1. UIの切り替え
+    async (user) => {
+        // 1. ログイン/ログアウトボタンの表示切替
         if(btnLogin) btnLogin.classList.add('hidden');
         if(btnLogout) {
             btnLogout.classList.remove('hidden');
             btnLogout.textContent = "DISCONNECT (" + user.displayName + ")";
         }
 
-        // 2. 自動読み込みロジック (URLパラメータ判定)
+        // 2. URLからIDを取得して自動ロード
         const urlParams = new URLSearchParams(window.location.search);
         const targetId = urlParams.get('id');
 
         if (targetId) {
-            // ID指定がある場合、自動でクラウドからロードを試みる
             try {
-                // 必要であればローディング表示のテキストを変更するなど
-                // console.log("Auto-loading character:", targetId);
-                
+                // クラウドから全データを取得
                 const cloudStore = await loadFromCloud();
                 
-                if (cloudStore && cloudStore[targetId]) {
-                    // データが見つかったらダッシュボードを起動
-                    launchDashboard(cloudStore[targetId]);
+                let foundData = null;
+                
+                if (cloudStore) {
+                    // 【検索パターンA】 IDがそのままキーになっている場合
+                    if (cloudStore[targetId]) {
+                        foundData = cloudStore[targetId];
+                    } 
+                    // 【検索パターンB】 データの中身の .id プロパティと一致する場合 (全検索)
+                    else {
+                        // 全データを配列にして、中身のidが一致するものを探す (型違いも考慮して == で比較)
+                        foundData = Object.values(cloudStore).find(char => char && char.id == targetId);
+                    }
+                }
+                
+                if (foundData) {
+                    // IDが見つかった場合、そのデータでダッシュボードを起動
+                    // (後で保存できるように、念のためIDをデータ自体に埋め込んでおく)
+                    if(!foundData.id) foundData.id = targetId; 
+                    
+                    launchDashboard(foundData);
                 } else {
-                    console.warn("Character ID not found in your cloud storage.");
-                    alert("指定されたキャラクターデータが見つかりませんでした。\n(ID: " + targetId + ")");
+                    console.warn("Target ID not found:", targetId);
+                    alert("指定されたキャラクターが見つかりませんでした。\n(ID: " + targetId + ")");
                 }
             } catch (e) {
                 console.error("Auto load failed:", e);
-                alert("データの読み込みに失敗しました。");
+                alert("データの読み込み中にエラーが発生しました。");
             }
         }
     },
     () => {
-        // ログアウト時
+        // ログアウト時の処理
         if(btnLogin) btnLogin.classList.remove('hidden');
         if(btnLogout) btnLogout.classList.add('hidden');
     }

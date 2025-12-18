@@ -449,9 +449,14 @@
             }
 
             // ★変更点: Object.values ではなく Object.entries を使い、[id, char] の形でIDを確実に取得する
-            Object.entries(data).forEach(([id, char], idx) => {
-                // もしデータ内にidが含まれていなくても、キー(id)を使うようにする
-                const charId = char.id || id; 
+             Object.entries(data).forEach(([key, char], idx) => {
+                
+                // ★修正: データの中にidが無い場合、キーをidとして採用してあげる
+                // これで詳細画面へ渡すIDと、データの中身のIDが一致します
+                if (!char.id) {
+                    char.id = key; 
+                }
+                const charId = char.id;
 
                 const unit = document.createElement('div');
                 unit.className = 'char-unit';
