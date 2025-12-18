@@ -20,8 +20,9 @@ export function parseIaChara(text) {
     };
 
     // 基本情報のパース (行単位で処理を強化)
-    const nameLine = m(/名前[:：]\s*(.+)/) || '';
-    // ★修正: カッコ内のカナを取得する正規表現を微調整
+    
+    // 名前: カッコ内のカナを取得する正規表現
+    const nameLine = m(/名前[:：]\s*([^\n]+)/) || '';
     const nameMatch = nameLine.match(/^(.+?)[\s　]*[(（](.+?)[)）]/);
     if(nameMatch) { 
         d.name = nameMatch[1].trim(); 
@@ -30,15 +31,18 @@ export function parseIaChara(text) {
         d.name = nameLine; 
     }
 
+    // ★修正: タグの取得。改行を含まない [ \t]* を使用し、行末までを取得する
+    // これにより次の行の「職業:」などを吸い込むのを防ぎます
+    d.tags = m(/タグ[:：][ \t]*([^\n]*)/);
+
     // プロフィール項目の取得ヘルパー (スラッシュ区切りや行末を意識)
-    // ★修正: 改行やスラッシュを含まないように [^/\n]* を使用
     const getProfileVal = (label) => {
+        // ラベルの後ろ、スラッシュか改行が来るまでの文字列を取得
         const regex = new RegExp(`${label}[:：]\\s*([^/\\n]*)`);
         return m(regex);
     };
 
     d.job = getProfileVal('職業');
-    d.tags = m(/タグ[:：]\s*(.*)/); // タグはスラッシュを含む可能性があるため .*
     
     // 数値項目
     d.age = parseInt(getProfileVal('年齢')) || '';
@@ -58,14 +62,14 @@ export function parseIaChara(text) {
     d.image = m(/画像URL[:：]\s*(\S+)/) || m(/【画像】\n:(\S+)/) || m(/【立ち絵】\n:(\S+)/);
     d.icon = m(/アイコンURL[:：]\s*(\S+)/) || m(/【アイコン】\n:(\S+)/);
     
-    // ★修正: 所持金と借金。行末までマッチさせ、次の行のセクションヘッダー等を巻き込まないようにする
+    // 所持金と借金
     d.money = m(/(?:現在の)?所持金[:：]\s*([^()\n]*)/);
-    // 借金は特に空欄の場合に次の行を吸い込みやすいので注意
     d.debt = m(/^.*借金[:：]\s*([^()\n]*)$/m);
 
     // ステータス取得
     const getStat = (name) => {
-        const reg = new RegExp(`${name}[\\s:：]+(\\d+)`);
+        // STR 13 のような形式。全角スペースなどにも対応
+        const reg = new RegExp(`${name}[\\s　:：]+(\\d+)`);
         const val = parseInt(m(reg));
         return isNaN(val) ? 0 : val;
     };
@@ -92,6 +96,7 @@ export function parseIaChara(text) {
     let cat = null;
     lines.forEach(l => {
         l = l.trim();
+        // カテゴリ判定
         if(l.includes('『戦闘技能』')) cat='combat';
         else if(l.includes('『探索技能』')) cat='explore';
         else if(l.includes('『行動技能』')) cat='action';
@@ -100,8 +105,13 @@ export function parseIaChara(text) {
         else if(l.startsWith('【')) cat=null;
 
         if(cat) {
-            const match = l.match(/^([^\d]+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)/);
-            if(match && match[1].trim()!=='技能名') {
+            // ★修正: 技能のパース正規表現
+            // 技能名にはスペースが含まれる可能性があるため(例: 運転(自動車))、
+            // 行末から数字をマッチさせる方式に変更して精度を向上
+            // 構成: [技能名] [合計] [初期] [職業] [興味] [成長] [その他]
+            const match = l.match(/^(.*?)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+).*$/);
+            
+            if(match && match[1].trim() !== '技能名') {
                 const n = match[1].trim();
                 d.skills[cat].push({
                     name: n, 
@@ -153,7 +163,7 @@ export function parseIaChara(text) {
     }
 
     const wMatch = text.match(/【戦闘・武器・防具】([\s\S]*?)【/);
-    if(wMatch) d.weapons = wMatch[1].trim(); // ※テキスト生データのまま保存する場合
+    if(wMatch) d.weapons = wMatch[1].trim(); 
 
     const itemSection = getSec('所持品');
     if(itemSection) {
@@ -168,7 +178,6 @@ export function parseIaChara(text) {
                 if(parts.length >= 5) desc = parts.slice(4).join(' ');
                 else if(parts.length > 1) desc = parts.slice(1).join(' ');
                 
-                // 所持金と借金の行はアイテムとして追加しない
                 if (name.includes('所持金') || name.includes('借金')) return;
 
                 items.push(desc ? `${name} : ${desc}` : name);

@@ -66,13 +66,19 @@
         .weapon-entry { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 30px; gap: 5px; margin-bottom: 5px; align-items: center; }
         .weapon-entry input { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 5px; font-size: 0.8rem; width: 100%; box-sizing: border-box; }
 
+        /* スキルテーブルと追加ボタンのスタイル */
         .skill-category { margin-bottom: 20px; }
-        .skill-category h4 { margin: 5px 0; color: #44ff44; font-size: 0.9rem; border-bottom: 1px solid #444; }
+        .skill-category h4 { margin: 5px 0; color: #44ff44; font-size: 0.9rem; border-bottom: 1px solid #444; display: flex; justify-content: space-between; align-items: center; }
         .skill-table { width: 100%; font-size: 0.8rem; border-collapse: collapse; }
         .skill-table th { color: #888; text-align: center; font-weight: normal; font-size: 0.7rem; padding: 4px; }
         .skill-table td { padding: 2px; }
         .skill-table input[type="number"] { text-align: center; color: #44ff44; padding: 4px; width: 100%; box-sizing: border-box; background: #1a1a1a; border: 1px solid #333; }
         .skill-desc-input { width: 100%; color: #ddd; font-size: 0.8rem; background: #1a1a1a; border: 1px solid #444; padding: 4px; box-sizing: border-box; }
+        .btn-add-skill { 
+            background: #333; border: 1px solid #555; color: #aaa; 
+            font-size: 0.7rem; padding: 2px 8px; cursor: pointer; border-radius: 4px; margin-left: 10px;
+        }
+        .btn-add-skill:hover { background: #444; color: #fff; border-color: #777; }
         
         input[type="color"] { width: 100%; height: 40px; padding: 2px; background: #2a2a2a; border: 1px solid #444; cursor: pointer; }
     </style>
@@ -433,6 +439,38 @@
             runCalculations();
         }
 
+        // ★修正: 技能の手動追加機能
+        window.addSkillRow = (catId) => {
+            const table = document.querySelector(`#skill-cat-${catId} tbody`);
+            if(!table) return;
+            
+            const tr = document.createElement('tr');
+            tr.className = 'skill-entry';
+            tr.innerHTML = `
+                <td><input type="text" class="s-name-edit" style="width:100%; color:#fff; background:#222; border:1px solid #444;" placeholder="技能名"></td>
+                <td><input type="number" class="s-total" readonly tabindex="-1"></td>
+                <td><input type="number" class="s-init" value="0" style="color:#888;"></td>
+                <td><input type="number" class="s-job" value="0"></td>
+                <td><input type="number" class="s-interest" value="0"></td>
+                <td><input type="number" class="s-growth" value="0"></td>
+                <td style="padding-left:10px;"><input type="text" class="s-desc skill-desc-input" placeholder="設定や理由など...">
+                <button onclick="this.closest('tr').remove()" style="float:right; background:transparent; border:none; color:#522; cursor:pointer;">×</button></td>
+            `;
+            table.appendChild(tr);
+            
+            // 自動計算イベントの付与
+            tr.querySelectorAll('input').forEach(inp => {
+                inp.addEventListener('input', (e) => {
+                    const row = e.target.closest('tr');
+                    const init = parseInt(row.querySelector('.s-init').value)||0;
+                    const job = parseInt(row.querySelector('.s-job').value)||0;
+                    const int = parseInt(row.querySelector('.s-interest').value)||0;
+                    const gro = parseInt(row.querySelector('.s-growth').value)||0;
+                    row.querySelector('.s-total').value = init + job + int + gro;
+                });
+            });
+        };
+
         function renderSkills(skillsObj) {
             const area = getEl('skillArea');
             area.innerHTML = '';
@@ -444,14 +482,14 @@
             ];
 
             cats.forEach(c => {
-                const list = skillsObj ? skillsObj[c.id] : [];
-                if(!list || list.length === 0) return;
+                // インポート時にデータがなくてもカテゴリ枠は作成する(手動追加のため)
+                const list = skillsObj ? (skillsObj[c.id] || []) : [];
 
                 const box = document.createElement('div');
                 box.className = 'skill-category';
                 box.id = `skill-cat-${c.id}`;
                 
-                let html = `<h4>${c.label}</h4>
+                let html = `<h4>${c.label} <button type="button" class="btn-add-skill" onclick="addSkillRow('${c.id}')">+ 追加</button></h4>
                 <table class="skill-table">
                     <thead>
                         <tr>
@@ -561,6 +599,7 @@
             const p = parseIaChara(text);
             
             // ★修正: 値が存在する場合(空文字でない場合)は上書きするように変更
+            // これにより、既存データがある状態でインポート元の項目が空白の場合は既存データが維持されます
             const updateVal = (id, val) => {
                 if(val !== undefined && val !== null && val !== "") {
                     setVal(id, val);
@@ -596,7 +635,13 @@
                     }
                 });
             }
-            if(p.skills) renderSkills(p.skills);
+            
+            // 技能は構造が複雑なため、インポートデータがある場合のみ再描画（上書き）します
+            // もし既存の技能を守りたい場合は、ここをスキップするロジックが必要ですが、
+            // 通常「いあきゃら」からのインポートは全技能データを伴うため、基本的には置き換えで問題ない想定です。
+            if(p.skills && Object.values(p.skills).flat().length > 0) {
+                renderSkills(p.skills);
+            }
 
             if(p.image) {
                 setVal('inpImageBody', p.image);
@@ -607,7 +652,7 @@
                 setSrc('previewIcon', p.icon);
             }
 
-            alert("解析・補完しました！\n値がある項目はテキストデータの内容で上書きされています。");
+            alert("解析・補完しました！\n値がある項目はテキストデータの内容で上書きされています。\n（空白の項目は既存データを維持しています）");
             runCalculations();
         });
 
