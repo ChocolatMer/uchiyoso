@@ -11,7 +11,7 @@
     --glass-shine: rgba(255, 255, 255, 0.6);
     --glass-shadow: 0 8px 32px 0 rgba(90, 61, 53, 0.1);
     --walker-size: 64px;
-    --ticker-height: 44px;
+    --ticker-height: 48px; /* 少し高さを確保 */
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; text-decoration: none; -webkit-tap-highlight-color: transparent; }
@@ -19,7 +19,6 @@
 body {
     font-family: "Zen Maru Gothic", sans-serif;
     background-color: #fce4ec;
-    /* パス変更: 一つ上の階層のimagesを参照 */
     background-image: url('../images/background/fur-texture-pink.jpg');
     background-size: cover;
     background-position: center;
@@ -94,7 +93,6 @@ body {
 .avatar {
     width: 90px; height: 90px; border-radius: 50%;
     background-color: #eee;
-    /* パス変更 */
     background-image: url('../images/background/fur-texture-pink.jpg');
     background-size: cover; border: 4px solid rgba(255,255,255,0.8);
     box-shadow: 0 8px 20px rgba(0,0,0,0.15);
@@ -179,7 +177,7 @@ body {
 
 /* マスコット */
 .floating-mascot {
-    position: fixed; bottom: 60px; right: 40px; width: 140px; height: auto; z-index: 95; cursor: pointer;
+    position: fixed; bottom: 65px; right: 20px; width: 140px; height: auto; z-index: 95; cursor: pointer;
     animation: playful-float 7s ease-in-out infinite; transition: 0.3s;
     will-change: transform;
 }
@@ -190,7 +188,7 @@ body {
 /* Pixel Walker */
 .pixel-walker {
     position: fixed;
-    bottom: 45px; 
+    bottom: 50px; 
     z-index: 90;
     width: var(--walker-size);
     height: var(--walker-size);
@@ -200,7 +198,6 @@ body {
 }
 .pixel-walker .sprite {
     width: 100%; height: 100%;
-    /* パス変更 */
     background-image: url('../images/hoko/mahiru.png'); 
     background-size: 300% 400%; background-repeat: no-repeat; image-rendering: pixelated;
     animation: walk-cycle 0.8s step-start infinite;
@@ -210,7 +207,7 @@ body {
 .pixel-walker[data-facing="right"] .sprite { background-position-y: 66.66%; }
 @keyframes walk-cycle { 0% { background-position-x: 0%; } 33% { background-position-x: 50%; } 66% { background-position-x: 100%; } }
 
-/* === 下部固定ニュースバー (リボン風デザイン) === */
+/* === 下部固定ニュースバー & ほのぼのエリア === */
 .bottom-news-ribbon {
     position: fixed;
     bottom: 0; left: 0;
@@ -231,82 +228,134 @@ body {
 .news-label-container {
     height: 100%; padding: 0 15px;
     display: flex; align-items: center; justify-content: center;
-    background: #fffafa;
-    z-index: 2;
-    position: relative;
+    background: #fffafa; z-index: 2; position: relative;
 }
 .news-label-badge {
     background: var(--accent-gradient);
-    color: #fff;
-    padding: 4px 16px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 900;
-    display: flex; align-items: center; gap: 6px;
+    color: #fff; padding: 4px 12px; border-radius: 20px;
+    font-size: 0.75rem; font-weight: 900;
+    display: flex; align-items: center; gap: 4px;
     box-shadow: 0 2px 8px rgba(255, 158, 187, 0.6);
     transform: rotate(-2deg);
 }
-.news-label-badge span { font-size: 1.1em; }
 .news-scroller {
     flex-grow: 1; overflow: hidden; position: relative;
     white-space: nowrap; height: 100%; display: flex; align-items: center;
-    mask-image: linear-gradient(to right, transparent 0%, black 20px);
+    mask-image: linear-gradient(to right, transparent 0%, black 20px, black 95%, transparent 100%);
 }
 .news-content {
     display: inline-block; white-space: nowrap;
-    animation: news-scroll 40s linear infinite;
-    padding-left: 100%;
+    animation: news-scroll 40s linear infinite; padding-left: 100%;
     will-change: transform;
 }
 .news-item {
     display: inline-block; margin-right: 60px;
-    position: relative;
-    color: var(--text-main);
+    position: relative; color: var(--text-main); font-size: 0.9rem;
 }
-.news-item::before {
-    content: '★'; color: var(--accent-pink); margin-right: 8px; font-size: 0.8em;
-}
-@keyframes news-scroll { 0% { transform: translate3d(0,0,0); } 100% { transform: translate3d(-100%,0,0); } }
+.news-item::before { content: '★'; color: var(--accent-pink); margin-right: 6px; }
 
-/* === スマホ最適化 === */
+/* --- ほのぼのエリア（時計 & レポート） --- */
+.honobono-container {
+    display: flex; align-items: center; height: 100%;
+    padding-right: 20px; padding-left: 10px;
+    background: #fffafa; z-index: 2;
+    gap: 15px;
+}
+.honobono-report {
+    font-size: 0.85rem; color: var(--text-sub);
+    animation: fadeReport 6s infinite; /* ふんわり切り替え */
+    white-space: nowrap;
+    max-width: 200px; overflow: hidden; text-overflow: ellipsis;
+}
+.digital-clock {
+    font-family: 'Zen Maru Gothic', monospace;
+    font-weight: 900; color: var(--accent-pink);
+    font-size: 1.1rem; letter-spacing: 0.05em;
+    background: #fff; padding: 2px 10px; border-radius: 8px;
+    border: 2px solid #ffe4ea;
+    box-shadow: 2px 2px 0 rgba(255, 158, 187, 0.3);
+}
+
+@keyframes news-scroll { 0% { transform: translate3d(0,0,0); } 100% { transform: translate3d(-100%,0,0); } }
+@keyframes fadeReport {
+    0%, 10% { opacity: 0; transform: translateY(2px); }
+    20%, 90% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-2px); }
+}
+
+/* === スマホ最適化 (PCの見た目に近づける) === */
 @media (max-width: 768px) {
     body {
         display: block; overflow-y: auto; overflow-x: hidden;
         height: auto; perspective: none;
         padding-top: 40px;
-        padding-bottom: calc(var(--ticker-height) + 60px);
+        padding-bottom: calc(var(--ticker-height) + 80px); /* マスコット分余白確保 */
     }
     
     .bento-container {
         width: 94%; margin: 0 auto;
-        display: flex; flex-direction: column; gap: 16px;
+        /* スマホでもグリッド表示にする */
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* 2列 */
+        gap: 12px; /* 隙間を少し詰める */
         transform: none !important;
     }
+    
+    /* カード共通設定 */
     .glass-card {
-        width: 100%; transform: none !important; margin-bottom: 0; padding: 20px;
+        width: 100%; transform: none !important; margin-bottom: 0;
+        padding: 16px; /* パディングを小さく */
+        border-radius: 24px; /* 角丸を少し小さく */
         will-change: auto;
     }
-    .glass-card:hover { transform: translateY(-3px) !important; }
+    .glass-card:hover { transform: translateY(-2px) !important; }
 
-    .profile-header { flex-direction: column; text-align: center; margin-bottom: 15px; }
-    .area-profile { text-align: center; align-items: center; padding: 30px 20px; }
-    .site-title { font-size: 1.8rem; }
-    .area-ticker { height: 60px; order: 2; }
+    /* 各エリアの配置調整 */
+    .area-profile {
+        grid-column: span 2; /* 横幅いっぱい */
+        text-align: center; align-items: center; padding: 24px;
+    }
+    .profile-header { flex-direction: column; gap: 12px; margin-bottom: 12px; }
+    .avatar { width: 70px; height: 70px; } /* アバター少し小さく */
+    .site-title { font-size: 1.5rem; }
     
+    .area-ticker {
+        grid-column: span 2; /* 横幅いっぱい */
+        height: 48px; order: 2;
+    }
+    
+    /* ツールボタン */
     .area-tool {
-        aspect-ratio: auto; flex-direction: row; justify-content: flex-start;
-        text-align: left; padding: 15px 20px; gap: 15px;
+        /* 正方形に近い比率を維持 */
+        aspect-ratio: 1 / 1;
+        flex-direction: column; justify-content: center; text-align: center;
+        padding: 10px; gap: 8px;
+    }
+    .area-tool-wide {
+        grid-column: span 2; /* ワイドボタンは2列分 */
+        aspect-ratio: auto;
+        flex-direction: row; justify-content: flex-start;
+        padding: 16px 20px;
     }
     .area-tool .icon-circle {
-        width: 44px; height: 44px; font-size: 24px; margin-bottom: 0; transform: none !important;
+        width: 48px; height: 48px; font-size: 24px; margin-bottom: 0; transform: none !important;
     }
-    .area-tool-wide { padding-left: 20px; }
-    .badge { top: 50%; right: 20px; transform: translateY(-50%); animation: none; }
+    .tool-label { font-size: 0.9rem; }
+    .tool-sub { font-size: 0.7rem; display: none; /* スマホの小さいボタンではサブテキスト隠す */ }
+    .area-tool-wide .tool-sub { display: block; /* ワイドボタンなら表示 */ }
+    
+    .badge { top: 10px; right: 10px; padding: 4px 10px; font-size: 0.65rem; animation: none; }
 
-    .area-share { display: block; width: 100%; padding: 0; margin-top: 10px; }
-    .btn-share-pill { width: 100%; justify-content: center; }
+    .area-share { grid-column: span 2; padding: 0; margin-top: 10px; }
 
-    .floating-mascot { width: 90px; bottom: calc(var(--ticker-height) + 15px); right: 10px; }
-    .pixel-walker { bottom: calc(var(--ticker-height) + 10px); }
-    :root { --walker-size: 48px; }
+    /* 下部固定バー調整 */
+    .news-label-badge { padding: 4px 8px; font-size: 0.7rem; }
+    .honobono-report { display: none; /* スマホ幅ではレポート非表示（狭いため） */ }
+    .honobono-container { padding-left: 5px; gap: 5px; }
+    .digital-clock { font-size: 0.9rem; padding: 2px 6px; }
+
+    /* キャラクター位置 */
+    .floating-mascot { width: 80px; bottom: calc(var(--ticker-height) + 10px); right: 10px; }
+    .pixel-walker { bottom: calc(var(--ticker-height) + 5px); }
+    :root { --walker-size: 40px; }
 }

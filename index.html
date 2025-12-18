@@ -8,7 +8,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
-<!-- パス変更: TOPフォルダ内のCSSを読み込み -->
 <link rel="stylesheet" href="TOP/style.css">
 </head>
 <body>
@@ -139,19 +138,32 @@
     <!-- 下部固定ニュースバー -->
     <div class="bottom-news-ribbon">
         <div class="ribbon-stitch"></div>
+        
+        <!-- 左側：NEWSラベル -->
         <div class="news-label-container">
             <div class="news-label-badge">
                 <span class="material-symbols-rounded">campaign</span> NEWS
             </div>
         </div>
+
+        <!-- 中央：ニューススクロール -->
         <div class="news-scroller">
             <div class="news-content" id="news-container">
                 <span class="news-item">Loading...</span>
             </div>
         </div>
+
+        <!-- 右側：ほのぼのレポート & 時計 -->
+        <div class="honobono-container">
+            <div class="honobono-report" id="report-text">
+                <!-- ここに report.json の内容がふわっと表示されます -->
+            </div>
+            <div class="digital-clock" id="digital-clock">
+                00:00
+            </div>
+        </div>
     </div>
 
-    <!-- パス変更: TOPフォルダ内のJSを読み込み -->
     <script src="TOP/script.js"></script>
 
 </body>
