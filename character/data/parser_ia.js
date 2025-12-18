@@ -28,14 +28,23 @@ export function parseIaChara(text) {
         return m(regex);
     };
 
-    // 全角数字を半角に変換する関数
+    // 全角英数字・記号を半角に変換
     const toHalfWidth = (str) => {
-        return str.replace(/[０-９]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
+        return str.replace(/[！-～]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
     };
 
-    // 数値かどうか判定する関数 (全角対応)
-    const isNum = (str) => {
-        return /^\d+$/.test(toHalfWidth(str));
+    // 数値として扱えるか判定 (整数、+付き、%付きなど許容)
+    const isLikeNumber = (str) => {
+        // 半角にしてから判定
+        const s = toHalfWidth(str);
+        // 数字を含み、かつ数字と記号だけで構成されているか、あるいは parseInt できるか
+        return /^[\d+\-%]+$/.test(s) && !isNaN(parseInt(s));
+    };
+
+    // 安全に数値化
+    const safeParseInt = (str) => {
+        const val = parseInt(toHalfWidth(str));
+        return isNaN(val) ? 0 : val;
     };
 
     // ■ 基本情報のパース
@@ -79,8 +88,7 @@ export function parseIaChara(text) {
     const getStat = (name) => {
         const reg = new RegExp(`${name}[\\s　:：]+([0-9０-９]+)`);
         const valStr = m(reg);
-        const val = parseInt(toHalfWidth(valStr));
-        return isNaN(val) ? 0 : val;
+        return safeParseInt(valStr);
     };
     d.stats.STR = getStat('STR'); d.stats.CON = getStat('CON');
     d.stats.POW = getStat('POW'); d.stats.DEX = getStat('DEX');
@@ -131,40 +139,52 @@ export function parseIaChara(text) {
             return;
         }
 
-        // ★最強の技能行解析ロジック
+        // ★技能行解析ロジック (改訂版)
         // あらゆる空白文字(半角/全角/タブ/NBSP等)で分割する
-        const parts = line.split(/\s+/);
+        // \s は全角スペースやNBSPも含む
+        const parts = line.split(/[\s　]+/);
         
-        // 後ろから数字の数を数える (全角数字もOK)
+        // 後ろから「数値っぽいもの」をカウント
         let numCount = 0;
         for (let i = parts.length - 1; i >= 0; i--) {
-            if (isNum(parts[i])) {
+            // 空文字はスキップ
+            if (!parts[i]) continue;
+
+            if (isLikeNumber(parts[i])) {
                 numCount++;
             } else {
-                break; // 数字以外が来たらストップ
+                // 数字以外が来たら、それが技能名の一部かもしれないのでストップ
+                break; 
             }
         }
 
-        // 数字が5個以上並んでいれば技能行とみなす
+        // 数値カラムが5個以上あれば技能とみなす
         // (合計, 初期, 職業, 興味, 成長) + (その他)
         if (numCount >= 5) {
-            // 数字部分と名前部分を分離
-            const numsStr = parts.slice(parts.length - numCount);
-            const nums = numsStr.map(n => parseInt(toHalfWidth(n)));
+            // 末尾から numCount 個分を数値データとして取得
+            // ただし最大6個まで（それ以上ある場合は技能名に数字が含まれている可能性考慮）
+            // いあキャラは通常6列（その他含む）か5列（その他なし）
+            const takeCols = numCount > 6 ? 6 : numCount;
             
-            const nameParts = parts.slice(0, parts.length - numCount);
+            // 数値部分の切り出し
+            const numsStr = parts.slice(parts.length - takeCols);
+            const nums = numsStr.map(n => safeParseInt(n));
+            
+            // 名前部分の切り出し
+            const nameParts = parts.slice(0, parts.length - takeCols);
             const name = nameParts.join(' ').trim();
 
-            // ヘッダー行や区切り線を除外
-            if (name === '技能名' || name.match(/^[-―]+$/) || !name) return;
+            // 除外判定
+            if (name === '技能名' || name.match(/^[-―=]+$/) || !name) return;
 
-            // 数字の割り当て (標準形式: Total, Init, Job, Interest, Growth, Other)
+            // データマッピング
+            // nums[0]=合計, [1]=初期, [2]=職業, [3]=興味, [4]=成長, [5]=その他
             let total = nums[0];
             let init = nums[1];
             let job = nums[2];
             let interest = nums[3];
             let growth = nums[4];
-            let other = nums[5] || 0; // 6列目がなければ0
+            let other = nums[5] || 0;
 
             const sData = {
                 name: name,
@@ -174,7 +194,6 @@ export function parseIaChara(text) {
                 interest: interest,
                 growth: growth,
                 desc: descMap[name] || '',
-                // カテゴリが不明なら original に入れる
                 category: currentCat || 'original'
             };
             d.skills[sData.category].push(sData);
