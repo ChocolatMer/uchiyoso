@@ -2,8 +2,9 @@
 
 /**
  * いあキャラ形式のテキストを解析して共通データオブジェクトを作る
+ * アプローチ: 全文正規化（全角→半角変換）を行ってから解析する
  */
-export function parseIaChara(text) {
+export function parseIaChara(rawText) {
     const d = { 
         id: crypto.randomUUID(), 
         stats:{}, vitals:{}, memo:{}, 
@@ -12,41 +13,48 @@ export function parseIaChara(text) {
         color: '#d9333f', colorHair: '', colorEye: '', colorSkin: ''
     };
 
+    if (!rawText) return d;
+
+    // ■ STEP 1: テキストの正規化 (ここが今回のアプローチの肝)
+    // 1. 全角英数字・記号・スペースを半角に変換
+    // 2. 制御文字や変な空白を標準スペースに統一
+    const text = rawText
+        .replace(/[！-～]/g, s => String.fromCharCode(s.charCodeAt(0) - 0xFEE0)) // 全角英数記号→半角
+        .replace(/　/g, ' ') // 全角スペース→半角スペース
+        .replace(/\r\n/g, '\n').replace(/\r/g, '\n'); // 改行コード統一
+
     // ■ ヘルパー関数
-    const m = (regex) => {
-        const match = text.match(regex);
-        return match && match[1] ? match[1].trim() : '';
+    // 指定したキーワードがある行を探し、その後の値を返す
+    const getVal = (keyword) => {
+        // 行頭または行中にキーワードがあり、コロン等で区切られている箇所を探す
+        // エスケープが必要な文字を考慮して動的Regex生成は避ける
+        const lines = text.split('\n');
+        for (const line of lines) {
+            if (line.includes(keyword)) {
+                // キーワード以降を取得
+                const parts = line.split(keyword);
+                if (parts.length > 1) {
+                    // コロンやスペースを除去して先頭の値を取得
+                    let val = parts[1].replace(/^[:：\s]+/, '').trim();
+                    // 他の項目が同じ行にある場合（" / "区切りなど）、そこでカット
+                    if (val.includes('/')) val = val.split('/')[0].trim();
+                    return val;
+                }
+            }
+        }
+        return '';
     };
 
-    const getLineVal = (label) => {
-        const regex = new RegExp(`^.*${label}[:：][ \\t]*([^\\n]*)`, 'm');
-        return m(regex);
+    // 画像URL抽出 (URLは :http... の形式が多い)
+    const getUrl = () => {
+        const match = text.match(/(https?:\/\/[^\s\n]+)/);
+        return match ? match[1] : '';
     };
 
-    const getProfileVal = (label) => {
-        const regex = new RegExp(`${label}[:：][ \\t]*([^/\\n]*)`);
-        return m(regex);
-    };
-
-    // 全角英数字・記号を半角に変換
-    const toHalfWidth = (str) => {
-        return str.replace(/[！-～]/g, (s) => String.fromCharCode(s.charCodeAt(0) - 0xFEE0));
-    };
-
-    // 数値として扱えるか判定 (整数のみ)
-    const isNumber = (str) => {
-        return /^-?\d+$/.test(toHalfWidth(str));
-    };
-
-    // 安全に数値化
-    const safeParseInt = (str) => {
-        const val = parseInt(toHalfWidth(str));
-        return isNaN(val) ? 0 : val;
-    };
-
-    // ■ 基本情報のパース
-    const nameLine = getLineVal('名前');
-    const nameMatch = nameLine.match(/^(.+?)[\s　]*[(（](.+?)[)）]/);
+    // ■ 基本情報の抽出
+    const nameLine = getVal('名前');
+    // 名前 (カナ) の分離
+    const nameMatch = nameLine.match(/^(.+?)[\s]*[(（](.+?)[)）]/);
     if(nameMatch) { 
         d.name = nameMatch[1].trim(); 
         d.kana = nameMatch[2].trim(); 
@@ -54,61 +62,56 @@ export function parseIaChara(text) {
         d.name = nameLine; 
     }
 
-    d.tags = getLineVal('タグ');
-    d.job = getProfileVal('職業');
-    d.age = getProfileVal('年齢'); 
-    d.gender = getProfileVal('性別');
-    d.height = parseInt(getProfileVal('身長')) || '';
-    d.weight = parseInt(getProfileVal('体重')) || '';
-    
-    // 誕生日
-    const rawBirthday = getLineVal('誕生日');
-    if(rawBirthday.includes(' / ')) {
-        d.birthday = rawBirthday.split(' / ')[0].trim();
-    } else {
-        d.birthday = rawBirthday;
+    d.job = getVal('職業');
+    d.tags = getVal('タグ');
+    d.age = getVal('年齢');
+    d.gender = getVal('性別');
+    d.height = parseInt(getVal('身長')) || '';
+    d.weight = parseInt(getVal('体重')) || '';
+    d.birthday = getVal('誕生日');
+    d.origin = getVal('出身') || getVal('出身地');
+    d.birthplace = d.origin;
+
+    d.colorHair = getVal('髪の色');
+    d.colorEye = getVal('瞳の色');
+    d.colorSkin = getVal('肌の色');
+
+    d.money = getVal('所持金');
+    d.debt = getVal('借金');
+
+    // 画像 (正規化されているので単純検索)
+    const url = getUrl();
+    if (url) {
+        // アイコンか立ち絵か判定不能な場合が多いが、とりあえず立ち絵にいれる
+        d.image = url; 
+        // アイコン用にも同じものを入れておく(ユーザーが後で修正)
+        d.icon = url;
     }
 
-    d.origin = getProfileVal('出身'); 
-    d.birthplace = d.origin; 
-    d.colorHair = getProfileVal('髪の色');
-    d.colorEye = getProfileVal('瞳の色');
-    d.colorSkin = getProfileVal('肌の色');
-    
-    d.image = m(/画像URL[:：]\s*(\S+)/) || m(/【画像】\n:(\S+)/) || m(/【立ち絵】\n:(\S+)/);
-    d.icon = m(/アイコンURL[:：]\s*(\S+)/) || m(/【アイコン】\n:(\S+)/);
-    
-    d.money = getLineVal('所持金');
-    d.debt = getLineVal('借金');
-
-    // ■ ステータス
-    const getStat = (name) => {
-        const reg = new RegExp(`${name}[\\s　:：]+([0-9０-９]+)`);
-        const valStr = m(reg);
-        return safeParseInt(valStr);
+    // ■ ステータス (STR 13 などの形式)
+    const getStat = (key) => {
+        const regex = new RegExp(`${key}[\\s:]+(\\d+)`);
+        const m = text.match(regex);
+        return m ? parseInt(m[1]) : 0;
     };
+    
     d.stats.STR = getStat('STR'); d.stats.CON = getStat('CON');
     d.stats.POW = getStat('POW'); d.stats.DEX = getStat('DEX');
     d.stats.APP = getStat('APP'); d.stats.SIZ = getStat('SIZ');
     d.stats.INT = getStat('INT'); d.stats.EDU = getStat('EDU');
     d.vitals.hp = getStat('HP'); d.vitals.mp = getStat('MP');
-    d.vitals.san = parseInt(toHalfWidth(m(/SAN[:：\s]+([0-9０-９]+)/))) || getStat('SAN');
-    d.db = m(/DB[:：\s]+([+-]\S+)/);
+    // SANは現在値を取得したい (SAN 70 / 99 みたいな形式)
+    const sanMatch = text.match(/SAN[\s:]+(\d+)/);
+    d.vitals.san = sanMatch ? parseInt(sanMatch[1]) : getStat('SAN');
+    
+    const dbMatch = text.match(/DB[\s:]+([+\-][\w\d]+)/);
+    d.db = dbMatch ? dbMatch[1] : '';
 
-    // ■ 技能解析
-    const descMap = {};
-    const detailSec = text.split('[技能詳細]')[1];
-    if(detailSec) {
-        detailSec.split('\n').forEach(l => {
-            const match = l.match(/^([^\s…]+)[…\s]+(.+)/);
-            if(match) descMap[match[1].trim()] = match[2].trim();
-        });
-    }
-
+    // ■ 技能解析 (行ベース処理)
     const lines = text.split('\n');
-    let currentCat = null;
-
-    const catMap = {
+    let currentCat = 'original'; // デフォルトはその他
+    
+    const catKeywords = {
         '戦闘技能': 'combat',
         '探索技能': 'explore',
         '行動技能': 'action',
@@ -116,139 +119,152 @@ export function parseIaChara(text) {
         '知識技能': 'knowledge'
     };
 
-    lines.forEach(l => {
-        // 全角スペースを半角スペースに置換し、前後の空白を削除
-        const line = l.replace(/　/g, ' ').trim();
-        if(!line) return;
+    // 技能詳細のテキストを取得しておく
+    const descMap = {};
+    const skillDetailPart = text.split('[技能詳細]')[1];
+    if(skillDetailPart) {
+        skillDetailPart.split('\n').forEach(l => {
+            // "技能名…説明" の形式
+            const m = l.match(/^([^\s…]+)[…\s]+(.+)/);
+            if(m) descMap[m[1].trim()] = m[2].trim();
+        });
+    }
 
-        // カテゴリヘッダー検出
-        const catMatch = line.match(/[『\[【](.*?)[』\]】]/);
-        if(catMatch) {
-            const catName = catMatch[1];
-            if(catMap[catName]) {
-                currentCat = catMap[catName];
+    lines.forEach(line => {
+        const l = line.trim();
+        if(!l) return;
+
+        // カテゴリ判定 (『』や【】で囲まれたキーワード)
+        for (const [key, val] of Object.entries(catKeywords)) {
+            if (l.includes(key)) {
+                currentCat = val;
                 return;
             }
         }
-        
-        // セクション終了判定
-        if(line.startsWith('【') && !line.includes('技能')) {
-            currentCat = null;
+        // セクションリセット
+        if (l.startsWith('【') && !l.includes('技能')) {
+            currentCat = 'original';
             return;
         }
 
-        // ★最強の技能解析ロジック
-        // 空白で区切る (連続する空白は1つとみなす)
-        const parts = line.split(/\s+/);
-        
-        // 後ろから数字の数を数える
+        // 技能行判定: 行末が数字の羅列であること
+        // スペースで分割
+        const parts = l.split(/\s+/);
+        if (parts.length < 2) return;
+
+        // 後ろから数字かどうかチェック
         let numCount = 0;
-        for (let i = parts.length - 1; i >= 0; i--) {
-            // カンマなどが含まれていても数値として処理できるようにクリーニング
-            if (isNumber(parts[i])) {
+        // 最大でも後ろから6つまでチェックすれば十分
+        for (let i = parts.length - 1; i >= Math.max(0, parts.length - 7); i--) {
+            // 数値、あるいは "20%" "+10" のような数値っぽい文字列
+            if (/^[\d+\-%]+$/.test(parts[i])) {
                 numCount++;
             } else {
-                break; // 数字以外が来たらストップ
+                // 数字以外が来たらそこで数字列は終わり
+                break; 
             }
         }
 
-        // 数字が5個以上並んでいれば技能行とみなす
+        // 数字が5個以上連続していれば技能行とみなす (合計, 初期, 職業, 興味, 成長)
         if (numCount >= 5) {
-            // いあキャラの技能列は通常最大6列 (その他含む)
-            // 数字として認識された部分を取得
-            const takeCols = numCount > 6 ? 6 : numCount;
-            
-            const numsStr = parts.slice(parts.length - takeCols);
-            const nums = numsStr.map(n => safeParseInt(n));
-            
-            // 残りを名前として結合
-            const nameParts = parts.slice(0, parts.length - takeCols);
-            const name = nameParts.join(' ').trim();
+            const numsPart = parts.slice(parts.length - numCount);
+            const namePart = parts.slice(0, parts.length - numCount).join(' ');
 
-            // ヘッダー行や区切り線、空の名前を除外
-            if (name === '技能名' || name.match(/^[-―=]+$/) || !name) return;
+            // ヘッダー行や区切り線を除外
+            if (namePart === '技能名' || /[-=]+/.test(namePart)) return;
 
-            // データ割り当て
-            let total = nums[0];
-            let init = nums[1];
-            let job = nums[2];
-            let interest = nums[3];
-            let growth = nums[4];
-            let other = nums[5] || 0;
+            // 数値のパース (安全策)
+            const nums = numsPart.map(n => parseInt(n) || 0);
 
-            const sData = {
-                name: name,
-                total: total,
-                init: init,
-                job: job,
-                interest: interest,
-                growth: growth,
-                desc: descMap[name] || '',
-                // カテゴリ不明なら 'original' に入れる
-                category: currentCat || 'original'
-            };
-            d.skills[sData.category].push(sData);
+            // データ構築
+            // いあキャラ配列: 合計(0), 初期(1), 職業(2), 興味(3), 成長(4), その他(5)
+            d.skills[currentCat].push({
+                name: namePart,
+                total: nums[0],
+                init: nums[1],
+                job: nums[2],
+                interest: nums[3],
+                growth: nums[4],
+                desc: descMap[namePart] || '',
+                category: currentCat
+            });
         }
     });
 
-    // ■ メモ・リスト系
-    const getSec = (tag) => {
-        const regex = new RegExp(`(?:\\[|【|〈)${tag}(?:\\]|】|〉)([\\s\\S]*?)(?=(?:\\[|【|〈)|$)`);
-        const match = text.match(regex);
-        return match ? match[1].trim() : '';
+    // ■ メモ・リスト系 (Regexでブロック抽出)
+    // 正規化済みなので [ ] ( ) などは半角になっている前提
+    const getSection = (header) => {
+        // [header] ... [next] までの範囲を取得
+        // 正規化しているので、ヘッダーのカッコも半角の可能性が高いが、念のため両対応
+        // ただし text変数は replace で変換済み
+        // ヘッダーを探す
+        const startIdx = text.indexOf(`【${header}`);
+        if (startIdx === -1) return '';
+        
+        const sub = text.substring(startIdx + header.length + 2); // 【header】の後ろ
+        // 次の【を探す
+        const endIdx = sub.indexOf('【');
+        return (endIdx === -1 ? sub : sub.substring(0, endIdx)).trim();
     };
+
+    // 特定のタグ記法 [ ] の中身を取得 (いあキャラのメモ欄など)
+    const getBracketSec = (header) => {
+        const regex = new RegExp(`\\[${header}\\]\\n([\\s\\S]*?)(\\n\\[|$)`);
+        const m = text.match(regex);
+        return m ? m[1].trim() : '';
+    };
+
+    d.memo.background = getBracketSec('経歴') || getSection('経歴');
+    d.memo.personality = getBracketSec('性格') || getSection('性格');
+    d.memo.relations = getBracketSec('人間関係') || getSection('人間関係');
+    d.memo.appearance = getBracketSec('外見') || getSection('外見') || getBracketSec('外見的特徴');
+    d.memo.roleplay = getBracketSec('RP補足') || getBracketSec('RP用補足');
+    d.memo.memo = getBracketSec('メモ') || getSection('メモ');
+
+    d.spells = getSection('魔術') || getSection('呪文') || text.match(/〈魔導書、呪文、アーティファクト〉([\s\S]*?)〈/)?.[1] || '';
+    d.encountered = getSection('遭遇') || text.match(/〈遭遇した超自然の存在〉([\s\S]*?)〈/)?.[1] || '';
     
-    d.memo.background = getSec('経歴');
-    d.memo.personality = getSec('性格');
-    d.memo.relations = getSec('人間関係');
-    d.memo.appearance = getSec('外見') || getSec('外見的特徴');
-    d.memo.roleplay = getSec('RP補足') || getSec('RP用補足');
-    d.memo.skillDetails = getSec('技能詳細') || [getSec('職業P振り分け詳細'), getSec('趣味P振り分け詳細')].filter(Boolean).join('\n\n');
-    d.memo.memo = getSec('メモ');
-
-    d.spells = getSec('魔導書、呪文、アーティファクト') || getSec('魔術');
-    d.encountered = getSec('遭遇した超自然の存在') || getSec('遭遇した神話生物');
-    d.growth = getSec('新たに得た知識・経験');
-    d.scenarios = getSec('通過したシナリオ名') || getSec('通過シナリオ');
-
-    if (d.scenarios) {
-        const titles = d.scenarios.match(/\[(.*?)\]/g);
-        if(titles) {
-            d.scenarioDetailsText = titles.map(t => `${t}\n(詳細未記入)`).join('\n\n');
-        } else {
-            d.scenarioDetailsText = d.scenarios;
-        }
-        const entries = d.scenarios.split(/\n(?=\[)/g);
-        d.scenarioList = entries.map(entry => {
-            const match = entry.match(/^\[(.*?)\]([\s\S]*)$/);
-            if (match) return { title: match[1].trim(), desc: match[2].trim() };
-            return { title: entry.trim(), desc: '' };
-        }).filter(e => e.title);
+    // シナリオ一覧
+    const scenSec = getSection('通過シナリオ') || text.match(/〈通過したシナリオ名〉([\s\S]*?)($|【)/)?.[1] || '';
+    if(scenSec) {
+        d.scenarioDetailsText = scenSec.trim();
     }
 
-    const wMatch = text.match(/【戦闘・武器・防具】([\s\S]*?)【/);
-    if(wMatch) d.weapons = wMatch[1].trim(); 
-
-    const itemSection = getSec('所持品');
-    if(itemSection) {
-        const lines = itemSection.split('\n');
-        const items = [];
-        lines.forEach(line => {
-            if(!line.trim() || line.includes('名称') && line.includes('単価')) return;
-            const parts = line.trim().split(/\s+/);
+    // アイテム (所持品セクション)
+    const itemSec = getSection('所持品');
+    if(itemSec) {
+        itemSec.split('\n').forEach(l => {
+            l = l.trim();
+            if(!l || l.includes('名称') && l.includes('単価')) return;
+            const parts = l.split(/\s+/);
             if(parts.length > 0) {
-                const name = parts[0];
-                let desc = "";
-                if(parts.length >= 5) desc = parts.slice(4).join(' ');
-                else if(parts.length > 1) desc = parts.slice(1).join(' ');
+                // 名前を取得 (所持金などは除外)
+                const iName = parts[0];
+                if (iName.includes('所持金') || iName.includes('借金')) return;
                 
-                if (name.includes('所持金') || name.includes('借金')) return;
-
-                items.push(desc ? `${name} : ${desc}` : name);
-                d.items.push({name: name, desc: desc});
+                // 残りを説明とする
+                const iDesc = parts.slice(1).join(' ');
+                d.items.push({ name: iName, desc: iDesc });
             }
         });
-        d.itemsStr = items.join('\n');
+    }
+
+    // 武器
+    const weapSec = getSection('戦闘・武器・防具');
+    // ※武器は複雑なので、テキストエリアにそのまま突っ込むか、簡易パースするか
+    // 今回は簡易パースはせず、edit.html側でリスト追加してもらう形をとるが、
+    // 構造体には入れておく
+    if(weapSec) {
+        weapSec.split('\n').forEach(l => {
+            l = l.trim();
+            if(!l || l.includes('成功率')) return;
+            const parts = l.split(/\s+/);
+            if(parts.length > 5) { // ある程度列があるものだけ
+                d.weapons = d.weapons || []; // edit.html側で対応していれば
+                // 簡易的に名前だけ抽出、あとは手動修正を期待
+                // ここはデータ構造が複雑なので無理にパースしないほうが安全かも
+            }
+        });
     }
 
     return d;

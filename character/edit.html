@@ -463,8 +463,10 @@
             const finalData = collectFormData(originalData, true);
             finalData.skills = skillsObj;
 
-            alert("保存準備完了 (Cloud保存を実行します)");
-            return finalData;
+            saveToCloud(finalData).then(() => {
+                alert("保存しました");
+                location.reload();
+            });
         };
 
         monitorAuth((user) => {
