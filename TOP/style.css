@@ -54,7 +54,7 @@ body {
     transition: transform 0.5s ease;
 }
 
-/* === グラスモーフィズムカード === */
+/* === グラスモーフィズムカード (質感維持) === */
 .glass-card {
     background: var(--glass-bg);
     backdrop-filter: blur(40px) saturate(180%);
@@ -82,7 +82,7 @@ body {
 }
 .glass-card:hover::before { left: 100%; transition: 0.7s ease-in-out; }
 
-/* 各エリア */
+/* 各エリア設定 */
 .area-profile {
     grid-column: span 2; grid-row: span 2; align-items: flex-start; text-align: left; padding: 40px;
     background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 100%);
@@ -148,7 +148,7 @@ body {
 }
 .btn-share-pill:hover { background: #fff; color: var(--accent-pink); transform: translateY(-5px) scale(1.05); box-shadow: 0 15px 40px rgba(255, 158, 187, 0.3); }
 
-/* アニメーション定義 */
+/* アニメーション */
 @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 @keyframes dance { 0%, 100% { transform: translateY(0) rotate(0deg); } 25% { transform: translateY(-6px) rotate(-3deg); } 75% { transform: translateY(2px) rotate(2deg); } }
 @keyframes dance-reverse { 0%, 100% { transform: translateY(0) rotate(0deg); } 25% { transform: translateY(6px) rotate(3deg); } 75% { transform: translateY(-2px) rotate(-2deg); } }
@@ -228,8 +228,16 @@ body {
 .header-right-area {
     display: flex; align-items: center; gap: 15px;
     margin-left: 20px; position: relative;
+    /* レポートを全文表示するために縮小しない */
     flex-shrink: 0;
+    /* 背景色をつけることで、ニュースの文字と重なっても読めるようにする */
+    background: #fffafa;
+    padding-left: 10px;
+    /* ニュースとの境界を少しぼかす */
+    box-shadow: -10px 0 10px -5px #fffafa;
+    z-index: 2;
 }
+
 .digital-clock {
     font-family: 'Zen Maru Gothic', monospace;
     font-weight: 900; color: var(--accent-pink);
@@ -239,69 +247,25 @@ body {
     box-shadow: 2px 2px 0 rgba(255, 158, 187, 0.3);
 }
 
-/* === ▼▼▼ 改修：レポート（文字を大きく、流れるように） ▼▼▼ === */
+/* === レポート（修正：バーの中に埋め込み、浮き上がる） === */
 .honobono-report {
-    position: absolute;
-    top: 55px;
-    right: 0;
-    z-index: 1000;
-    
-    /* 文字が見やすく、吹き出し自体を大きく */
-    width: 260px; /* 固定幅にして、中の文字を流す */
-    height: 46px;
-    background: #fff;
-    border-radius: 23px;
-    border: 2px solid #ffe4ea;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    
-    /* 中身の制御 */
-    overflow: hidden; /* はみ出した文字を隠す（スクロールさせるため） */
-    display: flex; align-items: center;
-    padding: 0 15px;
-    
-    animation: fadeReport 15s infinite;
-    pointer-events: none;
-}
-
-/* スクロールする中身（JSで生成） */
-.report-scroll-content {
-    display: inline-block;
-    white-space: nowrap;
-    font-size: 1.15rem; /* 大きく */
-    font-weight: bold;
+    font-size: 0.95rem; /* 読みやすいサイズ */
     color: var(--text-main);
+    font-weight: bold;
+    white-space: nowrap;
     
-    /* 文字を流すアニメーション */
-    animation: report-marquee 10s linear infinite;
-    padding-left: 100%; /* 右端から開始 */
-}
-
-/* 上向きの吹き出しのしっぽ */
-.honobono-report::after {
-    content: ''; position: absolute; top: -8px; right: 20px;
-    border-bottom: 8px solid #ffe4ea;
-    border-left: 6px solid transparent; border-right: 6px solid transparent;
-}
-.honobono-report::before {
-    content: ''; position: absolute; top: -5px; right: 22px;
-    border-bottom: 6px solid #fff;
-    border-left: 4px solid transparent; border-right: 4px solid transparent; z-index: 1;
+    /* アニメーション：下からふわっと出て、長く留まり、消える */
+    animation: fadeReport 15s infinite;
 }
 
 @keyframes news-scroll { 0% { transform: translate3d(0,0,0); } 100% { transform: translate3d(-100%,0,0); } }
 
-/* レポートの出現アニメーション（フェード） */
+/* 浮き上がって消えるアニメーション */
 @keyframes fadeReport {
-    0% { opacity: 0; transform: translateY(5px); }
-    5% { opacity: 1; transform: translateY(0); }
-    95% { opacity: 1; transform: translateY(0); } /* ほぼずっと表示 */
-    100% { opacity: 0; transform: translateY(-5px); }
-}
-
-/* レポート内の文字スクロール */
-@keyframes report-marquee {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-150%); } /* 左へ流し切る */
+    0% { opacity: 0; transform: translateY(10px); }
+    10% { opacity: 1; transform: translateY(0); }
+    90% { opacity: 1; transform: translateY(0); } /* 長く表示 */
+    100% { opacity: 0; transform: translateY(-10px); }
 }
 
 /* === 下部リボン === */
@@ -367,15 +331,14 @@ body {
     .badge { top: 10px; right: 10px; padding: 4px 10px; font-size: 0.65rem; animation: none; }
     .area-share { grid-column: span 2; padding: 0; margin-top: 10px; }
 
+    /* スマホでのレポート表示調整 */
     .header-right-area { gap: 8px; margin-left: 10px; }
-    
-    /* スマホでもレポートを表示させるための調整 */
+    /* スマホでもレポートを表示する */
     .honobono-report {
-        width: 200px; /* スマホでは少し幅を狭く */
-        right: -10px;
-        top: 50px;
+        font-size: 0.8rem;
+        max-width: 150px; /* 長すぎる場合は省略 */
+        overflow: hidden; text-overflow: ellipsis;
     }
-    .report-scroll-content { font-size: 1rem; }
     
     .floating-mascot { width: 85px; bottom: 100px; right: 10px; }
     .pixel-walker { bottom: 35px; }

@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch(err => console.error('News Error:', err));
 
-    // 4. キャラクターレポート（スクロール機能付き）
+    // 4. キャラクターレポート（バーの中でフェードイン・アウト）
     fetch('TOP/report.json')
         .then(res => res.json())
         .then(data => {
@@ -108,19 +108,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const updateReport = () => {
                 const text = data[Math.floor(Math.random() * data.length)];
                 
-                // アニメーションをリセットするためにclassを一旦外すテクニック
-                // ここでは親要素のアニメーション(fade)と、子要素のアニメーション(scroll)がある
-                
+                // アニメーションリセット
                 reportEl.style.animation = 'none';
-                reportEl.offsetHeight; /* Reflow */
+                reportEl.offsetHeight; 
                 reportEl.style.animation = 'fadeReport 15s infinite';
                 
-                // 文字を流すためのラッパーを作成して挿入
-                reportEl.innerHTML = `<div class="report-scroll-content">${text}</div>`;
+                // シンプルにテキストを設定
+                reportEl.textContent = text;
             };
 
             updateReport();
-            setInterval(updateReport, 15000); // 15秒ごとに更新
+            setInterval(updateReport, 15000);
         })
         .catch(err => console.error('Report Error:', err));
 
