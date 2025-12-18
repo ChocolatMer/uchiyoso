@@ -79,7 +79,6 @@
         }
         .btn-add-skill:hover { background: #444; color: #fff; border-color: #777; }
         
-        /* カテゴリ移動プルダウン用 */
         .skill-cat-select {
             background: #111; color: #888; border: 1px solid #333; font-size: 0.7rem; padding: 2px; width: 100%;
         }
@@ -298,7 +297,8 @@
         let allData = {};
         let currentId = null;
 
-        // --- グローバル関数定義 (リスト操作) ---
+        // --- グローバル関数定義 ---
+
         window.addItemRow = (val={name:'', desc:''}) => {
             const div = document.createElement('div');
             div.className = 'item-entry';
@@ -327,6 +327,97 @@
             getEl('weaponList').appendChild(div);
         };
 
+        // スキル計算用イベント付与
+        function attachSkillCalc(row) {
+            row.querySelectorAll('input[type="number"]').forEach(inp => {
+                inp.addEventListener('input', () => {
+                    const init = parseInt(row.querySelector('.s-init').value)||0;
+                    const job = parseInt(row.querySelector('.s-job').value)||0;
+                    const int = parseInt(row.querySelector('.s-interest').value)||0;
+                    const gro = parseInt(row.querySelector('.s-growth').value)||0;
+                    row.querySelector('.s-total').value = init + job + int + gro;
+                });
+            });
+        }
+
+        window.addSkillRow = (catId) => {
+            const table = document.querySelector(`#skill-cat-${catId} tbody`);
+            if(!table) return;
+            
+            const tr = document.createElement('tr');
+            tr.className = 'skill-entry';
+            tr.innerHTML = `
+                <td class="s-name" style="font-weight:bold;">
+                    <span class="s-name-text"><input type="text" class="s-name-edit" style="width:100%; color:#fff; background:#222; border:1px solid #444;" placeholder="技能名"></span>
+                </td>
+                <td><input type="number" class="s-total" readonly tabindex="-1"></td>
+                <td><input type="number" class="s-init" value="0" style="color:#888;"></td>
+                <td><input type="number" class="s-job" value="0"></td>
+                <td><input type="number" class="s-interest" value="0"></td>
+                <td><input type="number" class="s-growth" value="0"></td>
+                <td style="padding-left:10px;"><input type="text" class="s-desc skill-desc-input" placeholder="設定や理由など...">
+                <button onclick="this.closest('tr').remove()" style="float:right; background:transparent; border:none; color:#522; cursor:pointer;">×</button></td>
+            `;
+            table.appendChild(tr);
+            attachSkillCalc(tr);
+        };
+
+        // カテゴリ移動処理 (HTML構造変更に対応)
+        window.moveCategory = (selectEl) => {
+            const targetCat = selectEl.value;
+            if(!targetCat) return;
+
+            const row = selectEl.closest('tr');
+            // 名前テキストを取得（span内のテキスト、またはinputの値）
+            let name = "";
+            const nameSpan = row.querySelector('.s-name-text');
+            if (nameSpan) {
+                const nameInput = nameSpan.querySelector('input');
+                name = nameInput ? nameInput.value : nameSpan.textContent;
+            }
+
+            const total = row.querySelector('.s-total').value;
+            const init = row.querySelector('.s-init').value;
+            const job = row.querySelector('.s-job').value;
+            const interest = row.querySelector('.s-interest').value;
+            const growth = row.querySelector('.s-growth').value;
+            const desc = row.querySelector('.s-desc').value;
+
+            // 移動先のテーブル取得
+            const targetTable = document.querySelector(`#skill-cat-${targetCat} tbody`);
+            if(targetTable) {
+                // 行を削除して移動先に再作成
+                row.remove();
+                
+                const tr = document.createElement('tr');
+                tr.className = 'skill-entry';
+                tr.innerHTML = `
+                    <td class="s-name" style="font-weight:bold;">
+                        <span class="s-name-text">${name}</span>
+                        <div style="margin-top:2px;">
+                            <select class="skill-cat-select" onchange="moveCategory(this)">
+                                <option value="">カテゴリ移動...</option>
+                                <option value="combat">戦闘</option>
+                                <option value="explore">探索</option>
+                                <option value="action">行動</option>
+                                <option value="negotiate">交渉</option>
+                                <option value="knowledge">知識</option>
+                                <option value="original">その他</option>
+                            </select>
+                        </div>
+                    </td>
+                    <td><input type="number" class="s-total" value="${total}" readonly tabindex="-1"></td>
+                    <td><input type="number" class="s-init" value="${init}" readonly tabindex="-1" style="color:#888;"></td>
+                    <td><input type="number" class="s-job" value="${job}"></td>
+                    <td><input type="number" class="s-interest" value="${interest}"></td>
+                    <td><input type="number" class="s-growth" value="${growth}"></td>
+                    <td style="padding-left:10px;"><input type="text" class="s-desc skill-desc-input" value="${desc}" placeholder="設定や理由など..."></td>
+                `;
+                targetTable.appendChild(tr);
+                attachSkillCalc(tr);
+            }
+        };
+
         window.prepareSaveData = function() {
             if(!currentId) return null;
             const originalData = Object.values(allData).find(c=>c.id==currentId);
@@ -341,8 +432,7 @@
             });
             getEl('txtItems').value = itemsArr.join('\n');
 
-            // ★修正: 技能データをUIから収集する (カテゴリ移動に対応するため)
-            // collectFormData内で処理されていない技能データをここで回収して更新
+            // 技能データ収集
             const skillsObj = {
                 combat:[], explore:[], action:[], negotiate:[], knowledge:[], original:[]
             };
@@ -351,11 +441,15 @@
                 if(skillsObj[catId] === undefined) skillsObj[catId] = [];
                 
                 catDiv.querySelectorAll('.skill-entry').forEach(row => {
-                    const nameInput = row.querySelector('.s-name-edit');
-                    const name = nameInput ? nameInput.value : row.querySelector('.s-name').textContent;
+                    const nameSpan = row.querySelector('.s-name-text');
+                    let name = "";
+                    if (nameSpan) {
+                         const nameInput = nameSpan.querySelector('input');
+                         name = nameInput ? nameInput.value : nameSpan.textContent;
+                    }
                     
                     skillsObj[catId].push({
-                        name: name,
+                        name: name.trim(),
                         total: parseInt(row.querySelector('.s-total').value)||0,
                         init: parseInt(row.querySelector('.s-init').value)||0,
                         job: parseInt(row.querySelector('.s-job').value)||0,
@@ -366,10 +460,7 @@
                 });
             });
             
-            // フォームから基本データを収集
             const finalData = collectFormData(originalData, true);
-            
-            // 収集した技能データを統合
             finalData.skills = skillsObj;
 
             alert("保存準備完了 (Cloud保存を実行します)");
@@ -473,87 +564,6 @@
             runCalculations();
         }
 
-        window.addSkillRow = (catId) => {
-            const table = document.querySelector(`#skill-cat-${catId} tbody`);
-            if(!table) return;
-            
-            const tr = document.createElement('tr');
-            tr.className = 'skill-entry';
-            tr.innerHTML = `
-                <td><input type="text" class="s-name-edit" style="width:100%; color:#fff; background:#222; border:1px solid #444;" placeholder="技能名"></td>
-                <td><input type="number" class="s-total" readonly tabindex="-1"></td>
-                <td><input type="number" class="s-init" value="0" style="color:#888;"></td>
-                <td><input type="number" class="s-job" value="0"></td>
-                <td><input type="number" class="s-interest" value="0"></td>
-                <td><input type="number" class="s-growth" value="0"></td>
-                <td style="padding-left:10px;"><input type="text" class="s-desc skill-desc-input" placeholder="設定や理由など...">
-                <button onclick="this.closest('tr').remove()" style="float:right; background:transparent; border:none; color:#522; cursor:pointer;">×</button></td>
-            `;
-            table.appendChild(tr);
-            attachSkillCalc(tr);
-        };
-
-        // スキル行へのイベント付与
-        function attachSkillCalc(row) {
-            row.querySelectorAll('input[type="number"]').forEach(inp => {
-                inp.addEventListener('input', () => {
-                    const init = parseInt(row.querySelector('.s-init').value)||0;
-                    const job = parseInt(row.querySelector('.s-job').value)||0;
-                    const int = parseInt(row.querySelector('.s-interest').value)||0;
-                    const gro = parseInt(row.querySelector('.s-growth').value)||0;
-                    row.querySelector('.s-total').value = init + job + int + gro;
-                });
-            });
-        }
-
-        // ★修正: カテゴリ移動処理
-        window.moveCategory = (selectEl) => {
-            const targetCat = selectEl.value;
-            if(!targetCat) return;
-
-            const row = selectEl.closest('tr');
-            const name = row.querySelector('.s-name').textContent.trim();
-            const total = row.querySelector('.s-total').value;
-            const init = row.querySelector('.s-init').value;
-            const job = row.querySelector('.s-job').value;
-            const interest = row.querySelector('.s-interest').value;
-            const growth = row.querySelector('.s-growth').value;
-            const desc = row.querySelector('.s-desc').value;
-
-            // 移動先のテーブル取得
-            const targetTable = document.querySelector(`#skill-cat-${targetCat} tbody`);
-            if(targetTable) {
-                // 行を削除して移動先に再作成
-                row.remove();
-                
-                const tr = document.createElement('tr');
-                tr.className = 'skill-entry';
-                tr.innerHTML = `
-                    <td class="s-name" style="font-weight:bold;">${name}
-                        <div style="margin-top:2px;">
-                            <select class="skill-cat-select" onchange="moveCategory(this)">
-                                <option value="">カテゴリ移動...</option>
-                                <option value="combat">戦闘</option>
-                                <option value="explore">探索</option>
-                                <option value="action">行動</option>
-                                <option value="negotiate">交渉</option>
-                                <option value="knowledge">知識</option>
-                                <option value="original">その他</option>
-                            </select>
-                        </div>
-                    </td>
-                    <td><input type="number" class="s-total" value="${total}" readonly tabindex="-1"></td>
-                    <td><input type="number" class="s-init" value="${init}" readonly tabindex="-1" style="color:#888;"></td>
-                    <td><input type="number" class="s-job" value="${job}"></td>
-                    <td><input type="number" class="s-interest" value="${interest}"></td>
-                    <td><input type="number" class="s-growth" value="${growth}"></td>
-                    <td style="padding-left:10px;"><input type="text" class="s-desc skill-desc-input" value="${desc}" placeholder="設定や理由など..."></td>
-                `;
-                targetTable.appendChild(tr);
-                attachSkillCalc(tr);
-            }
-        };
-
         function renderSkills(skillsObj) {
             const area = getEl('skillArea');
             area.innerHTML = '';
@@ -561,7 +571,7 @@
             const cats = [
                 {id:'combat', label:'戦闘技能'}, {id:'explore', label:'探索技能'}, 
                 {id:'action', label:'行動技能'}, {id:'negotiate', label:'交渉技能'}, 
-                {id:'knowledge', label:'知識技能'}, {id:'original', label:'その他 (オリジナル)'} // ★追加
+                {id:'knowledge', label:'知識技能'}, {id:'original', label:'その他 (オリジナル)'}
             ];
 
             cats.forEach(c => {
@@ -590,7 +600,7 @@
                     html += `
                     <tr class="skill-entry">
                         <td class="s-name" style="font-weight:bold;">
-                            ${s.name}
+                            <span class="s-name-text">${s.name}</span>
                             <div style="margin-top:2px;">
                                 <select class="skill-cat-select" onchange="moveCategory(this)">
                                     <option value="">カテゴリ移動...</option>
@@ -720,6 +730,7 @@
                 });
             }
             
+            // 技能があれば上書き(オリジナル含む)
             if(p.skills && Object.values(p.skills).flat().length > 0) {
                 renderSkills(p.skills);
             }
@@ -755,3 +766,18 @@
                 const bmi = w/((h/100)**2);
                 getEl('outBMI').textContent = `${bmi.toFixed(1)}`;
             }
+        }
+        ['inpAge','inpHeight','inpWeight','s_edu'].forEach(id=>getEl(id)?.addEventListener('input', runCalculations));
+
+        getEl('btnCreateNew').addEventListener('click', ()=>{
+            const id=crypto.randomUUID();
+            allData[id]={id, name:"新規キャラ", stats:{}, vitals:{}, items:[], weapons:[], scenarioList:[], skills:{}};
+            currentId=id; renderSelect(); loadCharacterToForm(allData[id]);
+        });
+        getEl('btnDelete').addEventListener('click', async ()=>{
+            if(!currentId)return;
+            if(confirm('削除しますか？')) { delete allData[currentId]; location.reload(); }
+        });
+    </script>
+</body>
+</html>
