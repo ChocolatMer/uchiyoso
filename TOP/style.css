@@ -11,7 +11,7 @@
     --glass-shine: rgba(255, 255, 255, 0.6);
     --glass-shadow: 0 8px 32px 0 rgba(90, 61, 53, 0.1);
     --walker-size: 64px;
-    --ticker-height: 44px; /* テロップを少し高くして目立たせる */
+    --ticker-height: 44px;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; text-decoration: none; -webkit-tap-highlight-color: transparent; }
@@ -19,6 +19,7 @@
 body {
     font-family: "Zen Maru Gothic", sans-serif;
     background-color: #fce4ec;
+    /* パス変更: 一つ上の階層のimagesを参照 */
     background-image: url('../images/background/fur-texture-pink.jpg');
     background-size: cover;
     background-position: center;
@@ -73,7 +74,6 @@ body {
     transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     transform: translateZ(0px);
     transform-style: preserve-3d;
-    /* パフォーマンス改善: レイヤーを分ける */
     will-change: transform;
 }
 
@@ -94,6 +94,7 @@ body {
 .avatar {
     width: 90px; height: 90px; border-radius: 50%;
     background-color: #eee;
+    /* パス変更 */
     background-image: url('../images/background/fur-texture-pink.jpg');
     background-size: cover; border: 4px solid rgba(255,255,255,0.8);
     box-shadow: 0 8px 20px rgba(0,0,0,0.15);
@@ -153,7 +154,7 @@ body {
 }
 .btn-share-pill:hover { background: #fff; color: var(--accent-pink); transform: translateY(-5px) scale(1.05); }
 
-/* 各種アニメーション */
+/* アニメーション */
 @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
 @keyframes dance { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
 @keyframes dance-reverse { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
@@ -186,20 +187,21 @@ body {
 .floating-mascot:hover { transform: scale(1.15) rotate(10deg); }
 @keyframes playful-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px) rotate(3deg); } }
 
-/* Pixel Walker (修正版: leftではなくtransformを使用) */
+/* Pixel Walker */
 .pixel-walker {
     position: fixed;
     bottom: 45px; 
     z-index: 90;
     width: var(--walker-size);
     height: var(--walker-size);
-    left: 0; /* 初期位置は0で固定し、transformで動かす */
+    left: 0; 
     pointer-events: none;
-    /* transitionはJSで制御します */
     will-change: transform;
 }
 .pixel-walker .sprite {
-    width: 100%; height: 100%; background-image: url('../images/hoko/mahiru.png'); 
+    width: 100%; height: 100%;
+    /* パス変更 */
+    background-image: url('../images/hoko/mahiru.png'); 
     background-size: 300% 400%; background-repeat: no-repeat; image-rendering: pixelated;
     animation: walk-cycle 0.8s step-start infinite;
 }
@@ -208,30 +210,28 @@ body {
 .pixel-walker[data-facing="right"] .sprite { background-position-y: 66.66%; }
 @keyframes walk-cycle { 0% { background-position-x: 0%; } 33% { background-position-x: 50%; } 66% { background-position-x: 100%; } }
 
-/* === ▼▼▼ 下部固定ニュースバー (デザインリニューアル: リボン風) ▼▼▼ === */
+/* === 下部固定ニュースバー (リボン風デザイン) === */
 .bottom-news-ribbon {
     position: fixed;
     bottom: 0; left: 0;
     width: 100%; height: var(--ticker-height);
-    background: #fffafa; /* ほんのりピンクがかった白 */
-    border-top: 4px solid var(--accent-pink); /* リボン感を出す太めの線 */
+    background: #fffafa;
+    border-top: 4px solid var(--accent-pink);
     z-index: 999;
     display: flex; align-items: center;
     box-shadow: 0 -4px 15px rgba(255, 158, 187, 0.2);
     font-size: 0.95rem; font-weight: 700; color: var(--text-main);
 }
-/* ステッチ（縫い目）の飾り */
 .ribbon-stitch {
     position: absolute; top: 2px; left: 0; width: 100%; height: calc(100% - 4px);
     border-top: 2px dotted rgba(255, 158, 187, 0.5);
     border-bottom: 2px dotted rgba(255, 158, 187, 0.5);
     pointer-events: none;
 }
-
 .news-label-container {
     height: 100%; padding: 0 15px;
     display: flex; align-items: center; justify-content: center;
-    background: #fffafa; /* 線を隠す */
+    background: #fffafa;
     z-index: 2;
     position: relative;
 }
@@ -244,18 +244,17 @@ body {
     font-weight: 900;
     display: flex; align-items: center; gap: 6px;
     box-shadow: 0 2px 8px rgba(255, 158, 187, 0.6);
-    transform: rotate(-2deg); /* 可愛く少し傾ける */
+    transform: rotate(-2deg);
 }
 .news-label-badge span { font-size: 1.1em; }
-
 .news-scroller {
     flex-grow: 1; overflow: hidden; position: relative;
     white-space: nowrap; height: 100%; display: flex; align-items: center;
-    mask-image: linear-gradient(to right, transparent 0%, black 20px); /* 左端をふわっと消す */
+    mask-image: linear-gradient(to right, transparent 0%, black 20px);
 }
 .news-content {
     display: inline-block; white-space: nowrap;
-    animation: news-scroll 40s linear infinite; /* 少しゆっくりにして読みやすく */
+    animation: news-scroll 40s linear infinite;
     padding-left: 100%;
     will-change: transform;
 }
@@ -264,17 +263,12 @@ body {
     position: relative;
     color: var(--text-main);
 }
-/* ニュースの頭につけるアイコン */
 .news-item::before {
-    content: '★';
-    color: var(--accent-pink);
-    margin-right: 8px;
-    font-size: 0.8em;
+    content: '★'; color: var(--accent-pink); margin-right: 8px; font-size: 0.8em;
 }
-
 @keyframes news-scroll { 0% { transform: translate3d(0,0,0); } 100% { transform: translate3d(-100%,0,0); } }
 
-/* === ▼▼▼ スマホ最適化 (レスポンシブ) ▼▼▼ === */
+/* === スマホ最適化 === */
 @media (max-width: 768px) {
     body {
         display: block; overflow-y: auto; overflow-x: hidden;
@@ -290,7 +284,7 @@ body {
     }
     .glass-card {
         width: 100%; transform: none !important; margin-bottom: 0; padding: 20px;
-        will-change: auto; /* スマホではメモリ節約のため解除 */
+        will-change: auto;
     }
     .glass-card:hover { transform: translateY(-3px) !important; }
 
@@ -312,7 +306,6 @@ body {
     .area-share { display: block; width: 100%; padding: 0; margin-top: 10px; }
     .btn-share-pill { width: 100%; justify-content: center; }
 
-    /* スマホでのキャラ位置調整 */
     .floating-mascot { width: 90px; bottom: calc(var(--ticker-height) + 15px); right: 10px; }
     .pixel-walker { bottom: calc(var(--ticker-height) + 10px); }
     :root { --walker-size: 48px; }
