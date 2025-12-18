@@ -269,7 +269,8 @@
 
     <script type="module">
         import { loadFromCloud, monitorAuth, saveToCloud } from "./firestore.js";
-        import { collectFormData, parseIaChara, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING } from "./data/schema.js";
+        import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING } from "./data/schema.js";
+        import { parseIaChara } from "./data/parser_ia.js";
 
         const getEl = (id) => document.getElementById(id);
         const setVal = (id, v) => { const el = getEl(id); if(el) el.value = (v == null ? '' : v); };
@@ -510,7 +511,6 @@
             }
         });
 
-        // ★修正: PNG形式でリサイズし、サイズ上限を600pxにして容量を抑える
         const resizeImage = (file, maxWidth, maxHeight, callback) => {
             const reader = new FileReader();
             reader.onload = (e) => {
@@ -518,7 +518,6 @@
                 img.onload = () => {
                     let w = img.width;
                     let h = img.height;
-                    // リサイズ処理 (上限600px)
                     if (w > maxWidth || h > maxHeight) {
                         const ratio = Math.min(maxWidth / w, maxHeight / h);
                         w *= ratio;
@@ -528,10 +527,7 @@
                     canvas.width = w;
                     canvas.height = h;
                     const ctx = canvas.getContext('2d');
-                    // 透過維持のため背景塗りはしない
                     ctx.drawImage(img, 0, 0, w, h);
-                    
-                    // ★PNG形式で出力
                     callback(canvas.toDataURL('image/png'));
                 };
                 img.src = e.target.result;
@@ -547,7 +543,6 @@
             zone.addEventListener('drop', (e) => {
                 const file = e.dataTransfer.files[0];
                 if(file && file.type.match('image.*')) {
-                    // ★サイズ上限を600pxに設定 (PNGの容量対策)
                     resizeImage(file, 600, 600, (resizedDataUrl) => {
                         getEl(inputId).value = resizedDataUrl;
                         getEl(imgId).src = resizedDataUrl;
@@ -564,24 +559,26 @@
             if(!text) return;
             
             const p = parseIaChara(text);
-            const fillIfEmpty = (id, val) => {
-                const current = getEl(id)?.value;
-                if(!current && val) setVal(id, val);
+            
+            // ★修正: 値が存在する場合(空文字でない場合)は上書きするように変更
+            const updateVal = (id, val) => {
+                if(val !== undefined && val !== null && val !== "") {
+                    setVal(id, val);
+                }
             };
 
-            FIELD_MAPPING.forEach(f => { if(p[f.key]) fillIfEmpty(f.id, p[f.key]); });
-            STATS_MAPPING.forEach(f => fillIfEmpty(f.id, p.stats[f.key]));
-            VITALS_MAPPING.forEach(f => fillIfEmpty(f.id, p.vitals[f.key]));
+            FIELD_MAPPING.forEach(f => { if(p[f.key]) updateVal(f.id, p[f.key]); });
+            STATS_MAPPING.forEach(f => updateVal(f.id, p.stats[f.key]));
+            VITALS_MAPPING.forEach(f => updateVal(f.id, p.vitals[f.key]));
             
-            if(p.colorHair) fillIfEmpty('inpHair', p.colorHair);
-            if(p.colorEye) fillIfEmpty('inpEye', p.colorEye);
-            if(p.colorSkin) fillIfEmpty('inpSkin', p.colorSkin);
+            if(p.colorHair) updateVal('inpHair', p.colorHair);
+            if(p.colorEye) updateVal('inpEye', p.colorEye);
+            if(p.colorSkin) updateVal('inpSkin', p.colorSkin);
 
             Object.keys(MEMO_ID_MAP).forEach(key => {
-                if(p.memo[key]) fillIfEmpty(MEMO_ID_MAP[key], p.memo[key]);
+                if(p.memo[key]) updateVal(MEMO_ID_MAP[key], p.memo[key]);
             });
 
-            // ★重複チェック付きアイテム追加
             if(p.items && p.items.length > 0) {
                 const existingNames = Array.from(document.querySelectorAll('.i-name')).map(el => el.value.trim());
                 p.items.forEach(i => {
@@ -601,16 +598,16 @@
             }
             if(p.skills) renderSkills(p.skills);
 
-            if(p.image && !getEl('previewBody').src) {
+            if(p.image) {
                 setVal('inpImageBody', p.image);
                 setSrc('previewBody', p.image);
             }
-            if(p.icon && !getEl('previewIcon').src) {
+            if(p.icon) {
                 setVal('inpImageIcon', p.icon);
                 setSrc('previewIcon', p.icon);
             }
 
-            alert("解析・補完しました！\n所持品・武器・技能表が更新されています。");
+            alert("解析・補完しました！\n値がある項目はテキストデータの内容で上書きされています。");
             runCalculations();
         });
 
