@@ -1,10 +1,9 @@
 import { QUESTIONS_DATA } from "./questions.js";
 // ルートにある firestore.js を読み込む
-import { loadFromCloud, login, monitorAuth } from "../firestore.js";
+import { loadFromCloud, saveToCloud, login, monitorAuth } from "../firestore.js";
 
-const { createApp, ref, reactive, onMounted } = Vue;
+const { createApp, ref, reactive, onMounted, computed } = Vue;
 
-// クリック外判定
 const clickOutside = {
     beforeMount(el, binding) {
         el.clickOutsideEvent = function(event) {
@@ -22,7 +21,8 @@ createApp({
     setup() {
         // --- データ状態 ---
         const currentUser = reactive({
-            name: '', icon: 'https://placehold.co/100x100/png?text=?', description: 'Enter name or Load', isGuest: true, uid: null
+            name: '', icon: 'https://placehold.co/100x100/png?text=?', description: 'Enter name or Load', isGuest: true, uid: null,
+            originalData: null // サーバー保存用データ保持
         });
         const characterList = ref([]);
         const allQuestions = ref(QUESTIONS_DATA);
@@ -32,25 +32,23 @@ createApp({
         const loadingChars = ref(false);
         const showStamp = ref(false);
         const showQuestionSelector = ref(false);
-        const tempSelectedIds = ref([]); // 選択モーダル用の一時保存
+        const tempSelectedIds = ref([]);
 
         const displayedQuestions = ref([]);
         const answers = reactive({});
         const currentDate = new Date().toLocaleDateString('ja-JP');
 
-        // --- アイテム位置調整 (指示通りに移動 & 画像サイズはCSSで管理) ---
-        // ---         x: 数字を大きくすると 右 に動きます。 ---
-        // ---　　　　　 y: 数字を大きくすると 下 に動きます。 ---       
-
+        // --- アイテム位置調整 (ご指定の座標) ---
         const deskItems = ref([
-            { src: '../images/icons/desk1.png', x: 20, y: 550, name: 'Item 1' }, // Down 1 unit
-            { src: '../images/icons/desk2.png', x: 250, y: 250, name: 'Item 2' }, // Up 2, Right 1
-            { src: '../images/icons/desk3.png', x: window.innerWidth - 550, y: 100, name: 'Item 3' }, // Left 2, Down small
-            { src: '../images/icons/desk4.png', x: window.innerWidth - 320, y: 800, name: 'Item 4' }, // Same
-            { src: '../images/icons/desk5.png', x: 250, y: 700, name: 'Item 5' }, // Down 2, Right small
-            { src: '../images/icons/desk6.png', x: window.innerWidth - 550, y: 550, name: 'Item 6' }, // Down 3, Left 2
-            { src: '../images/icons/desk7.png', x: 150, y: 900, name: 'Item 7' }, // Down small
+            { src: '../images/icons/desk1.png', x: 20, y: 550, name: 'Item 1' },
+            { src: '../images/icons/desk2.png', x: 250, y: 250, name: 'Item 2' },
+            { src: '../images/icons/desk3.png', x: window.innerWidth - 550, y: 100, name: 'Item 3' },
+            { src: '../images/icons/desk4.png', x: window.innerWidth - 320, y: 800, name: 'Item 4' },
+            { src: '../images/icons/desk5.png', x: 250, y: 700, name: 'Item 5' },
+            { src: '../images/icons/desk6.png', x: window.innerWidth - 550, y: 550, name: 'Item 6' },
+            { src: '../images/icons/desk7.png', x: 150, y: 900, name: 'Item 7' },
         ]);
+        
         const dragging = ref({ index: -1, offsetX: 0, offsetY: 0 });
 
         const history = ref([]);
@@ -76,11 +74,13 @@ createApp({
             try {
                 const data = await loadFromCloud();
                 if (data) {
+                    // サーバーのデータをリスト化
                     characterList.value = Object.values(data).map(char => ({
                         name: char.name,
                         icon: char.inpImageIcon || char.icon || 'https://placehold.co/100x100/png?text=' + char.name.charAt(0),
                         job: char.inpJob || char.job || '',
                         desc: char.inpJob || char.job || 'No description',
+                        surveys: char.surveys || [], // アンケート履歴を取得
                         ...char
                     }));
                 } else {
@@ -88,7 +88,6 @@ createApp({
                 }
             } catch (e) {
                 console.error("Load Error:", e);
-                alert("Failed to load data.");
             } finally {
                 loadingChars.value = false;
             }
@@ -99,45 +98,133 @@ createApp({
             currentUser.icon = char.icon;
             currentUser.description = char.desc;
             currentUser.isGuest = false;
+            currentUser.originalData = char; // 保存用に元データを保持
             isDropdownOpen.value = false;
             
-            history.value = [
-                { timestamp: new Date().toISOString(), summary: 'Previous session data loaded.' }
-            ];
+            // 履歴を表示 (新しい順)
+            if (char.surveys && char.surveys.length > 0) {
+                history.value = [...char.surveys].reverse();
+            } else {
+                history.value = [];
+            }
+            
+            // 入力欄をリセット
+            Object.keys(answers).forEach(k => delete answers[k]);
         };
 
         const closeDropdown = () => isDropdownOpen.value = false;
 
-        // --- 機能：質問の更新・選択 ---
+        // --- 機能：履歴から再編集 (Re-edit) ---
+        const loadSurveyFromHistory = (record) => {
+            if(!confirm("この履歴の内容を復元して再編集しますか？\n(現在の入力内容は消えます)")) return;
+
+            // 1. 回答を復元
+            Object.keys(answers).forEach(k => delete answers[k]);
+            Object.assign(answers, record.answers);
+
+            // 2. 質問リストを復元 (IDに基づいて再構築)
+            // 記録されている回答キー(q1, q2...)から、対応する質問文を探し出す
+            const questionIds = Object.keys(record.answers);
+            const restoredQuestions = allQuestions.value.filter(q => questionIds.includes(q.id));
+            
+            // もし質問データが見つかればそれを表示、なければ現在の表示を維持
+            if (restoredQuestions.length > 0) {
+                displayedQuestions.value = restoredQuestions;
+            }
+        };
+
+        // --- 機能：Global Voices (他キャラの回答) ---
+        const showGlobalAnswers = (q) => {
+            selectedGlobalQuestion.value = q;
+            globalAnswers.value = [];
+
+            // 全キャラクターリストから、この質問(q.id)への回答を探す
+            // ※自分自身(currentUser)は除く
+            const otherAnswers = [];
+            
+            characterList.value.forEach(char => {
+                if (char.name === currentUser.name) return; // 自分はスキップ
+                if (!char.surveys) return;
+
+                char.surveys.forEach(survey => {
+                    if (survey.answers && survey.answers[q.id]) {
+                        // 重複を避けるため、最新の回答だけ採用するか、すべて出すか
+                        // ここでは「回答があれば追加」します
+                        otherAnswers.push({
+                            user: char.name,
+                            icon: char.icon,
+                            text: survey.answers[q.id]
+                        });
+                    }
+                });
+            });
+
+            // ランダムにシャッフルして表示
+            globalAnswers.value = otherAnswers.sort(() => 0.5 - Math.random()).slice(0, 10);
+        };
+
+        // --- 機能：保存 (Save to Cloud) ---
+        const submitSurvey = async () => {
+            if(!currentUser.name) return alert("キャラクターを選択または名前を入力してください。");
+            
+            showStamp.value = true;
+            setTimeout(() => showStamp.value = false, 2500);
+
+            // 保存データ構築
+            const newRecord = {
+                id: Date.now().toString(), // 一意のID
+                timestamp: new Date().toISOString(),
+                summary: Object.values(answers)[0] || 'No answer',
+                answers: { ...answers } // 回答のコピー
+            };
+
+            // ローカルの履歴に追加
+            history.value.unshift(newRecord);
+
+            // サーバー保存処理
+            if (currentUser.uid && currentUser.originalData) {
+                // 既存データがあれば、そこにsurveysを追加して保存
+                const charData = { ...currentUser.originalData };
+                if (!charData.surveys) charData.surveys = [];
+                
+                charData.surveys.push(newRecord);
+                
+                // サーバーへ送信 (firestore.js)
+                // ※ saveToCloudは alert を出すので、連続保存時は注意
+                await saveToCloud(charData);
+                
+                // 元データも更新しておく
+                currentUser.originalData = charData;
+            }
+        };
+
+        // --- その他：質問更新など ---
         const refreshQuestions = () => {
-            // ランダムに10個選ぶ
             displayedQuestions.value = [...allQuestions.value].sort(() => 0.5 - Math.random()).slice(0, 10);
-            // 回答をリセット
             Object.keys(answers).forEach(k => delete answers[k]);
         };
 
         const openQuestionSelector = () => {
-            // 現在表示されている質問のIDを初期選択状態にする
             tempSelectedIds.value = displayedQuestions.value.map(q => q.id);
             showQuestionSelector.value = true;
         };
 
         const toggleQuestionSelection = (q) => {
             const idx = tempSelectedIds.value.indexOf(q.id);
-            if (idx >= 0) {
-                tempSelectedIds.value.splice(idx, 1);
-            } else {
-                tempSelectedIds.value.push(q.id);
-            }
+            if (idx >= 0) tempSelectedIds.value.splice(idx, 1);
+            else tempSelectedIds.value.push(q.id);
         };
 
         const confirmQuestionSelection = () => {
-            // 選択されたIDに基づいて質問リストを再構築（元の順序を維持）
             displayedQuestions.value = allQuestions.value.filter(q => tempSelectedIds.value.includes(q.id));
             showQuestionSelector.value = false;
         };
 
-        // --- 機能：ドラッグ ---
+        const resetForm = () => {
+            if(confirm("入力を破棄しますか？")) Object.keys(answers).forEach(k => delete answers[k]);
+        };
+
+        // --- ドラッグ処理 ---
         const startDrag = (e, i) => {
             dragging.value = { index: i, offsetX: e.clientX - deskItems.value[i].x, offsetY: e.clientY - deskItems.value[i].y };
             window.addEventListener('mousemove', onDrag);
@@ -156,36 +243,22 @@ createApp({
             window.removeEventListener('mouseup', stopDrag);
         };
 
-        // --- 機能：保存など ---
-        const submitSurvey = () => {
-            if(!currentUser.name) return alert("Please enter a name.");
-            showStamp.value = true;
-            setTimeout(() => showStamp.value = false, 2500);
-            
-            history.value.unshift({
-                timestamp: new Date().toISOString(),
-                summary: Object.values(answers)[0] || 'No answer recorded'
-            });
-        };
-
-        const resetForm = () => {
-            if(confirm("Discard changes?")) Object.keys(answers).forEach(k => delete answers[k]);
-        };
-
-        const showGlobalAnswers = (q) => {
-            selectedGlobalQuestion.value = q;
-            globalAnswers.value = [
-                { user: 'Guest A', icon: 'https://placehold.co/50x50/png?text=A', text: '秘密です。' },
-                { user: 'Guest B', icon: 'https://placehold.co/50x50/png?text=B', text: '効率を重視します。' }
-            ];
-        };
-
+        // --- 初期化 ---
         onMounted(() => {
-            refreshQuestions(); // 初回ランダム
+            refreshQuestions();
             monitorAuth((user) => {
-                if (user) currentUser.uid = user.uid;
+                if (user) {
+                    currentUser.uid = user.uid;
+                    // ログインしたら自動でリスト更新しても良いが、負荷軽減のためボタン押下時に任せる
+                }
             });
         });
+
+        // 履歴の日付フォーマット
+        const formatDate = (iso) => {
+            const d = new Date(iso);
+            return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`;
+        };
 
         return {
             currentUser, characterList, displayedQuestions, answers, currentDate,
@@ -193,8 +266,7 @@ createApp({
             loadAndShowCharacters, selectCharacter, isDropdownOpen, closeDropdown, loadingChars,
             submitSurvey, resetForm, showStamp,
             history, selectedGlobalQuestion, globalAnswers, showGlobalAnswers,
-            formatDate: (iso) => new Date(iso).toLocaleDateString(),
-            // New Features
+            formatDate, loadSurveyFromHistory, // 追加した関数
             allQuestions, refreshQuestions,
             showQuestionSelector, openQuestionSelector, toggleQuestionSelection, confirmQuestionSelection, tempSelectedIds
         };

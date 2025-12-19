@@ -211,7 +211,7 @@
             </div>
         </div>
 
-        <!-- 右メモ：History -->
+<!-- 右メモ：History -->
         <div class="memo-paper memo-history">
             <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-24 h-8 bg-amber-200 opacity-70 -rotate-2 shadow-sm"></div>
             <h4 class="font-bold text-amber-900 mb-2 border-b border-amber-300 pb-1 flex items-center">
@@ -222,16 +222,20 @@
                     No history found...
                 </div>
                 <ul v-else class="space-y-4">
-                    <li v-for="rec in history" :key="rec.timestamp" class="relative pl-3 border-l-4 border-amber-400/50">
-                        <div class="text-[10px] text-gray-500 font-sans mb-1">{{ formatDate(rec.timestamp) }}</div>
-                        <div class="text-sm text-gray-800 leading-snug">"{{ rec.summary }}"</div>
+                    <!-- @click イベントを追加 -->
+                    <li v-for="rec in history" :key="rec.timestamp" 
+                        @click="loadSurveyFromHistory(rec)"
+                        class="relative pl-3 border-l-4 border-amber-400/50 cursor-pointer hover:bg-yellow-100 transition p-1 rounded">
+                        
+                        <div class="text-[10px] text-gray-500 font-sans mb-1">
+                            {{ formatDate(rec.timestamp) }} 
+                            <i class="fa-solid fa-pen-to-square ml-1 opacity-50"></i>
+                        </div>
+                        <div class="text-sm text-gray-800 leading-snug line-clamp-2">"{{ rec.summary }}"</div>
                     </li>
                 </ul>
             </div>
         </div>
-
-    </div>
-</div>
 
 <!-- JS読み込み -->
 <script type="module" src="Squestionnaire/script.js"></script>
