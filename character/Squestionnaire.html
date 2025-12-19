@@ -1,12 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
-
-  
 <head>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;700;900&family=Teko:wght@300;500&family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <link href="list/header.css" rel="stylesheet">
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Morning Desk Survey</title>
@@ -61,10 +55,10 @@
             filter: blur(30px);
         }
 
-        /* --- ドラッグアイテム（サイズ拡大・正方形枠） --- */
+        /* --- ドラッグアイテム --- */
         .draggable-item {
             position: absolute; cursor: grab; transition: transform 0.1s; z-index: 50; user-select: none;
-            width: 240px; height: 240px; /* 大きく */
+            width: 240px; height: 240px;
             display: flex; justify-content: center; align-items: center;
             filter: drop-shadow(8px 15px 10px rgba(0,0,0,0.3));
         }
@@ -167,14 +161,13 @@
         }
         .memo-paper:hover { z-index: 60; transform: scale(1.02); }
 
-        /* 配置調整: 中央用紙と被らないように外側へ */
         .memo-global { left: 40px; top: 100px; transform: rotate(-3deg); background-color: #e1f5fe; } 
         .memo-history { right: 40px; top: 80px; transform: rotate(2deg); background-color: #fff9c4; }
 
-        /* キャラ選択ドロップダウン */
-        .char-select-container { position: relative; }
+        /* --- キャラ選択 --- */
+        .char-select-container { position: relative; width: 100%; max-width: 500px; }
         .char-dropdown {
-            position: absolute; top: 100%; left: 0; width: 320px;
+            position: absolute; top: 100%; left: 0; width: 100%;
             background: white; border: 1px solid #ccc; border-radius: 4px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.15); z-index: 999;
             max-height: 350px; overflow-y: auto;
@@ -189,7 +182,6 @@
             border: 1px solid #ddd; object-fit: cover; background: #eee;
         }
         
-        /* スクロールバーカスタム */
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 3px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
@@ -203,7 +195,7 @@
 <div class="sun-overlay"></div>
 
 <div id="app">
-    <!-- ドラッグアイテム (7つに増量 & 配置を四隅に逃がす) -->
+    <!-- ドラッグアイテム -->
     <div v-for="(item, index) in deskItems" :key="index"
          class="draggable-item"
          :style="{ top: item.y + 'px', left: item.x + 'px' }"
@@ -211,7 +203,7 @@
         <img :src="item.src" :alt="item.name" onerror="this.style.opacity=0.3;">
     </div>
 
-    <!-- 完了スタンプ -->
+    <!-- スタンプ -->
     <div v-if="showStamp" class="fixed inset-0 flex items-center justify-center z-[100] pointer-events-none">
         <div class="stamp-animation border-4 border-red-700 text-red-700 font-bold text-6xl px-12 py-6 rounded-lg transform -rotate-12 bg-white bg-opacity-90 mix-blend-multiply tracking-widest shadow-xl" style="font-family: 'Courier New', serif;">
             THANK YOU!!
@@ -220,7 +212,7 @@
 
     <div class="workspace">
         
-        <!-- 左メモ：Global Answers -->
+        <!-- 左メモ -->
         <div class="memo-paper memo-global">
             <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-24 h-8 bg-blue-200 opacity-70 rotate-1 shadow-sm"></div>
             <h4 class="font-bold text-blue-900 mb-2 border-b border-blue-300 pb-1 flex items-center">
@@ -249,14 +241,13 @@
             </div>
         </div>
 
-        <!-- 中央：アンケート用紙 (幅広) -->
+        <!-- 中央：アンケート用紙 -->
         <div class="survey-sheet-container">
             <div class="masking-tape tape-tl"></div>
             <div class="masking-tape tape-tr"></div>
 
             <div class="survey-sheet">
                 
-                <!-- CONFIDENTIALスタンプ -->
                 <div class="absolute top-8 right-8 border-2 border-red-800 text-red-800 px-4 py-1 transform rotate-3 opacity-60 font-serif font-bold text-2xl tracking-widest pointer-events-none">
                     CONFIDENTIAL
                 </div>
@@ -269,31 +260,34 @@
                     <div class="flex-grow z-50">
                         <div class="text-xs text-gray-500 tracking-[0.2em] font-serif mb-1">CHARACTER NAME</div>
                         
-                        <!-- キャラ選択UI (ドロップダウン) -->
-                        <div class="relative">
-                            <!-- ロードボタン -->
-                            <button @click="loadAndShowCharacters" class="w-full text-left group">
-                                <div class="text-4xl font-serif font-bold text-gray-800 border-b border-dashed border-gray-400 group-hover:bg-gray-50 transition px-1 flex justify-between items-center">
-                                    <span :class="{'text-gray-400': !currentUser.name}">{{ currentUser.name || 'Select Character...' }}</span>
-                                    <span class="bg-gray-800 text-white text-xs px-3 py-1 rounded shadow group-hover:bg-black transition flex items-center">
-                                        <i class="fa-solid fa-cloud-arrow-down mr-2"></i> LOAD
-                                    </span>
-                                </div>
-                            </button>
-                            
+                        <!-- 手入力可能 ＋ 読み込みボタン -->
+                        <div class="char-select-container" v-click-outside="closeDropdown">
+                            <div class="flex items-center space-x-2">
+                                <!-- 手入力可能なInput -->
+                                <input type="text" 
+                                       v-model="currentUser.name" 
+                                       class="text-4xl font-serif font-bold text-gray-800 border-b border-dashed border-gray-400 bg-transparent outline-none w-full placeholder-gray-300"
+                                       placeholder="Guest..."
+                                >
+                                <!-- 読み込みボタン -->
+                                <button @click="loadAndShowCharacters" class="bg-gray-800 text-white text-xs px-3 py-2 rounded shadow hover:bg-black transition flex items-center whitespace-nowrap">
+                                    <i class="fa-solid fa-cloud-arrow-down mr-2"></i> LOAD
+                                </button>
+                            </div>
+
                             <!-- ドロップダウンリスト -->
-                            <div v-if="isDropdownOpen" class="char-dropdown" v-click-outside="closeDropdown">
+                            <div v-if="isDropdownOpen" class="char-dropdown">
                                 <div class="p-2 text-xs text-gray-500 bg-gray-100 border-b flex justify-between">
-                                    <span><i class="fa-solid fa-server mr-1"></i>Server Data</span>
+                                    <span><i class="fa-solid fa-server mr-1"></i>Select Character</span>
                                     <button @click="closeDropdown" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times"></i></button>
                                 </div>
                                 
                                 <div v-if="loadingChars" class="p-4 text-center text-gray-500">
-                                    <i class="fa-solid fa-spinner fa-spin mr-2"></i>Accessing Database...
+                                    <i class="fa-solid fa-spinner fa-spin mr-2"></i>Loading...
                                 </div>
                                 <div v-else-if="characterList.length === 0" class="p-4 text-center text-gray-500 text-sm">
                                     No characters found.<br>
-                                    <span class="text-xs">(Please login or create a character first)</span>
+                                    <span class="text-xs">(Please login first)</span>
                                 </div>
                                 <div v-else v-for="char in characterList" :key="char.name" 
                                      @click="selectCharacter(char)"
@@ -322,7 +316,6 @@
                         <div class="question-header">
                             <span class="q-badge">Q.{{ index + 1 }}</span>
                             <span class="q-text">{{ q.text }}</span>
-                            
                             <button @click="showGlobalAnswers(q)" class="ml-3 text-amber-600 opacity-0 group-hover:opacity-100 transition text-sm" title="みんなの回答を見る">
                                 <i class="fa-solid fa-eye"></i>
                             </button>
@@ -351,7 +344,7 @@
             </div>
         </div>
 
-        <!-- 右メモ：History -->
+        <!-- 右メモ -->
         <div class="memo-paper memo-history">
             <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-24 h-8 bg-amber-200 opacity-70 -rotate-2 shadow-sm"></div>
             <h4 class="font-bold text-amber-900 mb-2 border-b border-amber-300 pb-1 flex items-center">
@@ -373,15 +366,11 @@
     </div>
 </div>
 
-<!-- ======================================================== -->
-<!-- SCRIPT: Firestore連携 (./firestore.js を利用)               -->
-<!-- ======================================================== -->
 <script type="module">
     import { loadFromCloud, login, monitorAuth } from "./firestore.js";
 
     const { createApp, ref, reactive, onMounted } = Vue;
 
-    // クリック外判定
     const clickOutside = {
         beforeMount(el, binding) {
             el.clickOutsideEvent = function(event) {
@@ -397,18 +386,15 @@
     createApp({
         directives: { clickOutside },
         setup() {
-            // User & Data State
             const currentUser = reactive({
-                name: '', icon: 'https://placehold.co/100x100/png?text=?', description: 'Select Character', isGuest: true, uid: null
+                name: '', icon: 'https://placehold.co/100x100/png?text=?', description: 'Enter name or Load', isGuest: true, uid: null
             });
             const characterList = ref([]);
             
-            // UI State
             const isDropdownOpen = ref(false);
             const loadingChars = ref(false);
             const showStamp = ref(false);
             
-            // Survey Data
             const allQuestions = [
                 { id: 'q1', text: '休日はどのように過ごしていますか？' },
                 { id: 'q2', text: '好きな食べ物とその理由を教えてください。' },
@@ -423,7 +409,6 @@
             const answers = reactive({});
             const currentDate = new Date().toLocaleDateString('ja-JP');
 
-            // Desk Items
             const deskItems = ref([
                 { src: '../images/icons/desk1.png', x: 20, y: 20 },
                 { src: '../images/icons/desk2.png', x: 20, y: 600 },
@@ -435,22 +420,17 @@
             ]);
             const dragging = ref({ index: -1, offsetX: 0, offsetY: 0 });
 
-            // Memos
             const history = ref([]);
             const selectedGlobalQuestion = ref(null);
             const globalAnswers = ref([]);
 
-            // ■■■ 1. サーバーからキャラ読み込みロジック ■■■
             const loadAndShowCharacters = async () => {
                 isDropdownOpen.value = true;
                 loadingChars.value = true;
 
-                // 認証チェック
                 if (!currentUser.uid) {
-                    // 未ログインならログインを促す
                     try {
-                        login(); // firestore.jsのlogin関数 (ポップアップ)
-                        // ポップアップが閉じて認証状態が変わると monitorAuth が発火するはず
+                        login(); 
                         return; 
                     } catch (e) {
                         alert("Login Required");
@@ -459,11 +439,9 @@
                     }
                 }
 
-                // データロード (firestore.jsの機能を使用)
                 try {
-                    const data = await loadFromCloud(); // { charName: { ... }, ... }
+                    const data = await loadFromCloud();
                     if (data) {
-                        // オブジェクトを配列に変換
                         characterList.value = Object.values(data).map(char => ({
                             name: char.name,
                             icon: char.inpImageIcon || char.icon || 'https://placehold.co/100x100/png?text=' + char.name.charAt(0),
@@ -482,7 +460,6 @@
                 }
             };
 
-            // キャラクター選択
             const selectCharacter = (char) => {
                 currentUser.name = char.name;
                 currentUser.icon = char.icon;
@@ -490,16 +467,13 @@
                 currentUser.isGuest = false;
                 isDropdownOpen.value = false;
                 
-                // 履歴のダミー表示 (本来はここもDBから読み込む)
                 history.value = [
-                    { timestamp: new Date().toISOString(), summary: 'Previous session data loaded.' }
+                    { timestamp: new Date().toISOString(), summary: 'Session loaded.' }
                 ];
             };
 
             const closeDropdown = () => isDropdownOpen.value = false;
 
-
-            // ■■■ 2. ドラッグ処理 ■■■
             const startDrag = (e, i) => {
                 dragging.value = { index: i, offsetX: e.clientX - deskItems.value[i].x, offsetY: e.clientY - deskItems.value[i].y };
                 window.addEventListener('mousemove', onDrag);
@@ -518,9 +492,9 @@
                 window.removeEventListener('mouseup', stopDrag);
             };
 
-            // ■■■ 3. アンケート保存 ■■■
             const submitSurvey = () => {
-                if(!currentUser.name) return alert("キャラクターを選択してください。");
+                // 名前が入っていればゲストでもOKにする
+                if(!currentUser.name) return alert("Please enter a name.");
                 showStamp.value = true;
                 setTimeout(() => showStamp.value = false, 2500);
                 
@@ -531,7 +505,7 @@
             };
 
             const resetForm = () => {
-                if(confirm("入力内容を破棄しますか？")) displayedQuestions.value.forEach(q => answers[q.id] = '');
+                if(confirm("Discard changes?")) displayedQuestions.value.forEach(q => answers[q.id] = '');
             };
 
             const showGlobalAnswers = (q) => {
@@ -543,10 +517,7 @@
             };
 
             onMounted(() => {
-                // 質問ランダム設定
                 displayedQuestions.value = [...allQuestions].sort(() => 0.5 - Math.random()).slice(0, 8);
-                
-                // 認証監視開始
                 monitorAuth((user) => {
                     if (user) currentUser.uid = user.uid;
                 });
