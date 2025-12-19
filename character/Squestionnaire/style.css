@@ -1,0 +1,176 @@
+@charset "UTF-8";
+
+:root {
+    --paper-bg: #fdfbf7;
+    --ink-color: #2c3e50;
+    --tape-color-1: rgba(220, 200, 150, 0.85);
+    --tape-color-blue: rgba(100, 150, 255, 0.5);
+    --shadow-float: 0 15px 35px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -6px rgba(0, 0, 0, 0.2);
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    font-family: 'Shippori Mincho', serif;
+    color: var(--ink-color);
+    background-color: #3e2723;
+}
+
+/* --- Background --- */
+.desk-background {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    /* CSSファイルからの相対パスなので ../../ となります */
+    background-image: url('../../images/background/desk1.png'); 
+    background-color: #5d4037; background-size: cover; background-position: center; z-index: -10;
+}
+.sun-overlay {
+    position: fixed; inset: 0; pointer-events: none; z-index: 1;
+    background: radial-gradient(circle at 10% 20%, rgba(255, 240, 210, 0.3) 0%, transparent 60%),
+                linear-gradient(135deg, rgba(255, 220, 150, 0.1) 0%, transparent 40%);
+    mix-blend-mode: screen;
+}
+.shadow-overlay {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background: linear-gradient(110deg, transparent 40%, rgba(0,0,0,0.15) 45%, transparent 60%);
+    filter: blur(30px);
+}
+
+/* --- Draggable Items (さらに大きく) --- */
+.draggable-item {
+    position: absolute; cursor: grab; transition: transform 0.1s; z-index: 50; user-select: none;
+    width: 280px; height: 280px; /* ★サイズアップ 220px -> 280px */
+    display: flex; justify-content: center; align-items: center;
+    filter: drop-shadow(8px 15px 10px rgba(0,0,0,0.3));
+}
+.draggable-item:active { cursor: grabbing; transform: scale(1.05) !important; z-index: 100; }
+.draggable-item img {
+    max-width: 100%; max-height: 100%; width: auto; height: auto;
+    object-fit: contain; pointer-events: none;
+}
+
+.workspace {
+    position: relative; width: 100%; min-height: 100vh;
+    display: flex; justify-content: center; align-items: flex-start;
+    padding-top: 50px; padding-bottom: 100px; z-index: 10;
+}
+
+/* --- Survey Sheet (幅広) --- */
+.survey-sheet-container {
+    position: relative; margin-bottom: 50px; transform: rotate(0.2deg);
+}
+.survey-sheet-container::before {
+    content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    z-index: -1; transform: rotate(-1.2deg) translate(-4px, 3px);
+}
+
+.survey-sheet {
+    width: 100%; max-width: 880px; min-height: 900px;
+    background-color: var(--paper-bg);
+    /* 紙の質感 */
+    background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+    box-shadow: var(--shadow-float);
+    padding: 60px 90px; position: relative;
+}
+
+/* Tapes */
+.masking-tape {
+    position: absolute; height: 35px; width: 120px;
+    background-color: var(--tape-color-1); opacity: 0.9;
+    background-image: linear-gradient(90deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(255,255,255,0.2) 100%);
+    clip-path: polygon(3% 0%, 97% 0%, 100% 10%, 97% 20%, 100% 30%, 97% 40%, 100% 50%, 97% 60%, 100% 70%, 97% 80%, 100% 90%, 97% 100%, 3% 100%, 0% 90%, 3% 80%, 0% 70%, 3% 60%, 0% 50%, 3% 40%, 0% 30%, 3% 20%, 0% 10%);
+    z-index: 20;
+}
+.tape-tl { top: -18px; left: -30px; transform: rotate(-35deg); background-color: rgba(180, 200, 190, 0.7); }
+.tape-tr { top: -12px; right: -30px; transform: rotate(25deg); }
+
+/* --- Question Layout --- */
+.question-block {
+    margin-bottom: 2.8rem; position: relative;
+}
+.question-header {
+    display: flex; align-items: baseline; margin-bottom: 0.8rem;
+}
+.q-badge {
+    background-color: #333; color: #fff;
+    padding: 3px 8px; border-radius: 2px;
+    font-family: 'Oswald', sans-serif; font-size: 0.95rem; letter-spacing: 0.05em;
+    margin-right: 14px; flex-shrink: 0;
+}
+.q-text {
+    font-size: 1.15rem; font-weight: 700; color: #333; line-height: 1.4;
+}
+.input-line {
+    width: 100%; border: none;
+    background: repeating-linear-gradient(to right, #ccc 0, #ccc 2px, transparent 2px, transparent 6px);
+    background-position: bottom; background-size: 100% 1px; background-repeat: no-repeat;
+    font-family: 'Patrick Hand', cursive; font-size: 1.3rem; line-height: 2rem;
+    padding: 4px 0; outline: none; color: #444; resize: none; overflow: hidden;
+    transition: background 0.3s;
+}
+.input-line:focus {
+    background: linear-gradient(to right, #8d6e63 100%, #8d6e63 100%);
+    background-position: bottom; background-size: 100% 2px; background-repeat: no-repeat;
+}
+
+/* --- Stamp Animation --- */
+.stamp-animation {
+    animation: stamp-bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+@keyframes stamp-bounce {
+    0% { transform: scale(3) rotate(-15deg); opacity: 0; }
+    100% { transform: scale(1) rotate(-15deg); opacity: 0.8; }
+}
+
+/* --- Memo Paper (High Quality) --- */
+.memo-paper {
+    position: absolute; width: 280px; padding: 25px 20px;
+    background: #fffde7;
+    background-image: linear-gradient(#b0bec5 1px, transparent 1px);
+    background-size: 100% 25px;
+    line-height: 25px;
+    box-shadow: 2px 5px 15px rgba(0,0,0,0.15);
+    font-family: 'Patrick Hand', cursive;
+    z-index: 40; transition: transform 0.3s;
+}
+.memo-paper::after { /* Page Curl */
+    content: ""; position: absolute; bottom: 0; right: 0;
+    width: 30px; height: 30px;
+    background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.1) 50%, rgba(255,255,255,0.8) 55%);
+    border-radius: 0 0 0 5px; box-shadow: -1px -1px 2px rgba(0,0,0,0.1);
+}
+.memo-paper:hover { z-index: 60; transform: scale(1.02); }
+
+/* Memo Position Adjustment */
+.memo-global { left: 40px; top: 100px; transform: rotate(-3deg); background-color: #e1f5fe; } 
+.memo-history { right: 40px; top: 80px; transform: rotate(2deg); background-color: #fff9c4; }
+
+/* --- Character Dropdown --- */
+.char-select-container { position: relative; width: 100%; max-width: 500px; }
+.char-dropdown {
+    position: absolute; top: 100%; left: 0; width: 100%;
+    background: white; border: 1px solid #ccc; border-radius: 4px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15); z-index: 999;
+    max-height: 350px; overflow-y: auto;
+}
+.char-option {
+    padding: 10px 15px; cursor: pointer; display: flex; align-items: center;
+    border-bottom: 1px solid #eee; transition: background 0.2s;
+}
+.char-option:hover { background-color: #f0f8ff; }
+.char-option img { 
+    width: 45px; height: 45px; border-radius: 50%; margin-right: 15px; 
+    border: 1px solid #ddd; object-fit: cover; background: #eee;
+}
+
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 3px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+
+/* Modal Texture */
+.paper-texture {
+    background-color: #fdfbf7;
+    background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+}

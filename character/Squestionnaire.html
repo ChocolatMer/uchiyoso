@@ -19,174 +19,8 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <style>
-        :root {
-            --paper-bg: #fdfbf7;
-            --ink-color: #2c3e50;
-            --tape-color-1: rgba(220, 200, 150, 0.85);
-            --tape-color-blue: rgba(100, 150, 255, 0.5);
-            --shadow-float: 0 15px 35px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -6px rgba(0, 0, 0, 0.2);
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            overflow-y: auto;
-            overflow-x: hidden;
-            font-family: 'Shippori Mincho', serif;
-            color: var(--ink-color);
-            background-color: #3e2723;
-        }
-
-        .desk-background {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background-image: url('../images/background/desk1.png'); 
-            background-color: #5d4037; background-size: cover; background-position: center; z-index: -10;
-        }
-        .sun-overlay {
-            position: fixed; inset: 0; pointer-events: none; z-index: 1;
-            background: radial-gradient(circle at 10% 20%, rgba(255, 240, 210, 0.3) 0%, transparent 60%),
-                        linear-gradient(135deg, rgba(255, 220, 150, 0.1) 0%, transparent 40%);
-            mix-blend-mode: screen;
-        }
-        .shadow-overlay {
-            position: fixed; inset: 0; pointer-events: none; z-index: 0;
-            background: linear-gradient(110deg, transparent 40%, rgba(0,0,0,0.15) 45%, transparent 60%);
-            filter: blur(30px);
-        }
-
-        /* --- ドラッグアイテム --- */
-        .draggable-item {
-            position: absolute; cursor: grab; transition: transform 0.1s; z-index: 50; user-select: none;
-            width: 240px; height: 240px;
-            display: flex; justify-content: center; align-items: center;
-            filter: drop-shadow(8px 15px 10px rgba(0,0,0,0.3));
-        }
-        .draggable-item:active { cursor: grabbing; transform: scale(1.05) !important; z-index: 100; }
-        .draggable-item img {
-            max-width: 100%; max-height: 100%; width: auto; height: auto;
-            object-fit: contain; pointer-events: none;
-        }
-
-        .workspace {
-            position: relative; width: 100%; min-height: 100vh;
-            display: flex; justify-content: center; align-items: flex-start;
-            padding-top: 50px; padding-bottom: 100px; z-index: 10;
-        }
-
-        /* --- アンケート用紙 --- */
-        .survey-sheet-container {
-            position: relative; margin-bottom: 50px; transform: rotate(0.2deg);
-        }
-        .survey-sheet-container::before {
-            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            z-index: -1; transform: rotate(-1.2deg) translate(-4px, 3px);
-        }
-
-        .survey-sheet {
-            width: 100%; max-width: 880px; min-height: 900px;
-            background-color: var(--paper-bg);
-            background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
-            box-shadow: var(--shadow-float);
-            padding: 60px 90px; position: relative;
-        }
-
-        /* テープ */
-        .masking-tape {
-            position: absolute; height: 35px; width: 120px;
-            background-color: var(--tape-color-1); opacity: 0.9;
-            background-image: linear-gradient(90deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(255,255,255,0.2) 100%);
-            clip-path: polygon(3% 0%, 97% 0%, 100% 10%, 97% 20%, 100% 30%, 97% 40%, 100% 50%, 97% 60%, 100% 70%, 97% 80%, 100% 90%, 97% 100%, 3% 100%, 0% 90%, 3% 80%, 0% 70%, 3% 60%, 0% 50%, 3% 40%, 0% 30%, 3% 20%, 0% 10%);
-            z-index: 20;
-        }
-        .tape-tl { top: -18px; left: -30px; transform: rotate(-35deg); background-color: rgba(180, 200, 190, 0.7); }
-        .tape-tr { top: -12px; right: -30px; transform: rotate(25deg); }
-
-        /* --- 質問レイアウト --- */
-        .question-block {
-            margin-bottom: 2.8rem;
-            position: relative;
-        }
-        .question-header {
-            display: flex; align-items: baseline; margin-bottom: 0.8rem;
-        }
-        .q-badge {
-            background-color: #333; color: #fff;
-            padding: 3px 8px; border-radius: 2px;
-            font-family: 'Oswald', sans-serif; font-size: 0.95rem; letter-spacing: 0.05em;
-            margin-right: 14px; flex-shrink: 0;
-        }
-        .q-text {
-            font-size: 1.15rem; font-weight: 700; color: #333; line-height: 1.4;
-        }
-        .input-line {
-            width: 100%; border: none;
-            background: repeating-linear-gradient(to right, #ccc 0, #ccc 2px, transparent 2px, transparent 6px);
-            background-position: bottom; background-size: 100% 1px; background-repeat: no-repeat;
-            font-family: 'Patrick Hand', cursive; font-size: 1.3rem; line-height: 2rem;
-            padding: 4px 0; outline: none; color: #444; resize: none; overflow: hidden;
-            transition: background 0.3s;
-        }
-        .input-line:focus {
-            background: linear-gradient(to right, #8d6e63 100%, #8d6e63 100%);
-            background-position: bottom; background-size: 100% 2px; background-repeat: no-repeat;
-        }
-
-        /* --- スタンプ演出 --- */
-        .stamp-animation {
-            animation: stamp-bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-        @keyframes stamp-bounce {
-            0% { transform: scale(3) rotate(-15deg); opacity: 0; }
-            100% { transform: scale(1) rotate(-15deg); opacity: 0.8; }
-        }
-
-        /* --- メモ用紙 --- */
-        .memo-paper {
-            position: absolute; width: 280px; padding: 25px 20px;
-            background: #fffde7;
-            background-image: linear-gradient(#b0bec5 1px, transparent 1px);
-            background-size: 100% 25px;
-            line-height: 25px;
-            box-shadow: 2px 5px 15px rgba(0,0,0,0.15);
-            font-family: 'Patrick Hand', cursive;
-            z-index: 40; transition: transform 0.3s;
-        }
-        .memo-paper::after {
-            content: ""; position: absolute; bottom: 0; right: 0;
-            width: 30px; height: 30px;
-            background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.1) 50%, rgba(255,255,255,0.8) 55%);
-            border-radius: 0 0 0 5px; box-shadow: -1px -1px 2px rgba(0,0,0,0.1);
-        }
-        .memo-paper:hover { z-index: 60; transform: scale(1.02); }
-
-        .memo-global { left: 40px; top: 100px; transform: rotate(-3deg); background-color: #e1f5fe; } 
-        .memo-history { right: 40px; top: 80px; transform: rotate(2deg); background-color: #fff9c4; }
-
-        /* --- キャラ選択 --- */
-        .char-select-container { position: relative; width: 100%; max-width: 500px; }
-        .char-dropdown {
-            position: absolute; top: 100%; left: 0; width: 100%;
-            background: white; border: 1px solid #ccc; border-radius: 4px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15); z-index: 999;
-            max-height: 350px; overflow-y: auto;
-        }
-        .char-option {
-            padding: 10px 15px; cursor: pointer; display: flex; align-items: center;
-            border-bottom: 1px solid #eee; transition: background 0.2s;
-        }
-        .char-option:hover { background-color: #f0f8ff; }
-        .char-option img { 
-            width: 45px; height: 45px; border-radius: 50%; margin-right: 15px; 
-            border: 1px solid #ddd; object-fit: cover; background: #eee;
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 3px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-
-    </style>
+    <!-- ★CSS読み込み (Squestionnaireフォルダ内) -->
+    <link rel="stylesheet" href="Squestionnaire/style.css">
 </head>
 <body>
 
@@ -203,16 +37,43 @@
         <img :src="item.src" :alt="item.name" onerror="this.style.opacity=0.3;">
     </div>
 
-    <!-- スタンプ -->
+    <!-- 完了スタンプ -->
     <div v-if="showStamp" class="fixed inset-0 flex items-center justify-center z-[100] pointer-events-none">
         <div class="stamp-animation border-4 border-red-700 text-red-700 font-bold text-6xl px-12 py-6 rounded-lg transform -rotate-12 bg-white bg-opacity-90 mix-blend-multiply tracking-widest shadow-xl" style="font-family: 'Courier New', serif;">
             THANK YOU!!
         </div>
     </div>
 
+    <!-- 質問選択モーダル -->
+    <div v-if="showQuestionSelector" class="fixed inset-0 z-[200] bg-black bg-opacity-50 flex items-center justify-center backdrop-blur-sm">
+        <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col relative paper-texture">
+            <h3 class="text-xl font-serif font-bold text-gray-800 mb-4 border-b pb-2">
+                <i class="fa-solid fa-list-check mr-2"></i>Select Questions
+            </h3>
+            <div class="overflow-y-auto flex-grow pr-2 custom-scrollbar">
+                <div v-for="q in allQuestions" :key="q.id" class="flex items-start mb-3 p-2 hover:bg-gray-50 rounded cursor-pointer" @click="toggleQuestionSelection(q)">
+                    <div class="mr-3 mt-1">
+                        <i v-if="tempSelectedIds.includes(q.id)" class="fa-solid fa-square-check text-2xl text-blue-600"></i>
+                        <i v-else class="fa-regular fa-square text-2xl text-gray-400"></i>
+                    </div>
+                    <div class="text-sm font-bold text-gray-700 pt-1">{{ q.text }}</div>
+                </div>
+            </div>
+            <div class="mt-4 flex justify-between items-center pt-2 border-t">
+                <span class="text-xs text-gray-500">{{ tempSelectedIds.length }} selected</span>
+                <div class="space-x-3">
+                    <button @click="showQuestionSelector = false" class="px-4 py-2 text-gray-500 hover:text-gray-800 font-serif">Cancel</button>
+                    <button @click="confirmQuestionSelection" class="px-6 py-2 bg-gray-800 text-white rounded hover:bg-black font-serif shadow">
+                        Apply Selection
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="workspace">
         
-        <!-- 左メモ -->
+        <!-- 左メモ：Global Answers -->
         <div class="memo-paper memo-global">
             <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-24 h-8 bg-blue-200 opacity-70 rotate-1 shadow-sm"></div>
             <h4 class="font-bold text-blue-900 mb-2 border-b border-blue-300 pb-1 flex items-center">
@@ -263,19 +124,16 @@
                         <!-- 手入力可能 ＋ 読み込みボタン -->
                         <div class="char-select-container" v-click-outside="closeDropdown">
                             <div class="flex items-center space-x-2">
-                                <!-- 手入力可能なInput -->
                                 <input type="text" 
                                        v-model="currentUser.name" 
                                        class="text-4xl font-serif font-bold text-gray-800 border-b border-dashed border-gray-400 bg-transparent outline-none w-full placeholder-gray-300"
                                        placeholder="Guest..."
                                 >
-                                <!-- 読み込みボタン -->
                                 <button @click="loadAndShowCharacters" class="bg-gray-800 text-white text-xs px-3 py-2 rounded shadow hover:bg-black transition flex items-center whitespace-nowrap">
                                     <i class="fa-solid fa-cloud-arrow-down mr-2"></i> LOAD
                                 </button>
                             </div>
 
-                            <!-- ドロップダウンリスト -->
                             <div v-if="isDropdownOpen" class="char-dropdown">
                                 <div class="p-2 text-xs text-gray-500 bg-gray-100 border-b flex justify-between">
                                     <span><i class="fa-solid fa-server mr-1"></i>Select Character</span>
@@ -311,6 +169,15 @@
                 </div>
 
                 <!-- 質問エリア -->
+                <div class="mb-4 flex justify-end space-x-2 px-2">
+                    <button @click="openQuestionSelector" class="text-[10px] bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-1 rounded border transition" title="自分で選ぶ">
+                        <i class="fa-solid fa-check-to-slot mr-1"></i>自分で選ぶ
+                    </button>
+                    <button @click="refreshQuestions" class="text-[10px] bg-gray-100 hover:bg-gray-200 text-gray-600 px-2 py-1 rounded border transition" title="ランダム更新">
+                        <i class="fa-solid fa-rotate mr-1"></i>更新
+                    </button>
+                </div>
+
                 <div class="pl-2">
                     <div v-for="(q, index) in displayedQuestions" :key="q.id" class="question-block group">
                         <div class="question-header">
@@ -344,7 +211,7 @@
             </div>
         </div>
 
-        <!-- 右メモ -->
+        <!-- 右メモ：History -->
         <div class="memo-paper memo-history">
             <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-24 h-8 bg-amber-200 opacity-70 -rotate-2 shadow-sm"></div>
             <h4 class="font-bold text-amber-900 mb-2 border-b border-amber-300 pb-1 flex items-center">
@@ -366,173 +233,8 @@
     </div>
 </div>
 
-<script type="module">
-    import { loadFromCloud, login, monitorAuth } from "./firestore.js";
+<!-- JS読み込み -->
+<script type="module" src="Squestionnaire/script.js"></script>
 
-    const { createApp, ref, reactive, onMounted } = Vue;
-
-    const clickOutside = {
-        beforeMount(el, binding) {
-            el.clickOutsideEvent = function(event) {
-                if (!(el === event.target || el.contains(event.target))) {
-                    binding.value(event);
-                }
-            };
-            document.body.addEventListener('click', el.clickOutsideEvent);
-        },
-        unmounted(el) { document.body.removeEventListener('click', el.clickOutsideEvent); }
-    };
-
-    createApp({
-        directives: { clickOutside },
-        setup() {
-            const currentUser = reactive({
-                name: '', icon: 'https://placehold.co/100x100/png?text=?', description: 'Enter name or Load', isGuest: true, uid: null
-            });
-            const characterList = ref([]);
-            
-            const isDropdownOpen = ref(false);
-            const loadingChars = ref(false);
-            const showStamp = ref(false);
-            
-            const allQuestions = [
-                { id: 'q1', text: '休日はどのように過ごしていますか？' },
-                { id: 'q2', text: '好きな食べ物とその理由を教えてください。' },
-                { id: 'q3', text: 'もし魔法が一つ使えるなら何をしますか？' },
-                { id: 'q4', text: '最近、心が動かされた出来事は？' },
-                { id: 'q5', text: 'あなたの宝物は何ですか？' },
-                { id: 'q6', text: '苦手なものはありますか？' },
-                { id: 'q7', text: '自分を動物に例えると？' },
-                { id: 'q8', text: '大切な人へ伝えたいことは？' }
-            ];
-            const displayedQuestions = ref([]);
-            const answers = reactive({});
-            const currentDate = new Date().toLocaleDateString('ja-JP');
-
-            const deskItems = ref([
-                { src: '../images/icons/desk1.png', x: 20, y: 20 },
-                { src: '../images/icons/desk2.png', x: 20, y: 600 },
-                { src: '../images/icons/desk3.png', x: window.innerWidth - 300, y: 20 },
-                { src: '../images/icons/desk4.png', x: window.innerWidth - 320, y: 650 },
-                { src: '../images/icons/desk5.png', x: 100, y: 350 },
-                { src: '../images/icons/desk6.png', x: window.innerWidth - 150, y: 350 },
-                { src: '../images/icons/desk7.png', x: 150, y: 800 },
-            ]);
-            const dragging = ref({ index: -1, offsetX: 0, offsetY: 0 });
-
-            const history = ref([]);
-            const selectedGlobalQuestion = ref(null);
-            const globalAnswers = ref([]);
-
-            const loadAndShowCharacters = async () => {
-                isDropdownOpen.value = true;
-                loadingChars.value = true;
-
-                if (!currentUser.uid) {
-                    try {
-                        login(); 
-                        return; 
-                    } catch (e) {
-                        alert("Login Required");
-                        loadingChars.value = false;
-                        return;
-                    }
-                }
-
-                try {
-                    const data = await loadFromCloud();
-                    if (data) {
-                        characterList.value = Object.values(data).map(char => ({
-                            name: char.name,
-                            icon: char.inpImageIcon || char.icon || 'https://placehold.co/100x100/png?text=' + char.name.charAt(0),
-                            job: char.inpJob || char.job || '',
-                            desc: char.inpJob || char.job || 'No description',
-                            ...char
-                        }));
-                    } else {
-                        characterList.value = [];
-                    }
-                } catch (e) {
-                    console.error("Load Error:", e);
-                    alert("Failed to load data.");
-                } finally {
-                    loadingChars.value = false;
-                }
-            };
-
-            const selectCharacter = (char) => {
-                currentUser.name = char.name;
-                currentUser.icon = char.icon;
-                currentUser.description = char.desc;
-                currentUser.isGuest = false;
-                isDropdownOpen.value = false;
-                
-                history.value = [
-                    { timestamp: new Date().toISOString(), summary: 'Session loaded.' }
-                ];
-            };
-
-            const closeDropdown = () => isDropdownOpen.value = false;
-
-            const startDrag = (e, i) => {
-                dragging.value = { index: i, offsetX: e.clientX - deskItems.value[i].x, offsetY: e.clientY - deskItems.value[i].y };
-                window.addEventListener('mousemove', onDrag);
-                window.addEventListener('mouseup', stopDrag);
-            };
-            const onDrag = (e) => {
-                if(dragging.value.index >= 0) {
-                    const item = deskItems.value[dragging.value.index];
-                    item.x = e.clientX - dragging.value.offsetX;
-                    item.y = e.clientY - dragging.value.offsetY;
-                }
-            };
-            const stopDrag = () => {
-                dragging.value.index = -1;
-                window.removeEventListener('mousemove', onDrag);
-                window.removeEventListener('mouseup', stopDrag);
-            };
-
-            const submitSurvey = () => {
-                // 名前が入っていればゲストでもOKにする
-                if(!currentUser.name) return alert("Please enter a name.");
-                showStamp.value = true;
-                setTimeout(() => showStamp.value = false, 2500);
-                
-                history.value.unshift({
-                    timestamp: new Date().toISOString(),
-                    summary: Object.values(answers)[0] || 'No answer recorded'
-                });
-            };
-
-            const resetForm = () => {
-                if(confirm("Discard changes?")) displayedQuestions.value.forEach(q => answers[q.id] = '');
-            };
-
-            const showGlobalAnswers = (q) => {
-                selectedGlobalQuestion.value = q;
-                globalAnswers.value = [
-                    { user: 'Guest A', icon: 'https://placehold.co/50x50/png?text=A', text: '秘密です。' },
-                    { user: 'Guest B', icon: 'https://placehold.co/50x50/png?text=B', text: '効率を重視します。' }
-                ];
-            };
-
-            onMounted(() => {
-                displayedQuestions.value = [...allQuestions].sort(() => 0.5 - Math.random()).slice(0, 8);
-                monitorAuth((user) => {
-                    if (user) currentUser.uid = user.uid;
-                });
-            });
-
-            return {
-                currentUser, characterList, displayedQuestions, answers, currentDate,
-                deskItems, startDrag, 
-                loadAndShowCharacters, selectCharacter, isDropdownOpen, closeDropdown, loadingChars,
-                submitSurvey, resetForm, showStamp,
-                history, selectedGlobalQuestion, globalAnswers, showGlobalAnswers,
-                formatDate: (iso) => new Date(iso).toLocaleDateString()
-            };
-        }
-    }).mount('#app');
-</script>
 </body>
 </html>
