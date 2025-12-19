@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pair Harmony Survey</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@300;500&family=Zen+Maru+Gothic:wght@400;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Vue.js 3 & Tailwind -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 専用CSS -->
+    <link rel="stylesheet" href="Wquestionnaire/style.css">
+</head>
+<body>
+
+<div class="sparkles"></div>
+<!-- 背景パーティクル (JSで生成) -->
+<div id="particles"></div>
+
+<div id="app" class="main-container">
+
+    <!-- LEFT CHARACTER (SIDE A) -->
+    <div class="char-section" :style="{'--theme-color': charA.color || '#ff9a9e'}">
+        <div class="theme-bar" :style="{background: charA.color || '#ff9a9e'}"></div>
+        
+        <div class="char-icon-box">
+            <img :src="charA.icon" alt="CharA">
+        </div>
+        
+        <div class="text-center w-full relative">
+            <input type="text" v-model="charA.name" class="char-name-input" placeholder="Name...">
+            <button @click="openLoader('A')" class="load-btn">
+                <i class="fa-solid fa-cloud-arrow-down"></i> Load
+            </button>
+        </div>
+
+        <div class="answer-area">
+            <div class="text-xs text-center text-gray-400 mb-2 font-bold tracking-widest">ANSWER A</div>
+            <textarea 
+                v-model="answersA[currentQ.id]" 
+                class="handwritten-area" 
+                placeholder="Write here..."
+            ></textarea>
+        </div>
+    </div>
+
+    <!-- CENTER STAGE (Questions) -->
+    <div class="center-stage">
+        
+        <div class="heart-icon"><i class="fa-solid fa-heart"></i></div>
+
+        <!-- 質問カード (アニメーション付き) -->
+        <transition name="fade" mode="out-in">
+            <div :key="currentQ.id" class="question-card">
+                <div class="q-number">Question {{ currentIndex + 1 }} / {{ questions.length }}</div>
+                <div class="q-text">{{ currentQ.text }}</div>
+            </div>
+        </transition>
+
+        <!-- コントロール -->
+        <div class="controls">
+            <button @click="prevQ" :disabled="currentIndex === 0" class="control-btn">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <button @click="nextQ" :disabled="currentIndex === questions.length - 1" class="control-btn">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div>
+
+        <button @click="savePairData" class="save-btn">
+            <i class="fa-solid fa-wand-magic-sparkles mr-2"></i>SAVE MEMORY
+        </button>
+
+        <div v-if="saveMessage" class="mt-4 text-green-600 font-bold fade-enter-active text-center">
+            {{ saveMessage }}
+        </div>
+
+    </div>
+
+    <!-- RIGHT CHARACTER (SIDE B) -->
+    <div class="char-section" :style="{'--theme-color': charB.color || '#a29bfe'}">
+        <div class="theme-bar" :style="{background: charB.color || '#a29bfe'}"></div>
+
+        <div class="char-icon-box">
+            <img :src="charB.icon" alt="CharB">
+        </div>
+        
+        <div class="text-center w-full relative">
+            <input type="text" v-model="charB.name" class="char-name-input" placeholder="Name...">
+            <button @click="openLoader('B')" class="load-btn">
+                <i class="fa-solid fa-cloud-arrow-down"></i> Load
+            </button>
+        </div>
+
+        <div class="answer-area">
+            <div class="text-xs text-center text-gray-400 mb-2 font-bold tracking-widest">ANSWER B</div>
+            <textarea 
+                v-model="answersB[currentQ.id]" 
+                class="handwritten-area" 
+                placeholder="Write here..."
+            ></textarea>
+        </div>
+    </div>
+
+    <!-- キャラクター選択モーダル -->
+    <div v-if="showModal" class="modal-overlay" @click.self="showModal = false">
+        <div class="char-list-modal">
+            <h3 class="font-bold text-gray-600 mb-4 text-center">Select Character ({{ targetSide }})</h3>
+            <div v-if="loading" class="text-center text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>
+            <div v-else>
+                <div v-for="char in charList" :key="char.name" @click="selectCharacter(char)" class="char-item">
+                    <img :src="char.icon || 'https://placehold.co/50x50/png?text=?'">
+                    <div>
+                        <div class="font-bold text-gray-700">{{ char.name }}</div>
+                        <div class="text-xs text-gray-400">{{ char.job || 'No Data' }}</div>
+                    </div>
+                </div>
+                <div v-if="charList.length === 0" class="text-center text-sm text-gray-400 mt-4">
+                    No characters found.<br>Please login or create data.
+                </div>
+            </div>
+            <button @click="showModal = false" class="w-full mt-4 p-2 bg-gray-100 rounded hover:bg-gray-200 text-xs">Close</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- 専用JS -->
+<script type="module" src="Wquestionnaire/script.js"></script>
+
+</body>
+</html>
