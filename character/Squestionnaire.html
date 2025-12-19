@@ -3,534 +3,559 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SQUAD SELECT - FINAL ADJUST</title>
+    <title>Morning Desk Survey</title>
     
     <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;700;900&family=Teko:wght@300;500&family=Rajdhani:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;700&family=Patrick+Hand&family=Shippori+Mincho:wght@400;600;700&family=Oswald:wght@500&display=swap" rel="stylesheet">
     
-    <link href="list/header.css" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Vue.js 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
-        /* --- CORE VARIABLES --- */
         :root {
-            --card-w: 250px; 
-            --card-h: 75vh;
-            --gap: 30px;
-            --accent: #00d2ff;
-            
-            --z-screen: -150px;
-            --z-shadow: -100px;
-            --z-ui: 60px;
-            --z-fig: 100px;
-
-            --bg-color: #0a0b10;
-            --text-main: #fff;
-            --text-sub: #888;
-            --glass-bg: rgba(10, 15, 30, 0.6);
-            --glass-border: rgba(255, 255, 255, 0.3);
-            --screen-bg: rgba(0,0,0,0.8);
-            --screen-overlay: overlay;
+            --paper-bg: #fdfbf7;
+            --ink-color: #2c3e50;
+            --tape-color-1: rgba(220, 200, 150, 0.85);
+            --tape-color-blue: rgba(100, 150, 255, 0.5);
+            --shadow-float: 0 15px 35px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -6px rgba(0, 0, 0, 0.2);
         }
 
         body {
-            margin: 0; padding: 0;
-            background-color: var(--bg-color);
-            background-image: 
-                linear-gradient(rgba(0, 210, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 210, 255, 0.05) 1px, transparent 1px),
-                radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 0%, #000 90%);
-            background-size: 40px 40px, 40px 40px, 100% 100%;
-            font-family: 'Rajdhani', sans-serif;
-            overflow: hidden;
-            height: 100vh;
-            display: flex; flex-direction: column;
-            user-select: none;
-            color: var(--text-main);
+            margin: 0;
+            min-height: 100vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+            font-family: 'Shippori Mincho', serif;
+            color: var(--ink-color);
+            background-color: #3e2723;
         }
 
-        /* --- STAGE --- */
-        .stage-wrapper {
-            flex: 1; position: relative; width: 100%;
-            display: flex; align-items: center; justify-content: center;
-            perspective: 1600px;
-            overflow: hidden;
+        .desk-background {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-image: url('../images/background/desk1.png'); 
+            background-color: #5d4037; background-size: cover; background-position: center; z-index: -10;
+        }
+        .sun-overlay {
+            position: fixed; inset: 0; pointer-events: none; z-index: 1;
+            background: radial-gradient(circle at 10% 20%, rgba(255, 240, 210, 0.3) 0%, transparent 60%),
+                        linear-gradient(135deg, rgba(255, 220, 150, 0.1) 0%, transparent 40%);
+            mix-blend-mode: screen;
+        }
+        .shadow-overlay {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            background: linear-gradient(110deg, transparent 40%, rgba(0,0,0,0.15) 45%, transparent 60%);
+            filter: blur(30px);
         }
 
-        .particle-container { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
-        .particle {
-            position: absolute; bottom: -10px;
-            background: var(--accent); border-radius: 50%; opacity: 0;
-            animation: riseUp linear infinite;
-            box-shadow: 0 0 10px var(--accent);
-        }
-        @keyframes riseUp {
-            0% { transform: translateY(0) scale(0); opacity: 0; }
-            20% { opacity: 0.6; }
-            80% { opacity: 0.2; }
-            100% { transform: translateY(-100vh) scale(1.5); opacity: 0; }
-        }
-
-        .bg-tech-ring {
-            position: absolute; top: 50%; left: 50%;
-            width: 90vh; height: 90vh;
-            border: 1px dashed rgba(0, 210, 255, 0.2); border-radius: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 0 50px rgba(0, 210, 255, 0.05);
-            animation: rotateBg 60s linear infinite; pointer-events: none;
-        }
-        @keyframes rotateBg { to { transform: translate(-50%, -50%) rotate(360deg); } }
-
-        .stage-container {
-            display: flex; align-items: center;
-            padding: 0 50vw; 
-            overflow-x: auto; overflow-y: visible;
-            scroll-behavior: smooth;
-            height: 100%; width: 100%;
-            transform-style: preserve-3d;
-            scrollbar-width: none;
-            scroll-snap-type: x mandatory;
-            z-index: 10;
-        }
-        .stage-container::-webkit-scrollbar { display: none; }
-
-        /* --- CHARACTER UNIT --- */
-        .char-unit {
-            flex: 0 0 var(--card-w);
-            height: var(--card-h);
-            margin: 0 var(--gap);
-            position: relative;
-            transform-style: preserve-3d;
-            scroll-snap-align: center;
-            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-
-        /* SCREEN */
-        .unit-screen {
-            position: absolute; top: 0; height: 58%;
-            left: -5px; right: -5px;
-            background: var(--screen-bg);
-            transform: translateZ(var(--z-screen));
-            clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px);
-            filter: drop-shadow(0 0 5px var(--accent));
-            transition: all 0.5s ease; pointer-events: none;
-        }
-        .unit-screen::before {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(to bottom, transparent 50%, rgba(0, 210, 255, 0.05) 51%);
-            background-size: 100% 4px; z-index: 5;
-        }
-        .screen-img-container {
-            width: 135%; height: 135%; position: absolute; 
-            top: 0%; left: -17%; transform: rotate(-8deg); transition: transform 0.5s ease;
-        }
-        .screen-img {
-            width: 100%; height: 100%;
-            background-size: cover; background-position: top center;
-            background-color: var(--accent); 
-            background-blend-mode: var(--screen-overlay);
-            filter: grayscale(1) contrast(1.2) brightness(0.8);
-            opacity: 0.7; transition: all 0.5s ease;
-        }
-        .screen-deco-corner {
-            position: absolute; width: 15px; height: 15px;
-            border: 2px solid var(--text-main); z-index: 6; opacity: 0.5;
-            box-shadow: 0 0 10px var(--accent);
-        }
-        .corner-tl { top: 10px; left: 10px; border-right: none; border-bottom: none; }
-        .corner-br { bottom: 10px; right: 10px; border-left: none; border-top: none; }
-
-        /* HEADER & UI */
-        .ui-header-group {
-            position: absolute; top: -60px; left: -10px;
-            display: flex; flex-direction: column; align-items: flex-start; gap: 5px;
-            transform: translateZ(var(--z-ui)); z-index: 100; pointer-events: none; width: 150%;
-        }
-        .ui-job-tag {
-            background: var(--glass-bg); border: 1px solid var(--glass-border);
-            backdrop-filter: blur(4px); padding: 4px 12px;
-            display: flex; align-items: center; gap: 8px;
-            clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%);
-        }
-        .job-icon { width: 20px; height: 20px; background-size: cover; border-radius: 50%; border: 1px solid var(--accent); }
-        .job-val { font-family: 'Share Tech Mono'; font-weight: 700; color: var(--accent); }
-        .ui-name-box {
-            font-family: 'Noto Sans JP', sans-serif; font-weight: 900; font-size: 1.8rem;
-            color: var(--text-main); text-transform: uppercase; line-height: 1;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5); padding-left: 5px;
-            border-bottom: 4px solid var(--accent); white-space: nowrap;
-        }
-
-        .draggable-ui { cursor: grab; user-select: none; transition: transform 0.1s; }
-        .draggable-ui:active { cursor: grabbing; transform: scale(1.05); }
-
-        .ui-stats-container {
-            position: absolute; top: 20%; right: -60px; width: 140px;
-            display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
-            transform: translateZ(var(--z-ui)); z-index: 120;
-        }
-        .ui-san-container {
-            position: absolute; top: 55%; right: 20px; width: 75px; height: 75px;
-            transform: translateZ(var(--z-ui)); z-index: 125;
-            background: rgba(0,0,0,0.6); border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);
+        /* --- ドラッグアイテム（サイズ拡大・正方形枠） --- */
+        .draggable-item {
+            position: absolute; cursor: grab; transition: transform 0.1s; z-index: 50; user-select: none;
+            width: 240px; height: 240px; /* 大きく */
             display: flex; justify-content: center; align-items: center;
-            box-shadow: 0 0 15px rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+            filter: drop-shadow(8px 15px 10px rgba(0,0,0,0.3));
         }
-        .ui-san-container svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-        .san-bg { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 5; }
-        .san-fill { 
-            fill: none; stroke: var(--accent); stroke-width: 5; stroke-linecap: round;
-            stroke-dasharray: 220; stroke-dashoffset: 220; transition: stroke-dashoffset 1s ease;
-        }
-        .san-val { position: absolute; font-family: 'Share Tech Mono'; font-size: 1.4rem; font-weight: bold; color: #fff; top: 22px;}
-        .san-label { position: absolute; bottom: 12px; font-size: 0.6rem; color: var(--accent); }
-
-        .stats-grid {
-            background: var(--glass-bg); border: 1px solid var(--glass-border);
-            padding: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px 12px;
-            width: 100%; box-sizing: border-box;
-            clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        .stat-item { display: flex; justify-content: space-between; font-family: 'Share Tech Mono'; font-size: 0.75rem; color: var(--text-sub); }
-        .stat-val { font-weight: bold; color: var(--text-main); }
-
-        .ui-vitals {
-            position: absolute; top: 40%; left: -60px; width: 140px; transform: translateZ(var(--z-ui)); z-index: 120;
-            background: var(--glass-bg); border: 1px solid var(--glass-border); backdrop-filter: blur(8px); padding: 10px;
-            border-left: 3px solid var(--accent); clip-path: polygon(0 0, 100% 0, 100% 100%, 10px 100%);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-        .vital-row { margin-bottom: 8px; } .vital-row:last-child { margin-bottom: 0; }
-        .vital-header { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-main); font-family: 'Share Tech Mono'; margin-bottom: 4px; font-weight: bold; }
-        .vital-bar { height: 6px; background: rgba(128,128,128,0.3); overflow: hidden; border-radius: 2px; }
-        .vital-progress { height: 100%; width: 0%; transition: width 1s ease; }
-
-        .unit-figure-group {
-            position: absolute; bottom: 0; left: 50%; width: 100%; height: 60%; 
-            transform: translateX(-50%) translateZ(var(--z-fig));
-            display: flex; align-items: flex-end; justify-content: center;
-            z-index: 50; pointer-events: none; animation: floatChar 6s ease-in-out infinite;
-        }
-        @keyframes floatChar {
-            0%, 100% { transform: translateX(-50%) translateZ(var(--z-fig)) translateY(0); }
-            50% { transform: translateX(-50%) translateZ(var(--z-fig)) translateY(-15px); }
-        }
-        .char-figure {
-            max-height: 100%; max-width: 180%; object-fit: contain;
-            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.4)); transition: transform 0.4s;
+        .draggable-item:active { cursor: grabbing; transform: scale(1.05) !important; z-index: 100; }
+        .draggable-item img {
+            max-width: 100%; max-height: 100%; width: auto; height: auto;
+            object-fit: contain; pointer-events: none;
         }
 
-        .unit-shadow-container {
-            position: absolute; bottom: -20px; left: 50%; width: 160px; height: 50px;
-            transform: translateX(-50%) translateZ(var(--z-shadow)) rotateX(60deg);
-            z-index: 1; pointer-events: none; display: flex; justify-content: center; align-items: center;
-        }
-        .real-shadow {
-            width: 100%; height: 100%; background: radial-gradient(ellipse at center, var(--accent) 0%, transparent 60%);
-            opacity: 0.5; filter: blur(15px); animation: shadowBreath 6s ease-in-out infinite;
-        }
-        @keyframes shadowBreath {
-            0%, 100% { transform: scale(1); opacity: 0.5; }
-            50% { transform: scale(0.85); opacity: 0.3; }
+        .workspace {
+            position: relative; width: 100%; min-height: 100vh;
+            display: flex; justify-content: center; align-items: flex-start;
+            padding-top: 50px; padding-bottom: 100px; z-index: 10;
         }
 
-        .char-unit:hover .unit-screen {
-            transform: translateZ(calc(var(--z-screen) - 20px));
-            filter: drop-shadow(0 0 15px var(--accent)) brightness(1.05);
-            background: rgba(20, 20, 30, 0.95);
+        /* --- アンケート用紙 --- */
+        .survey-sheet-container {
+            position: relative; margin-bottom: 50px; transform: rotate(0.2deg);
         }
-        .char-unit:hover .screen-img-container { transform: rotate(0deg) scale(1.1); }
-        .char-unit:hover .screen-img {
-            filter: grayscale(0) contrast(1.05) brightness(1.0); background-color: transparent; opacity: 1;
+        .survey-sheet-container::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: -1; transform: rotate(-1.2deg) translate(-4px, 3px);
         }
-        .char-unit:hover .unit-figure-group { animation: none; transform: translateX(-50%) translateZ(calc(var(--z-fig) + 50px)) scale(1.08); }
-        .char-unit:hover .real-shadow { animation: none; transform: scale(1.3); opacity: 0.4; }
-        .char-unit:hover .ui-job-tag { background: var(--text-main); }
-        .char-unit:hover .job-val { color: var(--bg-color); }
 
-        .sub-header {
-            flex-shrink: 0; height: 60px; padding: 0 40px;
-            display: flex; align-items: center; justify-content: space-between;
-            background: var(--glass-bg); z-index: 200;
-            border-bottom: 1px solid var(--glass-border); backdrop-filter: blur(10px);
+        .survey-sheet {
+            width: 100%; max-width: 880px; min-height: 900px;
+            background-color: var(--paper-bg);
+            background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+            box-shadow: var(--shadow-float);
+            padding: 60px 90px; position: relative;
         }
-        .nav-btn {
-            position: absolute; top: 50%; transform: translateY(-50%); width: 60px; height: 60px; 
-            border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.5); 
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; z-index: 300; font-size: 1.5rem; color: var(--accent);
-            clip-path: polygon(20% 0, 100% 0, 100% 80%, 80% 100%, 0 100%, 0 20%); transition: 0.3s;
+
+        /* テープ */
+        .masking-tape {
+            position: absolute; height: 35px; width: 120px;
+            background-color: var(--tape-color-1); opacity: 0.9;
+            background-image: linear-gradient(90deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(255,255,255,0.2) 100%);
+            clip-path: polygon(3% 0%, 97% 0%, 100% 10%, 97% 20%, 100% 30%, 97% 40%, 100% 50%, 97% 60%, 100% 70%, 97% 80%, 100% 90%, 97% 100%, 3% 100%, 0% 90%, 3% 80%, 0% 70%, 3% 60%, 0% 50%, 3% 40%, 0% 30%, 3% 20%, 0% 10%);
+            z-index: 20;
         }
-        .nav-btn:hover { background: var(--accent); color: #fff; box-shadow: 0 0 20px var(--accent); }
-        .prev { left: 40px; } .next { right: 40px; }
-        .loading { font-family: 'Teko'; font-size: 2.5rem; color: var(--accent); letter-spacing: 0.2em; text-shadow: 0 0 10px var(--accent); }
+        .tape-tl { top: -18px; left: -30px; transform: rotate(-35deg); background-color: rgba(180, 200, 190, 0.7); }
+        .tape-tr { top: -12px; right: -30px; transform: rotate(25deg); }
+
+        /* --- 質問レイアウト --- */
+        .question-block {
+            margin-bottom: 2.8rem;
+            position: relative;
+        }
+        .question-header {
+            display: flex; align-items: baseline; margin-bottom: 0.8rem;
+        }
+        .q-badge {
+            background-color: #333; color: #fff;
+            padding: 3px 8px; border-radius: 2px;
+            font-family: 'Oswald', sans-serif; font-size: 0.95rem; letter-spacing: 0.05em;
+            margin-right: 14px; flex-shrink: 0;
+        }
+        .q-text {
+            font-size: 1.15rem; font-weight: 700; color: #333; line-height: 1.4;
+        }
+        .input-line {
+            width: 100%; border: none;
+            background: repeating-linear-gradient(to right, #ccc 0, #ccc 2px, transparent 2px, transparent 6px);
+            background-position: bottom; background-size: 100% 1px; background-repeat: no-repeat;
+            font-family: 'Patrick Hand', cursive; font-size: 1.3rem; line-height: 2rem;
+            padding: 4px 0; outline: none; color: #444; resize: none; overflow: hidden;
+            transition: background 0.3s;
+        }
+        .input-line:focus {
+            background: linear-gradient(to right, #8d6e63 100%, #8d6e63 100%);
+            background-position: bottom; background-size: 100% 2px; background-repeat: no-repeat;
+        }
+
+        /* --- スタンプ演出 --- */
+        .stamp-animation {
+            animation: stamp-bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes stamp-bounce {
+            0% { transform: scale(3) rotate(-15deg); opacity: 0; }
+            100% { transform: scale(1) rotate(-15deg); opacity: 0.8; }
+        }
+
+        /* --- メモ用紙 --- */
+        .memo-paper {
+            position: absolute; width: 280px; padding: 25px 20px;
+            background: #fffde7;
+            background-image: linear-gradient(#b0bec5 1px, transparent 1px);
+            background-size: 100% 25px;
+            line-height: 25px;
+            box-shadow: 2px 5px 15px rgba(0,0,0,0.15);
+            font-family: 'Patrick Hand', cursive;
+            z-index: 40; transition: transform 0.3s;
+        }
+        .memo-paper::after {
+            content: ""; position: absolute; bottom: 0; right: 0;
+            width: 30px; height: 30px;
+            background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.1) 50%, rgba(255,255,255,0.8) 55%);
+            border-radius: 0 0 0 5px; box-shadow: -1px -1px 2px rgba(0,0,0,0.1);
+        }
+        .memo-paper:hover { z-index: 60; transform: scale(1.02); }
+
+        /* 配置調整: 中央用紙と被らないように外側へ */
+        .memo-global { left: 40px; top: 100px; transform: rotate(-3deg); background-color: #e1f5fe; } 
+        .memo-history { right: 40px; top: 80px; transform: rotate(2deg); background-color: #fff9c4; }
+
+        /* キャラ選択ドロップダウン */
+        .char-select-container { position: relative; }
+        .char-dropdown {
+            position: absolute; top: 100%; left: 0; width: 320px;
+            background: white; border: 1px solid #ccc; border-radius: 4px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15); z-index: 999;
+            max-height: 350px; overflow-y: auto;
+        }
+        .char-option {
+            padding: 10px 15px; cursor: pointer; display: flex; align-items: center;
+            border-bottom: 1px solid #eee; transition: background 0.2s;
+        }
+        .char-option:hover { background-color: #f0f8ff; }
+        .char-option img { 
+            width: 45px; height: 45px; border-radius: 50%; margin-right: 15px; 
+            border: 1px solid #ddd; object-fit: cover; background: #eee;
+        }
         
-        /* Action Buttons */
-        .btn-group-corner { position: absolute; top: 10px; right: 10px; z-index: 400; display: flex; gap: 8px; opacity: 0; transition: opacity 0.3s; }
-        .char-unit:hover .btn-group-corner { opacity: 1; }
-        .btn-icon { width: 32px; height: 32px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color:#000; box-shadow: 0 0 10px rgba(0,0,0,0.5); font-size: 1.2rem; text-decoration: none;}
-        .btn-icon:hover { transform: scale(1.1); color: var(--accent); }
+        /* スクロールバーカスタム */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
 
-        .click-layer { position: absolute; inset: 0; z-index: 40; cursor: pointer; }
     </style>
 </head>
 <body>
-    
-    <div class="sub-header">
-        <div style="font-family:'Teko'; font-size:1.8rem; letter-spacing:0.05em; color:var(--text-main);">
-            SQUAD <span style="color:var(--accent);">//</span> SELECT
-        </div>
-        <div style="font-family:'Share Tech Mono'; color:var(--text-sub); font-size:0.8rem;">
-            SYSTEM: <span style="color:var(--accent);">READY</span>
-        </div>
-    </div>
-    
-    <div class="stage-wrapper">
-        <div class="particle-container" id="particleContainer"></div>
-        <div class="bg-tech-ring"></div>
-        <div class="nav-btn prev" id="btnPrev">◀</div>
-        <div class="nav-btn next" id="btnNext">▶</div>
-        <div class="stage-container" id="stage">
-            <div class="loading">CONNECTING...</div>
-        </div>
+
+<div class="desk-background"></div>
+<div class="shadow-overlay"></div>
+<div class="sun-overlay"></div>
+
+<div id="app">
+    <!-- ドラッグアイテム (7つに増量 & 配置を四隅に逃がす) -->
+    <div v-for="(item, index) in deskItems" :key="index"
+         class="draggable-item"
+         :style="{ top: item.y + 'px', left: item.x + 'px' }"
+         @mousedown="startDrag($event, index)">
+        <img :src="item.src" :alt="item.name" onerror="this.style.opacity=0.3;">
     </div>
 
-    <!-- スクリプトを統合して実行順序を制御 -->
-    <script type="module">
-        import { initHeader } from "./header.js";
-        import { loadFromCloud, saveToCloud, monitorAuth } from "./firestore.js";
+    <!-- 完了スタンプ -->
+    <div v-if="showStamp" class="fixed inset-0 flex items-center justify-center z-[100] pointer-events-none">
+        <div class="stamp-animation border-4 border-red-700 text-red-700 font-bold text-6xl px-12 py-6 rounded-lg transform -rotate-12 bg-white bg-opacity-90 mix-blend-multiply tracking-widest shadow-xl" style="font-family: 'Courier New', serif;">
+            THANK YOU!!
+        </div>
+    </div>
 
-        const stage = document.getElementById('stage');
+    <div class="workspace">
+        
+        <!-- 左メモ：Global Answers -->
+        <div class="memo-paper memo-global">
+            <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-24 h-8 bg-blue-200 opacity-70 rotate-1 shadow-sm"></div>
+            <h4 class="font-bold text-blue-900 mb-2 border-b border-blue-300 pb-1 flex items-center">
+                <i class="fa-solid fa-earth-americas mr-2"></i>Global Voices
+            </h4>
+            <div class="h-64 overflow-y-auto pr-1 custom-scrollbar">
+                <div v-if="!selectedGlobalQuestion" class="text-sm text-gray-500 leading-snug">
+                    <p>アンケートの「<i class="fa-solid fa-eye text-amber-600"></i>」ボタンで、他のキャラクターの回答を表示します。</p>
+                </div>
+                <div v-else>
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[10px] font-bold text-gray-500">PICKUP</span>
+                        <button @click="selectedGlobalQuestion = null" class="text-blue-500 hover:text-blue-700"><i class="fa-solid fa-times"></i></button>
+                    </div>
+                    <div class="text-xs font-bold mb-3 text-gray-700 bg-white/60 p-1 rounded">{{ selectedGlobalQuestion.text }}</div>
+                    <ul class="space-y-3">
+                        <li v-for="ans in globalAnswers" :key="ans.user" class="text-sm">
+                            <div class="flex items-center space-x-1 mb-0.5">
+                                <img :src="ans.icon" class="w-4 h-4 rounded-full border">
+                                <span class="font-bold text-xs text-gray-600">{{ ans.user }}</span>
+                            </div>
+                            <div class="pl-5 text-gray-800 leading-tight italic">"{{ ans.text }}"</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
 
-        // 1. パーティクル初期化
-        function initParticles() {
-            const container = document.getElementById('particleContainer');
-            for(let i=0; i<20; i++) {
-                const p = document.createElement('div');
-                p.className = 'particle';
-                const size = Math.random() * 4 + 2 + 'px';
-                p.style.width = size; p.style.height = size;
-                p.style.left = Math.random() * 100 + '%';
-                p.style.animationDuration = (Math.random() * 3 + 4) + 's';
-                p.style.animationDelay = Math.random() * 5 + 's';
-                container.appendChild(p);
-            }
-        }
-        initParticles();
+        <!-- 中央：アンケート用紙 (幅広) -->
+        <div class="survey-sheet-container">
+            <div class="masking-tape tape-tl"></div>
+            <div class="masking-tape tape-tr"></div>
 
-        // 2. ドラッグ機能
-        function enableDrag(el) {
-            let isDragging = false;
-            let startX, startY, startLeft, startTop;
-
-            el.onmousedown = function(e) {
-                e.stopPropagation(); e.preventDefault();
-                isDragging = true;
-                startX = e.clientX; startY = e.clientY;
-                startLeft = el.offsetLeft; startTop = el.offsetTop;
-                el.style.cursor = 'grabbing'; el.style.transition = 'none';
-            };
-            window.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-                e.preventDefault();
-                const dx = e.clientX - startX; const dy = e.clientY - startY;
-                el.style.left = (startLeft + dx) + 'px'; el.style.top = (startTop + dy) + 'px';
-                el.style.bottom = 'auto'; el.style.right = 'auto';
-            });
-            window.addEventListener('mouseup', () => {
-                if(isDragging) {
-                    isDragging = false; el.style.cursor = 'grab'; el.style.transition = 'transform 0.1s';
-                }
-            });
-        }
-
-        // 3. ヘルパー関数
-        function getDefaultColor(job) {
-            if(!job) return '#00d2ff';
-            const j = job;
-            if(j.includes('探偵') || j.includes('警')) return '#00d2ff'; 
-            if(j.includes('医') || j.includes('学')) return '#00b894'; 
-            if(j.includes('戦') || j.includes('狩')) return '#ff7675'; 
-            if(j.includes('魔') || j.includes('ア')) return '#a29bfe'; 
-            return '#00d2ff';
-        }
-
-        function animateValue(obj, end) {
-            let start = 0; const duration = 800; let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                obj.innerHTML = Math.floor(progress * end);
-                if (progress < 1) window.requestAnimationFrame(step);
-            };
-            window.requestAnimationFrame(step);
-        }
-
-        // 4. キャラクターリスト描画関数 (ここで定義)
-        window.renderCharacterList = function(data) {
-            stage.innerHTML = ''; 
-            const spacer = document.createElement('div');
-            spacer.style.minWidth = "50vw";
-            stage.appendChild(spacer);
-
-            if (!data || Object.keys(data).length === 0) {
-                stage.innerHTML = '<div class="loading">NO DATA</div>';
-                return;
-            }
-
-            Object.entries(data).forEach(([key, char], idx) => {
-                // IDの確保
-                if (!char.id) char.id = key;
-                const charId = char.id;
-
-                const unit = document.createElement('div');
-                unit.className = 'char-unit';
-                unit.style.opacity = '0';
-                unit.style.animation = `fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards ${idx * 0.15}s`;
-
-                const img = char.image || 'https://placehold.co/400x800/222/555?text=NO+IMG';
-                const icon = char.icon || img;
-                const accent = (char.color && char.color.length > 1) ? char.color : getDefaultColor(char.job);
-                unit.style.setProperty('--accent', accent);
+            <div class="survey-sheet">
                 
-                const s = char.stats || {};
-                const v = char.vitals || {};
-                const statsMap = {
-                    STR: s.STR||0, CON: s.CON||0, POW: s.POW||0, DEX: s.DEX||0,
-                    APP: s.APP||0, SIZ: s.SIZ||0, INT: s.INT||0, EDU: s.EDU||0
-                };
-                
-                const hpPct = 100; const mpPct = 100;
-                const sanVal = v.san || 50;
-                const maxDash = 220; 
-                const sanPct = Math.min(sanVal, 99) / 99;
-                const sanOffset = maxDash - (sanPct * maxDash);
+                <!-- CONFIDENTIALスタンプ -->
+                <div class="absolute top-8 right-8 border-2 border-red-800 text-red-800 px-4 py-1 transform rotate-3 opacity-60 font-serif font-bold text-2xl tracking-widest pointer-events-none">
+                    CONFIDENTIAL
+                </div>
 
-                unit.innerHTML = `
-                    <div class="unit-screen">
-                        <div class="screen-img-container">
-                            <div class="screen-img" style="background-image: url('${img}');"></div>
-                        </div>
-                        <div class="screen-deco-corner corner-tl"></div>
-                        <div class="screen-deco-corner corner-br"></div>
+                <!-- ヘッダー -->
+                <div class="flex items-end mb-12 border-b-2 border-gray-800 pb-4 relative">
+                    <div class="w-28 h-28 bg-gray-100 rounded-full border-4 border-double border-gray-300 mr-6 overflow-hidden flex-shrink-0 shadow-inner">
+                        <img :src="currentUser.icon" class="w-full h-full object-cover">
                     </div>
-
-                    <div class="ui-header-group">
-                        <div class="ui-job-tag">
-                            <div class="job-icon" style="background-image: url('${icon}');"></div>
-                            <span class="job-val">${char.job || 'UNKNOWN'}</span>
-                        </div>
-                        <div class="ui-name-box">${char.name}</div>
-                    </div>
-
-                    <div class="ui-san-container draggable-ui">
-                        <svg viewBox="0 0 80 80">
-                            <circle class="san-bg" cx="40" cy="40" r="35"></circle>
-                            <circle class="san-fill" cx="40" cy="40" r="35" style="stroke-dashoffset:${sanOffset}"></circle>
-                        </svg>
-                        <span class="san-val">${sanVal}</span>
-                        <span class="san-label">SAN</span>
-                    </div>
-
-                    <div class="ui-stats-container draggable-ui">
-                        <div class="stats-grid">
-                            ${Object.entries(statsMap).map(([k, val]) => `
-                                <div class="stat-item">
-                                    <span>${k}</span>
-                                    <span class="stat-val count-up" data-target="${val}">0</span>
+                    <div class="flex-grow z-50">
+                        <div class="text-xs text-gray-500 tracking-[0.2em] font-serif mb-1">CHARACTER NAME</div>
+                        
+                        <!-- キャラ選択UI (ドロップダウン) -->
+                        <div class="relative">
+                            <!-- ロードボタン -->
+                            <button @click="loadAndShowCharacters" class="w-full text-left group">
+                                <div class="text-4xl font-serif font-bold text-gray-800 border-b border-dashed border-gray-400 group-hover:bg-gray-50 transition px-1 flex justify-between items-center">
+                                    <span :class="{'text-gray-400': !currentUser.name}">{{ currentUser.name || 'Select Character...' }}</span>
+                                    <span class="bg-gray-800 text-white text-xs px-3 py-1 rounded shadow group-hover:bg-black transition flex items-center">
+                                        <i class="fa-solid fa-cloud-arrow-down mr-2"></i> LOAD
+                                    </span>
                                 </div>
-                            `).join('')}
+                            </button>
+                            
+                            <!-- ドロップダウンリスト -->
+                            <div v-if="isDropdownOpen" class="char-dropdown" v-click-outside="closeDropdown">
+                                <div class="p-2 text-xs text-gray-500 bg-gray-100 border-b flex justify-between">
+                                    <span><i class="fa-solid fa-server mr-1"></i>Server Data</span>
+                                    <button @click="closeDropdown" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times"></i></button>
+                                </div>
+                                
+                                <div v-if="loadingChars" class="p-4 text-center text-gray-500">
+                                    <i class="fa-solid fa-spinner fa-spin mr-2"></i>Accessing Database...
+                                </div>
+                                <div v-else-if="characterList.length === 0" class="p-4 text-center text-gray-500 text-sm">
+                                    No characters found.<br>
+                                    <span class="text-xs">(Please login or create a character first)</span>
+                                </div>
+                                <div v-else v-for="char in characterList" :key="char.name" 
+                                     @click="selectCharacter(char)"
+                                     class="char-option">
+                                    <img :src="char.icon || 'https://placehold.co/50x50/png?text=?'">
+                                    <div>
+                                        <div class="font-serif font-bold text-lg leading-none text-gray-800">{{ char.name }}</div>
+                                        <div class="text-xs text-gray-500 mt-1">{{ char.job || char.desc || 'No description' }}</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="ui-vitals draggable-ui">
-                        <div class="vital-row">
-                            <div class="vital-header"><span>HP</span><span>${v.hp||0}</span></div>
-                            <div class="vital-bar"><div class="vital-progress" style="width:${hpPct}%; background:#ff7675;"></div></div>
-                        </div>
-                        <div class="vital-row">
-                            <div class="vital-header"><span>MP</span><span>${v.mp||0}</span></div>
-                            <div class="vital-bar"><div class="vital-progress" style="width:${mpPct}%; background:#74b9ff;"></div></div>
-                        </div>
-                    </div>
-
-                    <div class="unit-figure-group">
-                        <img src="${img}" class="char-figure" alt="${char.name}">
-                    </div>
-
-                    <div class="unit-shadow-container">
-                        <div class="real-shadow"></div>
-                    </div>
-
-                    <!-- ★おすすめ機能: アンケート回答ボタン追加 -->
-                    <div class="btn-group-corner">
-                         <div class="btn-icon btn-edit" title="画像変更">📷</div>
-                         <a href="Squestionnaire.html?id=${charId}" class="btn-icon" title="アンケート回答">📝</a>
+                        <div class="text-sm text-gray-500 mt-2 font-mono h-5">{{ currentUser.description }}</div>
                     </div>
                     
-                    <div class="click-layer"></div>
-                `;
+                    <div class="absolute bottom-4 right-0 text-right">
+                        <div class="text-[10px] text-gray-400">RECORD DATE</div>
+                        <div class="font-serif text-lg">{{ currentDate }}</div>
+                    </div>
+                </div>
 
-                // 画像編集
-                const edit = unit.querySelector('.btn-edit');
-                edit.onclick = (e) => {
-                    e.stopPropagation();
-                    const newUrl = prompt('画像URL:', char.image || "");
-                    if(newUrl) { char.image = newUrl; saveToCloud(char).then(() => renderCharacterList(data)); }
-                };
+                <!-- 質問エリア -->
+                <div class="pl-2">
+                    <div v-for="(q, index) in displayedQuestions" :key="q.id" class="question-block group">
+                        <div class="question-header">
+                            <span class="q-badge">Q.{{ index + 1 }}</span>
+                            <span class="q-text">{{ q.text }}</span>
+                            
+                            <button @click="showGlobalAnswers(q)" class="ml-3 text-amber-600 opacity-0 group-hover:opacity-100 transition text-sm" title="みんなの回答を見る">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
+                        <textarea v-model="answers[q.id]" rows="1" class="input-line" placeholder="(回答を記述...)"></textarea>
+                    </div>
+                </div>
+
+                <!-- フッター -->
+                <div class="mt-20 flex justify-center space-x-12">
+                    <button @click="resetForm" class="flex flex-col items-center text-gray-400 hover:text-gray-600 transition">
+                        <div class="w-12 h-12 border border-gray-300 rounded-full flex items-center justify-center mb-1">
+                            <i class="fa-solid fa-eraser"></i>
+                        </div>
+                        <span class="text-xs font-serif tracking-widest">CLEAR</span>
+                    </button>
+                    
+                    <button @click="submitSurvey" class="flex flex-col items-center text-gray-800 hover:text-black transition transform hover:scale-105">
+                        <div class="w-20 h-20 bg-gray-900 text-white rounded-full shadow-2xl flex items-center justify-center mb-1 border-4 border-gray-800">
+                            <i class="fa-solid fa-file-import text-3xl"></i>
+                        </div>
+                        <span class="text-sm font-serif font-bold tracking-widest mt-1">SAVE RECORD</span>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 右メモ：History -->
+        <div class="memo-paper memo-history">
+            <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-24 h-8 bg-amber-200 opacity-70 -rotate-2 shadow-sm"></div>
+            <h4 class="font-bold text-amber-900 mb-2 border-b border-amber-300 pb-1 flex items-center">
+                <i class="fa-solid fa-clock-rotate-left mr-2"></i>History
+            </h4>
+            <div class="h-64 overflow-y-auto pr-1 custom-scrollbar">
+                <div v-if="history.length === 0" class="text-center text-gray-400 text-sm mt-10 italic">
+                    No history found...
+                </div>
+                <ul v-else class="space-y-4">
+                    <li v-for="rec in history" :key="rec.timestamp" class="relative pl-3 border-l-4 border-amber-400/50">
+                        <div class="text-[10px] text-gray-500 font-sans mb-1">{{ formatDate(rec.timestamp) }}</div>
+                        <div class="text-sm text-gray-800 leading-snug">"{{ rec.summary }}"</div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- SCRIPT: Firestore連携 (./firestore.js を利用)               -->
+<!-- ======================================================== -->
+<script type="module">
+    import { loadFromCloud, login, monitorAuth } from "./firestore.js";
+
+    const { createApp, ref, reactive, onMounted } = Vue;
+
+    // クリック外判定
+    const clickOutside = {
+        beforeMount(el, binding) {
+            el.clickOutsideEvent = function(event) {
+                if (!(el === event.target || el.contains(event.target))) {
+                    binding.value(event);
+                }
+            };
+            document.body.addEventListener('click', el.clickOutsideEvent);
+        },
+        unmounted(el) { document.body.removeEventListener('click', el.clickOutsideEvent); }
+    };
+
+    createApp({
+        directives: { clickOutside },
+        setup() {
+            // User & Data State
+            const currentUser = reactive({
+                name: '', icon: 'https://placehold.co/100x100/png?text=?', description: 'Select Character', isGuest: true, uid: null
+            });
+            const characterList = ref([]);
+            
+            // UI State
+            const isDropdownOpen = ref(false);
+            const loadingChars = ref(false);
+            const showStamp = ref(false);
+            
+            // Survey Data
+            const allQuestions = [
+                { id: 'q1', text: '休日はどのように過ごしていますか？' },
+                { id: 'q2', text: '好きな食べ物とその理由を教えてください。' },
+                { id: 'q3', text: 'もし魔法が一つ使えるなら何をしますか？' },
+                { id: 'q4', text: '最近、心が動かされた出来事は？' },
+                { id: 'q5', text: 'あなたの宝物は何ですか？' },
+                { id: 'q6', text: '苦手なものはありますか？' },
+                { id: 'q7', text: '自分を動物に例えると？' },
+                { id: 'q8', text: '大切な人へ伝えたいことは？' }
+            ];
+            const displayedQuestions = ref([]);
+            const answers = reactive({});
+            const currentDate = new Date().toLocaleDateString('ja-JP');
+
+            // Desk Items
+            const deskItems = ref([
+                { src: '../images/icons/desk1.png', x: 20, y: 20 },
+                { src: '../images/icons/desk2.png', x: 20, y: 600 },
+                { src: '../images/icons/desk3.png', x: window.innerWidth - 300, y: 20 },
+                { src: '../images/icons/desk4.png', x: window.innerWidth - 320, y: 650 },
+                { src: '../images/icons/desk5.png', x: 100, y: 350 },
+                { src: '../images/icons/desk6.png', x: window.innerWidth - 150, y: 350 },
+                { src: '../images/icons/desk7.png', x: 150, y: 800 },
+            ]);
+            const dragging = ref({ index: -1, offsetX: 0, offsetY: 0 });
+
+            // Memos
+            const history = ref([]);
+            const selectedGlobalQuestion = ref(null);
+            const globalAnswers = ref([]);
+
+            // ■■■ 1. サーバーからキャラ読み込みロジック ■■■
+            const loadAndShowCharacters = async () => {
+                isDropdownOpen.value = true;
+                loadingChars.value = true;
+
+                // 認証チェック
+                if (!currentUser.uid) {
+                    // 未ログインならログインを促す
+                    try {
+                        login(); // firestore.jsのlogin関数 (ポップアップ)
+                        // ポップアップが閉じて認証状態が変わると monitorAuth が発火するはず
+                        return; 
+                    } catch (e) {
+                        alert("Login Required");
+                        loadingChars.value = false;
+                        return;
+                    }
+                }
+
+                // データロード (firestore.jsの機能を使用)
+                try {
+                    const data = await loadFromCloud(); // { charName: { ... }, ... }
+                    if (data) {
+                        // オブジェクトを配列に変換
+                        characterList.value = Object.values(data).map(char => ({
+                            name: char.name,
+                            icon: char.inpImageIcon || char.icon || 'https://placehold.co/100x100/png?text=' + char.name.charAt(0),
+                            job: char.inpJob || char.job || '',
+                            desc: char.inpJob || char.job || 'No description',
+                            ...char
+                        }));
+                    } else {
+                        characterList.value = [];
+                    }
+                } catch (e) {
+                    console.error("Load Error:", e);
+                    alert("Failed to load data.");
+                } finally {
+                    loadingChars.value = false;
+                }
+            };
+
+            // キャラクター選択
+            const selectCharacter = (char) => {
+                currentUser.name = char.name;
+                currentUser.icon = char.icon;
+                currentUser.description = char.desc;
+                currentUser.isGuest = false;
+                isDropdownOpen.value = false;
                 
-                // ドラッグ有効化
-                enableDrag(unit.querySelector('.ui-san-container'));
-                enableDrag(unit.querySelector('.ui-stats-container'));
-                enableDrag(unit.querySelector('.ui-vitals'));
+                // 履歴のダミー表示 (本来はここもDBから読み込む)
+                history.value = [
+                    { timestamp: new Date().toISOString(), summary: 'Previous session data loaded.' }
+                ];
+            };
 
-                // 詳細画面へ遷移
-                unit.querySelector('.click-layer').onclick = () => {
-                    window.location.href = `detail.html?id=${charId}`;
-                };
+            const closeDropdown = () => isDropdownOpen.value = false;
 
-                // 数値アニメーション
-                unit.addEventListener('mouseenter', () => {
-                    unit.querySelectorAll('.count-up').forEach(el => animateValue(el, parseInt(el.dataset.target)));
+
+            // ■■■ 2. ドラッグ処理 ■■■
+            const startDrag = (e, i) => {
+                dragging.value = { index: i, offsetX: e.clientX - deskItems.value[i].x, offsetY: e.clientY - deskItems.value[i].y };
+                window.addEventListener('mousemove', onDrag);
+                window.addEventListener('mouseup', stopDrag);
+            };
+            const onDrag = (e) => {
+                if(dragging.value.index >= 0) {
+                    const item = deskItems.value[dragging.value.index];
+                    item.x = e.clientX - dragging.value.offsetX;
+                    item.y = e.clientY - dragging.value.offsetY;
+                }
+            };
+            const stopDrag = () => {
+                dragging.value.index = -1;
+                window.removeEventListener('mousemove', onDrag);
+                window.removeEventListener('mouseup', stopDrag);
+            };
+
+            // ■■■ 3. アンケート保存 ■■■
+            const submitSurvey = () => {
+                if(!currentUser.name) return alert("キャラクターを選択してください。");
+                showStamp.value = true;
+                setTimeout(() => showStamp.value = false, 2500);
+                
+                history.value.unshift({
+                    timestamp: new Date().toISOString(),
+                    summary: Object.values(answers)[0] || 'No answer recorded'
                 });
-                setTimeout(() => {
-                    unit.querySelectorAll('.count-up').forEach(el => animateValue(el, parseInt(el.dataset.target)));
-                }, 800 + idx*100);
+            };
 
-                stage.appendChild(unit);
+            const resetForm = () => {
+                if(confirm("入力内容を破棄しますか？")) displayedQuestions.value.forEach(q => answers[q.id] = '');
+            };
+
+            const showGlobalAnswers = (q) => {
+                selectedGlobalQuestion.value = q;
+                globalAnswers.value = [
+                    { user: 'Guest A', icon: 'https://placehold.co/50x50/png?text=A', text: '秘密です。' },
+                    { user: 'Guest B', icon: 'https://placehold.co/50x50/png?text=B', text: '効率を重視します。' }
+                ];
+            };
+
+            onMounted(() => {
+                // 質問ランダム設定
+                displayedQuestions.value = [...allQuestions].sort(() => 0.5 - Math.random()).slice(0, 8);
+                
+                // 認証監視開始
+                monitorAuth((user) => {
+                    if (user) currentUser.uid = user.uid;
+                });
             });
 
-            const spacerEnd = document.createElement('div');
-            spacerEnd.style.minWidth = "50vw";
-            stage.appendChild(spacerEnd);
-        };
-
-        // 5. ボタンイベント
-        document.getElementById('btnNext').onclick = () => {
-            const w = document.querySelector('.char-unit')?.offsetWidth || 250;
-            stage.scrollBy({ left: w + 30, behavior: 'smooth' });
-        };
-        document.getElementById('btnPrev').onclick = () => {
-            const w = document.querySelector('.char-unit')?.offsetWidth || 250;
-            stage.scrollBy({ left: -(w + 30), behavior: 'smooth' });
-        };
-
-        const st = document.createElement('style');
-        st.innerText = `@keyframes fadeInUp { from{opacity:0; transform:translateY(50px) scale(0.9);} to{opacity:1; transform:translateY(0) scale(1);} }`;
-        document.head.appendChild(st);
-
-        // 6. 初期化実行 (全ての定義が終わってから実行)
-        initHeader();
-
-        // 確実なデータロードのため、ここでも監視を行う
-        monitorAuth(async (user) => {
-            if (user) {
-                const data = await loadFromCloud();
-                window.renderCharacterList(data);
-            } else {
-                stage.innerHTML = '<div class="loading">OFFLINE</div>';
-            }
-        });
-    </script>
+            return {
+                currentUser, characterList, displayedQuestions, answers, currentDate,
+                deskItems, startDrag, 
+                loadAndShowCharacters, selectCharacter, isDropdownOpen, closeDropdown, loadingChars,
+                submitSurvey, resetForm, showStamp,
+                history, selectedGlobalQuestion, globalAnswers, showGlobalAnswers,
+                formatDate: (iso) => new Date(iso).toLocaleDateString()
+            };
+        }
+    }).mount('#app');
+</script>
 </body>
 </html>
