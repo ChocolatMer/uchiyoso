@@ -8,7 +8,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;700&family=Patrick+Hand&family=Shippori+Mincho:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;700&family=Patrick+Hand&family=Shippori+Mincho:wght@400;600;700&family=Oswald:wght@500&display=swap" rel="stylesheet">
     
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -24,9 +24,8 @@
             --paper-bg: #fdfbf7;
             --ink-color: #2c3e50;
             --tape-color-1: rgba(220, 200, 150, 0.85);
-            --tape-color-red: rgba(255, 100, 100, 0.5);
             --tape-color-blue: rgba(100, 150, 255, 0.5);
-            --shadow-float: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+            --shadow-float: 0 15px 35px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -6px rgba(0, 0, 0, 0.2);
         }
 
         body {
@@ -40,168 +39,154 @@
         }
 
         .desk-background {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background-image: url('../images/background/desk1.png'); 
-            background-color: #5d4037;
-            background-size: cover;
-            background-position: center;
-            z-index: -10;
+            background-color: #5d4037; background-size: cover; background-position: center; z-index: -10;
         }
-
         .sun-overlay {
-            position: fixed; inset: 0;
-            background: radial-gradient(circle at 10% 20%, rgba(255, 240, 210, 0.4) 0%, rgba(255,255,255,0) 60%),
-                        linear-gradient(135deg, rgba(255, 220, 150, 0.15) 0%, transparent 40%);
+            position: fixed; inset: 0; pointer-events: none; z-index: 1;
+            background: radial-gradient(circle at 10% 20%, rgba(255, 240, 210, 0.3) 0%, transparent 60%),
+                        linear-gradient(135deg, rgba(255, 220, 150, 0.1) 0%, transparent 40%);
             mix-blend-mode: screen;
-            pointer-events: none;
-            z-index: 1;
         }
-        
         .shadow-overlay {
-            position: fixed; inset: 0;
-            background: linear-gradient(110deg, transparent 40%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.1) 55%, transparent 55%);
-            filter: blur(20px);
-            pointer-events: none;
-            z-index: 0;
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            background: linear-gradient(110deg, transparent 40%, rgba(0,0,0,0.15) 45%, transparent 60%);
+            filter: blur(30px);
         }
 
-        /* --- ドラッグアイテム修正：サイズ統一とバランス --- */
+        /* --- ドラッグアイテム（サイズ拡大・正方形枠） --- */
         .draggable-item {
-            position: absolute;
-            cursor: grab;
-            transition: transform 0.1s;
-            z-index: 50;
-            user-select: none;
-            
-            /* 枠のサイズを固定（正方形） */
-            width: 180px; 
-            height: 180px;
-            
-            /* 中央寄せ */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            
-            /* フィルター効果 */
-            filter: drop-shadow(5px 10px 8px rgba(0,0,0,0.3));
+            position: absolute; cursor: grab; transition: transform 0.1s; z-index: 50; user-select: none;
+            width: 220px; height: 220px; /* 大きく */
+            display: flex; justify-content: center; align-items: center;
+            filter: drop-shadow(8px 15px 10px rgba(0,0,0,0.3));
         }
-        .draggable-item:active {
-            cursor: grabbing;
-            transform: scale(1.05) !important;
-            z-index: 100;
-        }
+        .draggable-item:active { cursor: grabbing; transform: scale(1.05) !important; z-index: 100; }
         .draggable-item img {
-            /* 画像を枠内に収める（縦横比維持） */
-            max-width: 100%;
-            max-height: 100%;
-            width: auto;
-            height: auto;
-            object-fit: contain;
-            pointer-events: none;
+            max-width: 100%; max-height: 100%; width: auto; height: auto;
+            object-fit: contain; pointer-events: none;
         }
 
         .workspace {
-            position: relative;
-            width: 100%;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding-top: 3vh; /* 上部余白を少し詰める */
-            padding-bottom: 10vh;
-            z-index: 10;
+            position: relative; width: 100%; min-height: 100vh;
+            display: flex; justify-content: center; align-items: flex-start;
+            padding-top: 50px; padding-bottom: 100px; z-index: 10;
         }
 
         /* --- アンケート用紙 --- */
         .survey-sheet-container {
-            position: relative;
-            margin-bottom: 50px;
-            transform: rotate(0.5deg);
+            position: relative; margin-bottom: 50px; transform: rotate(0.2deg);
         }
         .survey-sheet-container::before {
             content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #fcfcfc; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-            z-index: -1; transform: rotate(-1.5deg) translate(-5px, 2px);
+            background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: -1; transform: rotate(-1.2deg) translate(-4px, 3px);
         }
 
         .survey-sheet {
-            width: 100%;
-            max-width: 700px; /* 幅を少し狭めて縦長感を軽減 */
-            min-height: 800px;
+            width: 100%; max-width: 760px; min-height: 900px;
             background-color: var(--paper-bg);
             background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
             box-shadow: var(--shadow-float);
-            padding: 40px 60px; /* パディングを少し減らす */
-            position: relative;
+            padding: 60px 80px; position: relative;
         }
 
-        /* --- テープ装飾 --- */
+        /* テープ */
         .masking-tape {
-            position: absolute; height: 35px; width: 110px;
-            background-color: var(--tape-color-1); opacity: 0.85;
-            background-image: linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent);
-            background-size: 4px 4px;
-            clip-path: polygon(2% 0%, 98% 0%, 100% 10%, 98% 20%, 100% 30%, 98% 40%, 100% 50%, 98% 60%, 100% 70%, 98% 80%, 100% 90%, 98% 100%, 2% 100%, 0% 90%, 2% 80%, 0% 70%, 2% 60%, 0% 50%, 2% 40%, 0% 30%, 2% 20%, 0% 10%);
+            position: absolute; height: 35px; width: 120px;
+            background-color: var(--tape-color-1); opacity: 0.9;
+            background-image: linear-gradient(90deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(255,255,255,0.2) 100%);
+            clip-path: polygon(3% 0%, 97% 0%, 100% 10%, 97% 20%, 100% 30%, 97% 40%, 100% 50%, 97% 60%, 100% 70%, 97% 80%, 100% 90%, 97% 100%, 3% 100%, 0% 90%, 3% 80%, 0% 70%, 3% 60%, 0% 50%, 3% 40%, 0% 30%, 3% 20%, 0% 10%);
             z-index: 20;
         }
-        .tape-tl { top: -15px; left: -25px; transform: rotate(-35deg); }
-        .tape-tr { top: -10px; right: -25px; transform: rotate(25deg); }
-        .tape-bc { bottom: -15px; left: 50%; transform: translateX(-50%) rotate(-2deg); width: 100px; opacity: 0.6; }
+        .tape-tl { top: -18px; left: -30px; transform: rotate(-35deg); background-color: rgba(180, 200, 190, 0.7); }
+        .tape-tr { top: -12px; right: -30px; transform: rotate(25deg); }
 
-        /* 入力欄 */
+        /* --- 質問レイアウト（添付画像再現） --- */
+        .question-block {
+            margin-bottom: 2.5rem;
+            position: relative;
+        }
+        .question-header {
+            display: flex; align-items: baseline; margin-bottom: 0.8rem;
+        }
+        .q-badge {
+            background-color: #333; color: #fff;
+            padding: 2px 8px; border-radius: 2px;
+            font-family: 'Oswald', sans-serif; font-size: 0.9rem; letter-spacing: 0.05em;
+            margin-right: 12px; flex-shrink: 0;
+        }
+        .q-text {
+            font-size: 1.1rem; font-weight: 700; color: #333; line-height: 1.4;
+        }
         .input-line {
             width: 100%; border: none;
-            background: linear-gradient(to right, transparent 0%, transparent 100%), linear-gradient(to right, rgba(0,0,0,0.1) 50%, transparent 50%);
-            background-size: 10px 1px; background-repeat: repeat-x; background-position: bottom;
-            font-family: 'Patrick Hand', cursive; font-size: 1.2rem; line-height: 1.6rem;
-            padding: 2px 0; outline: none; color: #444; transition: background-size 0.3s;
+            background: repeating-linear-gradient(to right, #ccc 0, #ccc 2px, transparent 2px, transparent 6px);
+            background-position: bottom; background-size: 100% 1px; background-repeat: no-repeat;
+            font-family: 'Patrick Hand', cursive; font-size: 1.25rem; line-height: 2rem;
+            padding: 4px 0; outline: none; color: #444; resize: none; overflow: hidden;
+            transition: background 0.3s;
         }
         .input-line:focus {
-            background-image: linear-gradient(to right, #8d6e63 100%, #8d6e63 100%);
-            background-size: 100% 2px;
+            background: linear-gradient(to right, #8d6e63 100%, #8d6e63 100%);
+            background-position: bottom; background-size: 100% 2px; background-repeat: no-repeat;
         }
 
-        /* --- 分割されたメモのデザイン --- */
-        
-        /* 1. 履歴メモ (右側) */
-        .memo-history {
-            position: absolute;
-            right: 5%;
-            top: 50px;
-            width: 240px;
-            background-color: #fffde7; /* 黄色っぽいメモ */
-            padding: 15px;
-            box-shadow: 2px 4px 10px rgba(0,0,0,0.15);
-            transform: rotate(2deg);
-            z-index: 40;
-            font-family: 'Patrick Hand', cursive;
+        /* --- スタンプ演出 --- */
+        .stamp-mark {
+            position: absolute; top: 100px; right: 50px;
+            font-family: 'Courier New', serif; font-weight: bold; font-size: 2rem;
+            color: #d32f2f; border: 4px solid #d32f2f; padding: 5px 15px;
+            transform: rotate(-15deg); opacity: 0.7; pointer-events: none; mix-blend-mode: multiply;
+            mask-image: url("data:image/svg+xml;utf8,<svg...>...</svg>"); /* かすれ表現用（簡易） */
         }
-        .memo-history::before { /* リングノートの穴 */
-            content: ""; position: absolute; top: -10px; left: 10px; right: 10px; height: 20px;
-            background-image: radial-gradient(circle, #333 20%, transparent 25%);
-            background-size: 20px 20px;
-            background-position: top center;
+        .stamp-animation {
+            animation: stamp-bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes stamp-bounce {
+            0% { transform: scale(3) rotate(-15deg); opacity: 0; }
+            100% { transform: scale(1) rotate(-15deg); opacity: 0.8; }
         }
 
-        /* 2. みんなの回答メモ (左側) */
-        .memo-global {
-            position: absolute;
-            left: 5%;
-            top: 150px; /* 少し下にずらす */
-            width: 250px;
-            background-color: #e3f2fd; /* 青っぽいメモ */
-            padding: 15px;
-            box-shadow: 2px 4px 10px rgba(0,0,0,0.15);
-            transform: rotate(-3deg);
-            z-index: 40;
+        /* --- メモ用紙（リッチ化） --- */
+        .memo-paper {
+            position: absolute; width: 260px; padding: 25px 20px;
+            background: #fffde7;
+            /* 罫線 */
+            background-image: linear-gradient(#b0bec5 1px, transparent 1px);
+            background-size: 100% 25px;
+            line-height: 25px;
+            box-shadow: 2px 5px 15px rgba(0,0,0,0.15);
             font-family: 'Patrick Hand', cursive;
+            z-index: 40; transition: transform 0.3s;
         }
-        .tape-global {
-            top: -12px; left: 50%; transform: translateX(-50%) rotate(-1deg);
-            background-color: var(--tape-color-blue); width: 80px;
+        .memo-paper::after { /* めくれ表現 */
+            content: ""; position: absolute; bottom: 0; right: 0;
+            width: 30px; height: 30px;
+            background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.1) 50%, rgba(255,255,255,0.8) 55%);
+            border-radius: 0 0 0 5px; box-shadow: -1px -1px 2px rgba(0,0,0,0.1);
         }
+        .memo-paper:hover { z-index: 60; transform: scale(1.02); }
+
+        .memo-global { left: 3%; top: 120px; transform: rotate(-3deg); background-color: #e1f5fe; } /* 青系 */
+        .memo-history { right: 3%; top: 80px; transform: rotate(2deg); background-color: #fff9c4; } /* 黄色系 */
+
+        /* キャラ選択ドロップダウン */
+        .char-select-container {
+            position: relative;
+        }
+        .char-dropdown {
+            position: absolute; top: 100%; left: 0; width: 100%;
+            background: white; border: 1px solid #ccc; border-radius: 4px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 50;
+            max-height: 200px; overflow-y: auto;
+        }
+        .char-option {
+            padding: 8px 12px; cursor: pointer; display: flex; align-items: center;
+        }
+        .char-option:hover { background-color: #f5f5f5; }
+        .char-option img { width: 24px; height: 24px; border-radius: 50%; margin-right: 8px; }
 
     </style>
 </head>
@@ -212,7 +197,7 @@
 <div class="sun-overlay"></div>
 
 <div id="app">
-    <!-- ドラッグアイテム -->
+    <!-- ドラッグアイテム (初期位置を調整してメモと被らないように) -->
     <div v-for="(item, index) in deskItems" :key="index"
          class="draggable-item"
          :style="{ top: item.y + 'px', left: item.x + 'px' }"
@@ -220,36 +205,38 @@
         <img :src="item.src" :alt="item.name" onerror="this.style.opacity=0.3;">
     </div>
 
+    <!-- 完了スタンプ (アニメーション用) -->
+    <div v-if="showStamp" class="fixed inset-0 flex items-center justify-center z-[100] pointer-events-none">
+        <div class="stamp-animation border-4 border-red-700 text-red-700 font-bold text-6xl px-10 py-4 rounded-lg transform -rotate-12 bg-white bg-opacity-80 mix-blend-multiply tracking-widest" style="font-family: 'Courier New', serif;">
+            THANK YOU!!
+        </div>
+    </div>
+
     <div class="workspace">
         
-        <!-- 左サイド：みんなの回答 (Global Memo) -->
-        <div class="memo-global">
-            <div class="masking-tape tape-global"></div>
-            <h4 class="text-sm font-bold text-blue-800 border-b border-blue-200 mb-2 pb-1">
-                <i class="fa-solid fa-earth-asia mr-1"></i> Global Answers
+        <!-- 左メモ：Global (みんなの回答) -->
+        <div class="memo-paper memo-global">
+            <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-24 h-8 bg-blue-200 opacity-70 rotate-1 shadow-sm"></div>
+            <h4 class="font-bold text-blue-900 mb-2 border-b border-blue-300 pb-1 flex items-center">
+                <i class="fa-solid fa-earth-americas mr-2"></i>Global
             </h4>
-            
             <div class="h-64 overflow-y-auto pr-1 custom-scrollbar">
-                <div v-if="!selectedGlobalQuestion" class="text-xs text-gray-500 p-2 leading-relaxed">
-                    <p class="mb-2">アンケートの「<i class="fa-solid fa-eye text-amber-600"></i>」ボタンを押すと、みんなの回答がここに届きます。</p>
+                <div v-if="!selectedGlobalQuestion" class="text-sm text-gray-500 leading-snug">
+                    <p>質問の横にある「<i class="fa-solid fa-eye text-amber-600"></i>」を押すと、みんなの回答が見れます。</p>
                 </div>
                 <div v-else>
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-[10px] font-bold text-gray-400">Q.Pickup</span>
-                        <button @click="selectedGlobalQuestion = null" class="text-xs text-blue-400 hover:text-blue-600">
-                            <i class="fa-solid fa-times"></i>
-                        </button>
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[10px] font-bold text-gray-500">PICKUP QUESTION</span>
+                        <button @click="selectedGlobalQuestion = null" class="text-blue-500 hover:text-blue-700"><i class="fa-solid fa-times"></i></button>
                     </div>
-                    <div class="font-bold text-xs mb-2 text-gray-700 bg-white bg-opacity-50 p-1 rounded">
-                        {{ selectedGlobalQuestion.text }}
-                    </div>
-                    <ul class="space-y-2">
-                        <li v-for="ans in globalAnswers" :key="ans.user" class="text-xs bg-white p-2 rounded shadow-sm">
-                            <div class="flex items-center space-x-2 mb-1">
-                                <img :src="ans.icon" class="w-4 h-4 rounded-full border border-gray-200">
-                                <span class="font-bold text-gray-600">{{ ans.user }}</span>
+                    <div class="text-xs font-bold mb-3 text-gray-700 bg-white/60 p-1 rounded">{{ selectedGlobalQuestion.text }}</div>
+                    <ul class="space-y-3">
+                        <li v-for="ans in globalAnswers" :key="ans.user" class="text-sm">
+                            <div class="flex items-center space-x-1 mb-0.5">
+                                <img :src="ans.icon" class="w-4 h-4 rounded-full border">
+                                <span class="font-bold text-xs text-gray-600">{{ ans.user }}</span>
                             </div>
-                            <div class="text-gray-800 leading-tight">"{{ ans.text }}"</div>
+                            <div class="pl-5 text-gray-800 leading-tight italic">"{{ ans.text }}"</div>
                         </li>
                     </ul>
                 </div>
@@ -260,84 +247,99 @@
         <div class="survey-sheet-container">
             <div class="masking-tape tape-tl"></div>
             <div class="masking-tape tape-tr"></div>
-            <div class="masking-tape tape-bc"></div>
 
             <div class="survey-sheet">
                 
-                <!-- ヘッダーエリア -->
-                <div class="flex items-end justify-between mb-6 border-b-2 border-double border-gray-300 pb-3">
-                    <div class="flex items-center space-x-5">
-                        <div class="w-20 h-20 rounded-full border-4 border-white shadow-md overflow-hidden bg-gray-100 relative group">
-                            <img :src="currentUser.icon" class="w-full h-full object-cover">
-                        </div>
-                        
-                        <div>
-                            <label class="text-[10px] text-gray-400 font-bold tracking-widest uppercase">Target Character</label>
-                            <div class="relative flex items-center">
-                                <input type="text" 
-                                       v-model="currentUser.name" 
-                                       @keyup.enter="searchCharacter"
-                                       class="text-2xl font-serif font-bold bg-transparent border-b border-gray-300 focus:border-gray-600 outline-none w-56 placeholder-gray-300 text-gray-800"
-                                       placeholder="名前を入力...">
-                                
-                                <!-- 読み込みボタン -->
-                                <button @click="searchCharacter" class="ml-2 bg-gray-200 hover:bg-gray-300 text-gray-600 text-xs px-3 py-1 rounded shadow-sm transition">
-                                    <i class="fa-solid fa-magnifying-glass mr-1"></i>Load
-                                </button>
-                            </div>
-                            <p class="text-xs text-gray-500 mt-1 h-4 font-mono">{{ currentUser.description }}</p>
-                        </div>
-                    </div>
+                <!-- CONFIDENTIALスタンプ -->
+                <div class="absolute top-10 right-10 border-2 border-red-800 text-red-800 px-2 py-1 transform rotate-3 opacity-60 font-serif font-bold text-xl tracking-widest pointer-events-none">
+                    CONFIDENTIAL
+                </div>
 
-                    <div class="text-right opacity-70">
-                        <div class="text-[10px] text-gray-400 font-serif mb-1">RECORD DATE</div>
-                        <div class="text-lg font-serif text-gray-700 tracking-wider border-b border-gray-400 inline-block pb-1">
-                            {{ currentDate }}
+                <!-- ヘッダー -->
+                <div class="flex items-end mb-12 border-b-2 border-gray-800 pb-4 relative">
+                    <div class="w-24 h-24 bg-gray-100 rounded-full border-4 border-double border-gray-300 mr-6 overflow-hidden flex-shrink-0">
+                        <img :src="currentUser.icon" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-grow">
+                        <div class="text-xs text-gray-500 tracking-[0.2em] font-serif mb-1">NAME</div>
+                        
+                        <!-- キャラ選択 UI (自動読み込み) -->
+                        <div class="char-select-container" v-click-outside="closeDropdown">
+                            <div @click="toggleDropdown" 
+                                 class="text-4xl font-serif font-bold text-gray-800 border-b border-dashed border-gray-400 cursor-pointer hover:bg-gray-50 transition px-2 py-1 flex justify-between items-center">
+                                <span>{{ currentUser.name || 'Select Character...' }}</span>
+                                <i class="fa-solid fa-caret-down text-lg text-gray-400"></i>
+                            </div>
+                            <!-- ドロップダウンリスト -->
+                            <div v-if="isDropdownOpen" class="char-dropdown">
+                                <div v-for="char in schemaDB" :key="char.name" 
+                                     @click="selectCharacter(char)"
+                                     class="char-option">
+                                    <img :src="char.icon">
+                                    <span class="font-serif font-bold text-lg">{{ char.name }}</span>
+                                    <span class="text-xs text-gray-400 ml-2">- {{ char.desc }}</span>
+                                </div>
+                            </div>
                         </div>
+
+                        <div class="text-sm text-gray-500 mt-2 font-mono h-5">{{ currentUser.description }}</div>
+                    </div>
+                    <div class="absolute bottom-4 right-0 text-right">
+                        <div class="text-[10px] text-gray-400">DATE</div>
+                        <div class="font-serif">{{ currentDate }}</div>
                     </div>
                 </div>
 
-                <!-- 質問エリア (スペース節約のためmargin調整) -->
-                <div class="space-y-8 pl-2">
-                    <div v-for="(q, index) in displayedQuestions" :key="q.id" class="relative group">
-                        <div class="flex justify-between items-baseline mb-1">
-                            <label class="font-bold text-gray-800 font-serif text-md">
-                                <span class="text-xs text-gray-500 font-normal mr-2">No.{{index + 1}}</span>
-                                {{ q.text }}
-                            </label>
-                            <button @click="showGlobalAnswers(q)" class="text-[10px] text-amber-700 hover:text-amber-900 opacity-0 group-hover:opacity-100 transition bg-amber-100 px-2 py-0.5 rounded border border-amber-200">
-                                <i class="fa-solid fa-eye mr-1"></i>みんなは？
+                <!-- 質問エリア -->
+                <div class="pl-2">
+                    <div v-for="(q, index) in displayedQuestions" :key="q.id" class="question-block group">
+                        <div class="question-header">
+                            <span class="q-badge">Q.{{ index + 1 }}</span>
+                            <span class="q-text">{{ q.text }}</span>
+                            
+                            <!-- 隠しボタン -->
+                            <button @click="showGlobalAnswers(q)" class="ml-3 text-amber-600 opacity-0 group-hover:opacity-100 transition text-sm" title="みんなの回答を見る">
+                                <i class="fa-solid fa-eye"></i>
                             </button>
                         </div>
-                        <textarea v-model="answers[q.id]" rows="1" class="input-line resize-none bg-transparent" placeholder="(記述...)"></textarea>
+                        <textarea v-model="answers[q.id]" rows="1" class="input-line" placeholder="(回答を記述...)"></textarea>
                     </div>
                 </div>
 
-                <div class="mt-10 flex justify-center space-x-6 pb-2">
-                    <button @click="resetForm" class="text-gray-400 hover:text-gray-600 text-xs flex items-center">
-                        <i class="fa-solid fa-trash mr-1"></i> Clear
+                <!-- ボタンエリア -->
+                <div class="mt-16 flex justify-center space-x-10">
+                    <button @click="resetForm" class="flex flex-col items-center text-gray-400 hover:text-gray-600 transition">
+                        <div class="w-10 h-10 border border-gray-300 rounded-full flex items-center justify-center mb-1">
+                            <i class="fa-solid fa-eraser"></i>
+                        </div>
+                        <span class="text-xs font-serif">CLEAR</span>
                     </button>
-                    <button @click="submitSurvey" class="bg-gray-800 text-white shadow-lg hover:bg-black px-6 py-2 rounded-full flex items-center transition transform hover:scale-105">
-                        <i class="fa-solid fa-pen-nib mr-2"></i> Save
+                    
+                    <button @click="submitSurvey" class="flex flex-col items-center text-gray-800 hover:text-black transition transform hover:scale-105">
+                        <div class="w-16 h-16 bg-gray-800 text-white rounded-full shadow-xl flex items-center justify-center mb-1">
+                            <i class="fa-solid fa-check text-2xl"></i>
+                        </div>
+                        <span class="text-sm font-serif font-bold tracking-widest">SAVE</span>
                     </button>
                 </div>
 
             </div>
         </div>
 
-        <!-- 右サイド：履歴メモ (History Memo) -->
-        <div class="memo-history">
-            <h4 class="text-sm font-bold text-amber-800 border-b border-amber-200 mb-2 pb-1 text-center">
-                History Check
+        <!-- 右メモ：History (履歴) -->
+        <div class="memo-paper memo-history">
+            <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 w-24 h-8 bg-amber-200 opacity-70 -rotate-2 shadow-sm"></div>
+            <h4 class="font-bold text-amber-900 mb-2 border-b border-amber-300 pb-1 flex items-center">
+                <i class="fa-solid fa-clock-rotate-left mr-2"></i>History
             </h4>
             <div class="h-64 overflow-y-auto pr-1 custom-scrollbar">
-                <div v-if="history.length === 0" class="text-center text-gray-400 text-xs mt-8 italic">
-                    No records...
+                <div v-if="history.length === 0" class="text-center text-gray-400 text-sm mt-10 italic">
+                    No records found...
                 </div>
-                <ul class="space-y-3">
-                    <li v-for="rec in history" :key="rec.timestamp" class="relative pl-3 border-l-2 border-amber-300">
-                        <div class="text-[10px] text-gray-500 mb-0.5 font-sans">{{ formatDate(rec.timestamp) }}</div>
-                        <div class="text-xs text-gray-800 leading-tight">"{{ rec.summary }}"</div>
+                <ul v-else class="space-y-4">
+                    <li v-for="rec in history" :key="rec.timestamp" class="relative pl-3 border-l-4 border-amber-400/50">
+                        <div class="text-[10px] text-gray-500 font-sans mb-1">{{ formatDate(rec.timestamp) }}</div>
+                        <div class="text-sm text-gray-800 leading-snug">"{{ rec.summary }}"</div>
                     </li>
                 </ul>
             </div>
@@ -350,105 +352,121 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBZVh6NhFA_BSuyUW-sZV2QPSvSzdYJZWU",
-      authDomain: "chocolatmer-uchiyoso.firebaseapp.com",
-      projectId: "chocolatmer-uchiyoso",
-    };
-
-    let db;
-    try {
-        const app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-    } catch (e) { console.log("Firebase init skipped for demo"); }
+    // Firebase Config (Dummy for UI Demo)
+    const firebaseConfig = { apiKey: "demo", projectId: "demo" };
+    try { initializeApp(firebaseConfig); } catch(e) {}
 
     const { createApp, ref, reactive, onMounted } = Vue;
 
+    // クリック外判定ディレクティブ
+    const clickOutside = {
+        beforeMount(el, binding) {
+            el.clickOutsideEvent = function(event) {
+                if (!(el === event.target || el.contains(event.target))) {
+                    binding.value(event);
+                }
+            };
+            document.body.addEventListener('click', el.clickOutsideEvent);
+        },
+        unmounted(el) {
+            document.body.removeEventListener('click', el.clickOutsideEvent);
+        }
+    };
+
     createApp({
+        directives: { clickOutside },
         setup() {
             const currentUser = reactive({
-                name: '',
-                icon: 'https://placehold.co/100x100/png?text=User',
-                description: 'Enter name & Load',
-                isGuest: true
+                name: '', icon: 'https://placehold.co/100x100/png?text=?', description: 'Select character to start', isGuest: true
             });
 
-            // Mock Data
-            const SCHEMA_DB = [
-                { name: 'アリス', icon: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Alice', desc: '好奇心旺盛な冒険家' },
-                { name: 'ボブ', icon: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Bob', desc: '冷静なエンジニア' },
-                { name: 'キャロル', icon: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Carol', desc: '優しい森の住人' }
+            // キャラデータ (リスト用)
+            const schemaDB = [
+                { name: 'Alice', icon: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Alice', desc: '好奇心旺盛な冒険家' },
+                { name: 'Bob', icon: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Bob', desc: '冷静なエンジニア' },
+                { name: 'Carol', icon: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Carol', desc: '優しい森の住人' },
+                { name: 'Dave', icon: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Dave', desc: '熱血スポーツマン' }
             ];
 
             const allQuestions = [
-                { id: 'q1', text: '休日はどのように過ごしていますか？' }, { id: 'q2', text: '好きな食べ物とその理由を教えてください。' },
-                { id: 'q3', text: 'もし魔法が一つ使えるなら何をしますか？' }, { id: 'q4', text: '最近、心が動かされた出来事は？' },
-                { id: 'q5', text: 'あなたの宝物は何ですか？' }, { id: 'q6', text: '苦手なものはありますか？' },
-                { id: 'q7', text: '自分を動物に例えると？' }, { id: 'q8', text: '大切な人へ伝えたいことは？' },
-                { id: 'q9', text: '10年後の自分へ一言。' }, { id: 'q10', text: '今の気分を色で表すと？' }
+                { id: 'q1', text: '休日はどのように過ごしていますか？' },
+                { id: 'q2', text: '好きな食べ物とその理由を教えてください。' },
+                { id: 'q3', text: 'もし魔法が一つ使えるなら何をしますか？' },
+                { id: 'q4', text: '最近、心が動かされた出来事は？' },
+                { id: 'q5', text: 'あなたの宝物は何ですか？' },
+                { id: 'q6', text: '苦手なものはありますか？' },
+                { id: 'q7', text: '自分を動物に例えると？' },
+                { id: 'q8', text: '大切な人へ伝えたいことは？' }
             ];
             
             const displayedQuestions = ref([]);
             const answers = reactive({});
             const currentDate = new Date().toLocaleDateString('ja-JP');
 
-            // アイテム配置 (パスは ../images/ )
-            // ★ポイント：width, heightはCSSで制御するため、座標のみ指定
+            // アイテム初期位置（メモと被らないように外側へ配置）
             const deskItems = ref([
-                { src: '../images/icons/desk1.png', x: 200, y: 100, name: 'Item 1' },
-                { src: '../images/icons/desk2.png', x: 100, y: 450, name: 'Item 2' },
-                { src: '../images/icons/desk3.png', x: window.innerWidth - 300, y: 50, name: 'Item 3' },
-                { src: '../images/icons/desk4.png', x: window.innerWidth - 250, y: 400, name: 'Item 4' },
-                { src: '../images/icons/desk5.png', x: window.innerWidth - 150, y: 600, name: 'Item 5' },
+                { src: '../images/icons/desk1.png', x: 50, y: 500, name: 'Coffee' },
+                { src: '../images/icons/desk2.png', x: 100, y: 650, name: 'Pen' },
+                { src: '../images/icons/desk3.png', x: window.innerWidth - 250, y: 650, name: 'Glasses' },
+                { src: '../images/icons/desk4.png', x: window.innerWidth - 350, y: 50, name: 'Plant' },
+                { src: '../images/icons/desk5.png', x: 50, y: 50, name: 'Stamp' },
+                { src: '../images/icons/desk6.png', x: 150, y: 150, name: 'Stamp' },
+                { src: '../images/icons/desk7.png', x: 500, y: 50, name: 'Stamp' },
             ]);
             
             const dragging = ref({ index: -1, offsetX: 0, offsetY: 0 });
             const history = ref([]);
             const selectedGlobalQuestion = ref(null);
             const globalAnswers = ref([]);
+            
+            // UI State
+            const isDropdownOpen = ref(false);
+            const showStamp = ref(false);
 
             const getRandomQuestions = () => {
-                displayedQuestions.value = [...allQuestions].sort(() => 0.5 - Math.random()).slice(0, 10);
+                displayedQuestions.value = [...allQuestions].sort(() => 0.5 - Math.random()).slice(0, 8);
             };
 
-            // 検索・読み込みロジック (ボタン/Enterで発火)
-            const searchCharacter = () => {
-                const name = currentUser.name.trim();
-                if (!name) {
-                    alert("名前を入力してください");
-                    return;
-                }
+            // キャラ選択処理
+            const toggleDropdown = () => isDropdownOpen.value = !isDropdownOpen.value;
+            const closeDropdown = () => isDropdownOpen.value = false;
+            
+            const selectCharacter = (char) => {
+                currentUser.name = char.name;
+                currentUser.icon = char.icon;
+                currentUser.description = char.desc;
+                currentUser.isGuest = false;
+                isDropdownOpen.value = false;
                 
-                const found = SCHEMA_DB.find(c => c.name === name);
-                if (found) {
-                    currentUser.icon = found.icon;
-                    currentUser.description = found.desc;
-                    currentUser.isGuest = false;
-                    history.value = [{ timestamp: new Date().toISOString(), summary: 'データ読み込み成功...' }];
-                } else {
-                    currentUser.icon = `https://placehold.co/100x100/png?text=${name.charAt(0)}`;
-                    currentUser.description = '新規訪問者';
-                    currentUser.isGuest = true;
-                    history.value = [];
-                    alert("キャラクターが見つかりませんでした (ゲストとして開始)");
-                }
+                // 履歴モックロード
+                history.value = [
+                    { timestamp: new Date().toISOString(), summary: `${char.name}の過去ログ...` }
+                ];
             };
 
             const submitSurvey = () => {
-                if(!currentUser.name) return alert("名前を入力してください");
-                history.value.unshift({ timestamp: new Date().toISOString(), summary: Object.values(answers)[0] || '回答なし' });
-                alert("記録しました。");
+                if(!currentUser.name) return alert("キャラクターを選択してください");
+                
+                // スタンプ演出
+                showStamp.value = true;
+                setTimeout(() => showStamp.value = false, 2000);
+
+                // 履歴保存
+                history.value.unshift({
+                    timestamp: new Date().toISOString(),
+                    summary: Object.values(answers)[0] || '回答なし'
+                });
             };
             
             const resetForm = () => {
-                if(confirm("消去しますか？")) displayedQuestions.value.forEach(q => answers[q.id] = '');
+                if(confirm("入力内容をクリアしますか？")) displayedQuestions.value.forEach(q => answers[q.id] = '');
             };
 
             const showGlobalAnswers = (q) => {
                 selectedGlobalQuestion.value = q;
                 globalAnswers.value = [
-                    { user: 'アリス', icon: SCHEMA_DB[0].icon, text: '秘密です！' },
-                    { user: 'ボブ', icon: SCHEMA_DB[1].icon, text: '論理的に。' }
+                    { user: 'Alice', icon: schemaDB[0].icon, text: '秘密です！' },
+                    { user: 'Bob', icon: schemaDB[1].icon, text: '効率重視。' }
                 ].sort(() => 0.5 - Math.random());
             };
 
@@ -457,7 +475,6 @@
                 window.addEventListener('mousemove', onDrag);
                 window.addEventListener('mouseup', stopDrag);
             };
-            
             const onDrag = (e) => {
                 if(dragging.value.index >= 0) {
                     const item = deskItems.value[dragging.value.index];
@@ -465,7 +482,6 @@
                     item.y = e.clientY - dragging.value.offsetY;
                 }
             };
-            
             const stopDrag = () => {
                 dragging.value.index = -1;
                 window.removeEventListener('mousemove', onDrag);
@@ -479,9 +495,10 @@
             });
 
             return {
-                currentUser, displayedQuestions, answers, currentDate,
+                currentUser, schemaDB, displayedQuestions, answers, currentDate,
                 deskItems, startDrag, 
-                searchCharacter, submitSurvey, resetForm,
+                isDropdownOpen, toggleDropdown, closeDropdown, selectCharacter,
+                submitSurvey, resetForm, showStamp,
                 history, selectedGlobalQuestion, globalAnswers, showGlobalAnswers,
                 formatDate
             };
