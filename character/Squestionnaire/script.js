@@ -48,7 +48,7 @@ createApp({
             { src: '../images/icons/desk3.png', x: window.innerWidth - 550, y: 100, name: 'Item 3' }, // Left 2, Down small
             { src: '../images/icons/desk4.png', x: window.innerWidth - 320, y: 850, name: 'Item 4' }, // Same
             { src: '../images/icons/desk5.png', x: 150, y: 550, name: 'Item 5' }, // Down 2, Right small
-            { src: '../images/icons/desk6.png', x: window.innerWidth - 200, y: 550, name: 'Item 6' }, // Down 3, Left 2
+            { src: '../images/icons/desk6.png', x: window.innerWidth - 400, y: 550, name: 'Item 6' }, // Down 3, Left 2
             { src: '../images/icons/desk7.png', x: 150, y: 900, name: 'Item 7' }, // Down small
         ]);
         const dragging = ref({ index: -1, offsetX: 0, offsetY: 0 });
