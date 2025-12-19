@@ -5,28 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Morning Desk Survey</title>
     
-    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;700&family=Patrick+Hand&family=Shippori+Mincho:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;700&family=Patrick+Hand&family=Shippori+Mincho:wght@400;500;700&display=swap" rel="stylesheet">
     
-    <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-    <!-- Vue.js 3 -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
         :root {
             --paper-bg: #fdfbf7;
             --ink-color: #2c3e50;
-            --tape-color-1: rgba(220, 200, 150, 0.85);
-            --tape-color-red: rgba(255, 100, 100, 0.5);
-            --tape-color-blue: rgba(100, 150, 255, 0.5);
-            --shadow-float: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+            --tape-color-yellow: rgba(235, 215, 160, 0.9);
+            --tape-color-blue: rgba(140, 180, 220, 0.85);
         }
 
         body {
@@ -39,346 +33,368 @@
             background-color: #3e2723;
         }
 
+        /* --- 背景・環境効果 --- */
         .desk-background {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100vw; height: 100vh;
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background-image: url('../images/background/desk1.png'); 
-            background-color: #5d4037;
-            background-size: cover;
-            background-position: center;
+            background-color: #4a3b32;
+            background-size: cover; background-position: center;
             z-index: -10;
         }
-
         .sun-overlay {
             position: fixed; inset: 0;
-            background: radial-gradient(circle at 10% 20%, rgba(255, 240, 210, 0.4) 0%, rgba(255,255,255,0) 60%),
-                        linear-gradient(135deg, rgba(255, 220, 150, 0.15) 0%, transparent 40%);
-            mix-blend-mode: screen;
-            pointer-events: none;
-            z-index: 1;
-        }
-        
-        .shadow-overlay {
-            position: fixed; inset: 0;
-            background: linear-gradient(110deg, transparent 40%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.1) 55%, transparent 55%);
-            filter: blur(20px);
-            pointer-events: none;
-            z-index: 0;
+            background: linear-gradient(120deg, rgba(255,245,220,0.2) 0%, transparent 40%);
+            mix-blend-mode: soft-light; pointer-events: none; z-index: 1;
         }
 
-        /* --- ドラッグアイテム修正：サイズ統一とバランス --- */
+        /* --- ドラッグアイテム（サイズ拡大） --- */
         .draggable-item {
             position: absolute;
             cursor: grab;
-            transition: transform 0.1s;
+            transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             z-index: 50;
             user-select: none;
-            
-            /* 枠のサイズを固定（正方形） */
-            width: 180px; 
-            height: 180px;
-            
-            /* 中央寄せ */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            
-            /* フィルター効果 */
-            filter: drop-shadow(5px 10px 8px rgba(0,0,0,0.3));
+            width: 280px; /* サイズアップ */
+            height: 280px;
+            display: flex; justify-content: center; align-items: center;
+            filter: drop-shadow(8px 15px 10px rgba(0,0,0,0.4));
         }
         .draggable-item:active {
             cursor: grabbing;
-            transform: scale(1.05) !important;
+            transform: scale(1.08) rotate(2deg) !important;
             z-index: 100;
         }
         .draggable-item img {
-            /* 画像を枠内に収める（縦横比維持） */
-            max-width: 100%;
-            max-height: 100%;
-            width: auto;
-            height: auto;
-            object-fit: contain;
-            pointer-events: none;
+            max-width: 100%; max-height: 100%;
+            object-fit: contain; pointer-events: none;
         }
 
         .workspace {
-            position: relative;
-            width: 100%;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            padding-top: 3vh; /* 上部余白を少し詰める */
-            padding-bottom: 10vh;
+            position: relative; width: 100%; min-height: 100vh;
+            display: flex; justify-content: center; align-items: flex-start;
+            padding-top: 5vh; padding-bottom: 15vh;
             z-index: 10;
         }
 
-        /* --- アンケート用紙 --- */
-        .survey-sheet-container {
-            position: relative;
-            margin-bottom: 50px;
-            transform: rotate(0.5deg);
-        }
-        .survey-sheet-container::before {
-            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #fcfcfc; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-            z-index: -1; transform: rotate(-1.5deg) translate(-5px, 2px);
-        }
-
+        /* --- アンケート用紙デザイン --- */
         .survey-sheet {
-            width: 100%;
-            max-width: 700px; /* 幅を少し狭めて縦長感を軽減 */
-            min-height: 800px;
+            width: 100%; max-width: 750px; min-height: 900px;
             background-color: var(--paper-bg);
-            background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.6' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
-            box-shadow: var(--shadow-float);
-            padding: 40px 60px; /* パディングを少し減らす */
+            /* 紙の質感を出すノイズ */
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05), 0 20px 40px rgba(0,0,0,0.2);
+            padding: 60px 80px;
             position: relative;
+            transform: rotate(-0.5deg);
         }
 
-        /* --- テープ装飾 --- */
-        .masking-tape {
-            position: absolute; height: 35px; width: 110px;
-            background-color: var(--tape-color-1); opacity: 0.85;
-            background-image: linear-gradient(45deg, rgba(255,255,255,0.2) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0.2) 75%, transparent 75%, transparent);
-            background-size: 4px 4px;
-            clip-path: polygon(2% 0%, 98% 0%, 100% 10%, 98% 20%, 100% 30%, 98% 40%, 100% 50%, 98% 60%, 100% 70%, 98% 80%, 100% 90%, 98% 100%, 2% 100%, 0% 90%, 2% 80%, 0% 70%, 2% 60%, 0% 50%, 2% 40%, 0% 30%, 2% 20%, 0% 10%);
-            z-index: 20;
+        /* Confidential Stamp */
+        .stamp-confidential {
+            position: absolute;
+            top: 40px; right: 40px;
+            border: 3px solid #d32f2f;
+            color: #d32f2f;
+            padding: 5px 15px;
+            font-family: sans-serif;
+            font-weight: bold;
+            font-size: 1.8rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            transform: rotate(-8deg);
+            opacity: 0.7;
+            mask-image: url("data:image/svg+xml,%3Csvg width='200' height='50' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.5'/%3E%3C/svg%3E");
+            pointer-events: none;
         }
-        .tape-tl { top: -15px; left: -25px; transform: rotate(-35deg); }
-        .tape-tr { top: -10px; right: -25px; transform: rotate(25deg); }
-        .tape-bc { bottom: -15px; left: 50%; transform: translateX(-50%) rotate(-2deg); width: 100px; opacity: 0.6; }
 
-        /* 入力欄 */
-        .input-line {
+        /* 質問番号スタイル */
+        .q-badge {
+            background-color: #2c3e50;
+            color: #fff;
+            font-family: 'Times New Roman', serif;
+            font-weight: bold;
+            font-size: 0.85rem;
+            padding: 2px 8px;
+            border-radius: 2px;
+            margin-right: 10px;
+            box-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        /* 入力欄（ドットライン） */
+        .input-dotted {
             width: 100%; border: none;
-            background: linear-gradient(to right, transparent 0%, transparent 100%), linear-gradient(to right, rgba(0,0,0,0.1) 50%, transparent 50%);
-            background-size: 10px 1px; background-repeat: repeat-x; background-position: bottom;
-            font-family: 'Patrick Hand', cursive; font-size: 1.2rem; line-height: 1.6rem;
-            padding: 2px 0; outline: none; color: #444; transition: background-size 0.3s;
+            border-bottom: 2px dotted #bdc3c7;
+            background: transparent;
+            font-family: 'Shippori Mincho', serif;
+            font-size: 1.1rem;
+            line-height: 2rem;
+            padding: 5px 0;
+            outline: none;
+            color: #2c3e50;
+            transition: border-color 0.3s;
         }
-        .input-line:focus {
-            background-image: linear-gradient(to right, #8d6e63 100%, #8d6e63 100%);
-            background-size: 100% 2px;
+        .input-dotted:focus {
+            border-bottom: 2px solid #795548;
+            background-color: rgba(255,255,255,0.3);
         }
 
-        /* --- 分割されたメモのデザイン --- */
-        
-        /* 1. 履歴メモ (右側) */
-        .memo-history {
+        /* --- メモ用紙（クオリティ向上） --- */
+        .sticky-note {
             position: absolute;
-            right: 5%;
-            top: 50px;
-            width: 240px;
-            background-color: #fffde7; /* 黄色っぽいメモ */
-            padding: 15px;
-            box-shadow: 2px 4px 10px rgba(0,0,0,0.15);
+            padding: 20px;
+            font-family: 'Patrick Hand', cursive;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15), 0 3px 6px rgba(0,0,0,0.1);
+            z-index: 40;
+            transition: transform 0.2s;
+        }
+        .sticky-note:hover {
+            transform: scale(1.02) !important;
+            z-index: 45;
+        }
+        /* メモの質感 */
+        .sticky-note::after {
+            content: ""; position: absolute; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' opacity='0.1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.15'/%3E%3C/svg%3E");
+            pointer-events: none; mix-blend-mode: multiply;
+        }
+
+        .memo-yellow {
+            background-color: #fff9c4;
+            background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
+            right: 3%; top: 40px; width: 220px;
             transform: rotate(2deg);
-            z-index: 40;
-            font-family: 'Patrick Hand', cursive;
         }
-        .memo-history::before { /* リングノートの穴 */
-            content: ""; position: absolute; top: -10px; left: 10px; right: 10px; height: 20px;
-            background-image: radial-gradient(circle, #333 20%, transparent 25%);
-            background-size: 20px 20px;
-            background-position: top center;
-        }
-
-        /* 2. みんなの回答メモ (左側) */
-        .memo-global {
-            position: absolute;
-            left: 5%;
-            top: 150px; /* 少し下にずらす */
-            width: 250px;
-            background-color: #e3f2fd; /* 青っぽいメモ */
-            padding: 15px;
-            box-shadow: 2px 4px 10px rgba(0,0,0,0.15);
+        .memo-blue {
+            background-color: #e1f5fe;
+            background: linear-gradient(135deg, #e1f5fe 0%, #b3e5fc 100%);
+            left: 3%; top: 120px; width: 240px;
             transform: rotate(-3deg);
-            z-index: 40;
-            font-family: 'Patrick Hand', cursive;
-        }
-        .tape-global {
-            top: -12px; left: 50%; transform: translateX(-50%) rotate(-1deg);
-            background-color: var(--tape-color-blue); width: 80px;
         }
 
+        /* テープ */
+        .tape {
+            position: absolute; height: 35px; width: 90px;
+            opacity: 0.7; top: -15px; left: 50%;
+            transform: translateX(-50%) rotate(-1deg);
+            background-image: linear-gradient(90deg, rgba(255,255,255,0.3) 0%, transparent 10%, transparent 90%, rgba(255,255,255,0.3) 100%);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            z-index: 50;
+        }
+        .tape-yellow { background-color: var(--tape-color-yellow); }
+        .tape-blue { background-color: var(--tape-color-blue); }
+
+        /* キャラクター選択モーダル */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 999; backdrop-filter: blur(3px);
+        }
+        .char-card {
+            transition: all 0.2s;
+        }
+        .char-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            border-color: #8d6e63;
+        }
+
+        /* ツールバー */
+        .toolbar {
+            position: fixed; bottom: 20px; right: 20px;
+            display: flex; gap: 10px; z-index: 200;
+        }
+        .tool-btn {
+            width: 50px; height: 50px; border-radius: 50%;
+            background: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            display: flex; justify-content: center; align-items: center;
+            cursor: pointer; transition: transform 0.2s;
+            color: #555;
+        }
+        .tool-btn:hover { transform: scale(1.1); color: #000; }
+
+        /* カスタムスクロールバー */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.1); border-radius: 3px; }
     </style>
 </head>
 <body>
 
-<div class="desk-background"></div>
-<div class="shadow-overlay"></div>
-<div class="sun-overlay"></div>
-
 <div id="app">
-    <!-- ドラッグアイテム -->
+    <div class="desk-background"></div>
+    <div class="sun-overlay"></div>
+
     <div v-for="(item, index) in deskItems" :key="index"
          class="draggable-item"
          :style="{ top: item.y + 'px', left: item.x + 'px' }"
          @mousedown="startDrag($event, index)">
-        <img :src="item.src" :alt="item.name" onerror="this.style.opacity=0.3;">
-    </div>
+        <img :src="item.src" :alt="item.name" onerror="this.style.display='none'">
+        </div>
 
     <div class="workspace">
         
-        <!-- 左サイド：みんなの回答 (Global Memo) -->
-        <div class="memo-global">
-            <div class="masking-tape tape-global"></div>
-            <h4 class="text-sm font-bold text-blue-800 border-b border-blue-200 mb-2 pb-1">
-                <i class="fa-solid fa-earth-asia mr-1"></i> Global Answers
+        <div class="sticky-note memo-blue">
+            <div class="tape tape-blue"></div>
+            <h4 class="text-sm font-bold text-slate-600 border-b border-blue-200 mb-2 pb-1 flex justify-between">
+                <span><i class="fa-solid fa-users-viewfinder mr-1"></i> みんなの回答</span>
             </h4>
-            
-            <div class="h-64 overflow-y-auto pr-1 custom-scrollbar">
-                <div v-if="!selectedGlobalQuestion" class="text-xs text-gray-500 p-2 leading-relaxed">
-                    <p class="mb-2">アンケートの「<i class="fa-solid fa-eye text-amber-600"></i>」ボタンを押すと、みんなの回答がここに届きます。</p>
+            <div class="h-48 overflow-y-auto pr-1 custom-scrollbar text-xs">
+                 <div v-if="!selectedGlobalQuestion" class="text-gray-500 p-2 leading-relaxed">
+                    <p class="mb-2">質問の右にある「<i class="fa-solid fa-eye text-amber-600"></i>」ボタンを押すと、他の人の回答が見られます。</p>
                 </div>
                 <div v-else>
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="text-[10px] font-bold text-gray-400">Q.Pickup</span>
-                        <button @click="selectedGlobalQuestion = null" class="text-xs text-blue-400 hover:text-blue-600">
-                            <i class="fa-solid fa-times"></i>
-                        </button>
-                    </div>
-                    <div class="font-bold text-xs mb-2 text-gray-700 bg-white bg-opacity-50 p-1 rounded">
+                    <div class="bg-white/60 p-1 rounded mb-2 text-[10px] font-bold text-gray-600">
                         {{ selectedGlobalQuestion.text }}
                     </div>
                     <ul class="space-y-2">
-                        <li v-for="ans in globalAnswers" :key="ans.user" class="text-xs bg-white p-2 rounded shadow-sm">
-                            <div class="flex items-center space-x-2 mb-1">
-                                <img :src="ans.icon" class="w-4 h-4 rounded-full border border-gray-200">
-                                <span class="font-bold text-gray-600">{{ ans.user }}</span>
+                        <li v-for="ans in globalAnswers" class="bg-white p-2 rounded shadow-sm border border-blue-50">
+                             <div class="flex items-center gap-2 mb-1">
+                                <img :src="ans.icon" class="w-4 h-4 rounded-full">
+                                <span class="font-bold text-gray-500">{{ ans.user }}</span>
                             </div>
-                            <div class="text-gray-800 leading-tight">"{{ ans.text }}"</div>
+                            <div class="text-slate-700">"{{ ans.text }}"</div>
                         </li>
                     </ul>
+                    <button @click="selectedGlobalQuestion = null" class="mt-2 w-full text-center text-blue-400 text-[10px] hover:underline">閉じる</button>
                 </div>
             </div>
         </div>
 
-        <!-- 中央：アンケート用紙 -->
-        <div class="survey-sheet-container">
-            <div class="masking-tape tape-tl"></div>
-            <div class="masking-tape tape-tr"></div>
-            <div class="masking-tape tape-bc"></div>
+        <div class="survey-sheet-container relative">
+            <div class="survey-sheet" id="survey-paper">
+                <div class="stamp-confidential">CONFIDENTIAL</div>
 
-            <div class="survey-sheet">
-                
-                <!-- ヘッダーエリア -->
-                <div class="flex items-end justify-between mb-6 border-b-2 border-double border-gray-300 pb-3">
-                    <div class="flex items-center space-x-5">
-                        <div class="w-20 h-20 rounded-full border-4 border-white shadow-md overflow-hidden bg-gray-100 relative group">
+                <div class="flex items-end justify-between mb-10 border-b border-gray-400 pb-4 border-dashed">
+                    <div class="flex items-center space-x-6 cursor-pointer group" @click="showCharModal = true">
+                        <div class="w-24 h-24 rounded-full border-4 border-gray-100 shadow-lg overflow-hidden bg-gray-200 relative">
                             <img :src="currentUser.icon" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-white text-xs font-bold">
+                                Change
+                            </div>
                         </div>
                         
                         <div>
-                            <label class="text-[10px] text-gray-400 font-bold tracking-widest uppercase">Target Character</label>
-                            <div class="relative flex items-center">
-                                <input type="text" 
-                                       v-model="currentUser.name" 
-                                       @keyup.enter="searchCharacter"
-                                       class="text-2xl font-serif font-bold bg-transparent border-b border-gray-300 focus:border-gray-600 outline-none w-56 placeholder-gray-300 text-gray-800"
-                                       placeholder="名前を入力...">
-                                
-                                <!-- 読み込みボタン -->
-                                <button @click="searchCharacter" class="ml-2 bg-gray-200 hover:bg-gray-300 text-gray-600 text-xs px-3 py-1 rounded shadow-sm transition">
-                                    <i class="fa-solid fa-magnifying-glass mr-1"></i>Load
-                                </button>
+                            <div class="flex items-center gap-2">
+                                <label class="text-[10px] text-gray-400 font-bold tracking-[0.2em] uppercase">Target Name</label>
+                                <span class="bg-gray-100 text-[10px] text-gray-500 px-1 rounded border border-gray-200">Click to Select</span>
                             </div>
-                            <p class="text-xs text-gray-500 mt-1 h-4 font-mono">{{ currentUser.description }}</p>
+                            <div class="text-4xl font-serif font-bold text-gray-800 border-b-2 border-transparent hover:border-gray-200 transition inline-block min-w-[200px]">
+                                {{ currentUser.name || 'Guest' }}
+                            </div>
+                            <p class="text-sm text-gray-500 mt-1 font-sans">{{ currentUser.description }}</p>
                         </div>
                     </div>
 
-                    <div class="text-right opacity-70">
-                        <div class="text-[10px] text-gray-400 font-serif mb-1">RECORD DATE</div>
-                        <div class="text-lg font-serif text-gray-700 tracking-wider border-b border-gray-400 inline-block pb-1">
+                    <div class="text-right opacity-80">
+                        <div class="text-[10px] text-gray-400 font-serif mb-1">DATE</div>
+                        <div class="text-xl font-serif text-gray-700 tracking-wider font-bold">
                             {{ currentDate }}
                         </div>
                     </div>
                 </div>
 
-                <!-- 質問エリア (スペース節約のためmargin調整) -->
-                <div class="space-y-8 pl-2">
-                    <div v-for="(q, index) in displayedQuestions" :key="q.id" class="relative group">
-                        <div class="flex justify-between items-baseline mb-1">
-                            <label class="font-bold text-gray-800 font-serif text-md">
-                                <span class="text-xs text-gray-500 font-normal mr-2">No.{{index + 1}}</span>
-                                {{ q.text }}
-                            </label>
-                            <button @click="showGlobalAnswers(q)" class="text-[10px] text-amber-700 hover:text-amber-900 opacity-0 group-hover:opacity-100 transition bg-amber-100 px-2 py-0.5 rounded border border-amber-200">
-                                <i class="fa-solid fa-eye mr-1"></i>みんなは？
+                <div class="space-y-10 pl-2 pr-4">
+                    <div v-for="(q, index) in displayedQuestions" :key="q.id" class="group relative">
+                        <div class="flex items-baseline mb-3">
+                            <span class="q-badge">Q.{{ index + 1 }}</span>
+                            <span class="font-bold text-gray-800 font-serif text-lg flex-1">{{ q.text }}</span>
+                            
+                            <button @click="showGlobalAnswers(q)" class="opacity-0 group-hover:opacity-100 transition text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded border border-amber-200 hover:bg-amber-100 ml-2">
+                                <i class="fa-solid fa-eye"></i>
                             </button>
                         </div>
-                        <textarea v-model="answers[q.id]" rows="1" class="input-line resize-none bg-transparent" placeholder="(記述...)"></textarea>
+                        <textarea v-model="answers[q.id]" rows="1" class="input-dotted resize-none" placeholder="( 回答を記述... )"></textarea>
                     </div>
                 </div>
 
-                <div class="mt-10 flex justify-center space-x-6 pb-2">
-                    <button @click="resetForm" class="text-gray-400 hover:text-gray-600 text-xs flex items-center">
-                        <i class="fa-solid fa-trash mr-1"></i> Clear
+                <div class="mt-16 flex justify-center space-x-8">
+                    <button @click="resetForm" class="text-gray-400 hover:text-red-400 text-sm flex items-center transition">
+                        <i class="fa-solid fa-eraser mr-2"></i> リセット
                     </button>
-                    <button @click="submitSurvey" class="bg-gray-800 text-white shadow-lg hover:bg-black px-6 py-2 rounded-full flex items-center transition transform hover:scale-105">
-                        <i class="fa-solid fa-pen-nib mr-2"></i> Save
+                    <button @click="saveData" class="bg-gray-800 text-white shadow-xl hover:bg-black px-8 py-3 rounded-sm font-serif tracking-widest transition transform hover:-translate-y-1">
+                        記録する
                     </button>
                 </div>
 
             </div>
         </div>
 
-        <!-- 右サイド：履歴メモ (History Memo) -->
-        <div class="memo-history">
+        <div class="sticky-note memo-yellow">
+            <div class="tape tape-yellow"></div>
             <h4 class="text-sm font-bold text-amber-800 border-b border-amber-200 mb-2 pb-1 text-center">
-                History Check
+                History
             </h4>
-            <div class="h-64 overflow-y-auto pr-1 custom-scrollbar">
+            <div class="h-48 overflow-y-auto pr-1 custom-scrollbar">
                 <div v-if="history.length === 0" class="text-center text-gray-400 text-xs mt-8 italic">
                     No records...
                 </div>
                 <ul class="space-y-3">
-                    <li v-for="rec in history" :key="rec.timestamp" class="relative pl-3 border-l-2 border-amber-300">
-                        <div class="text-[10px] text-gray-500 mb-0.5 font-sans">{{ formatDate(rec.timestamp) }}</div>
-                        <div class="text-xs text-gray-800 leading-tight">"{{ rec.summary }}"</div>
+                    <li v-for="rec in history" class="relative pl-3 border-l-4 border-amber-200 bg-white/50 p-1">
+                        <div class="text-[10px] text-gray-500 font-sans">{{ formatDate(rec.timestamp) }}</div>
+                        <div class="text-xs text-gray-800 truncate font-bold">{{ rec.charName }}</div>
+                        <div class="text-xs text-gray-600 line-clamp-2">"{{ rec.summary }}"</div>
                     </li>
                 </ul>
             </div>
         </div>
 
     </div>
+
+    <div class="toolbar">
+        <button class="tool-btn" title="画像を保存（デモ）" @click="mockScreenshot">
+            <i class="fa-solid fa-camera"></i>
+        </button>
+        <button class="tool-btn" title="BGM切替（デモ）" @click="toggleBgm">
+            <i class="fa-solid" :class="bgmOn ? 'fa-volume-high' : 'fa-volume-xmark'"></i>
+        </button>
+    </div>
+
+    <div v-if="showCharModal" class="modal-overlay" @click.self="showCharModal = false">
+        <div class="bg-white p-8 rounded-lg shadow-2xl max-w-2xl w-full mx-4 relative bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')]">
+            <button class="absolute top-4 right-4 text-gray-400 hover:text-gray-600" @click="showCharModal = false">
+                <i class="fa-solid fa-times text-xl"></i>
+            </button>
+            
+            <h3 class="text-2xl font-serif font-bold text-gray-800 mb-6 border-b border-gray-300 pb-2">
+                <i class="fa-solid fa-address-card mr-2 text-amber-700"></i>Select Character
+            </h3>
+            
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div v-for="char in characterDB" :key="char.name" 
+                     @click="selectCharacter(char)"
+                     class="char-card cursor-pointer border-2 border-gray-100 rounded-lg p-4 flex flex-col items-center hover:bg-amber-50 bg-white">
+                    <img :src="char.icon" class="w-16 h-16 rounded-full mb-3 border border-gray-200">
+                    <div class="font-bold text-gray-800">{{ char.name }}</div>
+                    <div class="text-xs text-gray-500 text-center mt-1">{{ char.desc }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBZVh6NhFA_BSuyUW-sZV2QPSvSzdYJZWU",
-      authDomain: "chocolatmer-uchiyoso.firebaseapp.com",
-      projectId: "chocolatmer-uchiyoso",
-    };
-
-    let db;
-    try {
-        const app = initializeApp(firebaseConfig);
-        db = getFirestore(app);
-    } catch (e) { console.log("Firebase init skipped for demo"); }
-
+<script>
     const { createApp, ref, reactive, onMounted } = Vue;
 
     createApp({
         setup() {
-            const currentUser = reactive({
-                name: '',
-                icon: 'https://placehold.co/100x100/png?text=User',
-                description: 'Enter name & Load',
-                isGuest: true
-            });
-
-            // Mock Data
-            const SCHEMA_DB = [
+            const showCharModal = ref(false);
+            const bgmOn = ref(false);
+            
+            // キャラクターDB
+            const characterDB = [
                 { name: 'アリス', icon: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Alice', desc: '好奇心旺盛な冒険家' },
                 { name: 'ボブ', icon: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Bob', desc: '冷静なエンジニア' },
-                { name: 'キャロル', icon: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Carol', desc: '優しい森の住人' }
+                { name: 'キャロル', icon: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Carol', desc: '優しい森の住人' },
+                { name: 'デイビッド', icon: 'https://api.dicebear.com/7.x/adventurer/svg?seed=David', desc: '街の郵便屋さん' },
+                { name: 'エレン', icon: 'https://api.dicebear.com/7.x/adventurer/svg?seed=Ellen', desc: '図書館の司書' },
+                { name: 'ゲスト', icon: 'https://placehold.co/100x100/png?text=?', desc: '自由記入用' }
             ];
+
+            const currentUser = reactive({
+                name: 'Guest',
+                icon: 'https://placehold.co/100x100/png?text=?',
+                description: 'キャラクターを選択してください'
+            });
 
             const allQuestions = [
                 { id: 'q1', text: '休日はどのように過ごしていますか？' }, { id: 'q2', text: '好きな食べ物とその理由を教えてください。' },
@@ -390,16 +406,14 @@
             
             const displayedQuestions = ref([]);
             const answers = reactive({});
-            const currentDate = new Date().toLocaleDateString('ja-JP');
+            const currentDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-            // アイテム配置 (パスは ../images/ )
-            // ★ポイント：width, heightはCSSで制御するため、座標のみ指定
+            // アイテム配置（メモとかぶらないよう下部や端に配置）
             const deskItems = ref([
-                { src: '../images/icons/desk1.png', x: 200, y: 100, name: 'Item 1' },
-                { src: '../images/icons/desk2.png', x: 100, y: 450, name: 'Item 2' },
-                { src: '../images/icons/desk3.png', x: window.innerWidth - 300, y: 50, name: 'Item 3' },
-                { src: '../images/icons/desk4.png', x: window.innerWidth - 250, y: 400, name: 'Item 4' },
-                { src: '../images/icons/desk5.png', x: window.innerWidth - 150, y: 600, name: 'Item 5' },
+                { src: '../images/icons/desk1.png', x: 50, y: window.innerHeight - 350, name: 'Coffee' },
+                { src: '../images/icons/desk2.png', x: window.innerWidth - 300, y: window.innerHeight - 350, name: 'Plant' },
+                { src: '../images/icons/desk3.png', x: window.innerWidth - 200, y: 300, name: 'Glasses' }, // 右端中央
+                { src: '../images/icons/desk4.png', x: 100, y: window.innerHeight - 500, name: 'Pen' } // 左下寄り
             ]);
             
             const dragging = ref({ index: -1, offsetX: 0, offsetY: 0 });
@@ -407,57 +421,57 @@
             const selectedGlobalQuestion = ref(null);
             const globalAnswers = ref([]);
 
+            // 初期化
             const getRandomQuestions = () => {
-                displayedQuestions.value = [...allQuestions].sort(() => 0.5 - Math.random()).slice(0, 10);
+                displayedQuestions.value = [...allQuestions].slice(0, 5); // 5問に絞る
             };
 
-            // 検索・読み込みロジック (ボタン/Enterで発火)
-            const searchCharacter = () => {
-                const name = currentUser.name.trim();
-                if (!name) {
-                    alert("名前を入力してください");
-                    return;
-                }
+            // キャラクター選択処理
+            const selectCharacter = (char) => {
+                currentUser.name = char.name;
+                currentUser.icon = char.icon;
+                currentUser.description = char.desc;
+                showCharModal.value = false;
                 
-                const found = SCHEMA_DB.find(c => c.name === name);
-                if (found) {
-                    currentUser.icon = found.icon;
-                    currentUser.description = found.desc;
-                    currentUser.isGuest = false;
-                    history.value = [{ timestamp: new Date().toISOString(), summary: 'データ読み込み成功...' }];
-                } else {
-                    currentUser.icon = `https://placehold.co/100x100/png?text=${name.charAt(0)}`;
-                    currentUser.description = '新規訪問者';
-                    currentUser.isGuest = true;
-                    history.value = [];
-                    alert("キャラクターが見つかりませんでした (ゲストとして開始)");
-                }
+                // リセットするか尋ねてもいいが、今回はそのまま
+                history.value.unshift({ 
+                    timestamp: new Date().toISOString(), 
+                    charName: 'System',
+                    summary: `${char.name} を読み込みました` 
+                });
             };
 
-            const submitSurvey = () => {
-                if(!currentUser.name) return alert("名前を入力してください");
-                history.value.unshift({ timestamp: new Date().toISOString(), summary: Object.values(answers)[0] || '回答なし' });
-                alert("記録しました。");
+            const saveData = () => {
+                const firstAnswer = Object.values(answers).find(a => a && a.length > 0) || '回答なし';
+                history.value.unshift({ 
+                    timestamp: new Date().toISOString(), 
+                    charName: currentUser.name,
+                    summary: firstAnswer 
+                });
+                alert("データを記録しました");
             };
             
             const resetForm = () => {
-                if(confirm("消去しますか？")) displayedQuestions.value.forEach(q => answers[q.id] = '');
+                if(confirm("入力内容を消去しますか？")) {
+                    displayedQuestions.value.forEach(q => answers[q.id] = '');
+                }
             };
 
             const showGlobalAnswers = (q) => {
                 selectedGlobalQuestion.value = q;
                 globalAnswers.value = [
-                    { user: 'アリス', icon: SCHEMA_DB[0].icon, text: '秘密です！' },
-                    { user: 'ボブ', icon: SCHEMA_DB[1].icon, text: '論理的に。' }
-                ].sort(() => 0.5 - Math.random());
+                    { user: 'アリス', icon: characterDB[0].icon, text: 'それは秘密です！' },
+                    { user: 'ボブ', icon: characterDB[1].icon, text: '効率を重視します。' },
+                    { user: 'エレン', icon: characterDB[4].icon, text: '本を読んで過ごしますね。' }
+                ];
             };
 
+            // ドラッグ処理
             const startDrag = (e, i) => {
                 dragging.value = { index: i, offsetX: e.clientX - deskItems.value[i].x, offsetY: e.clientY - deskItems.value[i].y };
                 window.addEventListener('mousemove', onDrag);
                 window.addEventListener('mouseup', stopDrag);
             };
-            
             const onDrag = (e) => {
                 if(dragging.value.index >= 0) {
                     const item = deskItems.value[dragging.value.index];
@@ -465,25 +479,36 @@
                     item.y = e.clientY - dragging.value.offsetY;
                 }
             };
-            
             const stopDrag = () => {
                 dragging.value.index = -1;
                 window.removeEventListener('mousemove', onDrag);
                 window.removeEventListener('mouseup', stopDrag);
             };
 
-            const formatDate = (iso) => new Date(iso).toLocaleDateString();
+            const formatDate = (iso) => {
+                const d = new Date(iso);
+                return `${d.getMonth()+1}/${d.getDate()} ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`;
+            };
+
+            // 便利ツール（デモ）
+            const mockScreenshot = () => {
+                alert("カメラ機能：ここをクリックすると html2canvas 等で画面全体を画像として保存する機能を実装できます。");
+            };
+            const toggleBgm = () => {
+                bgmOn.value = !bgmOn.value;
+                // ここで new Audio('bgm.mp3').play() などを行う
+            };
 
             onMounted(() => {
                 getRandomQuestions();
             });
 
             return {
-                currentUser, displayedQuestions, answers, currentDate,
-                deskItems, startDrag, 
-                searchCharacter, submitSurvey, resetForm,
+                currentUser, characterDB, showCharModal, selectCharacter,
+                displayedQuestions, answers, currentDate, deskItems,
+                startDrag, saveData, resetForm,
                 history, selectedGlobalQuestion, globalAnswers, showGlobalAnswers,
-                formatDate
+                formatDate, mockScreenshot, toggleBgm, bgmOn
             };
         }
     }).mount('#app');
