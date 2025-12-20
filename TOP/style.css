@@ -17,13 +17,12 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; text-decoration: none; -webkit-tap-highlight-color: transparent; }
 
-/* 修正: スクロールバー制御の簡素化と二重防止 */
+/* 修正: 初歩的なリセット構成に戻し、スクロール管理を一元化 */
 html {
     width: 100%;
     height: 100%;
-    /* 修正: 常にスクロールバーを出す設定を削除し、ブラウザの標準挙動(auto)に任せる */
-    /* overflow-y: scroll; を削除 */
-    overflow-x: hidden; /* 横スクロールをhtmlレベルで確実に禁止 */
+    overflow-x: hidden; /* 横スクロールを禁止 */
+    /* overflow-y はブラウザデフォルト(auto)に任せる */
 }
 
 body {
@@ -32,16 +31,24 @@ body {
     background-image: url('../images/background/fur-texture-pink.jpg');
     background-size: cover;
     background-position: center;
-    min-height: 100vh;
-    display: block; 
+    
+    /* 修正: 100vhではなく100%にし、htmlの高さに合わせる */
+    min-height: 100%;
+    width: 100%;
+    display: block;
     color: var(--text-main);
     perspective: 1500px;
     
-    /* 修正: ヘッダーとの隙間を確保しつつ、フッター下の余白をリボンの高さぴったりにする */
-    padding-top: calc(var(--top-bar-height) + 60px); 
-    padding-bottom: var(--bottom-ribbon-height); /* ここを修正：余分な空間を削除 */
+    /* 修正: paddingを含めて高さを計算させる */
+    box-sizing: border-box;
     
-    overflow-x: hidden; /* bodyレベルでも横揺れを防止 */
+    /* ヘッダー周りの余白 */
+    padding-top: calc(var(--top-bar-height) + 60px); 
+    
+    /* 修正: リボンの高さ分だけ余白を取り、これ以上スクロールできないようにする */
+    padding-bottom: var(--bottom-ribbon-height); 
+    
+    overflow-x: hidden;
     position: relative;
 }
 
@@ -181,8 +188,6 @@ body {
     border-radius: 50%; filter: blur(8px); opacity: 0.6; 
     animation: floatUp 15s linear infinite; z-index: -1; 
     pointer-events: none; will-change: transform;
-    /* 修正: 万が一のはみ出し防止 */
-    max-width: 100vw;
 }
 @keyframes floatUp { 0% { transform: translateY(110vh) rotate(0deg); opacity: 0; } 10% { opacity: 0.6; } 90% { opacity: 0.6; } 100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; } }
 
@@ -315,8 +320,8 @@ body {
         display: block; overflow-y: auto; overflow-x: hidden;
         height: auto; perspective: none;
         padding-top: calc(var(--top-bar-height) + 40px);
-        /* 修正: スマホでもフッター下の謎の空間を削除。リボン高さ+少しのマージンのみに */
-        padding-bottom: calc(var(--bottom-ribbon-height) + 20px);
+        /* 修正: スマホでもパディングはリボン高さのみにし、謎の空間を削除 */
+        padding-bottom: var(--bottom-ribbon-height);
     }
     
     .bento-container {
