@@ -31,15 +31,18 @@ body {
     background-size: cover;
     background-position: center;
     
-    min-height: 100%;
+    /* 修正: PCでは画面一杯を使って中央揃えにするための設定 */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
     width: 100%;
-    display: block;
+    
     color: var(--text-main);
     perspective: 1500px;
     
-    /* 余白設定（PC初期値） */
-    padding-top: calc(var(--top-bar-height) + 60px); 
-    padding-bottom: var(--bottom-ribbon-height); 
+    /* ヘッダー・フッターに被らないための最小限の余白 */
+    padding-top: calc(var(--top-bar-height) + 20px);
+    padding-bottom: calc(var(--bottom-ribbon-height) + 20px);
     
     overflow-x: hidden;
     position: relative;
@@ -61,7 +64,10 @@ body {
 .bento-container {
     position: relative; z-index: 10;
     width: 1000px; max-width: 90%;
-    margin: 0 auto;
+    
+    /* 修正: 画面中央に自動配置（入らない場合はスクロール位置に） */
+    margin: auto;
+    
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: auto auto auto;
@@ -328,7 +334,10 @@ body {
     }
 
     body {
-        display: block; overflow-y: auto; overflow-x: hidden;
+        /* 修正: スマホではスクロール前提のBlock配置にする */
+        display: block; 
+        min-height: 100%;
+        overflow-y: auto; overflow-x: hidden;
         height: auto; perspective: none;
         
         /* フォントサイズを小さくしてPC画面に近づける */
