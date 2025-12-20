@@ -17,12 +17,12 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; text-decoration: none; -webkit-tap-highlight-color: transparent; }
 
-/* 修正: 初歩的なリセット構成に戻し、スクロール管理を一元化 */
+/* 修正: 二重スクロールバーの完全防止 */
 html {
     width: 100%;
     height: 100%;
-    overflow-x: hidden; /* 横スクロールを禁止 */
-    /* overflow-y はブラウザデフォルト(auto)に任せる */
+    overflow-x: hidden;
+    /* overflow-yはブラウザに任せ、body側でのオーバーフロー誘発を防ぐ */
 }
 
 body {
@@ -32,20 +32,16 @@ body {
     background-size: cover;
     background-position: center;
     
-    /* 修正: 100vhではなく100%にし、htmlの高さに合わせる */
+    /* 修正: 最小高さを100%とし、コンテンツ量に応じた自然なスクロールにする */
     min-height: 100%;
     width: 100%;
     display: block;
     color: var(--text-main);
     perspective: 1500px;
     
-    /* 修正: paddingを含めて高さを計算させる */
-    box-sizing: border-box;
-    
-    /* ヘッダー周りの余白 */
+    /* パディング設定 */
     padding-top: calc(var(--top-bar-height) + 60px); 
-    
-    /* 修正: リボンの高さ分だけ余白を取り、これ以上スクロールできないようにする */
+    /* 修正: 下部余白はリボンの高さピッタリにする */
     padding-bottom: var(--bottom-ribbon-height); 
     
     overflow-x: hidden;
@@ -56,6 +52,19 @@ body {
     position: absolute; width: 100%; height: 100%; top: 0; left: 0;
     background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.1) 100%);
     pointer-events: none; z-index: 0;
+}
+
+/* === 新設：パーティクル隔離用ラッパー === */
+/* これが「動くスクロールバー」と「謎の空間」を消す決定的な修正です */
+#particle-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden; /* 画面外の要素を完全に切り捨てる */
+    pointer-events: none; /* クリックなどを阻害しない */
+    z-index: -1; /* 背景として配置 */
 }
 
 /* === PC用 3Dグリッド === */
@@ -184,12 +193,17 @@ body {
 
 /* パーティクル & マスコット */
 .floating-particle {
-    position: fixed; 
+    position: absolute; /* 親要素(#particle-wrapper)に対して絶対配置 */
     border-radius: 50%; filter: blur(8px); opacity: 0.6; 
-    animation: floatUp 15s linear infinite; z-index: -1; 
+    animation: floatUp 15s linear infinite;
     pointer-events: none; will-change: transform;
 }
-@keyframes floatUp { 0% { transform: translateY(110vh) rotate(0deg); opacity: 0; } 10% { opacity: 0.6; } 90% { opacity: 0.6; } 100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; } }
+@keyframes floatUp { 
+    0% { transform: translateY(0) rotate(0deg); opacity: 0; } 
+    10% { opacity: 0.6; } 
+    90% { opacity: 0.6; } 
+    100% { transform: translateY(-130vh) rotate(360deg); opacity: 0; } 
+}
 
 .floating-mascot {
     position: fixed; bottom: 120px; right: 20px; width: 140px; height: auto; z-index: 95; cursor: pointer;

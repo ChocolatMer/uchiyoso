@@ -1,10 +1,14 @@
-// --- 背景パーティクル ---
+// --- 背景パーティクル（修正：専用コンテナ内に生成して隔離する） ---
 function createParticles() {
+    // 1. パーティクル専用のラッパーを作成
+    const wrapper = document.createElement('div');
+    wrapper.id = 'particle-wrapper';
+    document.body.appendChild(wrapper);
+
     const colors = ['#ff9ebb', '#a8cce8', '#ffffff'];
     const fragment = document.createDocumentFragment();
-    // 画面幅を取得し、パーティクルがはみ出さない安全マージンを確保
-    const safeWidth = window.innerWidth - 100; 
     
+    // 画面幅などの計算はCSSのコンテナで制御するため、ここではシンプルに生成
     for(let i=0; i < 12; i++) {
         const span = document.createElement('span');
         span.classList.add('floating-particle');
@@ -12,18 +16,19 @@ function createParticles() {
         span.style.width = sizeValue + 'px';
         span.style.height = sizeValue + 'px';
         
-        // 修正: %指定ではなくpx計算ではみ出しを物理的に防ぐ
-        // 万が一マイナスにならないようMath.maxを使用
-        const randomX = Math.random() * Math.max(0, safeWidth);
-        span.style.left = randomX + 'px';
+        // 0% ~ 100% の配置でOK（ラッパーがはみ出しをカットするため）
+        span.style.left = Math.random() * 100 + '%';
         
-        span.style.top = Math.random() * 100 + 'vh';
+        // 画面下部からスタートさせる
+        span.style.top = '110vh'; 
+        
         span.style.background = colors[Math.floor(Math.random() * colors.length)];
         span.style.animationDuration = (Math.random() * 10 + 15) + 's';
         span.style.animationDelay = '-' + (Math.random() * 10) + 's';
         fragment.appendChild(span);
     }
-    document.body.appendChild(fragment);
+    // ラッパーに追加
+    wrapper.appendChild(fragment);
 }
 createParticles();
 
