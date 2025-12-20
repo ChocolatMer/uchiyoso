@@ -8,7 +8,10 @@ function createParticles() {
         const sizeValue = Math.random() * 60 + 20;
         span.style.width = sizeValue + 'px';
         span.style.height = sizeValue + 'px';
-        span.style.left = Math.random() * 100 + '%';
+        
+        // 修正: 画面端(100%)ぎりぎりに配置されるとはみ出してスクロールバーを誘発するため、最大値を90%に抑える
+        span.style.left = Math.random() * 90 + '%';
+        
         span.style.top = Math.random() * 100 + 'vh';
         span.style.background = colors[Math.floor(Math.random() * colors.length)];
         span.style.animationDuration = (Math.random() * 10 + 15) + 's';

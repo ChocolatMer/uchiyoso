@@ -17,11 +17,13 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; text-decoration: none; -webkit-tap-highlight-color: transparent; }
 
-/* 修正: overflowの制御とスクロールバー安定化 */
+/* 修正: スクロールバー制御の簡素化と二重防止 */
 html {
     width: 100%;
-    overflow-x: hidden;
-    overflow-y: scroll; /* 常にスクロールバー領域を確保しガタツキ防止 */
+    height: 100%;
+    /* 修正: 常にスクロールバーを出す設定を削除し、ブラウザの標準挙動(auto)に任せる */
+    /* overflow-y: scroll; を削除 */
+    overflow-x: hidden; /* 横スクロールをhtmlレベルで確実に禁止 */
 }
 
 body {
@@ -31,14 +33,16 @@ body {
     background-size: cover;
     background-position: center;
     min-height: 100vh;
-    /* 修正: Flexbox中央揃えを廃止し、パディングでレイアウト制御 */
     display: block; 
     color: var(--text-main);
     perspective: 1500px;
-    /* ヘッダー(50px)との間に隙間を作る */
+    
+    /* 修正: ヘッダーとの隙間を確保しつつ、フッター下の余白をリボンの高さぴったりにする */
     padding-top: calc(var(--top-bar-height) + 60px); 
-    padding-bottom: calc(var(--bottom-ribbon-height) + 40px);
-    overflow-x: hidden;
+    padding-bottom: var(--bottom-ribbon-height); /* ここを修正：余分な空間を削除 */
+    
+    overflow-x: hidden; /* bodyレベルでも横揺れを防止 */
+    position: relative;
 }
 
 .ambient-light {
@@ -51,13 +55,12 @@ body {
 .bento-container {
     position: relative; z-index: 10;
     width: 1000px; max-width: 90%;
-    /* 修正: 中央揃え */
     margin: 0 auto;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: auto auto auto;
     gap: 24px;
-    transform: rotateX(5deg); /* Y移動を削除して配置を安定化 */
+    transform: rotateX(5deg);
     transform-style: preserve-3d;
     transition: transform 0.5s ease;
 }
@@ -174,11 +177,12 @@ body {
 
 /* パーティクル & マスコット */
 .floating-particle {
-    /* 修正: absoluteだとドキュメント高さを広げてしまうためfixedに変更 */
     position: fixed; 
     border-radius: 50%; filter: blur(8px); opacity: 0.6; 
     animation: floatUp 15s linear infinite; z-index: -1; 
     pointer-events: none; will-change: transform;
+    /* 修正: 万が一のはみ出し防止 */
+    max-width: 100vw;
 }
 @keyframes floatUp { 0% { transform: translateY(110vh) rotate(0deg); opacity: 0; } 10% { opacity: 0.6; } 90% { opacity: 0.6; } 100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; } }
 
@@ -188,7 +192,6 @@ body {
 }
 .floating-mascot img { width: 100%; display: block; filter: drop-shadow(0 8px 20px rgba(90, 61, 53, 0.25)); transition: filter 0.3s; }
 .floating-mascot:hover { 
-    /* 修正: 左へ傾ける & ぼんやり光る演出 */
     transform: scale(1.15) rotate(-10deg);
     filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 30px var(--accent-pink));
 }
@@ -244,12 +247,9 @@ body {
 .header-right-area {
     display: flex; align-items: center; gap: 15px;
     margin-left: 20px; position: relative;
-    /* レポートを全文表示するために縮小しない */
     flex-shrink: 0;
-    /* 背景色をつけることで、ニュースの文字と重なっても読めるようにする */
     background: #fffafa;
     padding-left: 10px;
-    /* ニュースとの境界を少しぼかす */
     box-shadow: -10px 0 10px -5px #fffafa;
     z-index: 2;
 }
@@ -278,7 +278,7 @@ body {
 @keyframes fadeReport {
     0% { opacity: 0; transform: translateY(10px); }
     10% { opacity: 1; transform: translateY(0); }
-    90% { opacity: 1; transform: translateY(0); } /* 長く表示 */
+    90% { opacity: 1; transform: translateY(0); }
     100% { opacity: 0; transform: translateY(-10px); }
 }
 
@@ -315,7 +315,8 @@ body {
         display: block; overflow-y: auto; overflow-x: hidden;
         height: auto; perspective: none;
         padding-top: calc(var(--top-bar-height) + 40px);
-        padding-bottom: 120px; 
+        /* 修正: スマホでもフッター下の謎の空間を削除。リボン高さ+少しのマージンのみに */
+        padding-bottom: calc(var(--bottom-ribbon-height) + 20px);
     }
     
     .bento-container {
@@ -345,12 +346,10 @@ body {
     .badge { top: 10px; right: 10px; padding: 4px 10px; font-size: 0.65rem; animation: none; }
     .area-share { grid-column: span 2; padding: 0; margin-top: 10px; }
 
-    /* スマホでのレポート表示調整 */
     .header-right-area { gap: 8px; margin-left: 10px; }
-    /* スマホでもレポートを表示する */
     .honobono-report {
         font-size: 0.8rem;
-        max-width: 150px; /* 長すぎる場合は省略 */
+        max-width: 150px; 
         overflow: hidden; text-overflow: ellipsis;
     }
     
