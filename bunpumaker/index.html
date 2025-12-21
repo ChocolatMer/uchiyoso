@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChartMaker Pro (Final v14 Color Config)</title>
+    <title>ChartMaker Pro (Final v13 Pattern Scale)</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -107,11 +107,7 @@
                     </div>
 
                     <div x-show="bgType==='pattern'">
-                        <div class="flex items-center justify-between mb-2">
-                             <label class="text-xs font-bold text-gray-500">ベースカラー</label>
-                             <input type="color" x-model="config.bgColor" @input="updateThumbnails(); draw()" class="w-20 h-8 rounded cursor-pointer">
-                        </div>
-                        
+                        <input type="color" x-model="config.bgColor" @input="updateThumbnails(); draw()" class="w-full h-8 mb-2 rounded cursor-pointer">
                         <div class="grid grid-cols-5 gap-2 mb-3">
                             <template x-for="(p, idx) in patterns">
                                 <button @click="config.patternIndex = idx; draw()" 
@@ -121,24 +117,10 @@
                                 </button>
                             </template>
                         </div>
-                        
-                        <!-- 柄の設定（サイズ・色） -->
-                        <div class="space-y-2 p-3 bg-pink-50 rounded-xl border border-pink-100">
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs font-bold text-pink-500 w-16">柄サイズ</span>
-                                <input type="range" min="0.2" max="3.0" step="0.1" x-model="config.patternScale" @input="draw()" class="flex-1 h-1.5 bg-pink-200 rounded-lg accent-pink-500 cursor-pointer">
-                            </div>
-
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs font-bold text-pink-500 w-16">柄の色1</span>
-                                <input type="color" x-model="config.patternColor1" @input="draw()" class="flex-1 h-8 rounded cursor-pointer">
-                            </div>
-                            
-                            <!-- 柄の色2 (dot-mixの時だけ表示) -->
-                            <div x-show="patterns[config.patternIndex].canvas.type === 'dot-mix'" class="flex items-center gap-2">
-                                <span class="text-xs font-bold text-pink-500 w-16">柄の色2</span>
-                                <input type="color" x-model="config.patternColor2" @input="draw()" class="flex-1 h-8 rounded cursor-pointer">
-                            </div>
+                        <!-- ▼▼▼ 柄のサイズ調整スライダー (新規追加) ▼▼▼ -->
+                        <div class="flex items-center gap-2 p-2 bg-pink-50 rounded-lg border border-pink-100">
+                            <span class="text-xs font-bold text-pink-500 whitespace-nowrap">柄の大きさ</span>
+                            <input type="range" min="0.2" max="3.0" step="0.1" x-model="config.patternScale" @input="draw()" class="w-full h-1.5 bg-pink-200 rounded-lg accent-pink-500 cursor-pointer">
                         </div>
                     </div>
 
@@ -250,10 +232,8 @@
                     bgColor: '#fbcfe8',
                     gradientStart: '#fbcfe8', gradientEnd: '#a78bfa', gradientDirection: 'br',
                     patternIndex: 4, 
-                    patternScale: 1.0,
-                    // ★初期パターン色（デフォルト値から読み込み）
-                    patternColor1: '#ffffff',
-                    patternColor2: '#ffffff',
+                    // ★デフォルト倍率：1.0
+                    patternScale: 1.0, 
                     cornerRadius: 60,
                     gridEnabled: true,
                     graphShadow: true,
@@ -264,23 +244,16 @@
 
                 config: {},
                 preview: { isOpen: false, src: null },
-                patterns: window.ChartPatternLibrary.config,
 
                 gradientDirections: [
                     { value: 'r', icon: '→' }, { value: 'l', icon: '←' }, { value: 'b', icon: '↓' }, { value: 't', icon: '↑' },
                     { value: 'br', icon: '↘' }, { value: 'tr', icon: '↗' }, { value: 'circle', icon: '◎' }, { value: 'conic', icon: '◑' },
                 ],
 
+                patterns: window.ChartPatternLibrary.config,
+
                 init() {
                     this.reset();
-                    // パターンが変更されたら、そのパターンのデフォルト色をカラーピッカーにセット
-                    this.$watch('config.patternIndex', (idx) => {
-                        const p = this.patterns[idx].canvas;
-                        this.config.patternColor1 = p.color || '#ffffff';
-                        this.config.patternColor2 = p.color2 || '#ffffff';
-                        this.draw();
-                    });
-                    
                     this.$watch('config.fontFamily', (val) => {
                         document.fonts.load(`bold 20px ${val}`).then(() => { this.draw(); });
                         setTimeout(() => this.draw(), 100);
@@ -292,31 +265,40 @@
                     this.config = JSON.parse(JSON.stringify(this.defaults));
                     this.bgType = 'pattern';
                     this.bgImageObj = null;
-                    
-                    // 初期パターンの色をセット
-                    const p = this.patterns[this.config.patternIndex].canvas;
-                    this.config.patternColor1 = p.color;
-                    this.config.patternColor2 = p.color2 || '#ffffff';
-
                     this.$nextTick(() => { if(this.bgType === 'pattern') this.updateThumbnails(); this.draw(); });
                 },
 
                 randomize() {
                     const fonts = ["'M PLUS Rounded 1c'", "'Zen Maru Gothic'", "'Noto Sans JP'", "'Noto Serif JP'", "'Potta One'", "'Yusei Magic'"];
                     const types = ['color', 'gradient', 'pattern'];
+                    const directions = ['r', 'l', 'b', 't', 'br', 'tr', 'circle', 'conic'];
+                    const crossTypes = ['gap', 'solid', 'dotted', 'stitch'];
+                    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+                    const randBool = () => Math.random() > 0.5;
                     const randColor = () => '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
 
-                    this.config.fontFamily = fonts[Math.floor(Math.random() * fonts.length)];
+                    this.config.fontFamily = pick(fonts);
                     this.config.textColor = randColor();
-                    this.bgType = types[Math.floor(Math.random() * types.length)];
-                    this.config.bgColor = randColor();
-                    this.config.gradientStart = randColor(); this.config.gradientEnd = randColor();
+                    this.config.textGlass = randBool();
+                    this.config.textShadow = randBool();
+                    this.config.labelRounded = randBool();
                     
+                    this.bgType = pick(types);
+                    this.config.bgColor = randColor();
+                    this.config.gradientStart = randColor();
+                    this.config.gradientEnd = randColor();
+                    this.config.gradientDirection = pick(directions);
                     this.config.patternIndex = Math.floor(Math.random() * this.patterns.length);
-                    // 柄の色もランダムに
-                    this.config.patternColor1 = randColor();
-                    this.config.patternColor2 = randColor();
+                    // ランダム時も適度なサイズに
                     this.config.patternScale = (Math.random() * 1.5 + 0.5).toFixed(1);
+
+                    this.config.cornerRadius = Math.floor(Math.random() * 200);
+                    this.config.gridEnabled = randBool();
+                    this.config.graphShadow = randBool();
+                    
+                    this.config.crossType = pick(crossTypes);
+                    this.config.crossColor = this.config.textColor; 
+                    this.config.crossWidth = Math.floor(Math.random() * 8) + 2;
 
                     if(this.bgType === 'pattern') this.updateThumbnails();
                     document.fonts.load(`bold 20px ${this.config.fontFamily}`).then(() => { this.draw(); });
@@ -328,7 +310,7 @@
                     const ctx = tempC.getContext('2d');
                     this.patterns.forEach(p => {
                         ctx.fillStyle = this.config.bgColor; ctx.fillRect(0, 0, 100, 100);
-                        // サムネイルはデフォルトの色（p.canvas）で描画
+                        // ★★★ 修正点: サムネイル作成時は倍率を 0.4 に固定して見やすくする ★★★
                         window.ChartPatternLibrary.draw(ctx, 100, 100, p.canvas, 0.4);
                         p.thumbUrl = tempC.toDataURL();
                     });
@@ -355,38 +337,42 @@
                         const y = (H - this.bgImageObj.height * scale) / 2;
                         ctx.drawImage(this.bgImageObj, x, y, this.bgImageObj.width * scale, this.bgImageObj.height * scale);
                     } else if (this.bgType === 'gradient') {
-                        const { gradientStart: st, gradientEnd: ed, gradientDirection: dir } = this.config;
                         let grd;
+                        const { gradientStart: st, gradientEnd: ed, gradientDirection: dir } = this.config;
                         if (dir === 'r') grd = ctx.createLinearGradient(0, 0, W, 0);
+                        else if (dir === 'l') grd = ctx.createLinearGradient(W, 0, 0, 0);
+                        else if (dir === 'b') grd = ctx.createLinearGradient(0, 0, 0, H);
+                        else if (dir === 't') grd = ctx.createLinearGradient(0, H, 0, 0);
                         else if (dir === 'br') grd = ctx.createLinearGradient(0, 0, W, H);
-                        else grd = ctx.createLinearGradient(0, 0, W, H); // 簡略化
-                        grd.addColorStop(0, st); grd.addColorStop(1, ed);
-                        ctx.fillStyle = grd; ctx.fillRect(0, 0, W, H);
+                        else if (dir === 'tr') grd = ctx.createLinearGradient(0, H, W, 0);
+                        else if (dir === 'circle') grd = ctx.createRadialGradient(W/2, H/2, 10, W/2, H/2, W/1.5);
+                        else grd = ctx.createLinearGradient(0, 0, W, H);
+                        
+                        grd.addColorStop(0, st);
+                        grd.addColorStop(0.4, st); 
+                        grd.addColorStop(1, ed);
+                        ctx.fillStyle = grd;
+                        ctx.fillRect(0, 0, W, H);
                     } else {
                         ctx.fillStyle = this.config.bgColor;
                         ctx.fillRect(0, 0, W, H);
                         if (this.bgType === 'pattern') {
-                            // ★★★ 色の上書きロジック ★★★
-                            const original = this.patterns[this.config.patternIndex].canvas;
-                            // ユーザーが選択した色を適用した新しいオブジェクトを作る
-                            const pForDraw = { 
-                                ...original, 
-                                color: this.config.patternColor1,
-                                color2: this.config.patternColor2
-                            };
-                            window.ChartPatternLibrary.draw(ctx, W, H, pForDraw, this.config.patternScale);
+                            // ★★★ 修正点: ユーザー指定の倍率 (patternScale) を適用 ★★★
+                            window.ChartPatternLibrary.draw(ctx, W, H, this.patterns[this.config.patternIndex].canvas, this.config.patternScale);
                         }
                     }
 
-                    // --- 以下、グラフ・文字描画（変更なし） ---
                     const chartSize = 980;
                     const chartX = (W - chartSize) / 2;
                     const chartY = (H - chartSize) / 2 + 100;
+
                     this.drawTextWrapped(ctx, this.config.title, W/2, 70, 70, 1000);
 
                     const gap = this.config.crossType === 'gap' ? 12 : 0;
                     const halfSize = (chartSize - gap) / 2;
-                    const cornerR = Math.min(this.config.cornerRadius, halfSize/2);
+                    const baseSize = this.config.crossType === 'gap' ? halfSize : chartSize;
+                    const maxR = baseSize / 2;
+                    const cornerR = Math.min(this.config.cornerRadius, maxR); 
 
                     if (this.config.graphShadow) {
                         ctx.shadowColor = "rgba(0, 0, 0, 0.2)"; ctx.shadowBlur = 30; ctx.shadowOffsetY = 15;
@@ -419,8 +405,10 @@
                     }
                     ctx.clip(); 
 
-                    if (this.config.gridEnabled) this.drawGrid(ctx, chartX, chartY, chartSize);
-                    
+                    if (this.config.gridEnabled) {
+                        this.drawGrid(ctx, chartX, chartY, chartSize);
+                    }
+
                     if (this.config.crossType !== 'gap') {
                         const crossColor = this.config.crossColor;
                         const crossW = this.config.crossWidth;
@@ -436,21 +424,135 @@
 
                     ctx.font = "bold 28px " + this.config.fontFamily;
                     const wmMetrics = ctx.measureText(this.config.watermark);
-                    const wmWidth = wmMetrics.width + 80; const wmX = W - 40; const wmY = H - 50; const wmCenterX = wmX - wmWidth/2;
+                    const wmWidth = wmMetrics.width + 80; 
+                    const wmX = W - 40; 
+                    const wmY = H - 50; 
+                    const wmCenterX = wmX - wmWidth/2;
+
                     this.drawText(ctx, this.config.watermark, wmX, wmY, 28, false, 'right');
-                    ctx.fillStyle = this.config.textColor; ctx.font = "bold 24px " + this.config.fontFamily;
-                    ctx.textAlign = "center"; ctx.fillText("テンプレート作成", wmCenterX, H - 90);
+
+                    ctx.fillStyle = this.config.textColor;
+                    ctx.font = "bold 24px " + this.config.fontFamily;
+                    ctx.textAlign = "center"; 
+                    ctx.fillText("テンプレート作成", wmCenterX, H - 90);
                 },
 
-                traceRoundRect(ctx, x, y, w, h, r) { const maxR = Math.min(w, h) / 2; r = Math.min(r, maxR); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); },
-                traceRoundRectComplex(ctx, x, y, w, h, radii) { const rTL = radii.tl || 0; const rTR = radii.tr || 0; const rBR = radii.br || 0; const rBL = radii.bl || 0; ctx.moveTo(x + rTL, y); ctx.lineTo(x + w - rTR, y); ctx.quadraticCurveTo(x + w, y, x + w, y + rTR); ctx.lineTo(x + w, y + h - rBR); ctx.quadraticCurveTo(x + w, y + h, x + w - rBR, y + h); ctx.lineTo(x + rBL, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - rBL); ctx.lineTo(x, y + rTL); ctx.quadraticCurveTo(x, y, x + rTL, y); },
-                drawGrid(ctx, x, y, size) { ctx.strokeStyle = "rgba(200, 200, 200, 0.5)"; ctx.lineWidth = 1; const step = 30; for (let i = x; i <= x + size; i += step) { ctx.beginPath(); ctx.moveTo(i, y); ctx.lineTo(i, y + size); ctx.stroke(); } for (let i = y; i <= y + size; i += step) { ctx.beginPath(); ctx.moveTo(x, i); ctx.lineTo(x + size, i); ctx.stroke(); } },
-                drawTextWrapped(ctx, text, x, y, fontSize, maxWidth) { if (!text) return; ctx.font = `bold ${fontSize}px ${this.config.fontFamily}`; const chars = text.split(''); const lines = []; let currentLine = ''; chars.forEach(char => { if (ctx.measureText(currentLine + char).width > maxWidth && currentLine.length > 0) { lines.push(currentLine); currentLine = char; } else { currentLine += char; } }); lines.push(currentLine); const paddingX = 60; const paddingY = 30; const lineHeight = fontSize * 1.3; let maxLineWidth = 0; lines.forEach(line => { const w = ctx.measureText(line).width; if (w > maxLineWidth) maxLineWidth = w; }); const bgW = maxLineWidth + paddingX; const bgH = (lineHeight * lines.length) + paddingY - (lineHeight - fontSize); const bgX = x - bgW/2; const bgY = y; if (this.config.textGlass) { if (this.config.textShadow) { ctx.shadowColor = "rgba(0,0,0,0.10)"; ctx.shadowBlur = 15; ctx.shadowOffsetY = 5; } ctx.fillStyle = "rgba(255, 255, 255, 0.95)"; ctx.beginPath(); if (this.config.labelRounded) this.traceRoundRect(ctx, bgX, bgY, bgW, bgH, 20); else ctx.rect(bgX, bgY, bgW, bgH); ctx.fill(); ctx.shadowColor = "transparent"; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3; ctx.stroke(); } ctx.fillStyle = this.config.textColor; ctx.textBaseline = "top"; ctx.textAlign = "center"; if (!this.config.textGlass && this.config.textShadow) { ctx.shadowColor = "rgba(255,255,255,0.8)"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; } lines.forEach((line, index) => { ctx.fillText(line, x, bgY + (paddingY/2) + (index * lineHeight)); }); ctx.shadowColor = "transparent"; },
-                drawText(ctx, text, x, y, fontSize, isTitle, align = 'center') { if (!text) return; ctx.font = `bold ${fontSize}px ${this.config.fontFamily}`; const metrics = ctx.measureText(text); const textW = metrics.width; const paddingX = 40; const paddingY = 20; const bgH = fontSize + paddingY; const bgW = textW + paddingX; let bgX = x - bgW/2; let bgY = y - bgH/2; if (align === 'right') bgX = x - bgW; if (this.config.textGlass) { if (this.config.textShadow) { ctx.shadowColor = "rgba(0,0,0,0.10)"; ctx.shadowBlur = 15; ctx.shadowOffsetY = 5; } ctx.fillStyle = "rgba(255, 255, 255, 0.95)"; ctx.beginPath(); if (this.config.labelRounded) this.traceRoundRect(ctx, bgX, bgY, bgW, bgH, 20); else ctx.rect(bgX, bgY, bgW, bgH); ctx.fill(); ctx.shadowColor = "transparent"; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3; ctx.stroke(); } ctx.fillStyle = this.config.textColor; ctx.textBaseline = "middle"; ctx.textAlign = "center"; if (!this.config.textGlass && this.config.textShadow) { ctx.shadowColor = "rgba(255,255,255,0.8)"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; } ctx.fillText(text, bgX + bgW/2, bgY + bgH/2 + (fontSize * 0.05)); ctx.shadowColor = "transparent"; },
-                drawTextVertical(ctx, text, x, y, fontSize) { if (!text) return; ctx.font = `bold ${fontSize}px ${this.config.fontFamily}`; const charArr = text.split(''); const paddingY = 40; const paddingX = 20; const bgW = fontSize + paddingX; const bgH = (fontSize * charArr.length) + paddingY + ((charArr.length-1) * 5); const bgX = x - bgW/2; const bgY = y - bgH/2; if (this.config.textGlass) { if (this.config.textShadow) { ctx.shadowColor = "rgba(0,0,0,0.10)"; ctx.shadowBlur = 15; ctx.shadowOffsetY = 5; } ctx.fillStyle = "rgba(255, 255, 255, 0.95)"; ctx.beginPath(); if (this.config.labelRounded) this.traceRoundRect(ctx, bgX, bgY, bgW, bgH, 20); else ctx.rect(bgX, bgY, bgW, bgH); ctx.fill(); ctx.shadowColor = "transparent"; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3; ctx.stroke(); } ctx.fillStyle = this.config.textColor; ctx.textBaseline = "middle"; ctx.textAlign = "center"; if (!this.config.textGlass && this.config.textShadow) { ctx.shadowColor = "rgba(255,255,255,0.8)"; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; } let currentY = bgY + (paddingY/2) + (fontSize/2); charArr.forEach(char => { ctx.fillText(char, x, currentY); currentY += fontSize + 5; }); ctx.shadowColor = "transparent"; },
-                drawDottedLine(ctx, x1, y1, x2, y2, color, width) { ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineCap = "round"; if (this.config.crossType === 'dotted') { ctx.setLineDash([0, 15]); ctx.lineWidth = width * 2; } else if (this.config.crossType === 'stitch') { ctx.setLineDash([15, 15]); ctx.lineWidth = width; } else { ctx.setLineDash([]); } ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.setLineDash([]); },
-                openPreview() { const canvas = this.$refs.canvas; this.preview.src = canvas.toDataURL('image/png'); this.preview.isOpen = true; },
-                downloadImage() { const canvas = this.$refs.canvas; const link = document.createElement('a'); link.download = `chart_${Date.now()}.png`; link.href = canvas.toDataURL('image/png'); link.click(); }
+                traceRoundRect(ctx, x, y, w, h, r) {
+                    const maxR = Math.min(w, h) / 2; r = Math.min(r, maxR);
+                    ctx.moveTo(x + r, y);
+                    ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r);
+                },
+                traceRoundRectComplex(ctx, x, y, w, h, radii) {
+                    const rTL = radii.tl || 0; const rTR = radii.tr || 0;
+                    const rBR = radii.br || 0; const rBL = radii.bl || 0;
+                    ctx.moveTo(x + rTL, y);
+                    ctx.lineTo(x + w - rTR, y); ctx.quadraticCurveTo(x + w, y, x + w, y + rTR);
+                    ctx.lineTo(x + w, y + h - rBR); ctx.quadraticCurveTo(x + w, y + h, x + w - rBR, y + h);
+                    ctx.lineTo(x + rBL, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - rBL);
+                    ctx.lineTo(x, y + rTL); ctx.quadraticCurveTo(x, y, x + rTL, y);
+                },
+
+                drawGrid(ctx, x, y, size) {
+                    ctx.strokeStyle = "rgba(200, 200, 200, 0.5)"; ctx.lineWidth = 1; const step = 30;
+                    for (let i = x; i <= x + size; i += step) { ctx.beginPath(); ctx.moveTo(i, y); ctx.lineTo(i, y + size); ctx.stroke(); }
+                    for (let i = y; i <= y + size; i += step) { ctx.beginPath(); ctx.moveTo(x, i); ctx.lineTo(x + size, i); ctx.stroke(); }
+                },
+
+                drawTextWrapped(ctx, text, x, y, fontSize, maxWidth) {
+                    if (!text) return;
+                    ctx.font = `bold ${fontSize}px ${this.config.fontFamily}`;
+                    const chars = text.split(''); const lines = []; let currentLine = '';
+                    chars.forEach(char => {
+                        if (ctx.measureText(currentLine + char).width > maxWidth && currentLine.length > 0) { lines.push(currentLine); currentLine = char; } else { currentLine += char; }
+                    });
+                    lines.push(currentLine);
+                    const paddingX = 60; const paddingY = 30; const lineHeight = fontSize * 1.3;
+                    let maxLineWidth = 0; lines.forEach(line => { const w = ctx.measureText(line).width; if (w > maxLineWidth) maxLineWidth = w; });
+                    const bgW = maxLineWidth + paddingX; const bgH = (lineHeight * lines.length) + paddingY - (lineHeight - fontSize);
+                    const bgX = x - bgW/2; const bgY = y;
+                    
+                    if (this.config.textGlass) {
+                        if (this.config.textShadow) { ctx.shadowColor = "rgba(0,0,0,0.10)"; ctx.shadowBlur = 15; ctx.shadowOffsetY = 5; }
+                        ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+                        ctx.beginPath(); 
+                        if (this.config.labelRounded) this.traceRoundRect(ctx, bgX, bgY, bgW, bgH, 20);
+                        else ctx.rect(bgX, bgY, bgW, bgH);
+                        ctx.fill();
+                        ctx.shadowColor = "transparent"; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3; ctx.stroke();
+                    }
+                    ctx.fillStyle = this.config.textColor; ctx.textBaseline = "top"; ctx.textAlign = "center";
+                    if (!this.config.textGlass && this.config.textShadow) { ctx.shadowColor = "rgba(255,255,255,0.8)"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; }
+                    lines.forEach((line, index) => { ctx.fillText(line, x, bgY + (paddingY/2) + (index * lineHeight)); });
+                    ctx.shadowColor = "transparent";
+                },
+                
+                drawText(ctx, text, x, y, fontSize, isTitle, align = 'center') {
+                    if (!text) return;
+                    ctx.font = `bold ${fontSize}px ${this.config.fontFamily}`;
+                    const metrics = ctx.measureText(text); const textW = metrics.width;
+                    const paddingX = 40; const paddingY = 20; const bgH = fontSize + paddingY; const bgW = textW + paddingX;
+                    let bgX = x - bgW/2; let bgY = y - bgH/2; if (align === 'right') bgX = x - bgW;
+                    
+                    if (this.config.textGlass) {
+                        if (this.config.textShadow) { ctx.shadowColor = "rgba(0,0,0,0.10)"; ctx.shadowBlur = 15; ctx.shadowOffsetY = 5; }
+                        ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+                        ctx.beginPath(); 
+                        if (this.config.labelRounded) this.traceRoundRect(ctx, bgX, bgY, bgW, bgH, 20);
+                        else ctx.rect(bgX, bgY, bgW, bgH);
+                        ctx.fill();
+                        ctx.shadowColor = "transparent"; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3; ctx.stroke();
+                    }
+                    ctx.fillStyle = this.config.textColor; ctx.textBaseline = "middle"; ctx.textAlign = "center";
+                    if (!this.config.textGlass && this.config.textShadow) { ctx.shadowColor = "rgba(255,255,255,0.8)"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; }
+                    ctx.fillText(text, bgX + bgW/2, bgY + bgH/2 + (fontSize * 0.05));
+                    ctx.shadowColor = "transparent";
+                },
+                
+                drawTextVertical(ctx, text, x, y, fontSize) {
+                    if (!text) return;
+                    ctx.font = `bold ${fontSize}px ${this.config.fontFamily}`;
+                    const charArr = text.split('');
+                    const paddingY = 40; const paddingX = 20; const bgW = fontSize + paddingX;
+                    const bgH = (fontSize * charArr.length) + paddingY + ((charArr.length-1) * 5);
+                    const bgX = x - bgW/2; const bgY = y - bgH/2;
+                    
+                    if (this.config.textGlass) {
+                        if (this.config.textShadow) { ctx.shadowColor = "rgba(0,0,0,0.10)"; ctx.shadowBlur = 15; ctx.shadowOffsetY = 5; }
+                        ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
+                        ctx.beginPath(); 
+                        if (this.config.labelRounded) this.traceRoundRect(ctx, bgX, bgY, bgW, bgH, 20);
+                        else ctx.rect(bgX, bgY, bgW, bgH);
+                        ctx.fill();
+                        ctx.shadowColor = "transparent"; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3; ctx.stroke();
+                    }
+                    ctx.fillStyle = this.config.textColor; ctx.textBaseline = "middle"; ctx.textAlign = "center";
+                    if (!this.config.textGlass && this.config.textShadow) { ctx.shadowColor = "rgba(255,255,255,0.8)"; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; }
+                    let currentY = bgY + (paddingY/2) + (fontSize/2);
+                    charArr.forEach(char => { ctx.fillText(char, x, currentY); currentY += fontSize + 5; });
+                    ctx.shadowColor = "transparent";
+                },
+                
+                drawDottedLine(ctx, x1, y1, x2, y2, color, width) {
+                    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineCap = "round";
+                    if (this.config.crossType === 'dotted') { ctx.setLineDash([0, 15]); ctx.lineWidth = width * 2; } 
+                    else if (this.config.crossType === 'stitch') { ctx.setLineDash([15, 15]); ctx.lineWidth = width; }
+                    else { ctx.setLineDash([]); }
+                    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.setLineDash([]);
+                },
+                
+                openPreview() {
+                    const canvas = this.$refs.canvas;
+                    this.preview.src = canvas.toDataURL('image/png');
+                    this.preview.isOpen = true;
+                },
+                
+                downloadImage() {
+                    const canvas = this.$refs.canvas;
+                    const link = document.createElement('a');
+                    link.download = `chart_${Date.now()}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                }
             }
         }
     </script>
