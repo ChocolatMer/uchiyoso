@@ -1,34 +1,134 @@
 /**
  * 柄（パターン）管理ライブラリ
- * Update: サイズ調整機能（Scale）に対応
+ * Update: ドット柄バリエーション追加（斜め・色違い・サイズ違い）、不要柄削除
  */
 
 (function() {
-    // ■■■ 1. 柄の設定データ (サイズは大きめのまま) ■■■
+    // ■■■ 1. 柄の設定データ ■■■
     const config = [
-        { id: 1, canvas: { type: 'dot', color: '#ffffff', size: 12, spacing: 60, opacity: 0.9 }, thumbUrl: '' },
-        { id: 2, canvas: { type: 'stripe', color: 'rgba(255,255,255,0.5)', width: 60 }, thumbUrl: '' },
-        { id: 3, canvas: { type: 'check', color: 'rgba(255,255,255,0.3)', size: 80 }, thumbUrl: '' },
-        { id: 4, canvas: { type: 'ichimatsu', color: 'rgba(255,255,255,0.4)', size: 80 }, thumbUrl: '' },
-        { id: 5, canvas: { type: 'argyle', color: 'rgba(255,255,255,0.3)', size: 120 }, thumbUrl: '' },
-        { id: 6, canvas: { type: 'heart', color: 'rgba(255,255,255,0.7)', size: 50, spacing: 110 }, thumbUrl: '' },
-        { id: 7, canvas: { type: 'star', color: 'rgba(255,255,255,0.8)', size: 40, spacing: 100 }, thumbUrl: '' },
-        { id: 8, canvas: { type: 'diagonal', color: 'rgba(255,255,255,0.4)', width: 50 }, thumbUrl: '' }
+        // 1. 斜めドット（CSSの.bg_skew_dotを再現）
+        // spacingがCSSのbackground-sizeに相当します
+        { 
+            id: 1, 
+            canvas: { type: 'dot-skew', color: '#ffffff', size: 10, spacing: 60, opacity: 0.9 }, 
+            thumbUrl: '' 
+        },
+        // 2. 太いボーダー（既存）
+        { 
+            id: 2, 
+            canvas: { type: 'stripe', color: 'rgba(255,255,255,0.5)', width: 60 }, 
+            thumbUrl: '' 
+        },
+        // 3. 大きなチェック（既存）
+        { 
+            id: 3, 
+            canvas: { type: 'check', color: 'rgba(255,255,255,0.3)', size: 80 }, 
+            thumbUrl: '' 
+        },
+        // 4. 大きな市松模様（既存）
+        { 
+            id: 4, 
+            canvas: { type: 'ichimatsu', color: 'rgba(255,255,255,0.4)', size: 80 }, 
+            thumbUrl: '' 
+        },
+        // 5. ビッグアーガイル（既存）
+        { 
+            id: 5, 
+            canvas: { type: 'argyle', color: 'rgba(255,255,255,0.3)', size: 120 }, 
+            thumbUrl: '' 
+        },
+        // 6. ドット色違い（CSSの.is-mixを再現）
+        // color2を追加で指定します
+        {
+            id: 6,
+            canvas: { 
+                type: 'dot-mix', 
+                color: 'rgba(180, 243, 234, 0.8)', // 色1
+                color2: 'rgba(255, 188, 188, 0.8)', // 色2
+                size: 15, 
+                spacing: 60 
+            },
+            thumbUrl: ''
+        },
+        // 7. ドットサイズ違い（CSSの.is-sizeを再現）
+        // size（小）と size2（大）を指定します
+        {
+            id: 7,
+            canvas: { 
+                type: 'dot-size', 
+                color: 'rgba(255, 255, 255, 0.8)', 
+                size: 10, // 小さい円
+                size2: 25, // 大きい円
+                spacing: 70 
+            },
+            thumbUrl: ''
+        }
     ];
 
     // ■■■ 2. 描画ロジック ■■■
-    // 第5引数に scale (倍率) を追加しました。デフォルトは 1.0 です。
     function draw(ctx, w, h, p, scale = 1.0) {
         const tempCanvas = document.createElement('canvas');
         const tCtx = tempCanvas.getContext('2d');
+        // opacityプロパティがあれば適用（dot-mixなどは個別色指定のため除外推奨だが一応残す）
         if (p.opacity) tCtx.globalAlpha = p.opacity;
 
-        if (p.type === 'dot') {
-            const s = p.spacing * scale; 
+        // --- 共通変数 ---
+        const s = p.spacing * scale; // パターンの1マスの大きさ
+
+        // ▼ 1. 斜めドット (dot-skew) ▼
+        if (p.type === 'dot-skew') {
             const sz = p.size * scale;
             tempCanvas.width = s; tempCanvas.height = s;
-            tCtx.fillStyle = p.color; tCtx.beginPath(); tCtx.arc(s/2, s/2, sz, 0, Math.PI*2); tCtx.fill();
+            tCtx.fillStyle = p.color;
+            
+            // 5の目のように描画することで斜め配置を再現
+            // 1. 真ん中に1つ
+            tCtx.beginPath(); tCtx.arc(s/2, s/2, sz, 0, Math.PI*2); tCtx.fill();
+            // 2. 四隅に1/4ずつ（これでリピートした時に繋がる）
+            tCtx.beginPath(); 
+            tCtx.arc(0, 0, sz, 0, Math.PI*2); 
+            tCtx.arc(s, 0, sz, 0, Math.PI*2);
+            tCtx.arc(0, s, sz, 0, Math.PI*2);
+            tCtx.arc(s, s, sz, 0, Math.PI*2);
+            tCtx.fill();
         } 
+        // ▼ 6. ドット色違い (dot-mix) ▼
+        else if (p.type === 'dot-mix') {
+            const sz = p.size * scale;
+            tempCanvas.width = s; tempCanvas.height = s;
+
+            // 色1で真ん中
+            tCtx.fillStyle = p.color;
+            tCtx.beginPath(); tCtx.arc(s/2, s/2, sz, 0, Math.PI*2); tCtx.fill();
+
+            // 色2で四隅
+            tCtx.fillStyle = p.color2;
+            tCtx.beginPath(); 
+            tCtx.arc(0, 0, sz, 0, Math.PI*2); 
+            tCtx.arc(s, 0, sz, 0, Math.PI*2);
+            tCtx.arc(0, s, sz, 0, Math.PI*2);
+            tCtx.arc(s, s, sz, 0, Math.PI*2);
+            tCtx.fill();
+        }
+        // ▼ 7. ドットサイズ違い (dot-size) ▼
+        else if (p.type === 'dot-size') {
+            const sz1 = p.size * scale;  // 小
+            const sz2 = p.size2 * scale; // 大
+            tempCanvas.width = s; tempCanvas.height = s;
+            tCtx.fillStyle = p.color;
+
+            // サイズ1で真ん中
+            tCtx.beginPath(); tCtx.arc(s/2, s/2, sz1, 0, Math.PI*2); tCtx.fill();
+
+            // サイズ2で四隅
+            tCtx.beginPath(); 
+            tCtx.arc(0, 0, sz2, 0, Math.PI*2); 
+            tCtx.arc(s, 0, sz2, 0, Math.PI*2);
+            tCtx.arc(0, s, sz2, 0, Math.PI*2);
+            tCtx.arc(s, s, sz2, 0, Math.PI*2);
+            tCtx.fill();
+        }
+        // --- 既存の柄 ---
         else if (p.type === 'ichimatsu') {
             const sz = p.size * scale;
             tempCanvas.width = sz * 2; tempCanvas.height = sz * 2;
@@ -58,41 +158,6 @@
             tCtx.strokeStyle = "rgba(255,255,255,0.6)"; tCtx.lineWidth = 1 * scale;
             tCtx.beginPath(); tCtx.moveTo(0,0); tCtx.lineTo(sz, sz); tCtx.moveTo(sz,0); tCtx.lineTo(0, sz); tCtx.stroke();
         } 
-        else if (p.type === 'heart') {
-            const s = p.spacing * scale;
-            const hs = p.size * scale;
-            tempCanvas.width = s; tempCanvas.height = s;
-            tCtx.fillStyle = p.color;
-            const hx = s/2; const hy = s/2;
-            tCtx.beginPath();
-            tCtx.moveTo(hx, hy + hs/2);
-            tCtx.bezierCurveTo(hx - hs, hy - hs/2, hx - hs, hy - hs, hx, hy - hs/2);
-            tCtx.bezierCurveTo(hx + hs, hy - hs, hx + hs, hy - hs/2, hx, hy + hs/2);
-            tCtx.fill();
-        } 
-        else if (p.type === 'star') {
-            const s = p.spacing * scale;
-            const sz = p.size * scale;
-            tempCanvas.width = s; tempCanvas.height = s;
-            tCtx.fillStyle = p.color;
-            const cx = s/2; const cy = s/2;
-            const spikes = 5; const outerRadius = sz; const innerRadius = sz/2;
-            let rot = Math.PI / 2 * 3; let x = cx; let y = cy; const step = Math.PI / spikes;
-            tCtx.beginPath(); tCtx.moveTo(cx, cy - outerRadius);
-            for (let i = 0; i < spikes; i++) {
-                x = cx + Math.cos(rot) * outerRadius; y = cy + Math.sin(rot) * outerRadius; tCtx.lineTo(x, y); rot += step;
-                x = cx + Math.cos(rot) * innerRadius; y = cy + Math.sin(rot) * innerRadius; tCtx.lineTo(x, y); rot += step;
-            }
-            tCtx.lineTo(cx, cy - outerRadius); tCtx.fill();
-        } 
-        else if (p.type === 'diagonal') {
-            const w = p.width * scale;
-            const size = w * 2;
-            tempCanvas.width = size; tempCanvas.height = size;
-            tCtx.strokeStyle = p.color; tCtx.lineWidth = w/2; tCtx.lineCap = 'butt';
-            tCtx.beginPath(); tCtx.moveTo(-w, size); tCtx.lineTo(size, -w); tCtx.stroke();
-            tCtx.beginPath(); tCtx.moveTo(0, size + w); tCtx.lineTo(size + w, 0); tCtx.stroke();
-        }
 
         const pattern = ctx.createPattern(tempCanvas, 'repeat');
         ctx.fillStyle = pattern; ctx.fillRect(0, 0, w, h);
