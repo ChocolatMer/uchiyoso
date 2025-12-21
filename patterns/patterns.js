@@ -1,6 +1,31 @@
 /**
  * 柄（パターン）管理ライブラリ
- * Update: 円描画のバグ修正（パスの干渉による崩れを解消）
+ * 
+ * 【他ページでの利用・設定時の注意事項】
+ * 
+ * 1. 読み込み方法
+ *    HTML内で <script src="path/to/patterns.js"></script> を読み込んでください。
+ *    グローバル変数 window.ChartPatternLibrary が利用可能になります。
+ * 
+ * 2. 描画の実行 (draw関数)
+ *    window.ChartPatternLibrary.draw(ctx, width, height, patternObject, scale);
+ *    - ctx: Canvasの2Dコンテキスト
+ *    - width, height: 塗りつぶす範囲の幅と高さ
+ *    - patternObject: config配列内のオブジェクト（canvasプロパティ）
+ *    - scale: 柄の拡大率（1.0が基準）
+ * 
+ * 3. 色の変更について
+ *    patternObject の内容を複製し、color プロパティを書き換えてから draw に渡すと色が変更できます。
+ *    例: 
+ *    const p = { ...originalPattern.canvas, color: '#ff0000' };
+ *    ChartPatternLibrary.draw(ctx, w, h, p, 1.0);
+ *    
+ *    ※ type: 'dot-mix' の場合のみ color2 プロパティも必要です。
+ * 
+ * 4. 透明度について
+ *    各パターンには opacity (0.0~1.0) が設定されています。
+ *    色は「不透明なカラーコード(#RRGGBB)」で指定すると、自動的に opacity の透明度が適用され
+ *    綺麗に馴染みます。
  */
 
 (function() {
@@ -15,36 +40,37 @@
         // 2. 太いボーダー
         { 
             id: 2, 
-            canvas: { type: 'stripe', color: 'rgba(255,255,255,0.5)', width: 60 }, 
+            canvas: { type: 'stripe', color: '#ffffff', width: 60, opacity: 0.5 }, 
             thumbUrl: '' 
         },
         // 3. 大きなチェック
         { 
             id: 3, 
-            canvas: { type: 'check', color: 'rgba(255,255,255,0.3)', size: 80 }, 
+            canvas: { type: 'check', color: '#ffffff', size: 80, opacity: 0.3 }, 
             thumbUrl: '' 
         },
         // 4. 大きな市松模様
         { 
             id: 4, 
-            canvas: { type: 'ichimatsu', color: 'rgba(255,255,255,0.4)', size: 80 }, 
+            canvas: { type: 'ichimatsu', color: '#ffffff', size: 80, opacity: 0.4 }, 
             thumbUrl: '' 
         },
         // 5. ビッグアーガイル
         { 
             id: 5, 
-            canvas: { type: 'argyle', color: 'rgba(255,255,255,0.3)', size: 120 }, 
+            canvas: { type: 'argyle', color: '#ffffff', size: 120, opacity: 0.3 }, 
             thumbUrl: '' 
         },
-        // 6. ドット色違い
+        // 6. ドット色違い（2色使用）
         {
             id: 6,
             canvas: { 
                 type: 'dot-mix', 
-                color: 'rgba(180, 243, 234, 0.8)', // 色1
-                color2: 'rgba(255, 188, 188, 0.8)', // 色2
+                color: '#b4f3ea', // 色1 (初期値: 水色系)
+                color2: '#ffbcbc', // 色2 (初期値: ピンク系)
                 size: 15, 
-                spacing: 60 
+                spacing: 60,
+                opacity: 0.9
             },
             thumbUrl: ''
         },
@@ -53,10 +79,11 @@
             id: 7,
             canvas: { 
                 type: 'dot-size', 
-                color: 'rgba(255, 255, 255, 0.8)', 
-                size: 10, // 小
-                size2: 25, // 大
-                spacing: 70 
+                color: '#ffffff', 
+                size: 10, 
+                size2: 25, 
+                spacing: 70,
+                opacity: 0.8
             },
             thumbUrl: ''
         }
@@ -66,52 +93,44 @@
     function draw(ctx, w, h, p, scale = 1.0) {
         const tempCanvas = document.createElement('canvas');
         const tCtx = tempCanvas.getContext('2d');
+        
+        // 透明度を一括適用（これにより色は不透明でも馴染みます）
         if (p.opacity) tCtx.globalAlpha = p.opacity;
 
         const s = p.spacing * scale;
 
-        // ▼ 1. 斜めドット (修正：円ごとにパスをリセット)
+        // ▼ 1. 斜めドット
         if (p.type === 'dot-skew') {
             const sz = p.size * scale;
             tempCanvas.width = s; tempCanvas.height = s;
             tCtx.fillStyle = p.color;
-            
-            // 真ん中
             tCtx.beginPath(); tCtx.arc(s/2, s/2, sz, 0, Math.PI*2); tCtx.fill();
-            
-            // 四隅 (ひとつずつ描画)
             tCtx.beginPath(); tCtx.arc(0, 0, sz, 0, Math.PI*2); tCtx.fill();
             tCtx.beginPath(); tCtx.arc(s, 0, sz, 0, Math.PI*2); tCtx.fill();
             tCtx.beginPath(); tCtx.arc(0, s, sz, 0, Math.PI*2); tCtx.fill();
             tCtx.beginPath(); tCtx.arc(s, s, sz, 0, Math.PI*2); tCtx.fill();
         } 
-        // ▼ 6. ドット色違い (修正：円ごとにパスをリセット)
+        // ▼ 6. ドット色違い (2色対応)
         else if (p.type === 'dot-mix') {
             const sz = p.size * scale;
             tempCanvas.width = s; tempCanvas.height = s;
-
             // 色1
             tCtx.fillStyle = p.color;
             tCtx.beginPath(); tCtx.arc(s/2, s/2, sz, 0, Math.PI*2); tCtx.fill();
-
             // 色2
-            tCtx.fillStyle = p.color2;
+            tCtx.fillStyle = p.color2 || p.color; // color2がない場合はcolor1を使う
             tCtx.beginPath(); tCtx.arc(0, 0, sz, 0, Math.PI*2); tCtx.fill();
             tCtx.beginPath(); tCtx.arc(s, 0, sz, 0, Math.PI*2); tCtx.fill();
             tCtx.beginPath(); tCtx.arc(0, s, sz, 0, Math.PI*2); tCtx.fill();
             tCtx.beginPath(); tCtx.arc(s, s, sz, 0, Math.PI*2); tCtx.fill();
         }
-        // ▼ 7. ドットサイズ違い (修正：円ごとにパスをリセット)
+        // ▼ 7. ドットサイズ違い
         else if (p.type === 'dot-size') {
             const sz1 = p.size * scale;
             const sz2 = p.size2 * scale;
             tempCanvas.width = s; tempCanvas.height = s;
             tCtx.fillStyle = p.color;
-
-            // サイズ1
             tCtx.beginPath(); tCtx.arc(s/2, s/2, sz1, 0, Math.PI*2); tCtx.fill();
-
-            // サイズ2
             tCtx.beginPath(); tCtx.arc(0, 0, sz2, 0, Math.PI*2); tCtx.fill();
             tCtx.beginPath(); tCtx.arc(s, 0, sz2, 0, Math.PI*2); tCtx.fill();
             tCtx.beginPath(); tCtx.arc(0, s, sz2, 0, Math.PI*2); tCtx.fill();
