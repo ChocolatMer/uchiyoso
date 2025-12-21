@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChartMaker Pro (Final v12 Preview Fix)</title>
+    <title>ChartMaker Pro</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,9 +12,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
 
-    <!-- ▼▼▼ パス修正: 親階層を経由して patterns.js を読み込み ▼▼▼ -->
+    <!-- ▼ 親階層の patterns.js を読み込み -->
     <script src="../patterns/patterns.js"></script>
-    <!-- ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲ -->
 
     <script>
         tailwind.config = {
@@ -27,9 +26,7 @@
             }
         }
     </script>
-    <style>
-        body { font-family: "Noto Sans JP", sans-serif; }
-    </style>
+    <style> body { font-family: "Noto Sans JP", sans-serif; } </style>
 </head>
 <body class="bg-gray-50 text-gray-800 antialiased" x-data="canvasApp()">
 
@@ -41,15 +38,9 @@
             </div>
             
             <div class="flex items-center gap-2">
-                <button @click="reset()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-full font-bold shadow-md transition flex items-center gap-1 text-sm">
-                    <span>↺</span> リセット
-                </button>
-                <button @click="randomize()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-full font-bold shadow-md transition flex items-center gap-1 text-sm">
-                    <span>🎲</span> ランダム
-                </button>
-                <button @click="openPreview()" class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-full font-bold shadow-md transition flex items-center gap-1 text-sm">
-                    <span>👁️</span> プレビュー
-                </button>
+                <button @click="reset()" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-full font-bold shadow-md transition flex items-center gap-1 text-sm"><span>↺</span> リセット</button>
+                <button @click="randomize()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-full font-bold shadow-md transition flex items-center gap-1 text-sm"><span>🎲</span> ランダム</button>
+                <button @click="openPreview()" class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded-full font-bold shadow-md transition flex items-center gap-1 text-sm"><span>👁️</span> プレビュー</button>
                 <button @click="downloadImage()" class="bg-pink-500 hover:bg-pink-600 text-white px-5 py-2 rounded-full font-bold shadow-md transition flex items-center gap-2 text-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     画像を保存
@@ -59,11 +50,9 @@
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-8">
-        
         <div class="lg:col-span-4 space-y-6 mb-8 lg:mb-0">
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
                 <h2 class="text-lg font-bold mb-4 border-b pb-2">✍️ 文字・ラベル設定</h2>
-                
                 <div class="space-y-4">
                     <div><label class="text-xs font-bold text-gray-500">タイトル</label><input type="text" x-model="config.title" @input="draw()" class="w-full border p-2 rounded bg-gray-50"></div>
                     <div class="grid grid-cols-2 gap-2">
@@ -72,7 +61,6 @@
                         <div><label class="text-xs font-bold text-gray-400">左</label><input type="text" x-model="config.labelLeft" @input="draw()" class="w-full border p-2 rounded bg-gray-50"></div>
                         <div><label class="text-xs font-bold text-gray-400">右</label><input type="text" x-model="config.labelRight" @input="draw()" class="w-full border p-2 rounded bg-gray-50"></div>
                     </div>
-
                     <div>
                         <label class="text-xs font-bold text-gray-500">フォント</label>
                         <select x-model="config.fontFamily" class="w-full border p-2 rounded bg-gray-50 cursor-pointer">
@@ -84,7 +72,6 @@
                             <option value="'Yusei Magic'">手書き風</option>
                         </select>
                     </div>
-
                     <div class="grid grid-cols-2 gap-2">
                         <div><label class="text-xs font-bold text-gray-500">文字色</label><input type="color" x-model="config.textColor" @input="draw()" class="w-full h-8 rounded cursor-pointer"></div>
                         <div><label class="text-xs font-bold text-gray-500">文字背景</label><button @click="config.textGlass = !config.textGlass; draw()" class="w-full h-8 rounded text-xs font-bold transition" :class="config.textGlass ? 'bg-pink-500 text-white' : 'bg-gray-200'">枠あり</button></div>
@@ -109,9 +96,7 @@
                         <input type="color" x-model="config.bgColor" @input="updateThumbnails(); draw()" class="w-full h-8 mb-2 rounded cursor-pointer">
                         <div class="grid grid-cols-5 gap-2">
                             <template x-for="(p, idx) in patterns">
-                                <button @click="config.patternIndex = idx; draw()" 
-                                        class="aspect-square rounded-lg border hover:ring-2 ring-pink-400 relative overflow-hidden"
-                                        :class="config.patternIndex === idx ? 'ring-2 ring-pink-500' : ''">
+                                <button @click="config.patternIndex = idx; draw()" class="aspect-square rounded-lg border hover:ring-2 ring-pink-400 relative overflow-hidden" :class="config.patternIndex === idx ? 'ring-2 ring-pink-500' : ''">
                                     <div class="absolute inset-0 bg-cover bg-center" :style="`background-image: url(${p.thumbUrl});`"></div>
                                 </button>
                             </template>
@@ -119,59 +104,23 @@
                     </div>
 
                     <div x-show="bgType==='gradient'" class="space-y-2">
-                        <div class="flex gap-2">
-                            <input type="color" x-model="config.gradientStart" @input="draw()" class="h-8 w-full rounded cursor-pointer">
-                            <span class="text-gray-400">→</span>
-                            <input type="color" x-model="config.gradientEnd" @input="draw()" class="h-8 w-full rounded cursor-pointer">
-                        </div>
+                        <div class="flex gap-2"><input type="color" x-model="config.gradientStart" @input="draw()" class="h-8 w-full rounded cursor-pointer"><span class="text-gray-400">→</span><input type="color" x-model="config.gradientEnd" @input="draw()" class="h-8 w-full rounded cursor-pointer"></div>
                         <div class="grid grid-cols-4 gap-2">
-                            <template x-for="dir in gradientDirections">
-                                <button @click="config.gradientDirection = dir.value; draw()" 
-                                        :class="config.gradientDirection === dir.value ? 'ring-2 ring-pink-500 bg-gray-100' : 'border bg-white'"
-                                        class="h-8 rounded flex items-center justify-center text-sm" x-text="dir.icon">
-                                </button>
-                            </template>
+                            <template x-for="dir in gradientDirections"><button @click="config.gradientDirection = dir.value; draw()" :class="config.gradientDirection === dir.value ? 'ring-2 ring-pink-500 bg-gray-100' : 'border bg-white'" class="h-8 rounded flex items-center justify-center text-sm" x-text="dir.icon"></button></template>
                         </div>
                     </div>
-                    
-                    <div x-show="bgType==='color'">
-                        <input type="color" x-model="config.bgColor" @input="draw()" class="w-full h-10 rounded cursor-pointer">
-                    </div>
-
-                    <div x-show="bgType==='image'">
-                        <input type="file" @change="handleImageUpload" accept="image/*" class="text-xs w-full">
-                        <button @click="bgImageObj=null; draw()" class="text-xs text-red-500 mt-2">画像を削除</button>
-                    </div>
+                    <div x-show="bgType==='color'"><input type="color" x-model="config.bgColor" @input="draw()" class="w-full h-10 rounded cursor-pointer"></div>
+                    <div x-show="bgType==='image'"><input type="file" @change="handleImageUpload" accept="image/*" class="text-xs w-full"><button @click="bgImageObj=null; draw()" class="text-xs text-red-500 mt-2">画像を削除</button></div>
 
                     <hr class="border-gray-100">
-                    
                     <div class="space-y-3">
                         <div class="flex justify-between items-center"><span class="text-xs font-bold text-gray-500">角の丸み</span><input type="range" min="0" max="450" x-model="config.cornerRadius" @input="draw()" class="w-32"></div>
-                        
                         <div class="grid grid-cols-2 gap-2">
-                            <div class="flex items-center justify-between bg-gray-50 p-2 rounded-lg border">
-                                <span class="text-xs text-gray-500">方眼紙</span>
-                                <button @click="config.gridEnabled = !config.gridEnabled; draw()" :class="config.gridEnabled ? 'bg-pink-500' : 'bg-gray-300'" class="w-8 h-4 rounded-full relative transition"><span :class="config.gridEnabled ? 'translate-x-4' : 'translate-x-0'" class="absolute left-0 top-0 w-4 h-4 bg-white rounded-full shadow transition transform"></span></button>
-                            </div>
-                            <div class="flex items-center justify-between bg-gray-50 p-2 rounded-lg border">
-                                <span class="text-xs text-gray-500">グラフの影</span>
-                                <button @click="config.graphShadow = !config.graphShadow; draw()" :class="config.graphShadow ? 'bg-pink-500' : 'bg-gray-300'" class="w-8 h-4 rounded-full relative transition"><span :class="config.graphShadow ? 'translate-x-4' : 'translate-x-0'" class="absolute left-0 top-0 w-4 h-4 bg-white rounded-full shadow transition transform"></span></button>
-                            </div>
+                            <div class="flex items-center justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-xs text-gray-500">方眼紙</span><button @click="config.gridEnabled = !config.gridEnabled; draw()" :class="config.gridEnabled ? 'bg-pink-500' : 'bg-gray-300'" class="w-8 h-4 rounded-full relative transition"><span :class="config.gridEnabled ? 'translate-x-4' : 'translate-x-0'" class="absolute left-0 top-0 w-4 h-4 bg-white rounded-full shadow transition transform"></span></button></div>
+                            <div class="flex items-center justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-xs text-gray-500">グラフの影</span><button @click="config.graphShadow = !config.graphShadow; draw()" :class="config.graphShadow ? 'bg-pink-500' : 'bg-gray-300'" class="w-8 h-4 rounded-full relative transition"><span :class="config.graphShadow ? 'translate-x-4' : 'translate-x-0'" class="absolute left-0 top-0 w-4 h-4 bg-white rounded-full shadow transition transform"></span></button></div>
                         </div>
-
-                        <div>
-                            <label class="text-xs text-gray-500 block mb-1">十字線のスタイル</label>
-                            <select x-model="config.crossType" @change="draw()" class="w-full border p-2 rounded-lg text-xs bg-gray-50">
-                                <option value="gap">透過</option>
-                                <option value="solid">実線</option>
-                                <option value="dotted">点線</option>
-                                <option value="stitch">縫い目</option>
-                            </select>
-                        </div>
-                        <div x-show="config.crossType !== 'gap'" class="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-100">
-                            <input type="color" x-model="config.crossColor" @input="draw()" class="h-6 w-6 p-0 border-0 rounded cursor-pointer">
-                            <input type="range" min="1" max="10" x-model="config.crossWidth" @input="draw()" class="w-20 h-1.5 bg-gray-200 rounded-lg accent-pink-500 cursor-pointer">
-                        </div>
+                        <div><label class="text-xs text-gray-500 block mb-1">十字線のスタイル</label><select x-model="config.crossType" @change="draw()" class="w-full border p-2 rounded-lg text-xs bg-gray-50"><option value="gap">透過</option><option value="solid">実線</option><option value="dotted">点線</option><option value="stitch">縫い目</option></select></div>
+                        <div x-show="config.crossType !== 'gap'" class="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border border-gray-100"><input type="color" x-model="config.crossColor" @input="draw()" class="h-6 w-6 p-0 border-0 rounded cursor-pointer"><input type="range" min="1" max="10" x-model="config.crossWidth" @input="draw()" class="w-20 h-1.5 bg-gray-200 rounded-lg accent-pink-500 cursor-pointer"></div>
                     </div>
                 </div>
             </div>
@@ -183,78 +132,39 @@
                 <canvas x-ref="canvas" width="1200" height="1600" class="w-full h-auto max-w-[600px] mx-auto bg-white shadow-xl rounded-lg"></canvas>
             </div>
         </div>
-
     </main>
 
-    <div x-show="preview.isOpen" 
-         x-transition.opacity 
-         class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" 
-         style="display: none;">
-
-        <button @click="preview.isOpen = false" class="absolute top-4 right-4 text-white hover:text-gray-300 z-[100] bg-gray-800/50 rounded-full p-2 transition">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-        </button>
-
+    <div x-show="preview.isOpen" x-transition.opacity class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" style="display: none;">
+        <button @click="preview.isOpen = false" class="absolute top-4 right-4 text-white hover:text-gray-300 z-[100] bg-gray-800/50 rounded-full p-2 transition"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
         <div class="relative w-full h-full flex flex-col items-center justify-center" @click.self="preview.isOpen = false">
             <div x-show="!preview.src" class="text-white">読み込み中...</div>
-            
-            <img x-show="preview.src" 
-                 :src="preview.src" 
-                 class="max-w-full max-h-[85vh] object-contain shadow-2xl rounded-md" 
-                 title="右クリック/長押しで保存"
-                 @click.stop>
-            
-            <p class="text-white/80 mt-4 text-sm font-bold bg-black/50 px-4 py-2 rounded-full">
-                画像を長押し または 右クリックで保存できます
-            </p>
+            <img x-show="preview.src" :src="preview.src" class="max-w-full max-h-[85vh] object-contain shadow-2xl rounded-md" @click.stop>
+            <p class="text-white/80 mt-4 text-sm font-bold bg-black/50 px-4 py-2 rounded-full">画像を長押し または 右クリックで保存できます</p>
         </div>
     </div>
 
     <script>
         function canvasApp() {
             return {
-                bgType: 'pattern',
-                bgImageObj: null,
-                
-                // ★デフォルト値更新 (料理・小食/大食い)★
+                bgType: 'pattern', bgImageObj: null,
                 defaults: {
                     title: '料理作る子？食べれる子？',
                     labelTop: '自分で作る（プロレベル）', labelBottom: '作れない（壊滅的）',
-                    labelLeft: '小食', labelRight: '大食い',
-                    watermark: '＠chocolat mer',
-                    
-                    fontFamily: "'M PLUS Rounded 1c'",
-                    textColor: '#ec4899', textGlass: true, textShadow: true, labelRounded: true,
-                    
-                    bgColor: '#fbcfe8',
-                    gradientStart: '#fbcfe8', gradientEnd: '#a78bfa', gradientDirection: 'br',
-                    
-                    patternIndex: 4, 
-                    cornerRadius: 60,
-                    gridEnabled: true,
-                    graphShadow: true,
-                    
-                    crossType: 'gap', 
-                    crossColor: '#ec4899',
-                    crossWidth: 4,
+                    labelLeft: '小食', labelRight: '大食い', watermark: '＠chocolat mer',
+                    fontFamily: "'M PLUS Rounded 1c'", textColor: '#ec4899', textGlass: true, textShadow: true, labelRounded: true,
+                    bgColor: '#fbcfe8', gradientStart: '#fbcfe8', gradientEnd: '#a78bfa', gradientDirection: 'br',
+                    patternIndex: 4, cornerRadius: 60, gridEnabled: true, graphShadow: true,
+                    crossType: 'gap', crossColor: '#ec4899', crossWidth: 4,
                 },
-
                 config: {},
                 preview: { isOpen: false, src: null },
-
-                gradientDirections: [
-                    { value: 'r', icon: '→' }, { value: 'l', icon: '←' }, { value: 'b', icon: '↓' }, { value: 't', icon: '↑' },
-                    { value: 'br', icon: '↘' }, { value: 'tr', icon: '↗' }, { value: 'circle', icon: '◎' }, { value: 'conic', icon: '◑' },
-                ],
-
-                // ▼▼▼ patterns.js から読み込んだデータを使用 ▼▼▼
-                patterns: window.chartPatternsConfig || [],
-                // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+                gradientDirections: [ { value: 'r', icon: '→' }, { value: 'l', icon: '←' }, { value: 'b', icon: '↓' }, { value: 't', icon: '↑' }, { value: 'br', icon: '↘' }, { value: 'tr', icon: '↗' }, { value: 'circle', icon: '◎' }, { value: 'conic', icon: '◑' } ],
+                
+                // ★ データ取得もライブラリから ★
+                patterns: window.ChartPatternLibrary.config,
 
                 init() {
-                    // ★初期化★
                     this.reset();
-                    // ★フォント反映監視★
                     this.$watch('config.fontFamily', (val) => {
                         document.fonts.load(`bold 20px ${val}`).then(() => { this.draw(); });
                         setTimeout(() => this.draw(), 100);
@@ -262,7 +172,6 @@
                     document.fonts.ready.then(() => { this.updateThumbnails(); this.draw(); });
                 },
 
-                // ★リセット機能★
                 reset() {
                     this.config = JSON.parse(JSON.stringify(this.defaults));
                     this.bgType = 'pattern';
@@ -270,7 +179,6 @@
                     this.$nextTick(() => { if(this.bgType === 'pattern') this.updateThumbnails(); this.draw(); });
                 },
 
-                // ★ランダム機能★
                 randomize() {
                     const fonts = ["'M PLUS Rounded 1c'", "'Zen Maru Gothic'", "'Noto Sans JP'", "'Noto Serif JP'", "'Potta One'", "'Yusei Magic'"];
                     const types = ['color', 'gradient', 'pattern'];
@@ -280,26 +188,13 @@
                     const randBool = () => Math.random() > 0.5;
                     const randColor = () => '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
 
-                    this.config.fontFamily = pick(fonts);
-                    this.config.textColor = randColor();
-                    this.config.textGlass = randBool();
-                    this.config.textShadow = randBool();
-                    this.config.labelRounded = randBool();
-                    
-                    this.bgType = pick(types);
-                    this.config.bgColor = randColor();
-                    this.config.gradientStart = randColor();
-                    this.config.gradientEnd = randColor();
-                    this.config.gradientDirection = pick(directions);
+                    this.config.fontFamily = pick(fonts); this.config.textColor = randColor();
+                    this.config.textGlass = randBool(); this.config.textShadow = randBool(); this.config.labelRounded = randBool();
+                    this.bgType = pick(types); this.config.bgColor = randColor();
+                    this.config.gradientStart = randColor(); this.config.gradientEnd = randColor(); this.config.gradientDirection = pick(directions);
                     this.config.patternIndex = Math.floor(Math.random() * this.patterns.length);
-
-                    this.config.cornerRadius = Math.floor(Math.random() * 200);
-                    this.config.gridEnabled = randBool();
-                    this.config.graphShadow = randBool();
-                    
-                    this.config.crossType = pick(crossTypes);
-                    this.config.crossColor = this.config.textColor; 
-                    this.config.crossWidth = Math.floor(Math.random() * 8) + 2;
+                    this.config.cornerRadius = Math.floor(Math.random() * 200); this.config.gridEnabled = randBool(); this.config.graphShadow = randBool();
+                    this.config.crossType = pick(crossTypes); this.config.crossColor = this.config.textColor; this.config.crossWidth = Math.floor(Math.random() * 8) + 2;
 
                     if(this.bgType === 'pattern') this.updateThumbnails();
                     document.fonts.load(`bold 20px ${this.config.fontFamily}`).then(() => { this.draw(); });
@@ -311,7 +206,8 @@
                     const ctx = tempC.getContext('2d');
                     this.patterns.forEach(p => {
                         ctx.fillStyle = this.config.bgColor; ctx.fillRect(0, 0, 100, 100);
-                        this.drawPattern(ctx, 100, 100, p.canvas);
+                        // ★ 描画はライブラリ経由 ★
+                        window.ChartPatternLibrary.draw(ctx, 100, 100, p.canvas);
                         p.thumbUrl = tempC.toDataURL();
                     });
                 },
@@ -323,24 +219,17 @@
                     img.src = URL.createObjectURL(file);
                 },
 
-                // ■■■ 描画処理 (Canvas) ■■■
                 draw() {
-                    const canvas = this.$refs.canvas;
-                    const ctx = canvas.getContext('2d');
-                    const W = canvas.width;
-                    const H = canvas.height;
-
+                    const canvas = this.$refs.canvas; const ctx = canvas.getContext('2d');
+                    const W = canvas.width; const H = canvas.height;
                     ctx.clearRect(0, 0, W, H);
 
-                    // 1. 背景描画
                     if (this.bgType === 'image' && this.bgImageObj) {
                         const scale = Math.max(W / this.bgImageObj.width, H / this.bgImageObj.height);
-                        const x = (W - this.bgImageObj.width * scale) / 2;
-                        const y = (H - this.bgImageObj.height * scale) / 2;
+                        const x = (W - this.bgImageObj.width * scale) / 2; const y = (H - this.bgImageObj.height * scale) / 2;
                         ctx.drawImage(this.bgImageObj, x, y, this.bgImageObj.width * scale, this.bgImageObj.height * scale);
                     } else if (this.bgType === 'gradient') {
-                        let grd;
-                        const { gradientStart: st, gradientEnd: ed, gradientDirection: dir } = this.config;
+                        let grd; const { gradientStart: st, gradientEnd: ed, gradientDirection: dir } = this.config;
                         if (dir === 'r') grd = ctx.createLinearGradient(0, 0, W, 0);
                         else if (dir === 'l') grd = ctx.createLinearGradient(W, 0, 0, 0);
                         else if (dir === 'b') grd = ctx.createLinearGradient(0, 0, 0, H);
@@ -349,254 +238,73 @@
                         else if (dir === 'tr') grd = ctx.createLinearGradient(0, H, W, 0);
                         else if (dir === 'circle') grd = ctx.createRadialGradient(W/2, H/2, 10, W/2, H/2, W/1.5);
                         else grd = ctx.createLinearGradient(0, 0, W, H);
-                        
-                        grd.addColorStop(0, st);
-                        grd.addColorStop(0.4, st); // ★修正: グラデーション 
-                        grd.addColorStop(1, ed);
-                        ctx.fillStyle = grd;
-                        ctx.fillRect(0, 0, W, H);
+                        grd.addColorStop(0, st); grd.addColorStop(0.4, st); grd.addColorStop(1, ed);
+                        ctx.fillStyle = grd; ctx.fillRect(0, 0, W, H);
                     } else {
-                        ctx.fillStyle = this.config.bgColor;
-                        ctx.fillRect(0, 0, W, H);
+                        ctx.fillStyle = this.config.bgColor; ctx.fillRect(0, 0, W, H);
                         if (this.bgType === 'pattern') {
-                            this.drawPattern(ctx, W, H, this.patterns[this.config.patternIndex].canvas);
+                            // ★ 描画はライブラリ経由 ★
+                            window.ChartPatternLibrary.draw(ctx, W, H, this.patterns[this.config.patternIndex].canvas);
                         }
                     }
 
-                    // 2. グラフエリア定義
-                    const chartSize = 980;
-                    const chartX = (W - chartSize) / 2;
-                    const chartY = (H - chartSize) / 2 + 100;
-
-                    // 3. タイトル
+                    const chartSize = 980; const chartX = (W - chartSize) / 2; const chartY = (H - chartSize) / 2 + 100;
                     this.drawTextWrapped(ctx, this.config.title, W/2, 70, 70, 1000);
 
-                    // 4. グラフ本体
                     const gap = this.config.crossType === 'gap' ? 12 : 0;
                     const halfSize = (chartSize - gap) / 2;
                     const baseSize = this.config.crossType === 'gap' ? halfSize : chartSize;
                     const maxR = baseSize / 2;
                     const cornerR = Math.min(this.config.cornerRadius, maxR); 
 
-                    if (this.config.graphShadow) {
-                        ctx.shadowColor = "rgba(0, 0, 0, 0.2)"; ctx.shadowBlur = 30; ctx.shadowOffsetY = 15;
-                    } else {
-                        ctx.shadowColor = "transparent";
-                    }
-
-                    ctx.fillStyle = "#ffffff";
-                    ctx.beginPath();
+                    if (this.config.graphShadow) { ctx.shadowColor = "rgba(0, 0, 0, 0.2)"; ctx.shadowBlur = 30; ctx.shadowOffsetY = 15; } else { ctx.shadowColor = "transparent"; }
+                    ctx.fillStyle = "#ffffff"; ctx.beginPath();
                     if (this.config.crossType === 'gap') {
                         this.traceRoundRectComplex(ctx, chartX, chartY, halfSize, halfSize, {tl: cornerR});
                         this.traceRoundRectComplex(ctx, chartX + halfSize + gap, chartY, halfSize, halfSize, {tr: cornerR});
                         this.traceRoundRectComplex(ctx, chartX, chartY + halfSize + gap, halfSize, halfSize, {bl: cornerR});
                         this.traceRoundRectComplex(ctx, chartX + halfSize + gap, chartY + halfSize + gap, halfSize, halfSize, {br: cornerR});
-                    } else {
-                        this.traceRoundRect(ctx, chartX, chartY, chartSize, chartSize, cornerR);
-                    }
-                    ctx.fill(); 
-                    ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+                    } else { this.traceRoundRect(ctx, chartX, chartY, chartSize, chartSize, cornerR); }
+                    ctx.fill(); ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
 
-                    // 5. グリッド (クリッピング)
-                    ctx.save();
-                    ctx.beginPath(); 
+                    ctx.save(); ctx.beginPath(); 
                     if (this.config.crossType === 'gap') {
                         this.traceRoundRectComplex(ctx, chartX, chartY, halfSize, halfSize, {tl: cornerR});
                         this.traceRoundRectComplex(ctx, chartX + halfSize + gap, chartY, halfSize, halfSize, {tr: cornerR});
                         this.traceRoundRectComplex(ctx, chartX, chartY + halfSize + gap, halfSize, halfSize, {bl: cornerR});
                         this.traceRoundRectComplex(ctx, chartX + halfSize + gap, chartY + halfSize + gap, halfSize, halfSize, {br: cornerR});
-                    } else {
-                        this.traceRoundRect(ctx, chartX, chartY, chartSize, chartSize, cornerR);
-                    }
+                    } else { this.traceRoundRect(ctx, chartX, chartY, chartSize, chartSize, cornerR); }
                     ctx.clip(); 
-
-                    if (this.config.gridEnabled) {
-                        this.drawGrid(ctx, chartX, chartY, chartSize);
-                    }
-
+                    if (this.config.gridEnabled) { this.drawGrid(ctx, chartX, chartY, chartSize); }
                     if (this.config.crossType !== 'gap') {
-                        const crossColor = this.config.crossColor;
-                        const crossW = this.config.crossWidth;
+                        const crossColor = this.config.crossColor; const crossW = this.config.crossWidth;
                         this.drawDottedLine(ctx, chartX, chartY + chartSize/2, chartX + chartSize, chartY + chartSize/2, crossColor, crossW);
                         this.drawDottedLine(ctx, chartX + chartSize/2, chartY, chartX + chartSize/2, chartY + chartSize, crossColor, crossW);
                     }
                     ctx.restore();
 
-                    // 6. ラベル
                     this.drawText(ctx, this.config.labelTop, W/2, chartY - 52, 40, false);
                     this.drawText(ctx, this.config.labelBottom, W/2, chartY + chartSize + 52, 40, false);
                     this.drawTextVertical(ctx, this.config.labelLeft, chartX - 55, chartY + chartSize/2, 40);
                     this.drawTextVertical(ctx, this.config.labelRight, chartX + chartSize + 55, chartY + chartSize/2, 40);
 
-                    // 7. クレジットと「テンプレート作成」ラベル
                     ctx.font = "bold 28px " + this.config.fontFamily;
                     const wmMetrics = ctx.measureText(this.config.watermark);
-                    const wmWidth = wmMetrics.width + 80; 
-                    const wmX = W - 40; 
-                    const wmY = H - 50; 
-                    const wmCenterX = wmX - wmWidth/2;
-
+                    const wmWidth = wmMetrics.width + 80; const wmX = W - 40; const wmY = H - 50; const wmCenterX = wmX - wmWidth/2;
                     this.drawText(ctx, this.config.watermark, wmX, wmY, 28, false, 'right');
-
-                    ctx.fillStyle = this.config.textColor;
-                    ctx.font = "bold 24px " + this.config.fontFamily;
-                    ctx.textAlign = "center"; 
-                    ctx.fillText("テンプレート作成", wmCenterX, H - 90);
+                    ctx.fillStyle = this.config.textColor; ctx.font = "bold 24px " + this.config.fontFamily;
+                    ctx.textAlign = "center"; ctx.fillText("テンプレート作成", wmCenterX, H - 90);
                 },
 
-                // ■ パターン描画
-                drawPattern(ctx, w, h, p) {
-                    const tempCanvas = document.createElement('canvas');
-                    const tCtx = tempCanvas.getContext('2d');
-                    if (p.opacity) tCtx.globalAlpha = p.opacity;
-
-                    if (p.type === 'dot') {
-                        tempCanvas.width = p.spacing; tempCanvas.height = p.spacing;
-                        tCtx.fillStyle = p.color; tCtx.beginPath(); tCtx.arc(p.spacing/2, p.spacing/2, p.size, 0, Math.PI*2); tCtx.fill();
-                    } else if (p.type === 'ichimatsu') {
-                        tempCanvas.width = p.size * 2; tempCanvas.height = p.size * 2;
-                        tCtx.fillStyle = p.color; tCtx.fillRect(0, 0, p.size, p.size); tCtx.fillRect(p.size, p.size, p.size, p.size);
-                    } else if (p.type === 'stripe') {
-                        const size = p.width * 2;
-                        tempCanvas.width = size; tempCanvas.height = size;
-                        tCtx.fillStyle = p.color;
-                        tCtx.beginPath();
-                        tCtx.moveTo(0, size); tCtx.lineTo(size, 0); tCtx.lineTo(size + p.width, 0); tCtx.lineTo(p.width, size); tCtx.fill();
-                        tCtx.beginPath(); tCtx.moveTo(0, 0); tCtx.lineTo(p.width, 0); tCtx.lineTo(0, p.width); tCtx.fill();
-                    } else if (p.type === 'check') {
-                        tempCanvas.width = p.size; tempCanvas.height = p.size;
-                        tCtx.fillStyle = p.color; tCtx.fillRect(0, 0, p.size, p.size/2);
-                        tCtx.globalCompositeOperation = 'source-over'; 
-                        tCtx.fillStyle = p.color; tCtx.fillRect(0, 0, p.size/2, p.size);
-                    } else if (p.type === 'argyle') {
-                        tempCanvas.width = p.size; tempCanvas.height = p.size;
-                        tCtx.fillStyle = p.color;
-                        tCtx.beginPath(); tCtx.moveTo(p.size/2, 0); tCtx.lineTo(p.size, p.size/2); tCtx.lineTo(p.size/2, p.size); tCtx.lineTo(0, p.size/2); tCtx.fill();
-                        tCtx.strokeStyle = "rgba(255,255,255,0.6)"; tCtx.lineWidth = 1;
-                        tCtx.beginPath(); tCtx.moveTo(0,0); tCtx.lineTo(p.size, p.size); tCtx.moveTo(p.size,0); tCtx.lineTo(0, p.size); tCtx.stroke();
-                    }
-
-                    const pattern = ctx.createPattern(tempCanvas, 'repeat');
-                    ctx.fillStyle = pattern; ctx.fillRect(0, 0, w, h);
-                },
-
-                traceRoundRect(ctx, x, y, w, h, r) {
-                    const maxR = Math.min(w, h) / 2; r = Math.min(r, maxR);
-                    ctx.moveTo(x + r, y);
-                    ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r);
-                },
-                traceRoundRectComplex(ctx, x, y, w, h, radii) {
-                    const rTL = radii.tl || 0; const rTR = radii.tr || 0;
-                    const rBR = radii.br || 0; const rBL = radii.bl || 0;
-                    ctx.moveTo(x + rTL, y);
-                    ctx.lineTo(x + w - rTR, y); ctx.quadraticCurveTo(x + w, y, x + w, y + rTR);
-                    ctx.lineTo(x + w, y + h - rBR); ctx.quadraticCurveTo(x + w, y + h, x + w - rBR, y + h);
-                    ctx.lineTo(x + rBL, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - rBL);
-                    ctx.lineTo(x, y + rTL); ctx.quadraticCurveTo(x, y, x + rTL, y);
-                },
-
-                drawGrid(ctx, x, y, size) {
-                    ctx.strokeStyle = "rgba(200, 200, 200, 0.5)"; ctx.lineWidth = 1; const step = 30;
-                    for (let i = x; i <= x + size; i += step) { ctx.beginPath(); ctx.moveTo(i, y); ctx.lineTo(i, y + size); ctx.stroke(); }
-                    for (let i = y; i <= y + size; i += step) { ctx.beginPath(); ctx.moveTo(x, i); ctx.lineTo(x + size, i); ctx.stroke(); }
-                },
-
-                drawTextWrapped(ctx, text, x, y, fontSize, maxWidth) {
-                    if (!text) return;
-                    ctx.font = `bold ${fontSize}px ${this.config.fontFamily}`;
-                    const chars = text.split(''); const lines = []; let currentLine = '';
-                    chars.forEach(char => {
-                        if (ctx.measureText(currentLine + char).width > maxWidth && currentLine.length > 0) { lines.push(currentLine); currentLine = char; } else { currentLine += char; }
-                    });
-                    lines.push(currentLine);
-                    const paddingX = 60; const paddingY = 30; const lineHeight = fontSize * 1.3;
-                    let maxLineWidth = 0; lines.forEach(line => { const w = ctx.measureText(line).width; if (w > maxLineWidth) maxLineWidth = w; });
-                    const bgW = maxLineWidth + paddingX; const bgH = (lineHeight * lines.length) + paddingY - (lineHeight - fontSize);
-                    const bgX = x - bgW/2; const bgY = y;
-                    
-                    if (this.config.textGlass) {
-                        if (this.config.textShadow) { ctx.shadowColor = "rgba(0,0,0,0.10)"; ctx.shadowBlur = 15; ctx.shadowOffsetY = 5; }
-                        ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
-                        ctx.beginPath(); 
-                        if (this.config.labelRounded) this.traceRoundRect(ctx, bgX, bgY, bgW, bgH, 20);
-                        else ctx.rect(bgX, bgY, bgW, bgH);
-                        ctx.fill();
-                        ctx.shadowColor = "transparent"; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3; ctx.stroke();
-                    }
-                    ctx.fillStyle = this.config.textColor; ctx.textBaseline = "top"; ctx.textAlign = "center";
-                    if (!this.config.textGlass && this.config.textShadow) { ctx.shadowColor = "rgba(255,255,255,0.8)"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; }
-                    lines.forEach((line, index) => { ctx.fillText(line, x, bgY + (paddingY/2) + (index * lineHeight)); });
-                    ctx.shadowColor = "transparent";
-                },
-                
-                drawText(ctx, text, x, y, fontSize, isTitle, align = 'center') {
-                    if (!text) return;
-                    ctx.font = `bold ${fontSize}px ${this.config.fontFamily}`;
-                    const metrics = ctx.measureText(text); const textW = metrics.width;
-                    const paddingX = 40; const paddingY = 20; const bgH = fontSize + paddingY; const bgW = textW + paddingX;
-                    let bgX = x - bgW/2; let bgY = y - bgH/2; if (align === 'right') bgX = x - bgW;
-                    
-                    if (this.config.textGlass) {
-                        if (this.config.textShadow) { ctx.shadowColor = "rgba(0,0,0,0.10)"; ctx.shadowBlur = 15; ctx.shadowOffsetY = 5; }
-                        ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
-                        ctx.beginPath(); 
-                        if (this.config.labelRounded) this.traceRoundRect(ctx, bgX, bgY, bgW, bgH, 20);
-                        else ctx.rect(bgX, bgY, bgW, bgH);
-                        ctx.fill();
-                        ctx.shadowColor = "transparent"; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3; ctx.stroke();
-                    }
-                    ctx.fillStyle = this.config.textColor; ctx.textBaseline = "middle"; ctx.textAlign = "center";
-                    if (!this.config.textGlass && this.config.textShadow) { ctx.shadowColor = "rgba(255,255,255,0.8)"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; }
-                    ctx.fillText(text, bgX + bgW/2, bgY + bgH/2 + (fontSize * 0.05));
-                    ctx.shadowColor = "transparent";
-                },
-                
-                drawTextVertical(ctx, text, x, y, fontSize) {
-                    if (!text) return;
-                    ctx.font = `bold ${fontSize}px ${this.config.fontFamily}`;
-                    const charArr = text.split('');
-                    const paddingY = 40; const paddingX = 20; const bgW = fontSize + paddingX;
-                    const bgH = (fontSize * charArr.length) + paddingY + ((charArr.length-1) * 5);
-                    const bgX = x - bgW/2; const bgY = y - bgH/2;
-                    
-                    if (this.config.textGlass) {
-                        if (this.config.textShadow) { ctx.shadowColor = "rgba(0,0,0,0.10)"; ctx.shadowBlur = 15; ctx.shadowOffsetY = 5; }
-                        ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
-                        ctx.beginPath(); 
-                        if (this.config.labelRounded) this.traceRoundRect(ctx, bgX, bgY, bgW, bgH, 20);
-                        else ctx.rect(bgX, bgY, bgW, bgH);
-                        ctx.fill();
-                        ctx.shadowColor = "transparent"; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3; ctx.stroke();
-                    }
-                    ctx.fillStyle = this.config.textColor; ctx.textBaseline = "middle"; ctx.textAlign = "center";
-                    if (!this.config.textGlass && this.config.textShadow) { ctx.shadowColor = "rgba(255,255,255,0.8)"; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; }
-                    let currentY = bgY + (paddingY/2) + (fontSize/2);
-                    charArr.forEach(char => { ctx.fillText(char, x, currentY); currentY += fontSize + 5; });
-                    ctx.shadowColor = "transparent";
-                },
-                
-                drawDottedLine(ctx, x1, y1, x2, y2, color, width) {
-                    ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineCap = "round";
-                    if (this.config.crossType === 'dotted') { ctx.setLineDash([0, 15]); ctx.lineWidth = width * 2; } 
-                    else if (this.config.crossType === 'stitch') { ctx.setLineDash([15, 15]); ctx.lineWidth = width; }
-                    else { ctx.setLineDash([]); }
-                    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.setLineDash([]);
-                },
-                
-                // ★プレビュー表示 (修正箇所)★
-                openPreview() {
-                    const canvas = this.$refs.canvas;
-                    this.preview.src = canvas.toDataURL('image/png');
-                    this.preview.isOpen = true;
-                },
-                
-                downloadImage() {
-                    const canvas = this.$refs.canvas;
-                    const link = document.createElement('a');
-                    link.download = `chart_${Date.now()}.png`;
-                    link.href = canvas.toDataURL('image/png');
-                    link.click();
-                }
+                traceRoundRect(ctx, x, y, w, h, r) { const maxR = Math.min(w, h) / 2; r = Math.min(r, maxR); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); },
+                traceRoundRectComplex(ctx, x, y, w, h, radii) { const rTL = radii.tl || 0; const rTR = radii.tr || 0; const rBR = radii.br || 0; const rBL = radii.bl || 0; ctx.moveTo(x + rTL, y); ctx.lineTo(x + w - rTR, y); ctx.quadraticCurveTo(x + w, y, x + w, y + rTR); ctx.lineTo(x + w, y + h - rBR); ctx.quadraticCurveTo(x + w, y + h, x + w - rBR, y + h); ctx.lineTo(x + rBL, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - rBL); ctx.lineTo(x, y + rTL); ctx.quadraticCurveTo(x, y, x + rTL, y); },
+                drawGrid(ctx, x, y, size) { ctx.strokeStyle = "rgba(200, 200, 200, 0.5)"; ctx.lineWidth = 1; const step = 30; for (let i = x; i <= x + size; i += step) { ctx.beginPath(); ctx.moveTo(i, y); ctx.lineTo(i, y + size); ctx.stroke(); } for (let i = y; i <= y + size; i += step) { ctx.beginPath(); ctx.moveTo(x, i); ctx.lineTo(x + size, i); ctx.stroke(); } },
+                drawTextWrapped(ctx, text, x, y, fontSize, maxWidth) { if (!text) return; ctx.font = `bold ${fontSize}px ${this.config.fontFamily}`; const chars = text.split(''); const lines = []; let currentLine = ''; chars.forEach(char => { if (ctx.measureText(currentLine + char).width > maxWidth && currentLine.length > 0) { lines.push(currentLine); currentLine = char; } else { currentLine += char; } }); lines.push(currentLine); const paddingX = 60; const paddingY = 30; const lineHeight = fontSize * 1.3; let maxLineWidth = 0; lines.forEach(line => { const w = ctx.measureText(line).width; if (w > maxLineWidth) maxLineWidth = w; }); const bgW = maxLineWidth + paddingX; const bgH = (lineHeight * lines.length) + paddingY - (lineHeight - fontSize); const bgX = x - bgW/2; const bgY = y; if (this.config.textGlass) { if (this.config.textShadow) { ctx.shadowColor = "rgba(0,0,0,0.10)"; ctx.shadowBlur = 15; ctx.shadowOffsetY = 5; } ctx.fillStyle = "rgba(255, 255, 255, 0.95)"; ctx.beginPath(); if (this.config.labelRounded) this.traceRoundRect(ctx, bgX, bgY, bgW, bgH, 20); else ctx.rect(bgX, bgY, bgW, bgH); ctx.fill(); ctx.shadowColor = "transparent"; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3; ctx.stroke(); } ctx.fillStyle = this.config.textColor; ctx.textBaseline = "top"; ctx.textAlign = "center"; if (!this.config.textGlass && this.config.textShadow) { ctx.shadowColor = "rgba(255,255,255,0.8)"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; } lines.forEach((line, index) => { ctx.fillText(line, x, bgY + (paddingY/2) + (index * lineHeight)); }); ctx.shadowColor = "transparent"; },
+                drawText(ctx, text, x, y, fontSize, isTitle, align = 'center') { if (!text) return; ctx.font = `bold ${fontSize}px ${this.config.fontFamily}`; const metrics = ctx.measureText(text); const textW = metrics.width; const paddingX = 40; const paddingY = 20; const bgH = fontSize + paddingY; const bgW = textW + paddingX; let bgX = x - bgW/2; let bgY = y - bgH/2; if (align === 'right') bgX = x - bgW; if (this.config.textGlass) { if (this.config.textShadow) { ctx.shadowColor = "rgba(0,0,0,0.10)"; ctx.shadowBlur = 15; ctx.shadowOffsetY = 5; } ctx.fillStyle = "rgba(255, 255, 255, 0.95)"; ctx.beginPath(); if (this.config.labelRounded) this.traceRoundRect(ctx, bgX, bgY, bgW, bgH, 20); else ctx.rect(bgX, bgY, bgW, bgH); ctx.fill(); ctx.shadowColor = "transparent"; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3; ctx.stroke(); } ctx.fillStyle = this.config.textColor; ctx.textBaseline = "middle"; ctx.textAlign = "center"; if (!this.config.textGlass && this.config.textShadow) { ctx.shadowColor = "rgba(255,255,255,0.8)"; ctx.shadowBlur = 0; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; } ctx.fillText(text, bgX + bgW/2, bgY + bgH/2 + (fontSize * 0.05)); ctx.shadowColor = "transparent"; },
+                drawTextVertical(ctx, text, x, y, fontSize) { if (!text) return; ctx.font = `bold ${fontSize}px ${this.config.fontFamily}`; const charArr = text.split(''); const paddingY = 40; const paddingX = 20; const bgW = fontSize + paddingX; const bgH = (fontSize * charArr.length) + paddingY + ((charArr.length-1) * 5); const bgX = x - bgW/2; const bgY = y - bgH/2; if (this.config.textGlass) { if (this.config.textShadow) { ctx.shadowColor = "rgba(0,0,0,0.10)"; ctx.shadowBlur = 15; ctx.shadowOffsetY = 5; } ctx.fillStyle = "rgba(255, 255, 255, 0.95)"; ctx.beginPath(); if (this.config.labelRounded) this.traceRoundRect(ctx, bgX, bgY, bgW, bgH, 20); else ctx.rect(bgX, bgY, bgW, bgH); ctx.fill(); ctx.shadowColor = "transparent"; ctx.strokeStyle = "#ffffff"; ctx.lineWidth = 3; ctx.stroke(); } ctx.fillStyle = this.config.textColor; ctx.textBaseline = "middle"; ctx.textAlign = "center"; if (!this.config.textGlass && this.config.textShadow) { ctx.shadowColor = "rgba(255,255,255,0.8)"; ctx.shadowOffsetX = 2; ctx.shadowOffsetY = 2; } let currentY = bgY + (paddingY/2) + (fontSize/2); charArr.forEach(char => { ctx.fillText(char, x, currentY); currentY += fontSize + 5; }); ctx.shadowColor = "transparent"; },
+                drawDottedLine(ctx, x1, y1, x2, y2, color, width) { ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineCap = "round"; if (this.config.crossType === 'dotted') { ctx.setLineDash([0, 15]); ctx.lineWidth = width * 2; } else if (this.config.crossType === 'stitch') { ctx.setLineDash([15, 15]); ctx.lineWidth = width; } else { ctx.setLineDash([]); } ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.setLineDash([]); },
+                openPreview() { const canvas = this.$refs.canvas; this.preview.src = canvas.toDataURL('image/png'); this.preview.isOpen = true; },
+                downloadImage() { const canvas = this.$refs.canvas; const link = document.createElement('a'); link.download = `chart_${Date.now()}.png`; link.href = canvas.toDataURL('image/png'); link.click(); }
             }
         }
     </script>

@@ -30,7 +30,6 @@
                     animation: {
                         'float': 'float 6s ease-in-out infinite',
                         'bounce-slight': 'bounce-slight 2s infinite',
-                        'spin-slow': 'spin 10s linear infinite',
                     },
                     keyframes: {
                         float: {
@@ -57,19 +56,9 @@
             backdrop-filter: blur(10px);
             border: 2px solid rgba(255, 255, 255, 0.8);
         }
-        .pattern-btn {
-            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-        .pattern-btn:hover {
-            transform: scale(1.1) rotate(3deg);
-            box-shadow: 0 10px 15px -3px rgba(236, 72, 153, 0.3);
-            z-index: 10;
-        }
-        .pattern-btn.active {
-            transform: scale(1.05);
-            border-color: #ec4899;
-            box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.2);
-        }
+        .pattern-btn { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .pattern-btn:hover { transform: scale(1.1) rotate(3deg); box-shadow: 0 10px 15px -3px rgba(236, 72, 153, 0.3); z-index: 10; }
+        .pattern-btn.active { transform: scale(1.05); border-color: #ec4899; box-shadow: 0 0 0 4px rgba(236, 72, 153, 0.2); }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-700 antialiased overflow-x-hidden" x-data="canvasApp()">
@@ -77,116 +66,65 @@
     <!-- 背景装飾 -->
     <div class="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cute-pink/20 rounded-full blur-3xl animate-float"></div>
     <div class="fixed bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-cute-blue/20 rounded-full blur-3xl animate-float" style="animation-delay: 2s;"></div>
-    <div class="fixed top-[20%] right-[10%] w-[20%] h-[20%] bg-cute-yellow/30 rounded-full blur-3xl animate-float" style="animation-delay: 4s;"></div>
 
     <header class="glass-panel sticky top-4 mx-4 rounded-full z-50 shadow-sm mt-4">
         <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
             <div class="flex items-center gap-3 animate-float">
-                <div class="bg-gradient-to-tr from-cute-pink to-cute-purple text-white p-2 rounded-xl shadow-md">
-                    <span class="text-2xl">🎨</span>
-                </div>
-                <div>
-                    <h1 class="text-2xl font-pop text-gray-700 tracking-wider">Pattern Preview</h1>
-                    <p class="text-xs text-cute-pink font-bold">New Pop & Cute Collection</p>
-                </div>
+                <div class="bg-gradient-to-tr from-cute-pink to-cute-purple text-white p-2 rounded-xl shadow-md"><span class="text-2xl">🎨</span></div>
+                <div><h1 class="text-2xl font-pop text-gray-700 tracking-wider">Pattern Preview</h1></div>
             </div>
             
             <div class="flex items-center gap-3">
-                <button @click="reset()" class="bg-white hover:bg-cute-yellow text-gray-600 hover:text-gray-800 px-5 py-2.5 rounded-full font-bold shadow-sm hover:shadow-md transition border-2 border-gray-100 flex items-center gap-2 group">
-                    <span class="group-hover:-rotate-180 transition duration-500 block">↺</span> リセット
-                </button>
-                <button @click="randomize()" class="bg-gradient-to-r from-cute-purple to-pink-400 hover:from-pink-400 hover:to-cute-purple text-white px-6 py-2.5 rounded-full font-bold shadow-lg shadow-pink-200 transition transform hover:-translate-y-1 flex items-center gap-2">
-                    <span class="animate-bounce-slight">🎲</span> ランダム
-                </button>
-                <button @click="openPreview()" class="bg-gray-800 hover:bg-gray-700 text-white px-6 py-2.5 rounded-full font-bold shadow-lg transition transform hover:scale-105 flex items-center gap-2">
-                    <span>👁️</span> 確認する
-                </button>
+                <button @click="reset()" class="bg-white hover:bg-cute-yellow text-gray-600 hover:text-gray-800 px-5 py-2.5 rounded-full font-bold shadow-sm transition border-2 border-gray-100 flex items-center gap-2">↺ リセット</button>
+                <button @click="randomize()" class="bg-gradient-to-r from-cute-purple to-pink-400 text-white px-6 py-2.5 rounded-full font-bold shadow-lg transition transform hover:-translate-y-1 flex items-center gap-2"><span class="animate-bounce-slight">🎲</span> ランダム</button>
+                <button @click="openPreview()" class="bg-gray-800 hover:bg-gray-700 text-white px-6 py-2.5 rounded-full font-bold shadow-lg transition transform hover:scale-105 flex items-center gap-2"><span>👁️</span> 確認する</button>
             </div>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-4 py-8 lg:grid lg:grid-cols-12 lg:gap-10 relative z-10">
-        
-        <!-- 左側：設定パネル -->
         <div class="lg:col-span-5 space-y-6">
             <div class="glass-panel rounded-3xl p-6 shadow-xl shadow-pink-100/50">
-                <div class="flex items-center gap-2 mb-6 border-b border-gray-100 pb-4">
-                    <span class="text-2xl">🎀</span>
-                    <h2 class="text-xl font-bold font-pop text-gray-700">デザイン設定</h2>
-                </div>
-
+                <div class="flex items-center gap-2 mb-6 border-b border-gray-100 pb-4"><span class="text-2xl">🎀</span><h2 class="text-xl font-bold font-pop text-gray-700">デザイン設定</h2></div>
                 <div class="space-y-6">
-                    <!-- タイプ切り替え -->
                     <div class="bg-white/50 p-2 rounded-2xl flex gap-1 shadow-inner">
-                        <template x-for="type in ['color','gradient','pattern','image']">
-                            <button @click="bgType=type; draw()" 
-                                    :class="bgType===type ? 'bg-white text-pink-500 shadow-md scale-100' : 'text-gray-400 hover:text-gray-600'"
-                                    class="flex-1 py-2 text-sm font-bold rounded-xl transition-all duration-300 capitalize"
-                                    x-text="type === 'color' ? '単色' : type === 'gradient' ? 'グラデ' : type === 'pattern' ? '柄' : '画像'">
-                            </button>
+                        <template x-for="type in ['color','gradient','pattern']">
+                            <button @click="bgType=type; draw()" :class="bgType===type ? 'bg-white text-pink-500 shadow-md' : 'text-gray-400'" class="flex-1 py-2 text-sm font-bold rounded-xl transition-all capitalize" x-text="type === 'color' ? '単色' : type === 'gradient' ? 'グラデ' : '柄'"></button>
                         </template>
                     </div>
 
-                    <!-- 柄選択エリア -->
-                    <div x-show="bgType==='pattern'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0">
-                        <div class="flex justify-between items-center mb-2">
-                            <label class="text-sm font-bold text-gray-500">ベースカラー</label>
-                            <input type="color" x-model="config.bgColor" @input="updateThumbnails(); draw()" class="w-12 h-8 rounded cursor-pointer border-2 border-white shadow-sm">
-                        </div>
-                        
+                    <div x-show="bgType==='pattern'">
+                        <div class="flex justify-between items-center mb-2"><label class="text-sm font-bold text-gray-500">ベースカラー</label><input type="color" x-model="config.bgColor" @input="updateThumbnails(); draw()" class="w-12 h-8 rounded border-2 border-white shadow-sm"></div>
                         <div class="grid grid-cols-4 gap-3">
                             <template x-for="(p, idx) in patterns">
-                                <button @click="config.patternIndex = idx; draw()" 
-                                        class="pattern-btn aspect-square rounded-2xl border-2 border-white bg-white relative overflow-hidden shadow-sm"
-                                        :class="config.patternIndex === idx ? 'active' : ''">
-                                    <div class="absolute inset-0 bg-cover bg-center transition-opacity duration-300" :style="`background-image: url(${p.thumbUrl});`"></div>
-                                    <div x-show="config.patternIndex === idx" class="absolute inset-0 border-4 border-pink-400/50 rounded-2xl"></div>
+                                <button @click="config.patternIndex = idx; draw()" class="pattern-btn aspect-square rounded-2xl border-2 border-white bg-white relative overflow-hidden shadow-sm" :class="config.patternIndex === idx ? 'active' : ''">
+                                    <div class="absolute inset-0 bg-cover bg-center" :style="`background-image: url(${p.thumbUrl});`"></div>
                                 </button>
                             </template>
                         </div>
-                        <p class="text-right text-xs text-pink-400 mt-2 font-bold animate-pulse">✨ New Patterns Added!</p>
-                    </div>
-
-                    <!-- 他の設定（簡易表示） -->
-                    <div x-show="bgType==='color'" class="bg-white/50 p-4 rounded-2xl">
-                         <input type="color" x-model="config.bgColor" @input="draw()" class="w-full h-12 rounded-xl cursor-pointer">
                     </div>
                     
+                    <div x-show="bgType==='color'" class="bg-white/50 p-4 rounded-2xl"><input type="color" x-model="config.bgColor" @input="draw()" class="w-full h-12 rounded-xl"></div>
                     <div x-show="bgType==='gradient'" class="bg-white/50 p-4 rounded-2xl space-y-3">
-                        <div class="flex gap-2">
-                            <input type="color" x-model="config.gradientStart" @input="draw()" class="h-10 w-full rounded-lg">
-                            <span class="text-gray-400 flex items-center">➜</span>
-                            <input type="color" x-model="config.gradientEnd" @input="draw()" class="h-10 w-full rounded-lg">
-                        </div>
-                        <div class="flex justify-between">
-                            <button @click="config.gradientDirection='br'; draw()" class="text-xs bg-white px-3 py-1 rounded shadow">↘ 斜め</button>
-                            <button @click="config.gradientDirection='b'; draw()" class="text-xs bg-white px-3 py-1 rounded shadow">↓ 縦</button>
-                            <button @click="config.gradientDirection='r'; draw()" class="text-xs bg-white px-3 py-1 rounded shadow">→ 横</button>
-                        </div>
+                        <div class="flex gap-2"><input type="color" x-model="config.gradientStart" @input="draw()" class="h-10 w-full rounded-lg"><span class="text-gray-400">➜</span><input type="color" x-model="config.gradientEnd" @input="draw()" class="h-10 w-full rounded-lg"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 右側：プレビュー -->
         <div class="lg:col-span-7 mt-8 lg:mt-0">
             <div class="relative group">
-                <!-- 装飾用の枠 -->
-                <div class="absolute -inset-4 bg-gradient-to-r from-cute-pink via-cute-purple to-cute-blue rounded-[2.5rem] opacity-30 blur-lg group-hover:opacity-50 transition duration-1000"></div>
-                
+                <div class="absolute -inset-4 bg-gradient-to-r from-cute-pink via-cute-purple to-cute-blue rounded-[2.5rem] opacity-30 blur-lg"></div>
                 <div class="bg-white/80 backdrop-blur-sm rounded-[2rem] p-8 shadow-2xl relative border border-white">
-                    <div class="absolute top-4 left-1/2 -translate-x-1/2 bg-gray-100 px-4 py-1 rounded-full text-xs text-gray-400 font-bold tracking-widest">PREVIEW</div>
-                    <canvas x-ref="canvas" width="1200" height="1600" class="w-full h-auto mx-auto bg-white shadow-lg rounded-xl transform transition duration-500 hover:scale-[1.01]"></canvas>
+                    <canvas x-ref="canvas" width="1200" height="1600" class="w-full h-auto mx-auto bg-white shadow-lg rounded-xl"></canvas>
                 </div>
             </div>
         </div>
-
     </main>
 
-    <!-- プレビューモーダル -->
     <div x-show="preview.isOpen" x-transition.opacity class="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" style="display: none;">
         <div class="absolute inset-0" @click="preview.isOpen = false"></div>
-        <div class="relative bg-transparent flex flex-col items-center animate-float">
+        <div class="relative flex flex-col items-center animate-float">
             <img x-show="preview.src" :src="preview.src" class="max-w-full max-h-[85vh] object-contain shadow-2xl rounded-2xl ring-4 ring-white/20">
             <button @click="preview.isOpen = false" class="mt-4 bg-white text-gray-800 px-6 py-2 rounded-full font-bold hover:bg-gray-100 transition shadow-lg">閉じる</button>
         </div>
@@ -196,36 +134,27 @@
         function canvasApp() {
             return {
                 bgType: 'pattern',
-                bgImageObj: null,
                 defaults: {
                     title: 'Pattern Preview',
-                    labelTop: 'Top', labelBottom: 'Bottom', labelLeft: 'Left', labelRight: 'Right',
-                    watermark: '@patterns',
-                    fontFamily: "'M PLUS Rounded 1c'",
-                    textColor: '#ec4899', textGlass: true, textShadow: true, labelRounded: true,
-                    bgColor: '#fbcfe8',
-                    gradientStart: '#fbcfe8', gradientEnd: '#a78bfa', gradientDirection: 'br',
-                    patternIndex: 5, // 初期値をハートに
-                    cornerRadius: 60, gridEnabled: true, graphShadow: true,
-                    crossType: 'gap', crossColor: '#ec4899', crossWidth: 4,
+                    bgColor: '#fbcfe8', gradientStart: '#fbcfe8', gradientEnd: '#a78bfa',
+                    patternIndex: 5,
                 },
                 config: {},
                 preview: { isOpen: false, src: null },
-                patterns: window.chartPatternsConfig || [],
+                
+                // ★ データ取得もライブラリから ★
+                patterns: window.ChartPatternLibrary.config,
 
                 init() {
                     this.reset();
-                    this.$watch('config.fontFamily', (val) => {
-                        document.fonts.load(`bold 20px ${val}`).then(() => { this.draw(); });
-                        setTimeout(() => this.draw(), 100);
-                    });
-                    document.fonts.ready.then(() => { this.updateThumbnails(); this.draw(); });
+                    // フォント読み込み待機等は簡略化
+                    setTimeout(() => { this.updateThumbnails(); this.draw(); }, 200);
                 },
 
                 reset() {
                     this.config = JSON.parse(JSON.stringify(this.defaults));
                     this.bgType = 'pattern';
-                    this.$nextTick(() => { if(this.bgType === 'pattern') this.updateThumbnails(); this.draw(); });
+                    this.$nextTick(() => { this.updateThumbnails(); this.draw(); });
                 },
 
                 randomize() {
@@ -240,7 +169,8 @@
                     const ctx = tempC.getContext('2d');
                     this.patterns.forEach(p => {
                         ctx.fillStyle = this.config.bgColor; ctx.fillRect(0, 0, 100, 100);
-                        this.drawPattern(ctx, 100, 100, p.canvas);
+                        // ★ 描画処理はライブラリに任せる ★
+                        window.ChartPatternLibrary.draw(ctx, 100, 100, p.canvas);
                         p.thumbUrl = tempC.toDataURL();
                     });
                 },
@@ -253,89 +183,17 @@
                     
                     if(this.bgType === 'pattern') {
                         ctx.fillStyle = this.config.bgColor; ctx.fillRect(0, 0, W, H);
-                        this.drawPattern(ctx, W, H, this.patterns[this.config.patternIndex].canvas);
+                        // ★ ここでもライブラリを使って描画 ★
+                        window.ChartPatternLibrary.draw(ctx, W, H, this.patterns[this.config.patternIndex].canvas);
                     } else if (this.bgType === 'color') {
                         ctx.fillStyle = this.config.bgColor; ctx.fillRect(0, 0, W, H);
                     } else if (this.bgType === 'gradient') {
-                        let grd = ctx.createLinearGradient(0, 0, W, H); // Simplified for preview
+                        let grd = ctx.createLinearGradient(0, 0, W, H);
                         grd.addColorStop(0, this.config.gradientStart);
                         grd.addColorStop(1, this.config.gradientEnd);
                         ctx.fillStyle = grd; ctx.fillRect(0,0,W,H);
                     }
-                    
-                    // プレビュー用の簡易枠
                     ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.lineWidth = 20; ctx.strokeRect(0,0,W,H);
-                },
-
-                // ★★★ 重要：新パターン（ハート・星・斜め）対応版描画関数 ★★★
-                drawPattern(ctx, w, h, p) {
-                    const tempCanvas = document.createElement('canvas');
-                    const tCtx = tempCanvas.getContext('2d');
-                    if (p.opacity) tCtx.globalAlpha = p.opacity;
-
-                    if (p.type === 'dot') {
-                        tempCanvas.width = p.spacing; tempCanvas.height = p.spacing;
-                        tCtx.fillStyle = p.color; tCtx.beginPath(); tCtx.arc(p.spacing/2, p.spacing/2, p.size, 0, Math.PI*2); tCtx.fill();
-                    } else if (p.type === 'ichimatsu') {
-                        tempCanvas.width = p.size * 2; tempCanvas.height = p.size * 2;
-                        tCtx.fillStyle = p.color; tCtx.fillRect(0, 0, p.size, p.size); tCtx.fillRect(p.size, p.size, p.size, p.size);
-                    } else if (p.type === 'stripe') {
-                        const size = p.width * 2;
-                        tempCanvas.width = size; tempCanvas.height = size;
-                        tCtx.fillStyle = p.color;
-                        tCtx.beginPath();
-                        tCtx.moveTo(0, size); tCtx.lineTo(size, 0); tCtx.lineTo(size + p.width, 0); tCtx.lineTo(p.width, size); tCtx.fill();
-                        tCtx.beginPath(); tCtx.moveTo(0, 0); tCtx.lineTo(p.width, 0); tCtx.lineTo(0, p.width); tCtx.fill();
-                    } else if (p.type === 'check') {
-                        tempCanvas.width = p.size; tempCanvas.height = p.size;
-                        tCtx.fillStyle = p.color; tCtx.fillRect(0, 0, p.size, p.size/2);
-                        tCtx.globalCompositeOperation = 'source-over'; 
-                        tCtx.fillStyle = p.color; tCtx.fillRect(0, 0, p.size/2, p.size);
-                    } else if (p.type === 'argyle') {
-                        tempCanvas.width = p.size; tempCanvas.height = p.size;
-                        tCtx.fillStyle = p.color;
-                        tCtx.beginPath(); tCtx.moveTo(p.size/2, 0); tCtx.lineTo(p.size, p.size/2); tCtx.lineTo(p.size/2, p.size); tCtx.lineTo(0, p.size/2); tCtx.fill();
-                        tCtx.strokeStyle = "rgba(255,255,255,0.6)"; tCtx.lineWidth = 1;
-                        tCtx.beginPath(); tCtx.moveTo(0,0); tCtx.lineTo(p.size, p.size); tCtx.moveTo(p.size,0); tCtx.lineTo(0, p.size); tCtx.stroke();
-                    } 
-                    // ▼▼▼ 新しいパターンのロジック ▼▼▼
-                    else if (p.type === 'heart') {
-                        // ハート柄
-                        const s = p.spacing;
-                        tempCanvas.width = s; tempCanvas.height = s;
-                        tCtx.fillStyle = p.color;
-                        const hs = p.size; // Heart Size
-                        const hx = s/2; const hy = s/2;
-                        tCtx.beginPath();
-                        tCtx.moveTo(hx, hy + hs/2);
-                        tCtx.bezierCurveTo(hx - hs, hy - hs/2, hx - hs, hy - hs, hx, hy - hs/2);
-                        tCtx.bezierCurveTo(hx + hs, hy - hs, hx + hs, hy - hs/2, hx, hy + hs/2);
-                        tCtx.fill();
-                    } else if (p.type === 'star') {
-                        // 星柄
-                        const s = p.spacing;
-                        tempCanvas.width = s; tempCanvas.height = s;
-                        tCtx.fillStyle = p.color;
-                        const cx = s/2; const cy = s/2;
-                        const spikes = 5; const outerRadius = p.size; const innerRadius = p.size/2;
-                        let rot = Math.PI / 2 * 3; let x = cx; let y = cy; const step = Math.PI / spikes;
-                        tCtx.beginPath(); tCtx.moveTo(cx, cy - outerRadius);
-                        for (let i = 0; i < spikes; i++) {
-                            x = cx + Math.cos(rot) * outerRadius; y = cy + Math.sin(rot) * outerRadius; tCtx.lineTo(x, y); rot += step;
-                            x = cx + Math.cos(rot) * innerRadius; y = cy + Math.sin(rot) * innerRadius; tCtx.lineTo(x, y); rot += step;
-                        }
-                        tCtx.lineTo(cx, cy - outerRadius); tCtx.fill();
-                    } else if (p.type === 'diagonal') {
-                        // 斜めストライプ
-                        const w = p.width; const size = w * 2;
-                        tempCanvas.width = size; tempCanvas.height = size;
-                        tCtx.strokeStyle = p.color; tCtx.lineWidth = w/2; tCtx.lineCap = 'butt';
-                        tCtx.beginPath(); tCtx.moveTo(-w, size); tCtx.lineTo(size, -w); tCtx.stroke();
-                        tCtx.beginPath(); tCtx.moveTo(0, size + w); tCtx.lineTo(size + w, 0); tCtx.stroke();
-                    }
-
-                    const pattern = ctx.createPattern(tempCanvas, 'repeat');
-                    ctx.fillStyle = pattern; ctx.fillRect(0, 0, w, h);
                 },
                 
                 openPreview() {
