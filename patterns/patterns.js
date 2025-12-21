@@ -1,63 +1,64 @@
 /**
  * 柄（パターン）管理ライブラリ
- * データと描画ロジックを統合管理します。
- * 今後、柄を追加・修正する場合はこのファイルのみを編集すればOKです。
+ * Update: 全体的に柄を大きく、間隔を広く調整
  */
 
 (function() {
     // ■■■ 1. 柄の設定データ ■■■
+    // ここに新しい柄のデータを追加します
     const config = [
-        // 1. 大きめドット
+        // 1. 大きな水玉
         { 
             id: 1, 
-            canvas: { type: 'dot', color: '#ffffff', size: 7, spacing: 30, opacity: 0.8 }, 
+            canvas: { type: 'dot', color: '#ffffff', size: 12, spacing: 60, opacity: 0.9 }, 
             thumbUrl: '' 
         },
-        // 2. 太めストライプ
+        // 2. 太いボーダー
         { 
             id: 2, 
-            canvas: { type: 'stripe', color: 'rgba(255,255,255,0.5)', width: 40 }, 
+            canvas: { type: 'stripe', color: 'rgba(255,255,255,0.5)', width: 60 }, 
             thumbUrl: '' 
         },
-        // 3. ギンガムチェック
+        // 3. 大きなチェック
         { 
             id: 3, 
-            canvas: { type: 'check', color: 'rgba(255,255,255,0.3)', size: 40 }, 
+            canvas: { type: 'check', color: 'rgba(255,255,255,0.3)', size: 80 }, 
             thumbUrl: '' 
         },
-        // 4. 市松模様
+        // 4. 大きな市松模様
         { 
             id: 4, 
-            canvas: { type: 'ichimatsu', color: 'rgba(255,255,255,0.4)', size: 40 }, 
+            canvas: { type: 'ichimatsu', color: 'rgba(255,255,255,0.4)', size: 80 }, 
             thumbUrl: '' 
         },
-        // 5. アーガイル
+        // 5. ビッグアーガイル
         { 
             id: 5, 
-            canvas: { type: 'argyle', color: 'rgba(255,255,255,0.3)', size: 60 }, 
+            canvas: { type: 'argyle', color: 'rgba(255,255,255,0.3)', size: 120 }, 
             thumbUrl: '' 
         },
-        // 6. ハート（キュート）
+        // 6. 大きなハート
         {
             id: 6,
-            canvas: { type: 'heart', color: 'rgba(255,255,255,0.6)', size: 24, spacing: 50 },
+            canvas: { type: 'heart', color: 'rgba(255,255,255,0.7)', size: 50, spacing: 110 },
             thumbUrl: ''
         },
-        // 7. お星さま（ポップ）
+        // 7. ポップな星
         {
             id: 7,
-            canvas: { type: 'star', color: 'rgba(255,255,255,0.7)', size: 15, spacing: 40 },
+            canvas: { type: 'star', color: 'rgba(255,255,255,0.8)', size: 40, spacing: 100 },
             thumbUrl: ''
         },
-        // 8. 斜めストライプ（キャンディ）
+        // 8. 太い斜めストライプ
         {
             id: 8,
-            canvas: { type: 'diagonal', color: 'rgba(255,255,255,0.4)', width: 30 },
+            canvas: { type: 'diagonal', color: 'rgba(255,255,255,0.4)', width: 50 },
             thumbUrl: ''
         }
     ];
 
     // ■■■ 2. 描画ロジック（共通関数） ■■■
+    // ここに新しい柄の「描き方」を追加します
     function draw(ctx, w, h, p) {
         const tempCanvas = document.createElement('canvas');
         const tCtx = tempCanvas.getContext('2d');
@@ -122,10 +123,5 @@
         ctx.fillStyle = pattern; ctx.fillRect(0, 0, w, h);
     }
 
-    // ■■■ グローバル公開 ■■■
-    // これにより、どのHTMLからでも window.ChartPatternLibrary.draw(...) が使えるようになります
-    window.ChartPatternLibrary = {
-        config: config,
-        draw: draw
-    };
+    window.ChartPatternLibrary = { config: config, draw: draw };
 })();
