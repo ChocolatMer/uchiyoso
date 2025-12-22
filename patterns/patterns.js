@@ -1,110 +1,113 @@
 /**
  * 柄（パターン）管理ライブラリ
- * Update: 新規柄（チョコレート、クッション、花柄、パズル、ミステリー）の追加
+ * Update: 新規柄の追加（画像のデザインに忠実に再現）、および色変更機能の強化
  */
 
 (function() {
+    // ■■■ 0. 色操作用ヘルパー ■■■
+    const ColorUtil = {
+        // Hex/RGB文字列をRGB配列に変換
+        toRgb: (color) => {
+            if (!color) return [0, 0, 0];
+            if (color.startsWith('rgb')) {
+                const m = color.match(/[\d.]+/g);
+                return m ? [parseFloat(m[0]), parseFloat(m[1]), parseFloat(m[2])] : [0, 0, 0];
+            }
+            if (color.startsWith('#')) {
+                let hex = color.slice(1);
+                if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+                const bigInt = parseInt(hex, 16);
+                return [(bigInt >> 16) & 255, (bigInt >> 8) & 255, bigInt & 255];
+            }
+            return [0, 0, 0];
+        },
+        // 色の明るさを変更 (amt: -1.0(黒) ~ 1.0(白))
+        shade: (color, amt) => {
+            const rgb = ColorUtil.toRgb(color);
+            const t = amt < 0 ? 0 : 255;
+            const p = amt < 0 ? amt * -1 : amt;
+            const r = Math.round((t - rgb[0]) * p) + rgb[0];
+            const g = Math.round((t - rgb[1]) * p) + rgb[1];
+            const b = Math.round((t - rgb[2]) * p) + rgb[2];
+            return `rgb(${r},${g},${b})`;
+        },
+        // 透明度を適用
+        alpha: (color, opacity) => {
+            const rgb = ColorUtil.toRgb(color);
+            return `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${opacity})`;
+        }
+    };
+
     // ■■■ 1. 柄の設定データ ■■■
     const config = [
-        // --- 既存の柄 ---
-        { 
-            id: 1, 
-            canvas: { type: 'dot-skew', color: '#ffffff', size: 10, spacing: 60, opacity: 0.9 }, 
-            thumbUrl: '' 
-        },
-        { 
-            id: 2, 
-            canvas: { type: 'stripe', color: 'rgba(255,255,255,0.5)', width: 60 }, 
-            thumbUrl: '' 
-        },
-        { 
-            id: 3, 
-            canvas: { type: 'check', color: 'rgba(255,255,255,0.3)', size: 80 }, 
-            thumbUrl: '' 
-        },
-        { 
-            id: 4, 
-            canvas: { type: 'ichimatsu', color: 'rgba(255,255,255,0.4)', size: 80 }, 
-            thumbUrl: '' 
-        },
-        { 
-            id: 5, 
-            canvas: { type: 'argyle', color: 'rgba(255,255,255,0.3)', size: 120 }, 
-            thumbUrl: '' 
-        },
-        {
-            id: 6,
-            canvas: { 
-                type: 'dot-mix', 
-                color: 'rgba(180, 243, 234, 0.8)', 
-                color2: 'rgba(255, 188, 188, 0.8)', 
-                size: 15, 
-                spacing: 60 
-            },
-            thumbUrl: ''
-        },
-        {
-            id: 7,
-            canvas: { 
-                type: 'dot-size', 
-                color: 'rgba(255, 255, 255, 0.8)', 
-                size: 10, 
-                size2: 25, 
-                spacing: 70 
-            },
-            thumbUrl: ''
-        },
-        // --- ▼ 新規追加の柄 ▼ ---
-        // 8. チョコレート (幾何学模様)
+        // --- 既存の柄 (ID: 1~7) ---
+        { id: 1, canvas: { type: 'dot-skew', color: '#ffffff', size: 10, spacing: 60, opacity: 0.9 }, thumbUrl: '' },
+        { id: 2, canvas: { type: 'stripe', color: 'rgba(255,255,255,0.5)', width: 60 }, thumbUrl: '' },
+        { id: 3, canvas: { type: 'check', color: 'rgba(255,255,255,0.3)', size: 80 }, thumbUrl: '' },
+        { id: 4, canvas: { type: 'ichimatsu', color: 'rgba(255,255,255,0.4)', size: 80 }, thumbUrl: '' },
+        { id: 5, canvas: { type: 'argyle', color: 'rgba(255,255,255,0.3)', size: 120 }, thumbUrl: '' },
+        { id: 6, canvas: { type: 'dot-mix', color: 'rgba(180, 243, 234, 0.8)', color2: 'rgba(255, 188, 188, 0.8)', size: 15, spacing: 60 }, thumbUrl: '' },
+        { id: 7, canvas: { type: 'dot-size', color: 'rgba(255, 255, 255, 0.8)', size: 10, size2: 25, spacing: 70 }, thumbUrl: '' },
+
+        // --- ▼ 追加の柄 (画像のデザインを再現) ▼ ---
+        
+        // 8. チョコレート
+        // 特徴: 板チョコのような立体感。基本色を変更すると全体のトーンが変わるように設計。
         {
             id: 8,
             canvas: {
                 type: 'chocolate',
-                colors: ['#c1a095', '#996349', '#7b4028', '#693319', '#612f0e', '#4c230e', '#2a0b00'],
-                size: 20 // 基準サイズ
+                color: '#693319', // ベースのチョコ色
+                size: 40
             },
             thumbUrl: ''
         },
-        // 9. クッション (タフティング風)
+        // 9. クッション (アーガイル/キルティング風)
+        // 特徴: ボタン留めされたようなふっくらしたデザイン。
         {
             id: 9,
             canvas: {
                 type: 'cushion',
-                // HSL(20deg)ベースのカラーパレット変換値
-                colors: ['#993d1f', '#7d260a', '#521907', '#3d1205'], 
-                baseColor: '#200902', // 背景の濃い色
-                size: 100
+                color: '#6e2c12', // ベース色（濃い茶色）
+                color2: '#9e4624', // 明るい部分
+                size: 80
             },
             thumbUrl: ''
         },
-        // 10. お花柄 (レトロフラワー)
+        // 10. お花柄 (レトロ)
+        // 特徴: 4枚花びらのレトロな花。
         {
             id: 10,
             canvas: {
                 type: 'flower',
-                colors: ["#f69524", "#003583", "#f6f0e2"], // 提示されたパレット1番目
+                color: '#003583', // 花びら (紺)
+                color2: '#f6f0e2', // 背景 (クリーム)
+                color3: '#f69524', // 花芯 (オレンジ)
                 size: 60
             },
             thumbUrl: ''
         },
         // 11. パズル柄
+        // 特徴: ピースが噛み合ったデザイン。基本色から濃淡を自動生成。
         {
             id: 11,
             canvas: {
                 type: 'puzzle',
-                colors: ['#4b2889', '#673ab7', '#401c81', '#2d125d'],
-                size: 60
+                color: '#4b2889', // メインの紫 (濃い色)
+                color2: '#673ab7', // サブの紫 (明るい色)
+                size: 50
             },
             thumbUrl: ''
         },
-        // 12. ミステリー (?)
+        // 12. ミステリー (扇形サークル)
+        // 特徴: 黒背景に4色の扇形で作られた円。
         {
             id: 12,
             canvas: {
                 type: 'mystery',
-                colors: ['#0f9177', '#fdebad', '#d34434', '#b5d999'],
-                overlayColor: '#1a2030',
-                size: 120
+                color: '#1a2030', // 背景色 (黒に近い紺)
+                colors: ['#0f9177', '#fdebad', '#d34434', '#b5d999'], // 扇形の色 (緑, 黄, 赤, 薄緑)
+                size: 100
             },
             thumbUrl: ''
         }
@@ -116,217 +119,247 @@
         const tCtx = tempCanvas.getContext('2d');
         if (p.opacity) tCtx.globalAlpha = p.opacity;
 
-        const s = p.spacing ? p.spacing * scale : (p.size * scale);
+        const s = (p.spacing || p.size) * scale;
 
-        // ▼ 1. 斜めドット
-        if (p.type === 'dot-skew') {
+        // --- 共通ヘルパー: 描画用 ---
+        const fillRect = (c, x, y, w, h) => { tCtx.fillStyle = c; tCtx.fillRect(x, y, w, h); };
+        const fillCircle = (c, x, y, r) => { tCtx.fillStyle = c; tCtx.beginPath(); tCtx.arc(x, y, r, 0, Math.PI*2); tCtx.fill(); };
+
+        // ▼ 8. チョコレート (立体ブロック)
+        if (p.type === 'chocolate') {
             const sz = p.size * scale;
-            tempCanvas.width = s; tempCanvas.height = s;
-            tCtx.fillStyle = p.color;
-            
-            tCtx.beginPath(); tCtx.arc(s/2, s/2, sz, 0, Math.PI*2); tCtx.fill();
-            
-            tCtx.beginPath(); tCtx.arc(0, 0, sz, 0, Math.PI*2); tCtx.fill();
-            tCtx.beginPath(); tCtx.arc(s, 0, sz, 0, Math.PI*2); tCtx.fill();
-            tCtx.beginPath(); tCtx.arc(0, s, sz, 0, Math.PI*2); tCtx.fill();
-            tCtx.beginPath(); tCtx.arc(s, s, sz, 0, Math.PI*2); tCtx.fill();
-        } 
-        // ▼ 6. ドット色違い
-        else if (p.type === 'dot-mix') {
-            const sz = p.size * scale;
-            tempCanvas.width = s; tempCanvas.height = s;
+            const blockW = sz * 2; 
+            const blockH = sz * 1.4;
+            tempCanvas.width = blockW; tempCanvas.height = blockH;
 
-            tCtx.fillStyle = p.color;
-            tCtx.beginPath(); tCtx.arc(s/2, s/2, sz, 0, Math.PI*2); tCtx.fill();
+            const baseColor = p.color;
+            const highlight = ColorUtil.alpha('#ffffff', 0.2);
+            const shadow = ColorUtil.alpha('#000000', 0.2);
+            const darkShadow = ColorUtil.alpha('#000000', 0.4);
 
-            tCtx.fillStyle = p.color2;
-            tCtx.beginPath(); tCtx.arc(0, 0, sz, 0, Math.PI*2); tCtx.fill();
-            tCtx.beginPath(); tCtx.arc(s, 0, sz, 0, Math.PI*2); tCtx.fill();
-            tCtx.beginPath(); tCtx.arc(0, s, sz, 0, Math.PI*2); tCtx.fill();
-            tCtx.beginPath(); tCtx.arc(s, s, sz, 0, Math.PI*2); tCtx.fill();
+            // 全体ベース
+            fillRect(baseColor, 0, 0, blockW, blockH);
+
+            // ブロックの立体表現
+            const pad = sz * 0.1;
+            const innerW = blockW - pad * 2;
+            const innerH = blockH - pad * 2;
+
+            // 溝（暗い色）
+            tCtx.fillStyle = darkShadow;
+            tCtx.fillRect(0, 0, blockW, blockH);
+            
+            // ブロック本体（ベース色）
+            tCtx.fillStyle = baseColor;
+            tCtx.fillRect(pad, pad, innerW, innerH);
+
+            // ハイライト（左と上）
+            tCtx.fillStyle = highlight;
+            tCtx.beginPath();
+            tCtx.moveTo(pad, pad + innerH); tCtx.lineTo(pad, pad); tCtx.lineTo(pad + innerW, pad);
+            tCtx.lineTo(pad + innerW - pad, pad + pad); tCtx.lineTo(pad + pad, pad + pad); tCtx.lineTo(pad + pad, pad + innerH - pad);
+            tCtx.fill();
+
+            // シャドウ（右と下）
+            tCtx.fillStyle = shadow;
+            tCtx.beginPath();
+            tCtx.moveTo(pad + innerW, pad); tCtx.lineTo(pad + innerW, pad + innerH); tCtx.lineTo(pad, pad + innerH);
+            tCtx.lineTo(pad + pad, pad + innerH - pad); tCtx.lineTo(pad + innerW - pad, pad + innerH - pad); tCtx.lineTo(pad + innerW - pad, pad + pad);
+            tCtx.fill();
+            
+            // トップ面
+            const topPad = pad * 2;
+            tCtx.fillStyle = ColorUtil.shade(baseColor, 0.05); // 少し明るく
+            tCtx.fillRect(topPad, topPad, blockW - topPad * 2, blockH - topPad * 2);
         }
-        // ▼ 7. ドットサイズ違い
-        else if (p.type === 'dot-size') {
-            const sz1 = p.size * scale;
-            const sz2 = p.size2 * scale;
-            tempCanvas.width = s; tempCanvas.height = s;
-            tCtx.fillStyle = p.color;
 
-            tCtx.beginPath(); tCtx.arc(s/2, s/2, sz1, 0, Math.PI*2); tCtx.fill();
-
-            tCtx.beginPath(); tCtx.arc(0, 0, sz2, 0, Math.PI*2); tCtx.fill();
-            tCtx.beginPath(); tCtx.arc(s, 0, sz2, 0, Math.PI*2); tCtx.fill();
-            tCtx.beginPath(); tCtx.arc(0, s, sz2, 0, Math.PI*2); tCtx.fill();
-            tCtx.beginPath(); tCtx.arc(s, s, sz2, 0, Math.PI*2); tCtx.fill();
-        }
-        // ▼ 8. チョコレート (幾何学模様)
-        else if (p.type === 'chocolate') {
-            // CSSの複雑なconic-gradientを、板チョコのようなブロックパターンとして再構成
-            const sz = p.size * scale; 
-            const unitW = sz * 2.5; // 長方形の比率
-            const unitH = sz * 1.5;
-            tempCanvas.width = unitW * 2;
-            tempCanvas.height = unitH * 2;
-            
-            const colors = p.colors; // c1-c7
-            
-            // ベース
-            tCtx.fillStyle = colors[6]; // Darkest
-            tCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-
-            // ブロックを描画する関数
-            const drawBlock = (ox, oy, w, h) => {
-                // 側面（左・上）
-                tCtx.fillStyle = colors[1];
-                tCtx.beginPath(); tCtx.moveTo(ox, oy+h); tCtx.lineTo(ox, oy); tCtx.lineTo(ox+w, oy); tCtx.lineTo(ox+w-sz/2, oy+sz/2); tCtx.lineTo(ox+sz/2, oy+sz/2); tCtx.lineTo(ox+sz/2, oy+h-sz/2); tCtx.fill();
-                
-                // 側面（右・下）
-                tCtx.fillStyle = colors[4];
-                tCtx.beginPath(); tCtx.moveTo(ox+w, oy); tCtx.lineTo(ox+w, oy+h); tCtx.lineTo(ox, oy+h); tCtx.lineTo(ox+sz/2, oy+h-sz/2); tCtx.lineTo(ox+w-sz/2, oy+h-sz/2); tCtx.lineTo(ox+w-sz/2, oy+sz/2); tCtx.fill();
-
-                // 上面（トップ）
-                tCtx.fillStyle = colors[0];
-                tCtx.fillRect(ox+sz/2, oy+sz/2, w-sz, h-sz);
-            };
-
-            drawBlock(0, 0, unitW, unitH);
-            drawBlock(unitW, unitH, unitW, unitH);
-            drawBlock(unitW, 0, unitW, unitH);
-            drawBlock(0, unitH, unitW, unitH);
-        }
-        // ▼ 9. クッション (キルティング風)
+        // ▼ 9. クッション (アーガイル/キルティング)
         else if (p.type === 'cushion') {
             const sz = p.size * scale;
             tempCanvas.width = sz; tempCanvas.height = sz;
-            
+
+            const c1 = p.color; // 濃い色 (背景)
+            const c2 = p.color2 || ColorUtil.shade(c1, 0.4); // 明るい色 (中央)
+            const cShadow = ColorUtil.alpha('#000000', 0.3);
+
             // 背景
-            tCtx.fillStyle = p.baseColor;
-            tCtx.fillRect(0, 0, sz, sz);
+            fillRect(c1, 0, 0, sz, sz);
 
-            // 菱形グラデーション（簡易表現）
-            tCtx.fillStyle = p.colors[0];
-            tCtx.beginPath(); tCtx.moveTo(sz/2, 0); tCtx.lineTo(sz, sz/2); tCtx.lineTo(sz/2, sz); tCtx.lineTo(0, sz/2); tCtx.fill();
+            // 菱形グラデーションの模倣
+            const grad = tCtx.createRadialGradient(sz/2, sz/2, 0, sz/2, sz/2, sz/1.5);
+            grad.addColorStop(0, c2);
+            grad.addColorStop(0.6, c1);
+            grad.addColorStop(1, c1);
+            tCtx.fillStyle = grad;
             
-            // 内部の影とハイライト
-            tCtx.fillStyle = p.colors[1];
-            const inset = sz * 0.1;
-            tCtx.beginPath(); tCtx.moveTo(sz/2, inset); tCtx.lineTo(sz-inset, sz/2); tCtx.lineTo(sz/2, sz-inset); tCtx.lineTo(inset, sz/2); tCtx.fill();
+            // 菱形クリップして描画
+            tCtx.beginPath();
+            tCtx.moveTo(sz/2, 0); tCtx.lineTo(sz, sz/2); tCtx.lineTo(sz/2, sz); tCtx.lineTo(0, sz/2);
+            tCtx.fill();
 
-            // ボタン（中心と四隅）
-            const btnSize = sz * 0.08;
-            tCtx.fillStyle = p.colors[3]; // Dark button
+            // ボタン（四隅と中央）
+            const btnR = sz * 0.06;
             const drawBtn = (x, y) => {
-                tCtx.beginPath(); tCtx.arc(x, y, btnSize, 0, Math.PI*2); tCtx.fill();
-                // ボタンのハイライト
-                tCtx.strokeStyle = 'rgba(255,255,255,0.2)'; tCtx.lineWidth = 1;
-                tCtx.beginPath(); tCtx.arc(x, y, btnSize, 0, Math.PI*2); tCtx.stroke();
+                // 影
+                fillCircle(cShadow, x + 1, y + 1, btnR);
+                // ボタン本体 (さらに濃い色)
+                fillCircle(ColorUtil.shade(c1, -0.2), x, y, btnR);
             };
-            
+
             drawBtn(sz/2, sz/2);
             drawBtn(0, 0); drawBtn(sz, 0); drawBtn(0, sz); drawBtn(sz, sz);
         }
+
         // ▼ 10. お花柄
         else if (p.type === 'flower') {
             const sz = p.size * scale;
             tempCanvas.width = sz; tempCanvas.height = sz;
-            
-            // 背景色
-            tCtx.fillStyle = p.colors[2];
-            tCtx.fillRect(0, 0, sz, sz);
 
-            // 花を描画
+            const petalColor = p.color;
+            const bgColor = p.color2 || '#fff';
+            const centerColor = p.color3 || '#fa0';
+
+            // 背景
+            fillRect(bgColor, 0, 0, sz, sz);
+
+            // 花びら (4枚)
             const cx = sz/2, cy = sz/2;
-            const r = sz * 0.25;
+            const r = sz * 0.28;
+            
+            tCtx.fillStyle = petalColor;
+            tCtx.beginPath();
+            tCtx.arc(cx - r, cy, r, 0, Math.PI*2); // 左
+            tCtx.arc(cx + r, cy, r, 0, Math.PI*2); // 右
+            tCtx.arc(cx, cy - r, r, 0, Math.PI*2); // 上
+            tCtx.arc(cx, cy + r, r, 0, Math.PI*2); // 下
+            tCtx.fill();
 
-            tCtx.fillStyle = p.colors[1]; // 花びら
-            // 4枚の花びら
-            tCtx.beginPath(); tCtx.arc(cx - r, cy, r, 0, Math.PI*2); tCtx.fill();
-            tCtx.beginPath(); tCtx.arc(cx + r, cy, r, 0, Math.PI*2); tCtx.fill();
-            tCtx.beginPath(); tCtx.arc(cx, cy - r, r, 0, Math.PI*2); tCtx.fill();
-            tCtx.beginPath(); tCtx.arc(cx, cy + r, r, 0, Math.PI*2); tCtx.fill();
-
-            // 中心
-            tCtx.fillStyle = p.colors[0];
-            tCtx.beginPath(); tCtx.arc(cx, cy, r * 0.8, 0, Math.PI*2); tCtx.fill();
+            // 花の中心
+            fillCircle(centerColor, cx, cy, r * 0.7);
         }
+
         // ▼ 11. パズル柄
         else if (p.type === 'puzzle') {
             const sz = p.size * scale;
             const unit = sz; 
             tempCanvas.width = unit * 2; tempCanvas.height = unit * 2;
 
-            const c = p.colors; // [TL, TR, BL, BR] 的な順序で使用
+            // 色設定: color2がなければ color から自動生成
+            const cDark = p.color; 
+            const cLight = p.color2 || ColorUtil.shade(cDark, 0.2);
+
             const r = unit * 0.25; // 凸凹の半径
 
-            // ベースの4マスを描画
-            // 左上
-            tCtx.fillStyle = c[3]; tCtx.fillRect(0, 0, unit, unit);
-            // 右上
-            tCtx.fillStyle = c[0]; tCtx.fillRect(unit, 0, unit, unit);
-            // 左下
-            tCtx.fillStyle = c[2]; tCtx.fillRect(0, unit, unit, unit);
-            // 右下
-            tCtx.fillStyle = c[1]; tCtx.fillRect(unit, unit, unit, unit);
+            // --- 市松模様ベース ---
+            fillRect(cDark, 0, 0, unit, unit);       // 左上
+            fillRect(cLight, unit, 0, unit, unit);   // 右上
+            fillRect(cLight, 0, unit, unit, unit);   // 左下
+            fillRect(cDark, unit, unit, unit, unit); // 右下
 
-            // 凸凹を描画（円で表現）
-            // 左上ブロック(c3)の右辺 -> 凸 (c3色で右へはみ出す)
-            tCtx.fillStyle = c[3]; tCtx.beginPath(); tCtx.arc(unit, unit/2, r, 0, Math.PI*2); tCtx.fill();
-            
-            // 右上ブロック(c0)の下辺 -> 凹 (c1色で食い込む = c1の円を描く)
-            tCtx.fillStyle = c[1]; tCtx.beginPath(); tCtx.arc(unit + unit/2, unit, r, 0, Math.PI*2); tCtx.fill();
+            // --- 凸凹 (円で表現) ---
+            // 1. 左上(Dark)から右へ凸 (Dark円)
+            fillCircle(cDark, unit, unit/2, r);
 
-            // 左下ブロック(c2)の上辺 -> 凹 (c3色で食い込む)
-            tCtx.fillStyle = c[3]; tCtx.beginPath(); tCtx.arc(unit/2, unit, r, 0, Math.PI*2); tCtx.fill();
+            // 2. 左上(Dark)の下側は凹 -> つまり左下(Light)が上に凸 (Light円)
+            fillCircle(cLight, unit/2, unit, r);
 
-            // 右下ブロック(c1)の左辺 -> 凸 (c1色ではみ出す)
-            tCtx.fillStyle = c[1]; tCtx.beginPath(); tCtx.arc(unit, unit + unit/2, r, 0, Math.PI*2); tCtx.fill();
+            // 3. 右上(Light)の下側へ凸 (Light円)
+            fillCircle(cLight, unit + unit/2, unit, r);
+
+            // 4. 右下(Dark)から左へ凸 (Dark円) -> 左下(Light)に食い込む
+            fillCircle(cDark, unit, unit + unit/2, r);
+
+            // 注: 円の重なり順序によってパズルの噛み合わせが変わる
+            // ここでは簡易的に実装しているが、視覚的にはパズルに見える
         }
-        // ▼ 12. ミステリー (円の切り抜き)
+
+        // ▼ 12. ミステリー (扇形サークル)
         else if (p.type === 'mystery') {
             const sz = p.size * scale;
+            const hSz = sz / 2;
             tempCanvas.width = sz; tempCanvas.height = sz;
 
-            // 1. 4色の背景を描画 (Conic Gradientの代わり)
-            const hSz = sz / 2;
-            tCtx.fillStyle = p.colors[1]; tCtx.fillRect(hSz, 0, hSz, hSz); // TR: Yellow
-            tCtx.fillStyle = p.colors[2]; tCtx.fillRect(hSz, hSz, hSz, hSz); // BR: Red
-            tCtx.fillStyle = p.colors[3]; tCtx.fillRect(0, hSz, hSz, hSz); // BL: LightGreen
-            tCtx.fillStyle = p.colors[0]; tCtx.fillRect(0, 0, hSz, hSz); // TL: Green
-
-            // 2. オーバーレイ色で全体を覆うが、円の部分だけ穴をあける
-            // destination-out を使うと透明になるので、背景色が見えるようになる
-            // しかし、キャンバス自体をパターンにするため、透明にすると「白」ではなく「透け」になる
-            // ここでは「オーバーレイ色」を描画し、globalCompositeOperation='destination-out' で穴をあけるのではなく、
-            // 「オーバーレイ色のパス」を工夫して描画する（EvenOddルール）
+            const bg = p.color; // 背景色
             
-            const holeR = sz * 0.35; // 70% width -> radius ~35%
-
-            const drawMask = (ox, oy) => {
-                tCtx.fillStyle = p.overlayColor;
-                tCtx.beginPath();
-                tCtx.rect(0, 0, sz, sz); // 全体
-                // 穴 (逆周りにして穴をあける)
-                tCtx.arc(ox, oy, holeR, 0, Math.PI*2, true); 
-                tCtx.fill('evenodd'); // 中抜き塗り
+            // 扇形の色: colors配列がなければ color をベースに生成
+            let fans = p.colors;
+            if (!fans || fans.length < 4) {
+                // colorを基準に色相をずらしたり明度を変えたりして4色作る
+                fans = [
+                    ColorUtil.shade(p.color, 0.4),  // 明るい
+                    ColorUtil.shade(p.color, 0.2), 
+                    ColorUtil.shade(p.color, -0.1), 
+                    ColorUtil.shade(p.color, -0.3)  // 暗い
+                ];
             }
 
-            // この柄は「穴」の位置が交互になる
-            // CSSは radial-gradient(...) と radial-gradient(... calc(s/2)...)
-            // 左上と中央に穴がある
-            tCtx.fillStyle = p.overlayColor;
-            tCtx.beginPath();
-            tCtx.rect(0, 0, sz, sz); // 全体を四角で定義
-            tCtx.arc(0, 0, holeR, 0, Math.PI*2, true); // 左上隅の穴
-            tCtx.arc(sz/2, sz/2, holeR, 0, Math.PI*2, true); // 中央の穴
-            // 四隅のつながりを表現するために右下などにも必要だが、繰り返しパターンなので
-            // 左上(0,0)にあれば、隣のタイルの右下等はカバーされる
-            tCtx.fill('evenodd');
+            // 背景塗りつぶし
+            fillRect(bg, 0, 0, sz, sz);
+
+            // 扇形を描く関数
+            const drawPie = (x, y, radius, startAngle, endAngle, color) => {
+                tCtx.beginPath();
+                tCtx.moveTo(x, y);
+                tCtx.arc(x, y, radius, startAngle, endAngle);
+                tCtx.closePath();
+                tCtx.fillStyle = color;
+                tCtx.fill();
+            };
+
+            // 円（4色の扇形）を描画
+            // 画像(右下)は千鳥配置ではなく整列配置に見えるが、
+            // CSSの background-position: ... calc(s/2) から千鳥配置の可能性もある。
+            // ここでは中央と四隅に配置してパターン化する（千鳥配置）
+            
+            const r = sz * 0.35; // 円の半径
+            
+            // 描画セット (x, y)
+            const points = [
+                {x: 0, y: 0}, 
+                {x: sz, y: 0}, 
+                {x: 0, y: sz}, 
+                {x: sz, y: sz}, 
+                {x: sz/2, y: sz/2}
+            ];
+
+            points.forEach(pt => {
+                // 4つの扇形 (TopRight, BottomRight, BottomLeft, TopLeft)
+                // 0rad = 3時方向
+                drawPie(pt.x, pt.y, r, Math.PI*1.5, Math.PI*2, fans[0]); // 右上
+                drawPie(pt.x, pt.y, r, 0, Math.PI*0.5, fans[1]);         // 右下
+                drawPie(pt.x, pt.y, r, Math.PI*0.5, Math.PI, fans[2]);   // 左下
+                drawPie(pt.x, pt.y, r, Math.PI, Math.PI*1.5, fans[3]);   // 左上
+            });
         }
-        // --- 既存の柄 ---
+
+        // --- 既存の柄 (変更なし) ---
+        else if (p.type === 'dot-skew') {
+            const sz = p.size * scale;
+            tempCanvas.width = s; tempCanvas.height = s;
+            tCtx.fillStyle = p.color;
+            fillCircle(p.color, s/2, s/2, sz);
+            fillCircle(p.color, 0, 0, sz); fillCircle(p.color, s, 0, sz);
+            fillCircle(p.color, 0, s, sz); fillCircle(p.color, s, s, sz);
+        } 
+        else if (p.type === 'dot-mix') {
+            const sz = p.size * scale;
+            tempCanvas.width = s; tempCanvas.height = s;
+            fillCircle(p.color, s/2, s/2, sz);
+            fillCircle(p.color2, 0, 0, sz); fillCircle(p.color2, s, 0, sz);
+            fillCircle(p.color2, 0, s, sz); fillCircle(p.color2, s, s, sz);
+        }
+        else if (p.type === 'dot-size') {
+            const sz1 = p.size * scale;
+            const sz2 = p.size2 * scale;
+            tempCanvas.width = s; tempCanvas.height = s;
+            fillCircle(p.color, s/2, s/2, sz1);
+            fillCircle(p.color, 0, 0, sz2); fillCircle(p.color, s, 0, sz2);
+            fillCircle(p.color, 0, s, sz2); fillCircle(p.color, s, s, sz2);
+        }
         else if (p.type === 'ichimatsu') {
             const sz = p.size * scale;
             tempCanvas.width = sz * 2; tempCanvas.height = sz * 2;
-            tCtx.fillStyle = p.color; tCtx.fillRect(0, 0, sz, sz); tCtx.fillRect(sz, sz, sz, sz);
+            fillRect(p.color, 0, 0, sz, sz); fillRect(p.color, sz, sz, sz, sz);
         } 
         else if (p.type === 'stripe') {
             const width = p.width * scale;
