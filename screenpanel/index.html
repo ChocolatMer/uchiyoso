@@ -87,8 +87,18 @@
                     </div>
                 </div>
                 <div id="colorUI" class="grid grid-cols-2 gap-2 mt-2">
-                    <div><span class="text-[10px] text-neutral-500">カラー1</span><div class="h-8 bg-[#262626] border border-[#444] rounded flex items-center px-1"><input type="color" id="color1" value="#111111" class="w-full h-6 bg-transparent border-none cursor-pointer"></div></div>
-                    <div id="color2Group" class="hidden"><span class="text-[10px] text-neutral-500">カラー2</span><div class="h-8 bg-[#262626] border border-[#444] rounded flex items-center px-1"><input type="color" id="color2" value="#4338ca" class="w-full h-6 bg-transparent border-none cursor-pointer"></div></div>
+                    <div>
+                        <span class="text-[10px] text-neutral-500">カラー1 (背景/Base)</span>
+                        <div class="h-8 bg-[#262626] border border-[#444] rounded flex items-center px-1">
+                            <input type="color" id="color1" value="#111111" class="w-full h-6 bg-transparent border-none cursor-pointer">
+                        </div>
+                    </div>
+                    <div id="color2Group" class="hidden">
+                        <span class="text-[10px] text-neutral-500">カラー2 (柄/Pattern)</span>
+                        <div class="h-8 bg-[#262626] border border-[#444] rounded flex items-center px-1">
+                            <input type="color" id="color2" value="#4338ca" class="w-full h-6 bg-transparent border-none cursor-pointer">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="bg-[#222] p-3 rounded border border-[#333] space-y-3 mt-2">
@@ -116,7 +126,7 @@
                 </div>
             </div>
             
-            <!-- NEW: 5. 装飾 (Decorations) -->
+            <!-- 3. 装飾 (Decorations) -->
             <div class="space-y-3">
                 <label class="text-xs font-bold text-indigo-400 border-b border-[#333] pb-1 block">3. 装飾 (Decorations)</label>
                 <div class="grid grid-cols-4 gap-2">
@@ -210,7 +220,7 @@
         const state = {
             width: 1600, height: 900,
             fill: 'solid', 
-            patternId: 1, // patternTypeから変更
+            patternId: 1, 
             color1: '#111111', color2: '#4338ca',
             bgImg: null, maskImg: null,
             margin: 10,
@@ -255,13 +265,11 @@
                 ChartPatternLibrary.config.forEach((conf, index) => {
                     const btn = document.createElement('button');
                     btn.className = 'p-1 bg-[#222] border border-[#444] rounded hover:bg-[#333] text-[9px] text-gray-300 transition';
-                    // 名前がないのでIDで表示
                     btn.textContent = `No.${conf.id}`;
                     btn.id = `btn-pattern-${conf.id}`;
                     btn.onclick = () => setPattern(conf.id);
                     container.appendChild(btn);
                 });
-                // 初期選択
                 updatePatternButtonState();
             } else {
                 console.warn('patterns.js not loaded');
@@ -349,7 +357,8 @@
         function updateUI() {
             const f = state.fill;
             document.getElementById('bgImageUI').classList.toggle('hidden', f!=='image');
-            // パターン選択またはグラデーションのときカラー2を表示
+            
+            // パターン・グラデーション時は Color2 を表示
             document.getElementById('color2Group').classList.toggle('hidden', !(f==='linear'||f==='pattern'));
             document.getElementById('patternSelectUI').classList.toggle('hidden', f!=='pattern');
             document.getElementById('colorUI').classList.toggle('hidden', f==='image');
@@ -373,14 +382,12 @@
             canvas.style.width = `${cssW}px`; canvas.style.height = `${cssH}px`;
         }
 
-        // --- V31 Core Engine: Super-Sampling + Dithering + Decorations ---
+        // --- V31 Core Engine ---
         function draw() {
-            // Super-Sampling Scale Factor
             const S = 2;
             const W = state.width * S;
             const H = state.height * S;
 
-            // Reset Internal Canvases (High-Res)
             offCanvas.width = W; offCanvas.height = H; 
             offCtx.imageSmoothingEnabled = true; offCtx.imageSmoothingQuality = 'high';
             
@@ -396,36 +403,32 @@
             const drawX = marginPx; const drawY = marginPx;
             const drawW = W - (marginPx * 2); const drawH = H - (marginPx * 2);
 
-            // 1. ソース画像の描画 (High-Res Fill)
+            // 1. ソース画像の描画
             offCtx.save();
             drawFill(offCtx, 0, 0, W, H, S);
             
-            // ★装飾の描画 (Fillの上に描く)
+            // 2. 装飾の描画 (背景の上に描画される)
             if (state.deco !== 'none') {
                 drawDeco(offCtx, drawX, drawY, drawW, drawH, S);
             }
             offCtx.restore();
 
-            /* --- [CRITICAL] DO NOT CHANGE LOGIC START --- */
-            // 2. マスク（型）の作成 (High-Res Mask)
+            // 3. マスク作成
             maskCtx.save();
             maskCtx.fillStyle = '#fff';
-            if (state.pBlur > 0) {
-                maskCtx.filter = `blur(${state.pBlur * S}px)`;
-            }
+            if (state.pBlur > 0) maskCtx.filter = `blur(${state.pBlur * S}px)`;
             maskCtx.fillRect(drawX, drawY, drawW, drawH);
             maskCtx.restore();
 
-            // 3. マスク適用 (destination-in)
+            // 4. マスク適用
             offCtx.save();
             offCtx.globalCompositeOperation = 'destination-in';
             offCtx.drawImage(maskCanvas, 0, 0);
             offCtx.restore();
-            /* --- [CRITICAL] DO NOT CHANGE LOGIC END --- */
 
-            // 4. 影の適用と合成 (High-Res Composition)
+            // 5. 合成 (影 + 不透明度)
             compCtx.save();
-            compCtx.globalAlpha = state.opacity;
+            compCtx.globalAlpha = state.opacity; // ここで不透明度を反映
             if (state.sDist > 0 || state.sBlur > 0) {
                 const rad = state.sAngle * (Math.PI/180);
                 compCtx.shadowColor = "rgba(0,0,0,0.8)";
@@ -436,26 +439,20 @@
             compCtx.drawImage(offCanvas, 0, 0);
             compCtx.restore();
 
-            /* --- [CRITICAL] DO NOT CHANGE LOGIC START --- */
-            // 5. 穴あけ (High-Res Hole Cut)
+            // 6. 穴あけ
             compCtx.save();
             compCtx.globalCompositeOperation = 'destination-out';
             compCtx.globalAlpha = 1; 
             if (state.hBlur > 0) compCtx.filter = `blur(${state.hBlur * S}px)`;
-            
             drawHole(compCtx, W, H, S);
             compCtx.fill();
             compCtx.restore();
-            /* --- [CRITICAL] DO NOT CHANGE LOGIC END --- */
 
-            // 6. 最終出力 (Downscaling)
+            // 7. 出力
             ctx.drawImage(compCanvas, 0, 0, state.width, state.height);
-
-            // 7. ★ディザリング処理 (Banding Removal) - V31 New Feature
             applyDithering(ctx, state.width, state.height);
         }
 
-        // --- Helper: Dithering for Gradients ---
         function applyDithering(c, w, h) {
             const idata = c.getImageData(0, 0, w, h);
             const data = idata.data;
@@ -470,7 +467,6 @@
             c.putImageData(idata, 0, 0);
         }
 
-        // --- Helper: Decorations ---
         function drawDeco(c, x, y, w, h, S) {
             const size = state.decoSize * S;
             const pad = size / 2;
@@ -517,20 +513,19 @@
                 g.addColorStop(0, color1); g.addColorStop(1, color2);
                 c.fillStyle = g; c.fillRect(x, y, w, h);
             } else if (fill === 'pattern') {
-                // patterns.js を利用した描画
+                // Color1を背景色として塗りつぶす (これにより不透明度と背景色が反映される)
+                c.fillStyle = color1;
+                c.fillRect(x, y, w, h);
+
                 if (window.ChartPatternLibrary) {
                     const conf = ChartPatternLibrary.config.find(i => i.id === state.patternId);
                     if (conf) {
-                        // 設定の複製と現在色の上書き
                         const pParams = { ...conf.canvas };
-                        pParams.color = color1;
-                        // 一部のパターンはcolor2を使う可能性があるため、color2も渡す
-                        // (patterns.jsの定義にcolor2が含まれる、またはtypeによって判断)
-                        pParams.color2 = color2;
-
+                        // Color2を柄の色として使用
+                        pParams.color = color2;
+                        
                         c.save();
                         c.translate(x, y);
-                        // ChartPatternLibrary.draw は (ctx, w, h, p, scale)
                         ChartPatternLibrary.draw(c, w, h, pParams, S);
                         c.restore();
                     }
@@ -545,7 +540,6 @@
             if (hRatio >= 1) { hw = (base * 0.8) * state.scale; hh = hw / hRatio; } 
             else { hh = (base * 0.8) * state.scale; hw = hh * hRatio; }
 
-            // Clamping with Safety Margin
             const safe = 20 * S;
             let rawX = W * state.x;
             let rawY = H * state.y;
