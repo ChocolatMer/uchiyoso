@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cocofolia Panel Generator V31 - Luxury Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- 外部パターンライブラリの読み込み -->
+    <script src="../patterns/patterns.js"></script>
+    <style>
+        body { font-family: 'Noto Sans JP', sans-serif; background-color: #1a1a1a; color: #e5e5e5; overflow: hidden; height: 100vh; width: 100vw; }
+        aside::-webkit-scrollbar { width: 6px; }
+        aside::-webkit-scrollbar-thumb { background-color: #444; border-radius: 3px; }
+        input[type="range"] { -webkit-appearance: none; background: #333; border-radius: 4px; height: 6px; width: 100%; outline: none; cursor: pointer; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; border-radius: 50%; background: #818cf8; border: 2px solid #fff; transition: transform 0.1s; }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        
+        #previewContainer.bg-check {
+            background-image: linear-gradient(45deg, #262626 25%, transparent 25%), linear-gradient(-45deg, #262626 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #262626 75%), linear-gradient(-45deg, transparent 75%, #262626 75%);
+            background-size: 24px 24px; background-position: 0 0, 0 12px, 12px -12px, -12px 0px; background-color: #1a1a1a;
+        }
+        #previewContainer.bg-white-mode { background: #e5e5e5; }
+        #previewContainer.bg-black-mode { background: #000000; }
+        #previewContainer.bg-pink-mode { background: #ffc0cb; }
+        
+        canvas { box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1); display: block; }
+        
+        .select-btn { background-color: #262626; border: 1px solid #444; border-radius: 6px; padding: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; color: #aaa; transition: all 0.2s; }
+        .select-btn:hover { background-color: #333; color: #fff; }
+        .select-btn.selected { background-color: #312e81; border-color: #818cf8; color: #fff; box-shadow: 0 0 0 1px #818cf8; }
+        
+        .ratio-btn.selected-ratio { background-color: #4f46e5; color: white; border-color: #818cf8; }
+        .hole-ratio-btn.selected-hole-ratio { background-color: #db2777; color: white; border-color: #f472b6; }
+        
+        .upload-area { border: 2px dashed #555; background-color: #222; padding: 12px; text-align: center; border-radius: 6px; cursor: pointer; transition: 0.2s; position: relative; }
+        .upload-area:hover { border-color: #818cf8; background-color: #2a2a2a; }
+        .upload-area input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+        
+        /* パターンボタン選択状態用 */
+        .pattern-btn-selected { background-color: #312e81 !important; border-color: #818cf8 !important; color: white !important; }
+    </style>
+</head>
+<body class="flex flex-col lg:flex-row">
+
+    <aside class="w-full lg:w-[420px] bg-[#141414] border-r border-[#333] flex flex-col z-50 h-full shadow-2xl flex-shrink-0">
+        <div class="p-4 border-b border-[#333] bg-[#141414]">
+            <h1 class="text-lg font-bold text-white flex items-center gap-2">
+                <span class="w-2 h-5 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full"></span>
+                Panel Generator V31
+            </h1>
+            <p class="text-[10px] text-neutral-400 pl-4">装飾機能 & バンディング除去搭載</p>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-5 space-y-8">
+            <!-- 1. 画像サイズ -->
+            <div class="space-y-2">
+                <label class="text-xs font-bold text-indigo-400">1. 全体のサイズ (Canvas)</label>
+                <div class="grid grid-cols-5 gap-1">
+                    <button onclick="setRatio(16,9)" id="r-16-9" class="ratio-btn bg-[#262626] border border-[#444] text-neutral-400 hover:text-white py-1.5 rounded text-[10px] transition selected-ratio">16:9</button>
+                    <button onclick="setRatio(9,16)" id="r-9-16" class="ratio-btn bg-[#262626] border border-[#444] text-neutral-400 hover:text-white py-1.5 rounded text-[10px] transition">9:16</button>
+                    <button onclick="setRatio(4,3)" id="r-4-3" class="ratio-btn bg-[#262626] border border-[#444] text-neutral-400 hover:text-white py-1.5 rounded text-[10px] transition">4:3</button>
+                    <button onclick="setRatio(3,4)" id="r-3-4" class="ratio-btn bg-[#262626] border border-[#444] text-neutral-400 hover:text-white py-1.5 rounded text-[10px] transition">3:4</button>
+                    <button onclick="setRatio(1,1)" id="r-1-1" class="ratio-btn bg-[#262626] border border-[#444] text-neutral-400 hover:text-white py-1.5 rounded text-[10px] transition">1:1</button>
+                </div>
+            </div>
+
+            <!-- 2. 背景・塗りつぶし -->
+            <div class="space-y-3">
+                <label class="text-xs font-bold text-indigo-400 border-b border-[#333] pb-1 block">2. 背景・塗りつぶし (Background)</label>
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="setFill('solid')" id="btn-fill-solid" class="select-btn selected"><div class="w-3 h-3 bg-gray-400"></div><span class="text-[9px]">単色</span></button>
+                    <button onclick="setFill('linear')" id="btn-fill-linear" class="select-btn"><div class="w-3 h-3 bg-gradient-to-r from-gray-500 to-white"></div><span class="text-[9px]">グラデ</span></button>
+                    <button onclick="setFill('pattern')" id="btn-fill-pattern" class="select-btn"><div class="w-3 h-3 border border-gray-500" style="background: repeating-linear-gradient(45deg,#888 0,#888 2px,transparent 2px,transparent 4px)"></div><span class="text-[9px]">柄</span></button>
+                    <button onclick="setFill('image')" id="btn-fill-image" class="select-btn"><span class="text-sm">🖼️</span><span class="text-[9px]">画像</span></button>
+                </div>
+                
+                <!-- patterns.js から動的に生成されるUI -->
+                <div id="patternSelectUI" class="hidden grid grid-cols-4 gap-1 mt-2">
+                    <!-- Javascriptでボタンを生成 -->
+                </div>
+
+                <div id="bgImageUI" class="hidden mt-2">
+                    <div class="upload-area">
+                        <span class="text-indigo-400 font-bold text-xs block">📁 背景画像を選択</span>
+                        <input type="file" id="bgImageInput" accept="image/*">
+                    </div>
+                </div>
+                <div id="colorUI" class="grid grid-cols-2 gap-2 mt-2">
+                    <div><span class="text-[10px] text-neutral-500">カラー1</span><div class="h-8 bg-[#262626] border border-[#444] rounded flex items-center px-1"><input type="color" id="color1" value="#111111" class="w-full h-6 bg-transparent border-none cursor-pointer"></div></div>
+                    <div id="color2Group" class="hidden"><span class="text-[10px] text-neutral-500">カラー2</span><div class="h-8 bg-[#262626] border border-[#444] rounded flex items-center px-1"><input type="color" id="color2" value="#4338ca" class="w-full h-6 bg-transparent border-none cursor-pointer"></div></div>
+                </div>
+
+                <div class="bg-[#222] p-3 rounded border border-[#333] space-y-3 mt-2">
+                    <div>
+                        <div class="flex justify-between text-[10px] text-neutral-400 mb-1"><span class="font-bold text-indigo-300">パネルの余白 (Margin)</span><span id="marginVal">10%</span></div>
+                        <input type="range" id="panelMargin" min="0" max="40" value="10">
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[10px] text-neutral-400 mb-1"><span>不透明度 (Opacity)</span><span id="opacityVal">100%</span></div>
+                        <input type="range" id="bgOpacity" min="0" max="1" step="0.01" value="1">
+                    </div>
+                </div>
+
+                <div class="bg-[#222] p-3 rounded border border-[#333] space-y-3">
+                    <span class="text-[10px] font-bold text-neutral-400 block border-b border-[#444] pb-1 mb-2">外枠の加工</span>
+                    <div>
+                        <div class="flex justify-between text-[10px] text-neutral-400 mb-1"><span class="text-indigo-300 font-bold">縁のぼかし (Outer Blur)</span><span id="pBlurVal">0px</span></div>
+                        <input type="range" id="panelBlur" min="0" max="100" value="0">
+                    </div>
+                    <div class="flex gap-2">
+                        <div class="w-1/2"><span class="text-[9px] text-neutral-500">影の距離</span><input type="range" id="shadowDist" min="0" max="100" value="0"></div>
+                        <div class="w-1/2"><span class="text-[9px] text-neutral-500">影のぼかし</span><input type="range" id="shadowBlur" min="0" max="100" value="0"></div>
+                    </div>
+                    <div><span class="text-[9px] text-neutral-500">影の角度</span><input type="range" id="shadowAngle" min="0" max="360" value="90"></div>
+                </div>
+            </div>
+            
+            <!-- NEW: 5. 装飾 (Decorations) -->
+            <div class="space-y-3">
+                <label class="text-xs font-bold text-indigo-400 border-b border-[#333] pb-1 block">3. 装飾 (Decorations)</label>
+                <div class="grid grid-cols-4 gap-2">
+                    <button onclick="setDeco('none')" id="btn-deco-none" class="select-btn selected"><span class="text-[9px]">なし</span></button>
+                    <button onclick="setDeco('frame')" id="btn-deco-frame" class="select-btn"><div class="w-4 h-3 border border-gray-400"></div><span class="text-[9px]">枠線</span></button>
+                    <button onclick="setDeco('corners')" id="btn-deco-corners" class="select-btn"><div class="w-4 h-3 relative"><div class="absolute top-0 left-0 w-1.5 h-1.5 border-t border-l border-gray-400"></div><div class="absolute bottom-0 right-0 w-1.5 h-1.5 border-b border-r border-gray-400"></div></div><span class="text-[9px]">四隅</span></button>
+                    <button onclick="setDeco('accent')" id="btn-deco-accent" class="select-btn"><div class="w-4 h-3 border-t-2 border-b-2 border-gray-400"></div><span class="text-[9px]">帯</span></button>
+                </div>
+                <div id="decoSettingUI" class="hidden bg-[#222] p-3 rounded border border-[#333] space-y-2 mt-2">
+                    <div><span class="text-[10px] text-neutral-500">装飾カラー</span><div class="h-6 bg-[#262626] border border-[#444] rounded flex items-center px-1"><input type="color" id="decoColor" value="#ffffff" class="w-full h-4 bg-transparent border-none cursor-pointer"></div></div>
+                    <div><div class="flex justify-between text-[10px] text-neutral-400"><span>太さ・サイズ</span><span id="decoSizeVal">5px</span></div><input type="range" id="decoSize" min="1" max="50" value="5"></div>
+                </div>
+            </div>
+
+            <!-- 4. 穴 (Window) -->
+            <div class="space-y-3">
+                <label class="text-xs font-bold text-indigo-400 border-b border-[#333] pb-1 block">4. 穴 (Window)</label>
+                
+                <div class="grid grid-cols-5 gap-1">
+                    <button onclick="setShape('rect')" id="btn-shape-rect" class="select-btn selected"><div class="w-3 h-3 border border-gray-400 bg-gray-600"></div></button>
+                    <button onclick="setShape('circle')" id="btn-shape-circle" class="select-btn"><div class="w-3 h-3 rounded-full bg-gray-600 border border-gray-400"></div></button>
+                    <button onclick="setShape('diamond')" id="btn-shape-diamond" class="select-btn"><div class="w-2 h-2 rotate-45 bg-gray-600 border border-gray-400"></div></button>
+                    <button onclick="setShape('emoji')" id="btn-shape-emoji" class="select-btn">✨</button>
+                    <button onclick="setShape('custom-image')" id="btn-shape-custom-image" class="select-btn">📂</button>
+                </div>
+
+                <div id="holeRatioUI" class="mt-2">
+                    <span class="text-[10px] text-neutral-500 mb-1 block">穴の比率 (Window Ratio)</span>
+                    <div class="grid grid-cols-5 gap-1">
+                        <button onclick="setHoleRatio(16,9)" id="hr-16-9" class="hole-ratio-btn bg-[#262626] border border-[#444] text-neutral-400 hover:text-white py-1 rounded text-[9px] transition">16:9</button>
+                        <button onclick="setHoleRatio(9,16)" id="hr-9-16" class="hole-ratio-btn bg-[#262626] border border-[#444] text-neutral-400 hover:text-white py-1 rounded text-[9px] transition">9:16</button>
+                        <button onclick="setHoleRatio(4,3)" id="hr-4-3" class="hole-ratio-btn bg-[#262626] border border-[#444] text-neutral-400 hover:text-white py-1 rounded text-[9px] transition selected-hole-ratio">4:3</button>
+                        <button onclick="setHoleRatio(3,4)" id="hr-3-4" class="hole-ratio-btn bg-[#262626] border border-[#444] text-neutral-400 hover:text-white py-1 rounded text-[9px] transition">3:4</button>
+                        <button onclick="setHoleRatio(1,1)" id="hr-1-1" class="hole-ratio-btn bg-[#262626] border border-[#444] text-neutral-400 hover:text-white py-1 rounded text-[9px] transition">1:1</button>
+                    </div>
+                </div>
+
+                <div id="maskImageUI" class="hidden mt-2"><div class="upload-area"><span class="text-indigo-400 font-bold text-xs block">📂 シルエット画像</span><input type="file" id="maskImageInput" accept="image/*"></div></div>
+                <div id="emojiUI" class="hidden mt-2"><input type="text" id="emojiText" value="🦋" class="w-full bg-[#262626] border border-[#444] text-center p-2 rounded outline-none"></div>
+                <div id="radiusUI" class="mt-2"><div class="flex justify-between text-[10px] text-neutral-400"><span>角丸 (Radius)</span><span id="radiusVal">0px</span></div><input type="range" id="cornerRadius" min="0" max="200" value="0"></div>
+                
+                <div class="grid grid-cols-2 gap-3 mt-2">
+                    <div><div class="flex justify-between text-[10px] text-neutral-400"><span>サイズ (Scale)</span><span id="scaleVal">50%</span></div><input type="range" id="holeScale" min="0.1" max="1.5" step="0.01" value="0.5"></div>
+                    <div><div class="flex justify-between text-[10px] text-neutral-400"><span class="text-pink-300 font-bold">穴のぼかし (Inner)</span><span id="hBlurVal">0px</span></div><input type="range" id="holeBlur" min="0" max="50" value="0"></div>
+                </div>
+            </div>
+
+            <!-- 5. 配置 -->
+            <div class="space-y-3 pb-8">
+                <label class="text-xs font-bold text-indigo-400 border-b border-[#333] pb-1 block">5. 配置 (Position)</label>
+                <div class="flex gap-1">
+                    <button onclick="setPos(0.2,0.2)" class="bg-[#262626] flex-1 py-1 rounded text-[10px] border border-[#444] hover:bg-[#333]">↖</button>
+                    <button onclick="setPos(0.8,0.2)" class="bg-[#262626] flex-1 py-1 rounded text-[10px] border border-[#444] hover:bg-[#333]">↗</button>
+                    <button onclick="setPos(0.5,0.5)" class="bg-[#262626] flex-1 py-1 rounded text-[10px] border border-[#444] hover:bg-[#333]">●</button>
+                    <button onclick="setPos(0.2,0.8)" class="bg-[#262626] flex-1 py-1 rounded text-[10px] border border-[#444] hover:bg-[#333]">↙</button>
+                    <button onclick="setPos(0.8,0.8)" class="bg-[#262626] flex-1 py-1 rounded text-[10px] border border-[#444] hover:bg-[#333]">↘</button>
+                </div>
+                <div class="flex gap-2">
+                    <div class="w-full">
+                        <span class="text-[9px] text-neutral-500">X</span>
+                        <input type="range" id="posX" min="0" max="100" value="50">
+                    </div>
+                    <div class="w-full">
+                        <span class="text-[9px] text-neutral-500">Y</span>
+                        <input type="range" id="posY" min="0" max="100" value="50">
+                    </div>
+                </div>
+                <p class="text-[9px] text-indigo-300 mt-1">※安全マージンにより、端に寄せても画面内側に留まります</p>
+            </div>
+
+            <div class="sticky bottom-0 bg-[#141414] py-4 border-t border-[#333]">
+                <button id="downloadBtn" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-3 rounded shadow-lg text-sm hover:opacity-90 transform hover:scale-[1.02] transition">画像を保存 (PNG)</button>
+            </div>
+        </div>
+    </aside>
+
+    <main id="previewContainer" class="flex-1 relative flex items-center justify-center bg-check overflow-hidden relative">
+        <div class="absolute top-4 right-4 z-50 flex items-center gap-2 bg-[#262626] px-3 py-2 rounded-full border border-[#444] shadow-xl">
+            <span class="text-[10px] text-neutral-400 mr-2">背景確認</span>
+            <button onclick="setBg('check')" class="w-5 h-5 rounded-full bg-check border border-[#555]"></button>
+            <button onclick="setBg('white')" class="w-5 h-5 rounded-full bg-white border border-[#555]"></button>
+            <button onclick="setBg('black')" class="w-5 h-5 rounded-full bg-black border border-[#555]"></button>
+            <button onclick="setBg('pink')" class="w-5 h-5 rounded-full bg-pink-mode border border-[#555]"></button>
+            <input type="color" oninput="setBg(this.value)" class="w-5 h-5 rounded-full p-0 border-0 cursor-pointer">
+        </div>
+        <canvas id="canvas"></canvas>
+    </main>
+
+    <script>
+        // State Management
+        const state = {
+            width: 1600, height: 900,
+            fill: 'solid', 
+            patternId: 1, // patternTypeから変更
+            color1: '#111111', color2: '#4338ca',
+            bgImg: null, maskImg: null,
+            margin: 10,
+            opacity: 1, pBlur: 0,
+            sDist: 0, sBlur: 0, sAngle: 90,
+            shape: 'rect', 
+            scale: 0.5, hBlur: 0, radius: 0,
+            emoji: '🦋', x: 0.5, y: 0.5,
+            holeAspectW: 4, holeAspectH: 3,
+            deco: 'none', decoColor: '#ffffff', decoSize: 5
+        };
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const previewContainer = document.getElementById('previewContainer');
+        
+        // High-Resolution Internal Canvases (For Super-Sampling)
+        const offCanvas = document.createElement('canvas'); 
+        const offCtx = offCanvas.getContext('2d');
+        const maskCanvas = document.createElement('canvas'); 
+        const maskCtx = maskCanvas.getContext('2d');
+        const compCanvas = document.createElement('canvas'); 
+        const compCtx = compCanvas.getContext('2d');
+
+        function init() {
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            addListeners();
+            // パターンボタンの生成
+            initPatternButtons();
+            
+            setRatio(16,9);
+            updateUI();
+            draw();
+        }
+
+        // patterns.js の読み込みとボタン生成
+        function initPatternButtons() {
+            const container = document.getElementById('patternSelectUI');
+            if (window.ChartPatternLibrary && window.ChartPatternLibrary.config) {
+                container.innerHTML = '';
+                ChartPatternLibrary.config.forEach((conf, index) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'p-1 bg-[#222] border border-[#444] rounded hover:bg-[#333] text-[9px] text-gray-300 transition';
+                    // 名前がないのでIDで表示
+                    btn.textContent = `No.${conf.id}`;
+                    btn.id = `btn-pattern-${conf.id}`;
+                    btn.onclick = () => setPattern(conf.id);
+                    container.appendChild(btn);
+                });
+                // 初期選択
+                updatePatternButtonState();
+            } else {
+                console.warn('patterns.js not loaded');
+                container.innerHTML = '<span class="text-[9px] text-red-400 col-span-4">Pattern lib not found</span>';
+            }
+        }
+
+        function updatePatternButtonState() {
+            if (!window.ChartPatternLibrary) return;
+            ChartPatternLibrary.config.forEach(conf => {
+                const btn = document.getElementById(`btn-pattern-${conf.id}`);
+                if (btn) {
+                    if (conf.id === state.patternId) {
+                        btn.classList.add('pattern-btn-selected');
+                        btn.classList.remove('bg-[#222]', 'text-gray-300');
+                    } else {
+                        btn.classList.remove('pattern-btn-selected');
+                        btn.classList.add('bg-[#222]', 'text-gray-300');
+                    }
+                }
+            });
+        }
+
+        // --- Action Handlers ---
+        function setFill(t) { state.fill = t; updateBtns('fill', t); updateUI(); draw(); }
+        
+        function setPattern(id) { 
+            state.patternId = id; 
+            updatePatternButtonState();
+            draw(); 
+        }
+        
+        function setDeco(d) {
+            state.deco = d;
+            updateBtns('deco', d);
+            updateUI();
+            draw();
+        }
+
+        function setShape(s) { 
+            state.shape = s; 
+            updateBtns('shape', s);
+            if(s === 'circle') setHoleRatio(1, 1);
+            else if (s === 'diamond') setHoleRatio(4, 3);
+            else if (s === 'rect') setHoleRatio(4, 3);
+            updateUI(); draw(); 
+        }
+
+        function setHoleRatio(w, h) {
+            state.holeAspectW = w; state.holeAspectH = h;
+            document.querySelectorAll('.hole-ratio-btn').forEach(b => {
+                const isMatch = b.id === `hr-${w}-${h}`;
+                b.classList.toggle('selected-hole-ratio', isMatch);
+                b.classList.toggle('bg-[#262626]', !isMatch);
+            });
+            draw();
+        }
+
+        function updateBtns(grp, val) { 
+            document.querySelectorAll(`[id^="btn-${grp}-"]`).forEach(b => b.classList.remove('selected')); 
+            document.getElementById(`btn-${grp}-${val}`).classList.add('selected'); 
+        }
+
+        function setRatio(w, h) {
+            if(w>h) { state.width=1600; state.height=Math.round(1600*h/w); } 
+            else { state.height=1200; state.width=Math.round(1200*w/h); }
+            document.querySelectorAll('.ratio-btn').forEach(b => { 
+                const match = b.id === `r-${w}-${h}`;
+                b.classList.toggle('selected-ratio', match);
+            });
+            resizePreview(); draw();
+        }
+
+        function setPos(x, y) { state.x=x; state.y=y; document.getElementById('posX').value=x*100; document.getElementById('posY').value=y*100; draw(); }
+        function setBg(c) {
+            previewContainer.className = "flex-1 relative flex items-center justify-center overflow-hidden relative"; 
+            previewContainer.style.background = '';
+            if(c==='check') previewContainer.classList.add('bg-check'); 
+            else if(c==='white') previewContainer.classList.add('bg-white-mode'); 
+            else if(c==='black') previewContainer.classList.add('bg-black-mode'); 
+            else if(c==='pink') previewContainer.classList.add('bg-pink-mode'); 
+            else previewContainer.style.background = c;
+        }
+
+        function updateUI() {
+            const f = state.fill;
+            document.getElementById('bgImageUI').classList.toggle('hidden', f!=='image');
+            // パターン選択またはグラデーションのときカラー2を表示
+            document.getElementById('color2Group').classList.toggle('hidden', !(f==='linear'||f==='pattern'));
+            document.getElementById('patternSelectUI').classList.toggle('hidden', f!=='pattern');
+            document.getElementById('colorUI').classList.toggle('hidden', f==='image');
+            
+            const s = state.shape;
+            document.getElementById('maskImageUI').classList.toggle('hidden', s!=='custom-image');
+            document.getElementById('emojiUI').classList.toggle('hidden', s!=='emoji');
+            document.getElementById('radiusUI').classList.toggle('hidden', s!=='rect');
+
+            document.getElementById('decoSettingUI').classList.toggle('hidden', state.deco==='none');
+        }
+
+        function resizePreview() {
+            canvas.width = state.width; canvas.height = state.height;
+            ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+            
+            const areaW = previewContainer.clientWidth - 80; const areaH = previewContainer.clientHeight - 80;
+            const aspect = state.width / state.height;
+            let cssW, cssH;
+            if (areaW / areaH > aspect) { cssH = areaH; cssW = areaH * aspect; } else { cssW = areaW; cssH = areaW / aspect; }
+            canvas.style.width = `${cssW}px`; canvas.style.height = `${cssH}px`;
+        }
+
+        // --- V31 Core Engine: Super-Sampling + Dithering + Decorations ---
+        function draw() {
+            // Super-Sampling Scale Factor
+            const S = 2;
+            const W = state.width * S;
+            const H = state.height * S;
+
+            // Reset Internal Canvases (High-Res)
+            offCanvas.width = W; offCanvas.height = H; 
+            offCtx.imageSmoothingEnabled = true; offCtx.imageSmoothingQuality = 'high';
+            
+            maskCanvas.width = W; maskCanvas.height = H; 
+            maskCtx.imageSmoothingEnabled = true; maskCtx.imageSmoothingQuality = 'high';
+            
+            compCanvas.width = W; compCanvas.height = H;
+            compCtx.imageSmoothingEnabled = true; compCtx.imageSmoothingQuality = 'high';
+            
+            ctx.clearRect(0,0,state.width,state.height);
+
+            const marginPx = Math.min(W, H) * (state.margin / 100);
+            const drawX = marginPx; const drawY = marginPx;
+            const drawW = W - (marginPx * 2); const drawH = H - (marginPx * 2);
+
+            // 1. ソース画像の描画 (High-Res Fill)
+            offCtx.save();
+            drawFill(offCtx, 0, 0, W, H, S);
+            
+            // ★装飾の描画 (Fillの上に描く)
+            if (state.deco !== 'none') {
+                drawDeco(offCtx, drawX, drawY, drawW, drawH, S);
+            }
+            offCtx.restore();
+
+            /* --- [CRITICAL] DO NOT CHANGE LOGIC START --- */
+            // 2. マスク（型）の作成 (High-Res Mask)
+            maskCtx.save();
+            maskCtx.fillStyle = '#fff';
+            if (state.pBlur > 0) {
+                maskCtx.filter = `blur(${state.pBlur * S}px)`;
+            }
+            maskCtx.fillRect(drawX, drawY, drawW, drawH);
+            maskCtx.restore();
+
+            // 3. マスク適用 (destination-in)
+            offCtx.save();
+            offCtx.globalCompositeOperation = 'destination-in';
+            offCtx.drawImage(maskCanvas, 0, 0);
+            offCtx.restore();
+            /* --- [CRITICAL] DO NOT CHANGE LOGIC END --- */
+
+            // 4. 影の適用と合成 (High-Res Composition)
+            compCtx.save();
+            compCtx.globalAlpha = state.opacity;
+            if (state.sDist > 0 || state.sBlur > 0) {
+                const rad = state.sAngle * (Math.PI/180);
+                compCtx.shadowColor = "rgba(0,0,0,0.8)";
+                compCtx.shadowBlur = state.sBlur * S;
+                compCtx.shadowOffsetX = (state.sDist * S) * Math.cos(rad);
+                compCtx.shadowOffsetY = (state.sDist * S) * Math.sin(rad);
+            }
+            compCtx.drawImage(offCanvas, 0, 0);
+            compCtx.restore();
+
+            /* --- [CRITICAL] DO NOT CHANGE LOGIC START --- */
+            // 5. 穴あけ (High-Res Hole Cut)
+            compCtx.save();
+            compCtx.globalCompositeOperation = 'destination-out';
+            compCtx.globalAlpha = 1; 
+            if (state.hBlur > 0) compCtx.filter = `blur(${state.hBlur * S}px)`;
+            
+            drawHole(compCtx, W, H, S);
+            compCtx.fill();
+            compCtx.restore();
+            /* --- [CRITICAL] DO NOT CHANGE LOGIC END --- */
+
+            // 6. 最終出力 (Downscaling)
+            ctx.drawImage(compCanvas, 0, 0, state.width, state.height);
+
+            // 7. ★ディザリング処理 (Banding Removal) - V31 New Feature
+            applyDithering(ctx, state.width, state.height);
+        }
+
+        // --- Helper: Dithering for Gradients ---
+        function applyDithering(c, w, h) {
+            const idata = c.getImageData(0, 0, w, h);
+            const data = idata.data;
+            for (let i = 0; i < data.length; i += 4) {
+                if (data[i+3] > 0) { 
+                    const noise = (Math.random() - 0.5) * 3; 
+                    data[i] = Math.min(255, Math.max(0, data[i] + noise));
+                    data[i+1] = Math.min(255, Math.max(0, data[i+1] + noise));
+                    data[i+2] = Math.min(255, Math.max(0, data[i+2] + noise));
+                }
+            }
+            c.putImageData(idata, 0, 0);
+        }
+
+        // --- Helper: Decorations ---
+        function drawDeco(c, x, y, w, h, S) {
+            const size = state.decoSize * S;
+            const pad = size / 2;
+            c.lineWidth = size;
+            c.strokeStyle = state.decoColor;
+            c.lineJoin = 'round';
+            c.lineCap = 'round';
+
+            if (state.deco === 'frame') {
+                c.strokeRect(x + pad, y + pad, w - size, h - size);
+            } else if (state.deco === 'corners') {
+                const len = Math.min(w, h) * 0.2;
+                c.beginPath();
+                c.moveTo(x + pad, y + pad + len); c.lineTo(x + pad, y + pad); c.lineTo(x + pad + len, y + pad);
+                c.moveTo(x + w - pad - len, y + pad); c.lineTo(x + w - pad, y + pad); c.lineTo(x + w - pad, y + pad + len);
+                c.moveTo(x + w - pad, y + h - pad - len); c.lineTo(x + w - pad, y + h - pad); c.lineTo(x + w - pad - len, y + h - pad);
+                c.moveTo(x + pad + len, y + h - pad); c.lineTo(x + pad, y + h - pad); c.lineTo(x + pad, y + h - pad - len);
+                c.stroke();
+            } else if (state.deco === 'accent') {
+                c.beginPath();
+                c.moveTo(x, y + pad); c.lineTo(x + w, y + pad);
+                c.moveTo(x, y + h - pad); c.lineTo(x + w, y + h - pad);
+                c.stroke();
+            }
+        }
+
+        function drawFill(c, x, y, w, h, S) {
+            const { fill, color1, color2, bgImg } = state;
+            if (fill === 'image' && bgImg) {
+                c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high';
+                const imgRatio = bgImg.naturalWidth / bgImg.naturalHeight;
+                const canvasRatio = w / h;
+                let dw, dh, dx, dy;
+                if (imgRatio > canvasRatio) {
+                    dh = h; dw = h * imgRatio; dx = x - (dw - w) / 2; dy = y;
+                } else {
+                    dw = w; dh = w / imgRatio; dx = x; dy = y - (dh - h) / 2;
+                }
+                c.drawImage(bgImg, dx, dy, dw, dh);
+            } else if (fill === 'solid') {
+                c.fillStyle = color1; c.fillRect(x, y, w, h);
+            } else if (fill === 'linear') {
+                const g = c.createLinearGradient(x, y, x+w, y+h);
+                g.addColorStop(0, color1); g.addColorStop(1, color2);
+                c.fillStyle = g; c.fillRect(x, y, w, h);
+            } else if (fill === 'pattern') {
+                // patterns.js を利用した描画
+                if (window.ChartPatternLibrary) {
+                    const conf = ChartPatternLibrary.config.find(i => i.id === state.patternId);
+                    if (conf) {
+                        // 設定の複製と現在色の上書き
+                        const pParams = { ...conf.canvas };
+                        pParams.color = color1;
+                        // 一部のパターンはcolor2を使う可能性があるため、color2も渡す
+                        // (patterns.jsの定義にcolor2が含まれる、またはtypeによって判断)
+                        pParams.color2 = color2;
+
+                        c.save();
+                        c.translate(x, y);
+                        // ChartPatternLibrary.draw は (ctx, w, h, p, scale)
+                        ChartPatternLibrary.draw(c, w, h, pParams, S);
+                        c.restore();
+                    }
+                }
+            }
+        }
+
+        function drawHole(c, W, H, S) {
+            const base = Math.min(W, H);
+            const hRatio = state.holeAspectW / state.holeAspectH;
+            let hw, hh;
+            if (hRatio >= 1) { hw = (base * 0.8) * state.scale; hh = hw / hRatio; } 
+            else { hh = (base * 0.8) * state.scale; hw = hh * hRatio; }
+
+            // Clamping with Safety Margin
+            const safe = 20 * S;
+            let rawX = W * state.x;
+            let rawY = H * state.y;
+            const halfW = hw / 2;
+            const halfH = hh / 2;
+            
+            const cx = Math.max(halfW + safe, Math.min(W - halfW - safe, rawX));
+            const cy = Math.max(halfH + safe, Math.min(H - halfH - safe, rawY));
+
+            c.beginPath();
+
+            if (state.shape === 'custom-image' && state.maskImg) {
+                const ir = state.maskImg.naturalWidth / state.maskImg.naturalHeight;
+                let dw, dh;
+                if (ir > hRatio) { dw = hw; dh = hw / ir; } else { dh = hh; dw = hh * ir; }
+                c.drawImage(state.maskImg, cx-dw/2, cy-dh/2, dw, dh);
+                return;
+            }
+
+            if (state.shape === 'emoji') {
+                const size = Math.min(hw, hh);
+                c.font = `${size}px serif`; c.textAlign='center'; c.textBaseline='middle';
+                c.fillText(state.emoji, cx, cy + size * 0.1); 
+                return;
+            }
+
+            if (state.shape === 'rect') {
+                const r = Math.min(state.radius * S, Math.min(hw,hh)/2);
+                c.roundRect(cx-hw/2, cy-hh/2, hw, hh, r);
+            } 
+            else if (state.shape === 'circle') { c.ellipse(cx, cy, hw/2, hh/2, 0, 0, Math.PI*2); }
+            else if (state.shape === 'diamond') { 
+                c.moveTo(cx, cy-hh/2); c.lineTo(cx+hw/2, cy); c.lineTo(cx, cy+hh/2); c.lineTo(cx-hw/2, cy); c.closePath(); 
+            }
+        }
+
+        function addListeners() {
+            document.getElementById('bgImageInput').onchange = e => { if(e.target.files[0]) { const r=new FileReader(); r.onload=ev=>{ const i=new Image(); i.onload=()=>{state.bgImg=i;draw()}; i.src=ev.target.result; }; r.readAsDataURL(e.target.files[0]); }};
+            document.getElementById('maskImageInput').onchange = e => { if(e.target.files[0]) { const r=new FileReader(); r.onload=ev=>{ const i=new Image(); i.onload=()=>{state.maskImg=i;draw()}; i.src=ev.target.result; }; r.readAsDataURL(e.target.files[0]); }};
+            
+            const map = { 
+                'bgOpacity':'opacity', 'panelBlur':'pBlur', 
+                'shadowDist':'sDist', 'shadowBlur':'sBlur', 'shadowAngle':'sAngle', 
+                'holeScale':'scale', 'holeBlur':'hBlur', 'cornerRadius':'radius', 'panelMargin':'margin',
+                'decoSize': 'decoSize'
+            };
+            for(const [id,k] of Object.entries(map)){
+                document.getElementById(id).oninput=e=>{
+                    state[k]=parseFloat(e.target.value);
+                    if(document.getElementById(id+'Val')) document.getElementById(id+'Val').innerText = state[k] + (k.includes('Angle')?'°':(k.includes('Blur')||k.includes('Dist')?'px':(k.includes('deco')?'px':'%')));
+                    draw();
+                };
+            }
+            document.getElementById('color1').oninput=e=>{state.color1=e.target.value;draw()};
+            document.getElementById('color2').oninput=e=>{state.color2=e.target.value;draw()};
+            document.getElementById('decoColor').oninput=e=>{state.decoColor=e.target.value;draw()};
+            document.getElementById('emojiText').oninput=e=>{state.emoji=e.target.value;draw()};
+            document.getElementById('posX').oninput=e=>{state.x=e.target.value/100;draw()};
+            document.getElementById('posY').oninput=e=>{state.y=e.target.value/100;draw()};
+            
+            document.getElementById('downloadBtn').onclick=()=>{ const a=document.createElement('a'); a.download=`panel_v31_${Date.now()}.png`; a.href=canvas.toDataURL(); a.click(); };
+            window.onresize=()=>{resizePreview();draw()};
+        }
+        init();
+    </script>
+</body>
+</html>
