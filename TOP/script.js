@@ -1,34 +1,21 @@
-// --- 背景パーティクル（修正：専用コンテナ内に生成して隔離する） ---
+// --- 背景パーティクル ---
 function createParticles() {
-    // 1. パーティクル専用のラッパーを作成
-    const wrapper = document.createElement('div');
-    wrapper.id = 'particle-wrapper';
-    document.body.appendChild(wrapper);
-
     const colors = ['#ff9ebb', '#a8cce8', '#ffffff'];
     const fragment = document.createDocumentFragment();
-    
-    // 画面幅などの計算はCSSのコンテナで制御するため、ここではシンプルに生成
     for(let i=0; i < 12; i++) {
         const span = document.createElement('span');
         span.classList.add('floating-particle');
         const sizeValue = Math.random() * 60 + 20;
         span.style.width = sizeValue + 'px';
         span.style.height = sizeValue + 'px';
-        
-        // 0% ~ 100% の配置でOK（ラッパーがはみ出しをカットするため）
         span.style.left = Math.random() * 100 + '%';
-        
-        // 画面下部からスタートさせる
-        span.style.top = '110vh'; 
-        
+        span.style.top = Math.random() * 100 + 'vh';
         span.style.background = colors[Math.floor(Math.random() * colors.length)];
         span.style.animationDuration = (Math.random() * 10 + 15) + 's';
         span.style.animationDelay = '-' + (Math.random() * 10) + 's';
         fragment.appendChild(span);
     }
-    // ラッパーに追加
-    wrapper.appendChild(fragment);
+    document.body.appendChild(fragment);
 }
 createParticles();
 
@@ -42,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const randomInterval = 15000;
 
     function startWalkerSequence() {
+        if(!walker) return;
         const w = window.innerWidth;
         const walkerWidth = walker.offsetWidth;
         const fromRight = Math.random() > 0.5;
@@ -78,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const minutes = String(now.getMinutes()).padStart(2, '0');
         const clockEl = document.getElementById('digital-clock');
         if(clockEl) {
+            // <a>タグでもtextContentで中身を書き換え可能
             clockEl.textContent = `${hours}:${minutes}`;
         }
     }
@@ -96,6 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(res => res.json())
         .then(data => {
             const container = document.getElementById('news-container');
+            if(!container) return;
             container.innerHTML = ''; 
             const shuffledData = shuffleArray(data);
             const createItems = () => {
@@ -116,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(res => res.json())
         .then(data => {
             const reportEl = document.getElementById('report-text');
-            if (!data || data.length === 0) return;
+            if (!reportEl || !data || data.length === 0) return;
 
             const updateReport = () => {
                 const text = data[Math.floor(Math.random() * data.length)];
@@ -126,7 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 reportEl.offsetHeight; 
                 reportEl.style.animation = 'fadeReport 15s infinite';
                 
-                // シンプルにテキストを設定
                 reportEl.textContent = text;
             };
 
@@ -139,15 +128,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const ribbonToggle = document.getElementById('ribbon-toggle');
     const bottomRibbon = document.getElementById('bottom-ribbon');
     
-    ribbonToggle.addEventListener('click', () => {
-        bottomRibbon.classList.toggle('hidden');
-        document.body.classList.toggle('ribbon-hidden');
-        
-        const isHidden = bottomRibbon.classList.contains('hidden');
-        if (isHidden) {
-            walker.style.bottom = '5px'; 
-        } else {
-            walker.style.bottom = '35px';
-        }
-    });
+    if(ribbonToggle && bottomRibbon) {
+        ribbonToggle.addEventListener('click', () => {
+            bottomRibbon.classList.toggle('hidden');
+            document.body.classList.toggle('ribbon-hidden');
+            
+            const isHidden = bottomRibbon.classList.contains('hidden');
+            if (isHidden) {
+                if(walker) walker.style.bottom = '5px'; 
+            } else {
+                if(walker) walker.style.bottom = '35px';
+            }
+        });
+    }
 });

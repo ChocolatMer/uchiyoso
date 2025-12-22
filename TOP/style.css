@@ -17,12 +17,7 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; text-decoration: none; -webkit-tap-highlight-color: transparent; }
 
-/* 修正: 二重スクロールバー防止 */
-html {
-    width: 100%;
-    height: 100%;
-    overflow-x: hidden;
-}
+html, body { width: 100%; overflow-x: hidden; }
 
 body {
     font-family: "Zen Maru Gothic", sans-serif;
@@ -30,49 +25,80 @@ body {
     background-image: url('../images/background/fur-texture-pink.jpg');
     background-size: cover;
     background-position: center;
-    
-    /* 修正: PCでは画面一杯を使って中央揃えにするための設定 */
-    display: flex;
-    flex-direction: column;
     min-height: 100vh;
-    width: 100%;
-    
+    display: flex;
+    justify-content: center;
+    align-items: center; /* 縦方向も中央揃え */
     color: var(--text-main);
     perspective: 1500px;
-    
-    /* ヘッダー・フッターに被らないための最小限の余白 */
-    padding-top: calc(var(--top-bar-height) + 20px);
+    padding-top: var(--top-bar-height);
     padding-bottom: calc(var(--bottom-ribbon-height) + 20px);
-    
-    overflow-x: hidden;
-    position: relative;
 }
 
 .ambient-light {
-    position: absolute; width: 100%; height: 100%; top: 0; left: 0;
+    position: absolute; width: 100%; height: 100%;
     background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.1) 100%);
     pointer-events: none; z-index: 0;
 }
 
-/* === パーティクル隔離用ラッパー === */
-#particle-wrapper {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    overflow: hidden; pointer-events: none; z-index: -1;
+/* === 新設：メインラッパー（サイドバーとツール群を横並び） === */
+.main-wrapper {
+    display: flex;
+    gap: 30px;
+    width: 1200px;
+    max-width: 95%;
+    align-items: flex-start; /* 上揃え */
+    position: relative;
+    z-index: 10;
+}
+
+/* === 新設：サイドバー（お知らせ版） === */
+.side-info-panel {
+    width: 260px;
+    flex-shrink: 0; /* 縮まないようにする */
+    background: var(--glass-bg);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: 36px;
+    padding: 24px;
+    display: flex; flex-direction: column;
+    transform: translateZ(0); /* 重なり順制御 */
+}
+
+.info-header {
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: var(--text-main);
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 2px dashed rgba(255, 158, 187, 0.5);
+    padding-bottom: 10px; margin-bottom: 15px;
+}
+.sub-header { margin-top: 20px; border-bottom: none; padding-bottom: 0; }
+
+.info-list { list-style: none; }
+.info-list li { margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 8px; }
+.info-list li:last-child { border-bottom: none; }
+
+.info-list .date {
+    display: block; font-size: 0.75rem; color: var(--accent-pink); font-weight: 800; margin-bottom: 2px;
+}
+.info-list .text { font-size: 0.85rem; line-height: 1.5; color: var(--text-sub); }
+
+.info-footer-text {
+    font-size: 0.8rem; color: var(--text-sub); line-height: 1.6; margin-top: 5px;
 }
 
 /* === PC用 3Dグリッド === */
 .bento-container {
-    position: relative; z-index: 10;
-    width: 1000px; max-width: 90%;
-    
-    /* 修正: 画面中央に自動配置（入らない場合はスクロール位置に） */
-    margin: auto;
-    
+    flex-grow: 1; /* 残りの幅を使う */
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: auto auto auto;
+    grid-auto-rows: auto;
     gap: 24px;
-    transform: rotateX(5deg);
+    /* 3D表現 */
+    transform: rotateX(5deg) translateY(-20px);
     transform-style: preserve-3d;
     transition: transform 0.5s ease;
 }
@@ -163,7 +189,7 @@ body {
 }
 
 /* シェアボタン */
-.area-share { grid-column: span 4; background: transparent; border: none; box-shadow: none; backdrop-filter: none; padding: 10px; display: flex; justify-content: center; }
+.area-share { grid-column: span 4; background: transparent; border: none; box-shadow: none; backdrop-filter: none; padding: 10px; display: flex; justify-content: center; margin-top: 10px; }
 .btn-share-pill {
     padding: 14px 40px; background: rgba(255,255,255,0.7); backdrop-filter: blur(10px); border: 1px solid #fff; border-radius: 50px;
     font-weight: 800; color: var(--text-main); transition: 0.3s; display: flex; align-items: center; gap: 10px;
@@ -177,39 +203,24 @@ body {
 @keyframes dance-reverse { 0%, 100% { transform: translateY(0) rotate(0deg); } 25% { transform: translateY(6px) rotate(3deg); } 75% { transform: translateY(-2px) rotate(-2deg); } }
 @keyframes bounce { 0%, 100% { transform: translateZ(30px) translateY(0); } 50% { transform: translateZ(30px) translateY(-5px); } }
 @keyframes entranceFadeUp { 0% { opacity: 0; transform: translateY(60px) scale(0.9); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
-.glass-card, .area-share { opacity: 0; animation: entranceFadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.glass-card, .area-share, .side-info-panel { opacity: 0; animation: entranceFadeUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; }
+.side-info-panel { animation-delay: 0s; }
 .glass-card:nth-of-type(1) { animation-delay: 0.1s; } 
 .glass-card:nth-of-type(2) { animation-delay: 0.2s; } 
-.glass-card:nth-of-type(3) { animation-delay: 0.3s; }
-.glass-card:nth-of-type(4) { animation-delay: 0.4s; } 
-.glass-card:nth-of-type(5) { animation-delay: 0.5s; }
-.glass-card:nth-of-type(6) { animation-delay: 0.6s; } 
-.glass-card:nth-of-type(7) { animation-delay: 0.7s; } 
-.area-share { animation-delay: 0.9s; }
+/* その他のカード遅延は自動的に流れるように */
 
 /* パーティクル & マスコット */
 .floating-particle {
-    position: absolute;
-    border-radius: 50%; filter: blur(8px); opacity: 0.6; 
-    animation: floatUp 15s linear infinite;
-    pointer-events: none; will-change: transform;
+    position: absolute; border-radius: 50%; filter: blur(8px); opacity: 0.6; animation: floatUp 15s linear infinite; z-index: -1; pointer-events: none; will-change: transform;
 }
-@keyframes floatUp { 
-    0% { transform: translateY(0) rotate(0deg); opacity: 0; } 
-    10% { opacity: 0.6; } 
-    90% { opacity: 0.6; } 
-    100% { transform: translateY(-130vh) rotate(360deg); opacity: 0; } 
-}
+@keyframes floatUp { 0% { transform: translateY(110vh) rotate(0deg); opacity: 0; } 10% { opacity: 0.6; } 90% { opacity: 0.6; } 100% { transform: translateY(-20vh) rotate(360deg); opacity: 0; } }
 
 .floating-mascot {
     position: fixed; bottom: 120px; right: 20px; width: 140px; height: auto; z-index: 95; cursor: pointer;
     animation: playful-float 7s ease-in-out infinite; transition: 0.3s; will-change: transform;
 }
-.floating-mascot img { width: 100%; display: block; filter: drop-shadow(0 8px 20px rgba(90, 61, 53, 0.25)); transition: filter 0.3s; }
-.floating-mascot:hover { 
-    transform: scale(1.15) rotate(-10deg);
-    filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.8)) drop-shadow(0 0 30px var(--accent-pink));
-}
+.floating-mascot img { width: 100%; display: block; filter: drop-shadow(0 8px 20px rgba(90, 61, 53, 0.25)); }
+.floating-mascot:hover { transform: scale(1.15) rotate(10deg); }
 @keyframes playful-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px) rotate(3deg); } }
 
 .pixel-walker {
@@ -269,16 +280,23 @@ body {
     z-index: 2;
 }
 
-.digital-clock {
+/* 修正：時計のリンク化スタイル */
+a.digital-clock {
+    display: inline-block;
     font-family: 'Zen Maru Gothic', monospace;
     font-weight: 900; color: var(--accent-pink);
     font-size: 1.1rem; letter-spacing: 0.05em;
     background: #fff; padding: 2px 10px; border-radius: 8px;
     border: 2px solid #ffe4ea;
     box-shadow: 2px 2px 0 rgba(255, 158, 187, 0.3);
+    transition: transform 0.2s ease, box-shadow 0.2s;
+    cursor: pointer;
+}
+a.digital-clock:hover {
+    transform: translateY(-2px);
+    box-shadow: 2px 4px 5px rgba(255, 158, 187, 0.4);
 }
 
-/* === レポート === */
 .honobono-report {
     font-size: 0.95rem; 
     color: var(--text-main);
@@ -289,11 +307,10 @@ body {
 
 @keyframes news-scroll { 0% { transform: translate3d(0,0,0); } 100% { transform: translate3d(-100%,0,0); } }
 
-/* 浮き上がって消えるアニメーション */
 @keyframes fadeReport {
     0% { opacity: 0; transform: translateY(10px); }
     10% { opacity: 1; transform: translateY(0); }
-    90% { opacity: 1; transform: translateY(0); }
+    90% { opacity: 1; transform: translateY(0); } 
     100% { opacity: 0; transform: translateY(-10px); }
 }
 
@@ -324,114 +341,60 @@ body {
 .ribbon-toggle-btn span { font-size: 20px; transition: 0.5s; }
 .bottom-ribbon-container.hidden .ribbon-toggle-btn span { transform: rotate(180deg); }
 
-/* === スマホ最適化（全体的に小さくし、密度を上げる修正） === */
-@media (max-width: 768px) {
-    /* ルート変数をスマホ用に上書きし、全体をコンパクトに */
-    :root {
-        --top-bar-height: 40px;      /* 50px -> 40px */
-        --bottom-ribbon-height: 30px; /* 40px -> 30px */
-        --walker-size: 32px;
+/* === スマホ・タブレット最適化 === */
+@media (max-width: 950px) {
+    /* サイドバーとメインを縦並びに */
+    .main-wrapper {
+        flex-direction: column;
+        width: 94%;
+        margin: 0 auto;
+        gap: 20px;
+    }
+    
+    .side-info-panel {
+        width: 100%;
+        margin-bottom: 10px;
     }
 
-    body {
-        /* 修正: スマホではスクロール前提のBlock配置にする */
-        display: block; 
-        min-height: 100%;
-        overflow-y: auto; overflow-x: hidden;
-        height: auto; perspective: none;
-        
-        /* フォントサイズを小さくしてPC画面に近づける */
-        font-size: 0.85rem; 
-        
-        /* コンパクトなヘッダー・フッターに合わせて余白も縮小 */
-        padding-top: calc(var(--top-bar-height) + 20px);
-        padding-bottom: var(--bottom-ribbon-height); 
-    }
-    
+    /* 弁当箱のレスポンシブ化 */
     .bento-container {
-        /* 幅を広げて情報量を増やす */
-        width: 96%; 
-        margin: 0 auto;
-        display: grid; grid-template-columns: 1fr 1fr; 
-        gap: 12px; /* ギャップを詰める */
-        transform: none !important;
+        width: 100%;
+        display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+        transform: none !important; /* 3D解除 */
     }
     
-    .glass-card { 
-        width: 100%; transform: none !important; margin-bottom: 0;
-        /* パディングを減らして密度アップ */
-        padding: 14px; 
-        border-radius: 24px;
-    }
+    .glass-card { width: 100%; transform: none !important; margin-bottom: 0; }
     .glass-card:active { transform: scale(0.98) !important; background: rgba(255, 255, 255, 0.25); }
 
-    /* プロフィールエリア：横並びに戻してコンパクトに */
-    .area-profile { 
-        grid-column: span 2; 
-        text-align: left; 
-        align-items: flex-start; 
-        padding: 20px; 
-    }
-    .profile-header { 
-        flex-direction: row; /* PCと同じ横並び */
-        gap: 16px; 
-        margin-bottom: 12px; 
-    }
-    .avatar { 
-        width: 60px; height: 60px; /* 縮小 */
-        border-width: 3px;
-    } 
-    .site-title { font-size: 1.4rem; }
-    .site-desc { font-size: 0.8rem; }
-    .profile-text { font-size: 0.8rem; line-height: 1.6; }
+    .area-profile { grid-column: span 2; text-align: center; align-items: center; padding: 24px; }
+    .profile-header { flex-direction: column; gap: 12px; margin-bottom: 12px; }
+    .avatar { width: 80px; height: 80px; } 
+    .site-title { font-size: 1.6rem; }
     
-    .area-ticker { grid-column: span 2; height: 40px; order: 2; }
-    .ticker-item { font-size: 1.2rem; margin: 0 10px; }
+    .area-ticker { grid-column: span 2; height: 50px; order: 2; }
     
-    /* ツールボタン：余白とアイコンを小さく */
-    .area-tool { 
-        aspect-ratio: 1 / 1; 
-        flex-direction: column; justify-content: center; text-align: center; 
-        padding: 10px; gap: 6px; 
-    }
-    .area-tool-wide { 
-        grid-column: span 2; 
-        aspect-ratio: auto; 
-        flex-direction: row; justify-content: flex-start; 
-        padding: 12px 20px; gap: 12px;
-    }
-    .area-tool .icon-circle { 
-        width: 40px; height: 40px; /* アイコン縮小 */
-        font-size: 20px; 
-        margin-bottom: 4px; transform: none !important; 
-    }
-    .area-tool-wide .icon-circle { margin-bottom: 0; }
+    .area-tool { aspect-ratio: 1 / 1; flex-direction: column; justify-content: center; text-align: center; padding: 10px; gap: 8px; }
+    .area-tool-wide { grid-column: span 2; aspect-ratio: auto; flex-direction: row; justify-content: flex-start; padding: 16px 24px; }
+    .area-tool .icon-circle { width: 54px; height: 54px; font-size: 26px; margin-bottom: 0; transform: none !important; }
     
-    .tool-label { font-size: 0.9rem; }
-    .tool-sub { font-size: 0.7rem; display: none; }
-    .area-tool-wide .tool-sub { display: block; font-size: 0.7rem; }
+    .tool-label { font-size: 1rem; }
+    .tool-sub { font-size: 0.75rem; display: none; }
+    .area-tool-wide .tool-sub { display: block; }
     
-    .badge { top: 8px; right: 8px; padding: 3px 8px; font-size: 0.6rem; animation: none; }
-    .area-share { grid-column: span 2; padding: 0; margin-top: 5px; }
-    .btn-share-pill { padding: 10px 30px; font-size: 0.9rem; }
+    .badge { top: 10px; right: 10px; padding: 4px 10px; font-size: 0.65rem; animation: none; }
+    .area-share { grid-column: span 2; padding: 0; }
 
-    /* ヘッダー・フッターも少し小さく */
-    .top-news-bar { height: var(--top-bar-height); font-size: 0.8rem; }
-    .bottom-ribbon-container { height: var(--bottom-ribbon-height); }
-    .ribbon-toggle-btn { width: 36px; height: 20px; top: -20px; }
-    .ribbon-toggle-btn span { font-size: 16px; }
-
-    .header-right-area { gap: 6px; margin-left: 8px; }
+    /* スマホでのレポート表示調整 */
+    .header-right-area { gap: 8px; margin-left: 10px; }
     .honobono-report {
-        font-size: 0.75rem;
-        max-width: 120px; 
+        font-size: 0.8rem;
+        max-width: 150px; 
         overflow: hidden; text-overflow: ellipsis;
     }
-    .digital-clock { font-size: 0.9rem; padding: 1px 6px; }
     
-    /* マスコット縮小 */
-    .floating-mascot { width: 70px; bottom: 80px; right: 10px; }
-    .pixel-walker { bottom: 30px; } /* リボン高さに合わせて調整 */
+    .floating-mascot { width: 85px; bottom: 100px; right: 10px; }
+    .pixel-walker { bottom: 35px; }
+    :root { --walker-size: 42px; }
 
     body.ribbon-hidden .floating-mascot { transform: translateY(30px); }
     body.ribbon-hidden .pixel-walker { bottom: 5px; }
