@@ -29,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const randomInterval = 15000;
 
     function startWalkerSequence() {
-        if(!walker) return;
         const w = window.innerWidth;
         const walkerWidth = walker.offsetWidth;
         const fromRight = Math.random() > 0.5;
@@ -66,7 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const minutes = String(now.getMinutes()).padStart(2, '0');
         const clockEl = document.getElementById('digital-clock');
         if(clockEl) {
-            // <a>タグでもtextContentで中身を書き換え可能
             clockEl.textContent = `${hours}:${minutes}`;
         }
     }
@@ -85,7 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(res => res.json())
         .then(data => {
             const container = document.getElementById('news-container');
-            if(!container) return;
             container.innerHTML = ''; 
             const shuffledData = shuffleArray(data);
             const createItems = () => {
@@ -106,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(res => res.json())
         .then(data => {
             const reportEl = document.getElementById('report-text');
-            if (!reportEl || !data || data.length === 0) return;
+            if (!data || data.length === 0) return;
 
             const updateReport = () => {
                 const text = data[Math.floor(Math.random() * data.length)];
@@ -116,6 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 reportEl.offsetHeight; 
                 reportEl.style.animation = 'fadeReport 15s infinite';
                 
+                // シンプルにテキストを設定
                 reportEl.textContent = text;
             };
 
@@ -128,17 +126,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const ribbonToggle = document.getElementById('ribbon-toggle');
     const bottomRibbon = document.getElementById('bottom-ribbon');
     
-    if(ribbonToggle && bottomRibbon) {
-        ribbonToggle.addEventListener('click', () => {
-            bottomRibbon.classList.toggle('hidden');
-            document.body.classList.toggle('ribbon-hidden');
-            
-            const isHidden = bottomRibbon.classList.contains('hidden');
-            if (isHidden) {
-                if(walker) walker.style.bottom = '5px'; 
-            } else {
-                if(walker) walker.style.bottom = '35px';
-            }
-        });
-    }
+    ribbonToggle.addEventListener('click', () => {
+        bottomRibbon.classList.toggle('hidden');
+        document.body.classList.toggle('ribbon-hidden');
+        
+        const isHidden = bottomRibbon.classList.contains('hidden');
+        if (isHidden) {
+            walker.style.bottom = '5px'; 
+        } else {
+            walker.style.bottom = '35px';
+        }
+    });
 });
