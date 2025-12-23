@@ -152,12 +152,3 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// script.js の最後の方に追加
-document.addEventListener('DOMContentLoaded', () => {
-    // ...既存の処理...
-
-    // アニメーションが完了する頃にスクロールバーを解禁する
-    setTimeout(() => {
-        document.body.style.overflowY = 'auto';
-    }, 1500); // 1.5秒後に実行（アニメーションの遅延に合わせて調整）
-});
