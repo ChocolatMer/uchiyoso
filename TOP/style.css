@@ -347,16 +347,3 @@ body {
     body.ribbon-hidden .floating-mascot { transform: translateY(30px); }
     body.ribbon-hidden .pixel-walker { bottom: 5px; }
 }
-
-
-.trigger-link {
-    cursor: pointer;
-    transition: 0.3s;
-}
-.trigger-link:hover {
-    color: var(--accent-pink) !important;
-    opacity: 1;
-    -webkit-text-stroke: 0;
-    text-shadow: 0 0 10px var(--accent-pink);
-    transform: scale(1.1);
-}

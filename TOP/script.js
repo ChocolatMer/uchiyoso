@@ -1,19 +1,7 @@
 // --- 背景パーティクル ---
 function createParticles() {
-    const wrapper = document.createElement('div');
-    wrapper.id = 'particle-wrapper';
-    document.body.appendChild(wrapper);
-
-    // ★現在のページが ura.html かどうか自動判定
-    const isUra = window.location.href.indexOf('ura.html') > -1;
-
-    // 色の設定（裏なら青系、表ならピンク系）
-    const colors = isUra 
-        ? ['#89c3eb', '#a0d8ef', '#ffffff'] // 水色系
-        : ['#ff9ebb', '#a8cce8', '#ffffff']; // ピンク系
-
+    const colors = ['#ff9ebb', '#a8cce8', '#ffffff'];
     const fragment = document.createDocumentFragment();
-    
     for(let i=0; i < 12; i++) {
         const span = document.createElement('span');
         span.classList.add('floating-particle');
@@ -21,14 +9,13 @@ function createParticles() {
         span.style.width = sizeValue + 'px';
         span.style.height = sizeValue + 'px';
         span.style.left = Math.random() * 100 + '%';
-        span.style.top = '110vh'; 
-        
+        span.style.top = Math.random() * 100 + 'vh';
         span.style.background = colors[Math.floor(Math.random() * colors.length)];
         span.style.animationDuration = (Math.random() * 10 + 15) + 's';
         span.style.animationDelay = '-' + (Math.random() * 10) + 's';
         fragment.appendChild(span);
     }
-    wrapper.appendChild(fragment);
+    document.body.appendChild(fragment);
 }
 createParticles();
 
@@ -111,7 +98,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .catch(err => console.error('News Error:', err));
 
-    // 4. キャラクターレポート
+    // 4. キャラクターレポート（バーの中でフェードイン・アウト）
     fetch('TOP/report.json')
         .then(res => res.json())
         .then(data => {
@@ -121,10 +108,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const updateReport = () => {
                 const text = data[Math.floor(Math.random() * data.length)];
                 
+                // アニメーションリセット
                 reportEl.style.animation = 'none';
                 reportEl.offsetHeight; 
                 reportEl.style.animation = 'fadeReport 15s infinite';
                 
+                // シンプルにテキストを設定
                 reportEl.textContent = text;
             };
 
@@ -137,17 +126,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const ribbonToggle = document.getElementById('ribbon-toggle');
     const bottomRibbon = document.getElementById('bottom-ribbon');
     
-    if (ribbonToggle && bottomRibbon) {
-        ribbonToggle.addEventListener('click', () => {
-            bottomRibbon.classList.toggle('hidden');
-            document.body.classList.toggle('ribbon-hidden');
-            
-            const isHidden = bottomRibbon.classList.contains('hidden');
-            if (isHidden) {
-                walker.style.bottom = '5px'; 
-            } else {
-                walker.style.bottom = '35px';
-            }
-        });
-    }
+    ribbonToggle.addEventListener('click', () => {
+        bottomRibbon.classList.toggle('hidden');
+        document.body.classList.toggle('ribbon-hidden');
+        
+        const isHidden = bottomRibbon.classList.contains('hidden');
+        if (isHidden) {
+            walker.style.bottom = '5px'; 
+        } else {
+            walker.style.bottom = '35px';
+        }
+    });
 });
