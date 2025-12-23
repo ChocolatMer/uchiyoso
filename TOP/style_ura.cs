@@ -17,8 +17,12 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; text-decoration: none; -webkit-tap-highlight-color: transparent; }
 
-/* ▼▼▼ 修正: スクロールバーはbodyに任せる ▼▼▼ */
-html { width: 100%; }
+/* ▼▼▼ 修正：スクロールバー設定 ▼▼▼ */
+html { 
+    width: 100%; 
+    overflow-y: scroll; /* ガタつき防止 */
+    overflow-x: hidden;
+}
 
 body {
     font-family: "Zen Maru Gothic", sans-serif;
@@ -27,8 +31,7 @@ body {
     background-size: cover;
     background-position: center;
     
-    /* ▼▼▼ 修正: 常時スクロールバー表示でガタつき防止 ▼▼▼ */
-    min-height: 101vh;
+    min-height: 100vh;
     
     display: flex;
     justify-content: center;
@@ -36,13 +39,11 @@ body {
     color: var(--text-main);
     perspective: 1500px;
     
-    /* ▼▼▼ 修正: 余白調整 ▼▼▼ */
-    padding-top: 80px;
-    padding-bottom: calc(var(--bottom-ribbon-height) + 20px);
+    /* ▼▼▼ 修正：余白確保 ▼▼▼ */
+    padding-top: 110px;
+    padding-bottom: calc(var(--bottom-ribbon-height) + 40px);
     
-    /* ▼▼▼ 修正: 横スクロール防止 ▼▼▼ */
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow: visible;
     width: 100%;
     position: relative;
 }
@@ -131,18 +132,12 @@ body {
 .ticker-item.hollow { color: transparent; -webkit-text-stroke: 2px rgba(31, 60, 88, 0.4); opacity: 0.8; }
 .ticker-item span { margin-right: 8px; }
 
-/* ▼▼▼ 修正: リンク用スタイル ▼▼▼ */
+/* リンク用スタイル */
 .ticker-item.trigger-link {
-    cursor: pointer;
-    position: relative;
-    z-index: 100;
-    text-decoration: none;
-    pointer-events: auto;
+    cursor: pointer; position: relative; z-index: 100; text-decoration: none; pointer-events: auto;
 }
 .ticker-item.trigger-link:hover {
-    color: var(--text-main);
-    -webkit-text-stroke: 0;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    color: var(--text-main); -webkit-text-stroke: 0; text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
 }
 
 /* ツールボタン */
@@ -190,7 +185,7 @@ body {
 .glass-card:nth-of-type(7) { animation-delay: 0.7s; } 
 .area-share { animation-delay: 0.9s; }
 
-/* ▼▼▼ 修正: パーティクル固定 ▼▼▼ */
+/* パーティクル固定 */
 .floating-particle {
     position: fixed; 
     border-radius: 50%; filter: blur(8px); opacity: 0.6; animation: floatUp 15s linear infinite; z-index: -1; pointer-events: none; will-change: transform;
@@ -320,7 +315,7 @@ body {
     body {
         display: block; overflow-y: auto; overflow-x: hidden;
         height: auto; perspective: none;
-        padding-top: calc(var(--top-bar-height) + 30px);
+        padding-top: 100px;
         padding-bottom: 120px; 
     }
     

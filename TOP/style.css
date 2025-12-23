@@ -17,10 +17,12 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; text-decoration: none; -webkit-tap-highlight-color: transparent; }
 
-/* ▼▼▼ 修正: スクロールバーはbodyに任せる（2本化防止） ▼▼▼ */
+/* ▼▼▼ 修正：スクロールバーのガタつき防止・一本化 ▼▼▼ */
 html { 
     width: 100%; 
-    /* htmlにはoverflowを指定しない */
+    /* 常にスクロールバーを表示させることで、コンテンツ量によるガタつき（勝手に動く現象）を防ぐ */
+    overflow-y: scroll; 
+    overflow-x: hidden;
 }
 
 body {
@@ -30,8 +32,7 @@ body {
     background-size: cover;
     background-position: center;
     
-    /* ▼▼▼ 修正: スクロールバーが勝手に動くのを防ぐため、常に少しだけ高さを確保してバーを常駐させる ▼▼▼ */
-    min-height: 101vh; 
+    min-height: 100vh;
     
     display: flex;
     justify-content: center;
@@ -39,20 +40,19 @@ body {
     color: var(--text-main);
     perspective: 1500px;
     
-    /* ▼▼▼ 修正: 余白調整。ヘッダー(50px) + 余白(30px)で重なりを防ぐ ▼▼▼ */
-    padding-top: 80px; 
-    padding-bottom: calc(var(--bottom-ribbon-height) + 20px);
+    /* ▼▼▼ 修正：ヘッダーとの余白を十分に確保（重なり防止） ▼▼▼ */
+    /* Bar(50px) + 余白(40px) + 3D変形の食い込み分(20px) = 110px */
+    padding-top: 110px; 
+    padding-bottom: calc(var(--bottom-ribbon-height) + 40px);
     
-    /* ▼▼▼ 修正: 横スクロール完全防止 ▼▼▼ */
-    overflow-x: hidden;
-    overflow-y: auto;
+    /* body側ではスクロールバーを出さない */
+    overflow: visible;
     width: 100%;
     position: relative;
 }
 
 .ambient-light {
-    position: fixed; 
-    top: 0; left: 0;
+    position: fixed; top: 0; left: 0;
     width: 100%; height: 100%;
     background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0.1) 100%);
     pointer-events: none; z-index: 0;
@@ -136,18 +136,12 @@ body {
 .ticker-item.hollow { color: transparent; -webkit-text-stroke: 2px rgba(139, 107, 97, 0.4); opacity: 0.8; }
 .ticker-item span { margin-right: 8px; }
 
-/* ▼▼▼ 修正: リンク用スタイル。確実にクリック可能にする ▼▼▼ */
+/* リンク用スタイル */
 .ticker-item.trigger-link {
-    cursor: pointer;
-    position: relative;
-    z-index: 100;
-    text-decoration: none;
-    pointer-events: auto;
+    cursor: pointer; position: relative; z-index: 100; text-decoration: none; pointer-events: auto;
 }
 .ticker-item.trigger-link:hover {
-    color: var(--text-main);
-    -webkit-text-stroke: 0;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+    color: var(--text-main); -webkit-text-stroke: 0; text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
 }
 
 /* ツールボタン */
@@ -195,7 +189,7 @@ body {
 .glass-card:nth-of-type(7) { animation-delay: 0.7s; } 
 .area-share { animation-delay: 0.9s; }
 
-/* ▼▼▼ 修正: パーティクルを固定配置にしてスクロールバー干渉を完全防止 ▼▼▼ */
+/* パーティクル（固定配置でスクロール影響なし） */
 .floating-particle {
     position: fixed; 
     border-radius: 50%; filter: blur(8px); opacity: 0.6; 
@@ -333,7 +327,7 @@ body {
         display: block; overflow-y: auto; overflow-x: hidden;
         height: auto; perspective: none;
         /* スマホ用余白調整 */
-        padding-top: calc(var(--top-bar-height) + 30px);
+        padding-top: 100px;
         padding-bottom: 120px; 
     }
     
