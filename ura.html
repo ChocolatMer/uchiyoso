@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Uchiyoso Maker - Secret</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+<link rel="stylesheet" href="TOP/style.css">
+<!-- ▼▼▼ ここが重要：裏専用の水色スタイル ▼▼▼ -->
+<link rel="stylesheet" href="TOP/style_ura.css">
+</head>
+<body>
+
+    <div class="top-news-bar">
+        <div class="news-label-badge">
+            <span class="material-symbols-rounded">campaign</span> NEWS
+        </div>
+        <div class="news-scroller">
+            <div class="news-content" id="news-container">
+                <span class="news-item">Loading...</span>
+            </div>
+        </div>
+        <div class="header-right-area">
+            <div class="honobono-report" id="report-text"></div>
+            <div class="digital-clock" id="digital-clock">00:00</div>
+        </div>
+    </div>
+
+    <div class="ambient-light"></div>
+    
+    <div class="bento-container">
+        
+        <div class="glass-card area-profile">
+            <div class="profile-header">
+                <div class="avatar"></div>
+                <div>
+                    <h1 class="site-title">Uchiyoso Maker</h1>
+                    <p class="site-desc">Inside of the World...</p>
+                </div>
+            </div>
+            <p class="profile-text">
+                ようこそ、裏の世界へ。<br>
+                ここは少し静かな場所です。<br>
+                ゆっくりしていってください。
+            </p>
+        </div>
+
+        <div class="glass-card area-ticker">
+            <div class="ticker-wrap">
+                <div class="ticker-content">
+                    <div class="ticker-item"><span>♥</span>LOVE</div>
+                    <div class="ticker-item hollow">CREATION</div>
+                    <div class="ticker-item"><span>★</span>DREAM</div>
+                    <div class="ticker-item hollow">STORY</div>
+                    <div class="ticker-item"><span>♦</span>RELATION</div>
+                    <!-- ▼▼▼ 表に戻るリンク ▼▼▼ -->
+                    <div class="ticker-item hollow trigger-link" onclick="location.href='index.html'">UCHIYOSO</div>
+                    
+                    <div class="ticker-item"><span>♥</span>LOVE</div>
+                    <div class="ticker-item hollow">CREATION</div>
+                    <div class="ticker-item"><span>★</span>DREAM</div>
+                    <div class="ticker-item hollow">STORY</div>
+                    <div class="ticker-item"><span>♦</span>RELATION</div>
+                    <!-- ▼▼▼ 表に戻るリンク(ループ用) ▼▼▼ -->
+                    <div class="ticker-item hollow trigger-link" onclick="location.href='index.html'">UCHIYOSO</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ツールリンク群（必要に応じて変更してください） -->
+        <a href="bunpumaker/index.html" class="glass-card area-tool area-tool-wide">
+            <span class="badge">Update</span>
+            <div class="icon-circle">
+                <span class="material-symbols-rounded">bar_chart</span>
+            </div>
+            <div class="tool-info">
+                <div class="tool-label">分布図を作る</div>
+                <div class="tool-sub">探索者を分布分けしよう</div>
+            </div>
+        </a>
+
+        <a href="snsmaker/index.html" class="glass-card area-tool">
+            <div class="icon-circle">
+                <span class="material-symbols-rounded">image</span>
+            </div>
+            <div class="tool-info">
+                <div class="tool-label">SNSメーカー</div>
+                <div class="tool-sub">会話画面風</div>
+            </div>  
+        </a>
+
+        <a href="#" class="glass-card area-tool">
+            <div class="icon-circle">
+                <span class="material-symbols-rounded">edit_note</span>
+            </div>
+            <div class="tool-info">
+                <div class="tool-label">SSエディタ</div>
+                <div class="tool-sub">文庫本スタイル</div>
+            </div>
+        </a>
+
+        <a href="labelmaker/index.html" class="glass-card area-tool">
+            <span class="badge" style="background: linear-gradient(135deg, #a8cce8 0%, #8ec5fc 100%);">NEW</span>
+            <div class="icon-circle">
+                <span class="material-symbols-rounded">style</span>
+            </div>
+            <div class="tool-info">
+                <div class="tool-label">ラベル</div>
+                <div class="tool-sub">整理用タグ</div>
+            </div>
+        </a>
+
+        <a href="backclear/index.html" class="glass-card area-tool">
+            <div class="icon-circle">
+                <span class="material-symbols-rounded">layers_clear</span>
+            </div>
+            <div class="tool-info">
+                <div class="tool-label">背景除去</div>
+                <div class="tool-sub">立ち絵加工</div>
+            </div>
+        </a>
+
+        <a href="calendarmaker/index.html" class="glass-card area-tool">
+            <span class="badge" style="background: linear-gradient(135deg, #ffe082 0%, #ffca28 100%); color: #5a3d35;">NEW</span>
+            <div class="icon-circle">
+                <span class="material-symbols-rounded">calendar_month</span>
+            </div>
+            <div class="tool-info">
+                <div class="tool-label">カレンダー</div>
+                <div class="tool-sub">記念日記録</div>
+            </div>
+        </a>
+
+        <div class="area-share">
+            <a href="#" class="btn-share-pill">
+                <span class="material-symbols-rounded">share</span>
+                ページをシェアする
+            </a>
+        </div>
+    </div>
+
+    <a href="badohuro/index.html" class="floating-mascot">
+        <img src="images/icons/nui1.png" alt="Mascot">
+    </a>
+
+    <a href="mahiruheya/index.html" target="_blank" id="pixel-walker" class="pixel-walker" data-facing="right">
+        <div class="sprite"></div>
+    </a>
+
+    <div class="bottom-ribbon-container" id="bottom-ribbon">
+        <div class="ribbon-bar">
+            <div class="ribbon-stitch"></div>
+        </div>
+        <button class="ribbon-toggle-btn" id="ribbon-toggle" title="リボンを隠す">
+            <span class="material-symbols-rounded">keyboard_arrow_down</span>
+        </button>
+    </div>
+
+    <script src="TOP/script.js"></script>
+
+</body>
+</html>
