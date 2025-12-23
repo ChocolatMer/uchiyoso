@@ -4,35 +4,59 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Uchiyoso Maker - Luxe Archive</title>
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Noto+Sans+JP:wght@100;300;400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
+            /* 基本色設定 */
             --bg-color: #080808;
             --text-main: #ffffff;
             --text-sub: #8899a6;
+            --ui-border: rgba(255, 255, 255, 0.15);
+            --ui-bg: rgba(255, 255, 255, 0.03);
+            
             --font-en: 'Syncopate', sans-serif;
             --font-jp: 'Noto Sans JP', sans-serif;
             
-            /* テーマカラー（初期値） */
+            /* テーマカラー（JSで動的に変わります） */
             --accent-color: #00ffcc; 
             
-            /* 背景画像用変数 */
-            --bg-image: none;
+            /* 背景画像用 */
+            --bg-image-url: none;
         }
 
-        /* --- 背景モード切り替え用のクラス --- */
-        body.mode-black { --bg-color: #080808; --text-main: #ffffff; }
-        body.mode-white { --bg-color: #f4f4f4; --text-main: #1a1a1a; }
+        /* --- 背景モードごとのスタイル定義 --- */
+        
+        /* [黒モード] デフォルト */
+        body.mode-black {
+            --bg-color: #080808;
+            --text-main: #ffffff;
+            --ui-border: rgba(255, 255, 255, 0.15);
+            --ui-bg: rgba(255, 255, 255, 0.03);
+        }
+
+        /* [白モード] 文字色反転 */
+        body.mode-white {
+            --bg-color: #f4f4f4;
+            --text-main: #1a1a1a;
+            --text-sub: #555555;
+            --ui-border: rgba(0, 0, 0, 0.1);
+            --ui-bg: rgba(0, 0, 0, 0.03);
+        }
+
+        /* [写真モード] 背景画像設定 + 文字を見やすくするオーバーレイ */
         body.mode-photo {
-            --bg-color: #000000; --text-main: #ffffff;
-            background-image: var(--bg-image);
+            --bg-color: #000000;
+            --text-main: #ffffff;
+            background-image: var(--bg-image-url);
             background-size: cover;
             background-position: center;
         }
-        /* 写真モード時は文字が見やすいようオーバーレイを掛ける */
+        /* 写真モード時は背景を暗くして文字とパーティクルを目立たせる */
         body.mode-photo::before {
             content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4); z-index: -1;
+            background: rgba(0, 0, 0, 0.5); z-index: -1;
+            pointer-events: none;
         }
 
         body, html {
@@ -49,18 +73,20 @@
         #canvas-container {
             position: fixed; top: 0; left: 0; z-index: 0;
             opacity: 1.0; pointer-events: none;
-            mix-blend-mode: screen; /* 写真の上でも綺麗に光るように */
+            /* スクリーン合成で光らせる */
+            mix-blend-mode: screen; 
         }
 
         /* --- 2. News Ticker --- */
         #news-ticker {
             position: fixed; top: 0; left: 0; width: 100%; height: 28px;
-            background: rgba(0, 0, 0, 0.85); /* 常に黒帯 */
+            background: rgba(0, 0, 0, 0.85); /* 常に黒帯で見やすく */
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(4px);
             z-index: 100;
             display: flex; align-items: center; padding: 0 20px;
             font-family: var(--font-en); font-size: 9px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
         }
         .ticker-label {
             color: var(--accent-color); font-weight: bold; margin-right: 20px;
@@ -93,8 +119,9 @@
             display: flex; flex-direction: column;
             justify-content: center; align-items: center;
             gap: 60px;
-            border-right: 1px solid rgba(255,255,255,0.1);
-            background: linear-gradient(to right, rgba(0,0,0,0.6), transparent);
+            border-right: 1px solid var(--ui-border);
+            background: linear-gradient(to right, rgba(0,0,0,0.2), transparent);
+            transition: border-color 0.5s;
         }
         .sub-nav-item {
             writing-mode: vertical-rl;
@@ -108,24 +135,26 @@
             text-shadow: 0 0 15px var(--accent-color);
         }
 
-        /* --- BG Control Button (New) --- */
-        .bg-control {
+        /* 背景切り替えボタン (左メニューに追加) */
+        .bg-trigger {
             margin-top: 40px;
-            writing-mode: vertical-rl;
-            font-family: var(--font-en); font-size: 9px; letter-spacing: 0.2em;
-            color: var(--text-main); border: 1px solid rgba(255,255,255,0.3);
-            padding: 15px 5px; cursor: pointer; transition: 0.3s;
+            font-size: 14px; 
+            border: 1px solid var(--ui-border);
+            padding: 10px 4px;
+            border-radius: 4px;
         }
-        .bg-control:hover { background: var(--text-main); color: var(--bg-color); }
+        .bg-trigger:hover {
+            border-color: var(--accent-color);
+            background: var(--accent-color);
+            color: #000;
+        }
 
         /* Character Area (Left Aligned) */
         .character-stage {
             grid-column: 2; grid-row: 1 / 4;
             display: flex; align-items: flex-end; 
-            /* 左寄せ設定 */
-            justify-content: flex-start; 
-            padding-left: 5%; /* 左に少し余白 */
-            
+            justify-content: flex-start; /* 左寄せ */
+            padding-left: 5%; 
             position: relative; overflow: hidden;
             pointer-events: auto; cursor: pointer;
         }
@@ -134,7 +163,7 @@
             height: 92%; width: auto; max-width: 100%;
             object-fit: cover; object-position: top center;
             
-            /* 足元フェード */
+            /* 足元フェード (黒モードと写真モード用) */
             mask-image: linear-gradient(to top, transparent 5%, black 25%);
             -webkit-mask-image: linear-gradient(to top, transparent 5%, black 25%);
             
@@ -143,11 +172,12 @@
             opacity: 0; transform: translateY(30px) scale(0.98);
             transition: opacity 1s ease, transform 1s cubic-bezier(0.16, 1, 0.3, 1);
         }
+        /* 白モードの時だけ足元のフェードを弱めるなどの調整も可能ですが、今回は統一 */
         .char-img.visible { opacity: 1; transform: translateY(0) scale(1); }
 
         /* Speech Bubble */
         .speech-bubble {
-            position: absolute; bottom: 25%; left: 0%; /* キャラに合わせて左へ */
+            position: absolute; bottom: 25%; left: 0%; 
             font-family: var(--font-jp); font-weight: 300; letter-spacing: 0.05em;
             color: #fff; /* 吹き出し内は常に白文字 */
             background: rgba(10, 10, 10, 0.85);
@@ -189,8 +219,9 @@
         .user-status {
             position: absolute; top: 110px; right: 40px;
             text-align: right;
-            border-right: 1px solid rgba(128,128,128,0.3);
+            border-right: 1px solid var(--ui-border);
             padding-right: 20px;
+            transition: border-color 0.5s;
         }
         .status-label { font-size: 8px; color: var(--accent-color); letter-spacing: 0.2em; font-family: var(--font-en); transition: color 1s; }
         .status-name { font-size: 15px; margin-top: 5px; font-weight: 500; letter-spacing: 0.1em; color: var(--text-main); }
@@ -218,22 +249,20 @@
         .nav-btn {
             display: flex; align-items: center; justify-content: center;
             width: 230px; height: 50px;
-            background: rgba(128,128,128,0.05); /* 汎用的な薄い背景 */
-            border: 1px solid rgba(128,128,128,0.3);
+            background: var(--ui-bg); 
+            border: 1px solid var(--ui-border);
             color: var(--text-main); text-decoration: none;
             font-family: var(--font-en); font-size: 11px; letter-spacing: 0.2em;
             position: relative; overflow: hidden;
             transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
         }
         
-        /* Slide Shine */
         .nav-btn::before {
             content: ''; position: absolute;
             top: 0; left: -100%; width: 50%; height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
             transform: skewX(-20deg); transition: 0.5s;
         }
-        /* Border Accent */
         .nav-btn::after {
             content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%;
             background: var(--accent-color);
@@ -267,13 +296,12 @@
 
     <div class="viewport">
         
-        <!-- Left Sub Nav & BG Control -->
+        <!-- Left Sub Nav & BG Trigger -->
         <nav class="sub-nav">
             <div class="sub-nav-item">System Log</div>
             <div class="sub-nav-item">Archive</div>
-            
-            <!-- 背景切り替えボタン -->
-            <div class="bg-control" onclick="cycleBackground()">BG CHANGE</div>
+            <!-- 背景変更ボタン -->
+            <div class="sub-nav-item bg-trigger" onclick="cycleBackground()">DISPLAY MODE</div>
         </nav>
 
         <!-- Header Title -->
@@ -340,24 +368,21 @@
         let targetColor = new THREE.Color(DEFAULT_THEME);
 
         // Background State
-        // Modes: 0=Black, 1=White, 2=Photo
-        let bgMode = 0; 
-        let photoIndex = 1; // Start from 1.png
+        let bgMode = 0; // 0:Black, 1:White, 2:Photo
+        let photoIndex = 1; 
 
         const fallbackData = [{
             name: "System",
-            inpThemeColor: "#00ffcc",
+            color: "#00ffcc", // colorキーを優先
             remarks: "アーカイブへようこそ。<br>接続を確立するにはCONNECTボタンを押してください。",
             image: "https://via.placeholder.com/800x1200/111/333?text=STANDBY"
         }];
 
         // ==========================================
-        // 1. Background Logic (Looping Photos)
+        // 1. Background Switch Logic
         // ==========================================
         window.cycleBackground = () => {
             const body = document.body;
-            
-            // 状態遷移: Black -> White -> Photo(Try 1) -> ... -> Photo(Try N) -> Black
             
             if (bgMode === 0) {
                 // Black -> White
@@ -369,7 +394,7 @@
                 photoIndex = 1;
                 setPhotoBackground();
             } else if (bgMode === 2) {
-                // Photo X -> Photo X+1
+                // Photo X -> Photo X+1 (Try)
                 photoIndex++;
                 setPhotoBackground();
             }
@@ -377,24 +402,21 @@
 
         function setPhotoBackground() {
             const imgPath = `${PHOTO_BASE}${photoIndex}.png`;
-            
-            // 画像の存在チェック（読み込み試行）
             const img = new Image();
             img.onload = () => {
-                // 成功したら背景適用
+                // 成功
                 document.body.className = "mode-photo";
-                document.documentElement.style.setProperty('--bg-image', `url('${imgPath}')`);
+                document.documentElement.style.setProperty('--bg-image-url', `url('${imgPath}')`);
             };
             img.onerror = () => {
-                // 失敗（次の画像がない）したらBlackに戻る
+                // 失敗(画像切れ) -> Blackに戻る
                 bgMode = 0;
                 photoIndex = 1;
                 document.body.className = "mode-black";
-                document.documentElement.style.setProperty('--bg-image', 'none');
+                document.documentElement.style.setProperty('--bg-image-url', 'none');
             };
             img.src = imgPath;
         }
-
 
         // ==========================================
         // 2. News Ticker
@@ -432,7 +454,7 @@
         }
 
         // ==========================================
-        // 3. Display Logic & Theme Color Update
+        // 3. Display Logic (Fix: Check 'color' key)
         // ==========================================
         function resolveImage(charName, cloudUrl) {
             return new Promise((resolve) => {
@@ -458,11 +480,14 @@
             bubbleEl.classList.remove('show');
 
             const nextImgSrc = await resolveImage(char.name, char.image);
-            const theme = char.inpThemeColor || DEFAULT_THEME;
             
-            // ★ 色の反映 (CSS変数 & Three.jsターゲット)
+            // ★重要：schema.jsに合わせて 'color' キーを優先的に見る
+            // inpThemeColorは入力フォームIDなので、保存データは color に入っている可能性が高い
+            const theme = char.color || char.inpThemeColor || DEFAULT_THEME;
+            
+            // 色更新
             rootStyles.setProperty('--accent-color', theme);
-            targetColor.set(theme); 
+            targetColor.set(theme);
 
             let dialogue = char.remarks || char.txtRoleplay || "……。";
             dialogue = dialogue.replace(/<br>/g, "\n");
@@ -495,7 +520,7 @@
         }
 
         // ==========================================
-        // 4. Three.js Particles (Soft Glow & Dynamic Color)
+        // 4. Three.js Particles
         // ==========================================
         function createParticles() {
             const scene = new THREE.Scene();
@@ -504,7 +529,6 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-            // 光る丸いテクスチャを生成
             function getTexture() {
                 const c = document.createElement('canvas');
                 c.width = 32; c.height = 32;
@@ -532,7 +556,7 @@
             
             particleMaterial = new THREE.PointsMaterial({ 
                 color: new THREE.Color(DEFAULT_THEME), 
-                size: 5, // ぼかしがある分大きく
+                size: 5, 
                 map: getTexture(),
                 transparent: true, 
                 opacity: 0.8,
@@ -548,7 +572,6 @@
                 requestAnimationFrame(animate);
                 points.rotation.x += 0.0003;
                 points.rotation.y += 0.0005;
-                // 色の追従
                 particleMaterial.color.lerp(targetColor, 0.05);
                 renderer.render(scene, camera);
             }
