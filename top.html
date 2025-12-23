@@ -3,453 +3,402 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChocolatMer | Home</title>
-    
+    <title>Uchiyoso Maker - Luxe Archive</title>
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500;1,700&family=Zen+Old+Mincho:wght@500;700;900&family=Jost:wght@400;500;700&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Noto+Sans+JP:wght@100;400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* JSでキャラごとのテーマカラーに書き換わります */
-            --theme-color: #81D4FA; 
-            --theme-dark: #0277BD;
-            --accent: #FFAB91; /* 共通アクセントカラー */
+            --bg-color: #080808;
+            --text-main: #ffffff;
+            --text-sub: #8899a6;
+            --font-en: 'Syncopate', sans-serif;
+            --font-jp: 'Noto Sans JP', sans-serif;
             
-            --glass-bg: rgba(255, 255, 255, 0.85);
-            --glass-border: rgba(255, 255, 255, 0.9);
-            --text-primary: #263238;
-            --text-secondary: #546E7A;
-            --shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            /* キャラクターごとのテーマカラー（JSで動的に変わります） */
+            --char-theme: #00ffcc; 
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            width: 100vw; height: 100vh;
+        body, html {
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-jp);
             overflow: hidden;
-            background: #ECEFF1;
-            font-family: 'Jost', 'Zen Old Mincho', serif;
-            color: var(--text-primary);
-            position: relative;
-            transition: background 0.5s ease;
+            transition: background-color 1s ease;
         }
 
-        /* --- Dynamic Background --- */
-        .ambient-bg {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            /* テーマカラーを使ったグラデーション */
-            background: radial-gradient(circle at 70% 30%, var(--theme-color), transparent 70%),
-                        radial-gradient(circle at 20% 80%, #ffffff, transparent 50%);
-            opacity: 0.6;
-            z-index: 0;
-            transition: background 1s ease;
-        }
-        
-        /* ゲームっぽいパターンオーバーレイ */
-        .pattern-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: 
-                linear-gradient(45deg, rgba(255,255,255,0.4) 25%, transparent 25%, transparent 50%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.4) 75%, transparent 75%, transparent);
-            background-size: 40px 40px;
-            opacity: 0.3;
-            z-index: 1;
-            pointer-events: none;
+        /* --- 1. Background (Three.js Container) --- */
+        #canvas-container {
+            position: fixed; top: 0; left: 0;
+            z-index: 0; opacity: 0.8; pointer-events: none;
         }
 
-        #particle-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
-
-        /* 背景の巨大文字 */
-        .background-typo {
-            position: absolute; top: 50%; left: 50%; 
-            transform: translate(-50%, -50%);
-            font-family: 'Cormorant Garamond', serif; 
-            font-size: 15vw; font-style: italic; font-weight: 700;
-            color: #fff; 
-            white-space: nowrap; 
-            z-index: 3; pointer-events: none; 
-            opacity: 0.4;
-            text-shadow: 0 0 30px var(--theme-color);
-            transition: text-shadow 1s ease;
-        }
-
-        /* --- NEWS TICKER (Game Style) --- */
-        #news-bar {
-            position: absolute; top: 20px; left: 20px; 
-            background: #fff;
-            padding: 8px 25px;
-            border-radius: 50px;
-            z-index: 100;
-            display: flex; align-items: center;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            border: 2px solid var(--theme-color);
-            transition: border-color 1s ease;
-            max-width: 40%;
-            overflow: hidden;
-        }
-        .news-label {
-            font-family: 'Jost'; font-weight: 700; font-size: 0.7rem; 
-            background: var(--theme-color); color: #fff;
-            padding: 2px 8px; border-radius: 4px;
-            margin-right: 15px; white-space: nowrap;
-            transition: background 1s ease;
-        }
-        .news-content {
-            font-family: 'Zen Old Mincho'; font-size: 0.85rem; color: var(--text-primary);
-            white-space: nowrap; font-weight: 700;
-        }
-
-        /* --- Main Layout --- */
-        #interface-layer {
-            position: relative; z-index: 10; width: 100%; height: 100%;
-            display: grid;
-            grid-template-columns: 80px 1fr 400px; /* 左メニュー / キャラ / 右パネル */
-            grid-template-rows: 1fr;
-        }
-
-        /* --- Left Side (Logo & Nav) --- */
-        .left-sidebar {
-            grid-column: 1; display: flex; flex-direction: column;
-            align-items: center; justify-content: space-between;
-            padding: 30px 0;
-            background: rgba(255,255,255,0.3);
+        /* --- 2. News Ticker (Top Bar) --- */
+        #news-ticker {
+            position: fixed; top: 0; left: 0; width: 100%; height: 32px;
+            background: rgba(0, 0, 0, 0.85);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(5px);
-            border-right: 1px solid rgba(255,255,255,0.5);
+            z-index: 100;
+            display: flex; align-items: center; padding: 0 20px;
+            font-family: var(--font-en); font-size: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
         }
-        .logo-text {
-            font-family: 'Cormorant Garamond'; font-weight: 700; font-size: 1.8rem; 
-            color: var(--text-primary); writing-mode: vertical-rl;
-            letter-spacing: 0.2em; text-shadow: 2px 2px 0 #fff;
+        .ticker-label {
+            color: var(--char-theme); font-weight: bold; margin-right: 20px;
+            letter-spacing: 0.1em; white-space: nowrap;
+            text-shadow: 0 0 8px var(--char-theme);
+            transition: color 1s, text-shadow 1s;
+            border-right: 1px solid rgba(255,255,255,0.2);
+            padding-right: 15px;
         }
-        .social-icons { font-size: 1.2rem; color: var(--text-secondary); display: flex; flex-direction: column; gap: 20px; }
+        .ticker-content {
+            color: #ccc; font-family: var(--font-jp); font-weight: 400;
+            opacity: 0; transform: translateY(5px); transition: all 0.5s;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .ticker-content.active { opacity: 1; transform: translateY(0); }
 
-        /* --- Character Area (修正点: 顔が見切れないように調整) --- */
-        .char-stage {
-            grid-column: 2; position: relative;
-            display: flex; justify-content: center; align-items: flex-end;
-            overflow: hidden; /* はみ出し防止 */
-            cursor: pointer;
+        /* --- 3. Main Layout --- */
+        .viewport {
+            position: relative;
+            width: 100vw; height: 100vh;
+            display: grid;
+            grid-template-columns: 80px 1fr 400px;
+            grid-template-rows: 60px 1fr 150px;
+            z-index: 10;
+        }
+
+        /* Left Sub Nav */
+        .sub-nav {
+            grid-row: 1 / 4;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            gap: 60px;
+            border-right: 1px solid rgba(255,255,255,0.08);
+            background: linear-gradient(to right, rgba(0,0,0,0.5), transparent);
+        }
+        .sub-nav-item {
+            writing-mode: vertical-rl;
+            font-family: var(--font-en); font-size: 9px; letter-spacing: 0.6em;
+            color: rgba(255,255,255,0.3); text-transform: uppercase;
+            cursor: pointer; transition: 0.4s;
+        }
+        .sub-nav-item:hover { color: var(--char-theme); transform: translateY(-5px); text-shadow: 0 0 8px var(--char-theme); }
+
+        /* Character Area */
+        .character-stage {
+            grid-column: 2 / 3; grid-row: 1 / 4;
+            display: flex; align-items: flex-end; justify-content: center;
+            position: relative; overflow: hidden;
+            pointer-events: auto; cursor: pointer;
         }
 
         .char-img {
-            /* 
-               顔が見切れないようにするための設定 
-               height: 90vh -> 画面高さの90%に収める
-               object-fit: cover -> 比率を維持して領域を埋める（またはcontainで全体表示）
-               object-position: top center -> 画像の上端（顔）を基準に配置
-            */
-            height: 95vh; 
-            width: auto;
-            max-width: 100%;
+            /* 顔が見切れないように上基準で配置 & サイズ調整 */
+            height: 90%; 
+            width: auto; max-width: 100%;
             object-fit: cover; 
-            object-position: top center; 
+            object-position: top center;
             
-            /* 足元を少しフェードアウトさせて馴染ませる */
-            mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
-
-            filter: drop-shadow(0 10px 30px rgba(0,0,0,0.2));
+            /* 下部を黒背景に溶け込ませる */
+            mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
             
-            opacity: 0;
-            transform: translateY(20px) scale(0.95); /* 初期位置 */
-            transition: opacity 0.6s, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            filter: drop-shadow(0 0 50px rgba(0,0,0,0.6));
+            
+            opacity: 0; transform: translateY(30px) scale(0.98);
+            transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
+        .char-img.visible { opacity: 1; transform: translateY(0) scale(1); }
 
-        /* 表示時の状態 */
-        .char-img.visible {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-        }
-        
-        /* 呼吸アニメーション（控えめに） */
-        .char-img.breathing {
-            animation: breathe 6s ease-in-out infinite;
-        }
-
-        /* セリフウィンドウ（ゲーム風） */
-        .dialogue-box {
-            position: absolute; bottom: 40px; left: 50%; 
-            transform: translateX(-50%) translateY(20px);
-            width: 90%; max-width: 700px;
-            background: rgba(255, 255, 255, 0.9);
-            border: 2px solid var(--theme-color);
-            border-radius: 12px;
-            padding: 1.5rem 2rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            opacity: 0; transition: all 0.4s ease;
-            z-index: 20;
-        }
-        .dialogue-box.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-        
-        /* 三角形の装飾 */
-        .dialogue-box::after {
-            content: ''; position: absolute; bottom: -10px; left: 50%;
-            width: 20px; height: 20px; background: #fff;
-            border-bottom: 2px solid var(--theme-color);
-            border-right: 2px solid var(--theme-color);
-            transform: translateX(-50%) rotate(45deg);
-        }
-
-        .char-name-label {
-            position: absolute; top: -18px; left: 30px;
-            background: var(--theme-color); color: #fff;
-            padding: 5px 20px; border-radius: 20px;
-            font-family: 'Zen Old Mincho'; font-weight: 700; font-size: 0.9rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            transition: background 1s ease;
-        }
-        
-        .char-text {
-            font-size: 1.1rem; line-height: 1.6; color: var(--text-primary);
-            font-family: 'Zen Old Mincho'; font-weight: 600;
-            min-height: 3.2em;
-        }
-
-        /* --- Right Panel (UI) --- */
-        .right-panel {
-            grid-column: 3; 
-            background: rgba(255,255,255,0.6);
-            backdrop-filter: blur(20px);
-            border-left: 2px solid #fff;
-            display: flex; flex-direction: column;
-            justify-content: center;
-            padding: 40px;
-            box-shadow: -10px 0 30px rgba(0,0,0,0.05);
-        }
-
-        .user-info {
-            text-align: right; margin-bottom: 40px;
-            border-bottom: 2px solid var(--theme-color);
-            padding-bottom: 10px;
-            transition: border-color 1s ease;
-        }
-        .user-label { font-size: 0.7rem; font-weight: 700; color: var(--text-secondary); letter-spacing: 0.1em; }
-        .user-name { font-family: 'Jost'; font-size: 1.8rem; font-weight: 700; color: var(--text-primary); }
-
-        .menu-container { display: flex; flex-direction: column; gap: 15px; }
-
-        /* スタイリッシュなボタン */
-        .menu-card {
-            display: flex; align-items: center; justify-content: space-between;
-            background: #fff;
-            padding: 15px 20px;
-            border-radius: 8px;
-            text-decoration: none; color: var(--text-primary);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-            transition: all 0.2s ease;
-            border-left: 5px solid transparent;
-        }
-        .menu-card:hover {
-            transform: translateX(-10px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            border-left-color: var(--theme-color);
-        }
-        .menu-title { font-family: 'Zen Old Mincho'; font-weight: 700; font-size: 1.1rem; }
-        .menu-sub { font-size: 0.7rem; color: var(--text-secondary); font-weight: 700; }
-
-        /* CONNECTボタン */
-        .connect-btn {
-            margin-top: 40px;
-            width: 100%; padding: 18px;
-            border: none; border-radius: 50px;
-            background: linear-gradient(135deg, var(--text-primary), #000);
+        /* Speech Bubble */
+        .speech-bubble {
+            position: absolute; bottom: 25%; left: 8%;
+            font-family: var(--font-jp); font-weight: 300; letter-spacing: 0.05em;
             color: #fff;
-            font-family: 'Jost'; font-weight: 700; letter-spacing: 0.2em; font-size: 1rem;
-            cursor: pointer;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            transition: all 0.3s;
-            position: relative; overflow: hidden;
+            background: rgba(15, 15, 15, 0.85);
+            padding: 25px 35px;
+            backdrop-filter: blur(12px);
+            border-left: 3px solid var(--char-theme);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            max-width: 450px; line-height: 1.8;
+            
+            opacity: 0; transform: translateX(-20px);
+            transition: all 0.5s ease 0.3s, border-color 1s;
         }
-        .connect-btn:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
-            background: var(--theme-color);
+        .speech-bubble.show { opacity: 1; transform: translateX(0); }
+        
+        .char-name-label {
+            font-family: var(--font-en); font-size: 11px; color: var(--char-theme);
+            margin-bottom: 12px; display: block; font-weight: bold; letter-spacing: 0.2em;
+            transition: color 1s;
+        }
+        .cursor {
+            display: inline-block; width: 2px; height: 1em; background: var(--char-theme);
+            animation: blink 1s infinite; vertical-align: middle; transition: background 1s;
         }
 
-        @keyframes auroraRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes breathe {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
+        /* Right Header */
+        .header-title {
+            grid-column: 3; grid-row: 1;
+            padding: 25px 40px; text-align: right;
         }
+        .header-title h1 {
+            font-family: var(--font-en); font-size: 26px; margin: 0;
+            color: #fff; letter-spacing: 0.2em; text-shadow: 0 0 10px rgba(255,255,255,0.1);
+        }
+        .header-sub { font-size: 9px; color: var(--text-sub); letter-spacing: 0.4em; margin-top: 5px; opacity: 0.6; }
+
+        /* User Status */
+        .user-status {
+            position: absolute; top: 120px; right: 40px;
+            text-align: right;
+            border-right: 1px solid rgba(255,255,255,0.15);
+            padding-right: 20px;
+        }
+        .status-label { font-size: 8px; color: var(--char-theme); letter-spacing: 0.2em; font-family: var(--font-en); transition: color 1s; }
+        .status-name { font-size: 15px; margin-top: 5px; font-weight: 500; letter-spacing: 0.1em; }
+        .connect-btn {
+            background: none; border: 1px solid var(--char-theme); color: var(--char-theme);
+            font-size: 10px; padding: 6px 20px; margin-top: 15px; cursor: pointer;
+            font-family: var(--font-en); transition: 0.3s;
+        }
+        .connect-btn:hover { background: var(--char-theme); color: #000; box-shadow: 0 0 15px var(--char-theme); }
+
+        /* Right Bottom Main Nav */
+        .main-nav {
+            grid-column: 3; grid-row: 2 / 4;
+            display: flex; flex-direction: column; 
+            justify-content: flex-end; align-items: flex-end;
+            padding: 0 40px 50px 0; gap: 25px;
+        }
+
+        .nav-btn-group { display: flex; flex-direction: column; align-items: flex-end; }
+        .btn-label {
+            font-family: var(--font-en); font-size: 8px; color: var(--text-sub);
+            margin-bottom: 6px; letter-spacing: 0.2em;
+        }
+        
+        .nav-btn {
+            display: flex; align-items: center; justify-content: center;
+            width: 240px; height: 50px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; text-decoration: none;
+            font-family: var(--font-en); font-size: 11px; letter-spacing: 0.2em;
+            position: relative; overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+        .nav-btn::before {
+            content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%;
+            background: var(--char-theme);
+            transform: scaleY(0); transition: transform 0.3s;
+        }
+        .nav-btn:hover {
+            border-color: var(--char-theme);
+            background: rgba(255, 255, 255, 0.05);
+            padding-left: 15px;
+            box-shadow: 0 0 25px rgba(0,0,0,0.5);
+            text-shadow: 0 0 5px rgba(255,255,255,0.5);
+        }
+        .nav-btn:hover::before { transform: scaleY(1); }
+
+        @keyframes blink { 50% { opacity: 0; } }
+
     </style>
 </head>
 <body>
 
-    <!-- Background Layers -->
-    <div class="ambient-bg"></div>
-    <div class="pattern-overlay"></div>
-    <canvas id="particle-canvas"></canvas>
+    <!-- 1. THREE.JS PARTICLE CONTAINER -->
+    <div id="canvas-container"></div>
 
-    <!-- News Ticker -->
-    <div id="news-bar">
-        <span class="news-label">REPORT</span>
-        <div id="news-content" class="news-content">System Booting...</div>
+    <!-- 2. NEWS TICKER -->
+    <div id="news-ticker">
+        <span class="ticker-label">LATEST REPORT</span>
+        <span id="news-content" class="ticker-content">Connecting to Database...</span>
     </div>
 
-    <!-- Typography BG -->
-    <div class="background-typo">CHOCOLAT MER</div>
-
-    <!-- Main Interface -->
-    <div id="interface-layer">
+    <!-- 3. MAIN UI -->
+    <div class="viewport">
         
-        <!-- Left Sidebar -->
-        <aside class="left-sidebar">
-            <div class="logo-text">ChocolatMer</div>
-            <div class="social-icons">
-                <span>✦</span>
-                <span>✦</span>
-                <span>✦</span>
-            </div>
-        </aside>
+        <!-- Left Sub Nav -->
+        <nav class="sub-nav">
+            <div class="sub-nav-item">System Log</div>
+            <div class="sub-nav-item">Network</div>
+            <div class="sub-nav-item">Archive</div>
+        </nav>
+
+        <!-- Header -->
+        <div class="header-title">
+            <h1>UCHIYOSO<br>ARCHIVE</h1>
+            <div class="header-sub">PREMIUM INTERFACE v2.0</div>
+        </div>
+
+        <!-- User Panel -->
+        <div class="user-status">
+            <div class="status-label">LOGGED IN AS</div>
+            <div id="user-display" class="status-name">GUEST</div>
+            <button id="main-connect-btn" class="connect-btn" onclick="handleConnect()">CONNECT</button>
+        </div>
 
         <!-- Character Stage -->
-        <main class="char-stage" onclick="handleCharClick()">
-            <!-- 
-                画像の設定:
-                前のコードでは scale(1.7) などで拡大していましたが、
-                CSSで height: 95vh; object-position: top center; とすることで
-                「画面の高さに合わせて、頭のてっぺんを基準に表示」するようにしました。
-                これで顔が見切れることはありません。
-            -->
-            <img id="char-img" class="char-img" src="" alt="">
+        <section class="character-stage" onclick="handleCharClick()">
+            <!-- 画像：上基準配置＆サイズ調整済み -->
+            <img id="char-img" class="char-img" src="" alt="Character">
             
-            <div class="dialogue-box">
-                <div id="char-name-label" class="char-name-label">...</div>
-                <div class="char-text">
-                    <span id="typewriter-text"></span><span style="animation:blink 1s infinite">|</span>
-                </div>
+            <div class="speech-bubble">
+                <span id="char-name-label" class="char-name-label">SYSTEM</span>
+                <span id="typewriter-text"></span><span class="cursor"></span>
             </div>
-        </main>
+        </section>
 
-        <!-- Right Panel -->
-        <aside class="right-panel">
-            <div class="user-info">
-                <span class="user-label">CURRENT USER</span>
-                <div id="user-display" class="user-name">GUEST</div>
+        <!-- Menu Links -->
+        <nav class="main-nav">
+            
+            <div class="nav-btn-group">
+                <span class="btn-label">DATA ENTRY</span>
+                <a href="./character/edit.html" class="nav-btn">EDIT DATA</a>
             </div>
 
-            <nav class="menu-container">
-                <a href="./character/edit.html" class="menu-card">
-                    <span class="menu-title">Character Edit</span>
-                    <span class="menu-sub">INPUT DATA</span>
-                </a>
-                <a href="./character/list.html" class="menu-card">
-                    <span class="menu-title">Member List</span>
-                    <span class="menu-sub">VIEW ALL</span>
-                </a>
-                <a href="./character/Squestionnaire.html" class="menu-card">
-                    <span class="menu-title">Art Request</span>
-                    <span class="menu-sub">POLL</span>
-                </a>
-                <a href="./character/Mquestionnaire.html" class="menu-card">
-                    <span class="menu-title">Questions</span>
-                    <span class="menu-sub">PAIR</span>
-                </a>
-            </nav>
+            <div class="nav-btn-group">
+                <span class="btn-label">DATABASE</span>
+                <a href="./character/list.html" class="nav-btn">MEMBER LIST</a>
+            </div>
 
-            <button id="main-btn" class="connect-btn" onclick="handleMainButton()">
-                CONNECT
-            </button>
-        </aside>
+            <div class="nav-btn-group">
+                <span class="btn-label">REQUEST MODE</span>
+                <a href="./character/Squestionnaire.html" class="nav-btn">ART POLL (SOLO)</a>
+            </div>
 
+            <div class="nav-btn-group">
+                <span class="btn-label">COMMUNICATION</span>
+                <a href="./character/Mquestionnaire.html" class="nav-btn">PAIR QUESTIONS</a>
+            </div>
+
+        </nav>
     </div>
 
-    <!-- Logic -->
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Application Logic -->
     <script type="module">
         import { login, logout, monitorAuth, loadFromCloud } from "./character/firestore.js";
 
-        // 設定
+        // --- Settings ---
         const LOCAL_IMG_BASE = "./images/character/";
-        const FALLBACK_COLOR = "#81D4FA"; // 水色
-
-        // State
+        const DEFAULT_THEME = "#00ffcc";
+        
+        // --- State ---
         let currentUser = null;
         let charDataList = [];
         let currentIndex = 0;
         let typeWriterTimeout = null;
+        
+        // Three.js Particle Variables
+        let particleSystem, particleMaterial;
+        let targetColor = new THREE.Color(DEFAULT_THEME);
 
-        // ダミーデータ
+        // Fallback Data
         const fallbackData = [{
             name: "System",
-            inpThemeColor: "#78909C",
-            remarks: "ネットワークに接続されていません。<br>CONNECTボタンからログインしてください。",
-            image: "https://placehold.co/800x1200/eceff1/90a4ae?text=No+Signal"
+            inpThemeColor: "#00ffcc",
+            remarks: "アーカイブへようこそ。<br>接続を確立するにはCONNECTボタンを押してください。",
+            image: "https://via.placeholder.com/800x1200/111/333?text=NO+CONNECTION"
         }];
 
-        // 画像パス解決
+        // ==========================================
+        // 1. News Ticker (Auto-Detect Path)
+        // ==========================================
+        async function initNews() {
+            const el = document.getElementById('news-content');
+            
+            // 複数の場所を探しに行く
+            const paths = [
+                './report.json',
+                './TOP/report.json',
+                '../TOP/report.json',
+                '../../TOP/report.json'
+            ];
+
+            let data = null;
+            for (const path of paths) {
+                try {
+                    const res = await fetch(`${path}?t=${Date.now()}`);
+                    if (res.ok) {
+                        data = await res.json();
+                        break;
+                    }
+                } catch (e) {}
+            }
+
+            if (!data || !Array.isArray(data) || data.length === 0) {
+                el.textContent = "Welcome to Uchiyoso Archive.";
+                el.classList.add('active');
+                return;
+            }
+
+            const cycle = () => {
+                el.classList.remove('active');
+                setTimeout(() => {
+                    el.textContent = data[Math.floor(Math.random() * data.length)];
+                    el.classList.add('active');
+                }, 500);
+            };
+            cycle();
+            setInterval(cycle, 6000);
+        }
+
+        // ==========================================
+        // 2. Character Display & Theme Logic
+        // ==========================================
         function resolveImage(charName, cloudUrl) {
             return new Promise((resolve) => {
                 if (!charName) { resolve(cloudUrl || fallbackData[0].image); return; }
                 const localPath = `${LOCAL_IMG_BASE}${charName}.png`;
                 const img = new Image();
                 img.onload = () => resolve(localPath);
-                img.onerror = () => resolve(cloudUrl || `https://placehold.co/800x1200/81D4FA/ffffff?text=${encodeURIComponent(charName)}`);
+                img.onerror = () => resolve(cloudUrl || `https://via.placeholder.com/800x1200/000/333?text=${encodeURIComponent(charName)}`);
                 img.src = localPath;
             });
         }
 
-        // News Ticker
-        async function initNews() {
-            const el = document.getElementById('news-content');
-            try {
-                const res = await fetch(`./report.json?t=${Date.now()}`);
-                if(!res.ok) throw new Error();
-                const data = await res.json();
-                if(!data.length) throw new Error();
-
-                const cycle = () => {
-                    el.style.opacity = 0;
-                    setTimeout(() => {
-                        el.textContent = data[Math.floor(Math.random() * data.length)];
-                        el.style.opacity = 1;
-                    }, 500);
-                };
-                cycle();
-                setInterval(cycle, 5000);
-            } catch(e) {
-                el.textContent = "Welcome to ChocolatMer Portal";
-                el.style.opacity = 1;
-            }
-        }
-
-        // 画面更新
         const imgEl = document.getElementById('char-img');
         const nameLabel = document.getElementById('char-name-label');
         const textContainer = document.getElementById('typewriter-text');
-        const dialogueBox = document.querySelector('.dialogue-box');
+        const bubbleEl = document.querySelector('.speech-bubble');
         const rootStyles = document.documentElement.style;
 
         async function updateDisplay() {
             const char = charDataList[currentIndex];
 
-            // 1. 退場
-            imgEl.classList.remove('visible', 'breathing');
-            dialogueBox.classList.remove('show');
-            
-            // 2. データ準備
+            // Exit
+            imgEl.classList.remove('visible');
+            bubbleEl.classList.remove('show');
+
             const nextImgSrc = await resolveImage(char.name, char.image);
-            const theme = char.inpThemeColor || FALLBACK_COLOR;
+            const theme = char.inpThemeColor || DEFAULT_THEME;
             
-            // 色の適用
-            rootStyles.setProperty('--theme-color', theme);
+            // ★ CSS変数とパーティクル色の更新
+            rootStyles.setProperty('--char-theme', theme);
+            targetColor.set(theme); // Three.jsの色目標値を更新
             
-            // セリフ整形
             let dialogue = char.remarks || char.txtRoleplay || "……。";
             dialogue = dialogue.replace(/<br>/g, "\n");
 
-            // 3. 入場
             setTimeout(() => {
                 imgEl.src = nextImgSrc;
                 imgEl.onload = () => {
-                    nameLabel.textContent = char.name;
-                    nameLabel.style.backgroundColor = theme; // 名前ラベルの色も変更
-
+                    nameLabel.textContent = char.name.toUpperCase();
+                    
+                    // Enter
                     imgEl.classList.add('visible');
                     
                     setTimeout(() => {
-                        imgEl.classList.add('breathing');
-                        dialogueBox.classList.add('show');
+                        bubbleEl.classList.add('show');
                         startTypewriter(dialogue);
                     }, 400);
                 };
@@ -464,27 +413,82 @@
                 if (i < text.length) {
                     textContainer.textContent += text.charAt(i);
                     i++;
-                    typeWriterTimeout = setTimeout(type, 40);
+                    typeWriterTimeout = setTimeout(type, 30);
                 }
             }
             type();
         }
 
-        // Firebase Auth
+        // ==========================================
+        // 3. Three.js Particles (Dynamic Color)
+        // ==========================================
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        const geometry = new THREE.BufferGeometry();
+        const vertices = [];
+        for (let i = 0; i < 6000; i++) {
+            vertices.push(
+                THREE.MathUtils.randFloatSpread(2500), 
+                THREE.MathUtils.randFloatSpread(1500), 
+                THREE.MathUtils.randFloatSpread(2000)
+            );
+        }
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        
+        // Material with additive blending for neon look
+        particleMaterial = new THREE.PointsMaterial({ 
+            color: new THREE.Color(DEFAULT_THEME), 
+            size: 2.5, 
+            transparent: true, 
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending 
+        });
+        
+        particleSystem = new THREE.Points(geometry, particleMaterial);
+        scene.add(particleSystem);
+        camera.position.z = 1000;
+
+        function animateParticles() {
+            requestAnimationFrame(animateParticles);
+            
+            // Rotation
+            particleSystem.rotation.x += 0.0002;
+            particleSystem.rotation.y += 0.0004;
+
+            // Color Lerp (Smooth transition to character theme)
+            particleMaterial.color.lerp(targetColor, 0.02);
+
+            renderer.render(scene, camera);
+        }
+        animateParticles();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // ==========================================
+        // 4. Auth Logic
+        // ==========================================
         const userDisplay = document.getElementById('user-display');
-        const mainBtn = document.getElementById('main-btn');
+        const connectBtn = document.getElementById('main-connect-btn');
 
         monitorAuth(
             async (user) => {
                 currentUser = user;
-                userDisplay.textContent = user.displayName || "Member";
-                mainBtn.textContent = "NEXT CHAR";
+                userDisplay.textContent = (user.displayName || "MEMBER").toUpperCase();
+                connectBtn.textContent = "NEXT";
                 
                 const data = await loadFromCloud();
                 if (data && Object.keys(data).length > 0) {
                     charDataList = Object.values(data);
                 } else {
-                    charDataList = [{ name: "No Data", remarks: "データがありません。", inpThemeColor: "#B0BEC5" }];
+                    charDataList = [{ name: "No Data", remarks: "データがありません。", inpThemeColor: "#555" }];
                 }
                 currentIndex = Math.floor(Math.random() * charDataList.length);
                 updateDisplay();
@@ -492,66 +496,22 @@
             () => {
                 currentUser = null;
                 userDisplay.textContent = "GUEST";
-                mainBtn.textContent = "CONNECT";
+                connectBtn.textContent = "CONNECT";
                 charDataList = fallbackData;
                 currentIndex = 0;
                 updateDisplay();
             }
         );
 
-        window.handleMainButton = () => {
-            if (!currentUser) login();
-            else nextChar();
-        };
-        window.handleCharClick = () => {
-            if (currentUser) nextChar();
-        };
-
+        window.handleConnect = () => { if (!currentUser) login(); else nextChar(); };
+        window.handleCharClick = () => { if (currentUser) nextChar(); };
         function nextChar() {
             if (charDataList.length <= 1) return;
-            // 背景文字アニメーション
-            const typo = document.querySelector('.background-typo');
-            typo.style.transform = "translate(-50%, -50%) scale(1.1)";
-            setTimeout(() => typo.style.transform = "translate(-50%, -50%) scale(1)", 300);
-
             currentIndex = (currentIndex + 1) % charDataList.length;
             updateDisplay();
         }
 
-        // Particles
-        const canvas = document.getElementById('particle-canvas');
-        const ctx = canvas.getContext('2d');
-        let width, height, particles = [];
-        function resize() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; }
-        window.addEventListener('resize', resize); resize();
-
-        class Particle {
-            constructor() { this.reset(); }
-            reset() {
-                this.x = Math.random() * width; this.y = Math.random() * height;
-                this.size = Math.random() * 3; 
-                this.speedX = (Math.random() - 0.5) * 0.5; this.speedY = (Math.random() - 0.5) * 0.5;
-                this.alpha = Math.random() * 0.5 + 0.1;
-                this.color = Math.random() > 0.8 ? getComputedStyle(document.body).getPropertyValue('--theme-color') : '#ffffff';
-            }
-            update() {
-                this.x += this.speedX; this.y += this.speedY;
-                if(this.x > width || this.x < 0 || this.y > height || this.y < 0) this.reset();
-            }
-            draw() {
-                ctx.fillStyle = this.color === '#ffffff' ? `rgba(255,255,255,${this.alpha})` : getComputedStyle(document.documentElement).getPropertyValue('--theme-color');
-                ctx.globalAlpha = this.alpha;
-                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill();
-                ctx.globalAlpha = 1.0;
-            }
-        }
-        for(let i=0; i<50; i++) particles.push(new Particle());
-        function animate() {
-            ctx.clearRect(0,0,width,height);
-            particles.forEach(p => { p.update(); p.draw(); });
-            requestAnimationFrame(animate);
-        }
-        animate();
+        // Init
         initNews();
 
     </script>
