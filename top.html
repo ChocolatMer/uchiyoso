@@ -19,6 +19,7 @@
             --bg-image-url: none;
         }
 
+        /* --- 背景モード --- */
         body.mode-black { --bg-color: #080808; --text-main: #ffffff; }
         body.mode-white { --bg-color: #f4f4f4; --text-main: #1a1a1a; --text-sub: #555; }
         body.mode-photo {
@@ -43,35 +44,28 @@
             opacity: 1.0; pointer-events: none; mix-blend-mode: screen;
         }
 
-        /* --- Updated News Ticker (More Visible) --- */
+        /* --- News Ticker (Original Layout, Bigger Font) --- */
         #news-ticker {
-            position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
-            width: 90%; max-width: 1200px; height: 36px;
-            background: rgba(0, 0, 0, 0.9);
-            border: 1px solid var(--accent-color); /* テーマカラーの枠線 */
-            border-radius: 4px;
-            box-shadow: 0 0 15px var(--accent-color); /* 発光 */
-            z-index: 100;
+            position: fixed; top: 0; left: 0; width: 100%; height: 32px;
+            background: rgba(0, 0, 0, 0.85);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(4px); z-index: 100;
             display: flex; align-items: center; padding: 0 20px;
-            font-family: var(--font-en); font-size: 11px;
-            animation: pulseBorder 4s infinite;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
         }
-        @keyframes pulseBorder {
-            0%, 100% { box-shadow: 0 0 10px var(--accent-color); }
-            50% { box-shadow: 0 0 25px var(--accent-color); }
-        }
-
         .ticker-label {
-            color: #fff; background: var(--accent-color);
-            font-weight: bold; margin-right: 20px;
-            padding: 2px 8px; border-radius: 2px;
-            color: #000; letter-spacing: 0.1em; white-space: nowrap;
+            font-family: var(--font-en); font-size: 10px;
+            color: var(--accent-color); font-weight: bold; margin-right: 20px;
+            letter-spacing: 0.1em; white-space: nowrap;
+            text-shadow: 0 0 10px var(--accent-color);
+            transition: color 1s, text-shadow 1s;
+            border-right: 1px solid rgba(255,255,255,0.2); padding-right: 15px;
         }
         .ticker-content {
-            color: #fff; font-family: var(--font-jp); font-weight: 500;
+            font-family: var(--font-jp); font-weight: 500; font-size: 14px; /* 文字を大きく */
+            color: #ddd;
             opacity: 0; transform: translateY(5px); transition: all 0.5s;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            width: 100%;
         }
         .ticker-content.active { opacity: 1; transform: translateY(0); }
 
@@ -84,33 +78,47 @@
             z-index: 10;
         }
 
-        /* --- Left Nav & Controls --- */
+        /* --- Left Nav (Layout Fixed) --- */
         .sub-nav {
             grid-row: 1 / 4; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; gap: 40px;
+            justify-content: center; align-items: center;
             border-right: 1px solid var(--ui-border);
             background: linear-gradient(to right, rgba(0,0,0,0.2), transparent);
         }
+        .sub-nav-content {
+            display: flex; flex-direction: column; align-items: center; gap: 60px;
+        }
+        .sub-nav-item {
+            writing-mode: vertical-rl; font-family: var(--font-en); font-size: 9px; letter-spacing: 0.6em;
+            color: var(--text-main); opacity: 0.4;
+            text-transform: uppercase; cursor: pointer; transition: 0.4s;
+        }
+        .sub-nav-item:hover {
+            color: var(--accent-color); opacity: 1;
+            transform: translateY(-8px); text-shadow: 0 0 15px var(--accent-color);
+        }
+        .bg-trigger {
+            font-family: var(--font-en); font-size: 10px; letter-spacing: 0.2em;
+            color: var(--text-main); border: 1px solid var(--ui-border);
+            padding: 15px 6px; cursor: pointer; transition: 0.3s;
+        }
+        .bg-trigger:hover { background: var(--accent-color); color: #000; border-color: var(--accent-color);}
 
-        /* BGM Player */
+        /* --- BGM Player (Bottom Left) --- */
         .sound-control {
-            display: flex; flex-direction: column; align-items: center; gap: 10px;
+            position: fixed; bottom: 20px; left: 15px;
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(0,0,0,0.5); padding: 5px 10px; border-radius: 20px;
+            backdrop-filter: blur(5px);
+            z-index: 101;
         }
         .sound-icon {
             color: var(--text-main); font-size: 20px; cursor: pointer;
             opacity: 0.5; transition: 0.3s;
         }
-        .sound-icon:hover, .sound-icon.playing { opacity: 1; color: var(--accent-color); text-shadow: 0 0 10px var(--accent-color); }
-        
-        /* BG Select Button */
-        .bg-trigger {
-            writing-mode: vertical-rl; font-family: var(--font-en); font-size: 10px; letter-spacing: 0.2em;
-            color: var(--text-main); border: 1px solid var(--ui-border);
-            padding: 15px 6px; cursor: pointer; transition: 0.3s;
-        }
-        .bg-trigger:hover {
-            border-color: var(--accent-color); background: var(--accent-color); color: #000;
-        }
+        .sound-icon:hover, .sound-icon.playing { opacity: 1; color: var(--accent-color); }
+        .volume-bar { -webkit-appearance: none; appearance: none; width: 60px; height: 3px; background: #555; outline: none; transition: 0.2s; cursor: pointer; }
+        .volume-bar::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 10px; height: 10px; background: var(--accent-color); border-radius: 50%; }
 
         /* --- BG Selection Modal --- */
         #bg-modal {
@@ -120,7 +128,6 @@
             opacity: 0; pointer-events: none; transition: 0.3s;
         }
         #bg-modal.open { opacity: 1; pointer-events: auto; }
-        
         .modal-content {
             background: rgba(20,20,20,0.9); border: 1px solid var(--accent-color);
             padding: 40px; border-radius: 8px; max-width: 600px; width: 90%;
@@ -128,19 +135,20 @@
         }
         .modal-title { font-family: var(--font-en); color: var(--text-main); margin-bottom: 20px; }
         .bg-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 15px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px;
         }
         .bg-option {
-            aspect-ratio: 1; border: 2px solid #555; cursor: pointer;
+            aspect-ratio: 16/9; border: 2px solid #555; cursor: pointer;
             display: flex; justify-content: center; align-items: center;
-            font-size: 10px; color: #fff; background-size: cover; background-position: center;
+            font-family: var(--font-en); font-size: 14px;
+            color: #fff; background-size: cover; background-position: center;
             transition: 0.2s;
         }
         .bg-option:hover { border-color: var(--accent-color); transform: scale(1.05); }
         .bg-black { background: #000; }
         .bg-white { background: #fff; color: #000; }
         .close-modal { margin-top: 20px; background: none; border: none; color: #888; cursor: pointer; }
-
+        
         /* --- Character --- */
         .character-stage {
             grid-column: 2; grid-row: 1 / 4;
@@ -158,7 +166,6 @@
             transition: opacity 1s ease, transform 1s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .char-img.visible { opacity: 1; transform: translateY(0) scale(1); }
-
         .speech-bubble {
             position: absolute; bottom: 25%; left: 0%;
             font-family: var(--font-jp); font-weight: 300; letter-spacing: 0.05em;
@@ -180,7 +187,8 @@
 
         /* --- Right Column --- */
         .header-title {
-            grid-column: 3; grid-row: 1; padding: 25px 40px; text-align: right;
+            grid-column: 3; grid-row: 1;
+            padding: 25px 40px; text-align: right;
         }
         .header-title h1 {
             font-family: var(--font-en); font-size: 26px; margin: 0;
@@ -241,61 +249,49 @@
 </head>
 <body class="mode-black">
 
-    <!-- Audio Player -->
     <audio id="bgm-player" loop>
         <source src="./sound/aoren.mp3" type="audio/mpeg">
     </audio>
 
-    <!-- Canvas -->
     <div id="canvas-container"></div>
-
-    <!-- Background Select Modal -->
     <div id="bg-modal">
         <div class="modal-content">
-            <h3 class="modal-title">SELECT BACKGROUND</h3>
+            <h3 class="modal-title">SELECT DISPLAY MODE</h3>
             <div class="bg-grid" id="bg-grid">
-                <!-- JSでボタン生成 -->
                 <div class="bg-option bg-black" onclick="setBgMode('black')">BLACK</div>
                 <div class="bg-option bg-white" onclick="setBgMode('white')">WHITE</div>
-                <!-- Photo 1-5 will be added here -->
             </div>
             <button class="close-modal" onclick="toggleBgModal()">CLOSE</button>
         </div>
     </div>
-
-    <!-- News Ticker -->
     <div id="news-ticker">
         <span class="ticker-label">LATEST REPORT</span>
         <span id="news-content" class="ticker-content">Initializing System...</span>
     </div>
 
     <div class="viewport">
-        <!-- Left Nav -->
         <nav class="sub-nav">
-            <!-- BGM Controls -->
-            <div class="sound-control">
-                <span class="material-icons sound-icon" id="btn-play" onclick="toggleBGM()">play_arrow</span>
-                <span class="material-icons sound-icon" onclick="changeVolume()" style="font-size:16px;">volume_up</span>
+            <div class="sub-nav-content">
+                <div class="sub-nav-item">System Log</div>
+                <div class="sub-nav-item">Archive</div>
+                <div class="bg-trigger" onclick="toggleBgModal()">DISPLAY</div>
             </div>
-            
-            <div style="flex-grow:1"></div>
-
-            <div class="sub-nav-item">System Log</div>
-            <div class="sub-nav-item">Archive</div>
-            <div class="bg-trigger" onclick="toggleBgModal()">BG SELECT</div>
         </nav>
+        
+        <div class="sound-control">
+            <span class="material-icons sound-icon" id="btn-play" onclick="toggleBGM()">play_arrow</span>
+            <input type="range" class="volume-bar" id="volume-slider" min="0" max="1" step="0.1" value="0.3" oninput="changeVolume(this.value)">
+        </div>
 
         <div class="header-title">
             <h1>UCHIYOSO<br>ARCHIVE</h1>
-            <div class="header-sub">PREMIUM INTERFACE v2.1</div>
+            <div class="header-sub">PREMIUM INTERFACE v2.2</div>
         </div>
-
         <div class="user-status">
             <div class="status-label">LOGGED IN AS</div>
             <div id="user-display" class="status-name">GUEST</div>
             <button id="main-connect-btn" class="connect-btn" onclick="handleConnect()">CONNECT</button>
         </div>
-
         <section class="character-stage" onclick="handleCharClick()">
             <img id="char-img" class="char-img" src="" alt="Character">
             <div class="speech-bubble">
@@ -303,7 +299,6 @@
                 <span id="typewriter-text"></span><span class="cursor"></span>
             </div>
         </section>
-
         <nav class="main-nav">
             <div class="nav-btn-group">
                 <span class="btn-label">QUICK EDIT</span>
@@ -353,6 +348,7 @@
         // --- BGM Logic ---
         const bgmPlayer = document.getElementById('bgm-player');
         const playBtn = document.getElementById('btn-play');
+        const volumeSlider = document.getElementById('volume-slider');
         bgmPlayer.volume = 0.3;
 
         window.toggleBGM = () => {
@@ -360,27 +356,21 @@
                 bgmPlayer.play().then(() => {
                     playBtn.textContent = 'pause';
                     playBtn.classList.add('playing');
-                }).catch(e => console.log("Audio Error:", e));
+                }).catch(e => console.log("Audio play was prevented. User interaction needed."));
             } else {
                 bgmPlayer.pause();
                 playBtn.textContent = 'play_arrow';
                 playBtn.classList.remove('playing');
             }
         };
-
-        window.changeVolume = () => {
-            bgmPlayer.volume = bgmPlayer.volume >= 0.9 ? 0.1 : bgmPlayer.volume + 0.2;
-            alert("Volume: " + Math.round(bgmPlayer.volume * 10));
-        };
+        window.changeVolume = (value) => { bgmPlayer.volume = value; };
 
         // --- BG Modal Logic ---
-        window.toggleBgModal = () => {
-            document.getElementById('bg-modal').classList.toggle('open');
-        };
+        window.toggleBgModal = () => document.getElementById('bg-modal').classList.toggle('open');
 
         window.setBgMode = (mode, photoIdx) => {
             const body = document.body;
-            body.className = ""; // Reset
+            body.className = "";
             document.documentElement.style.setProperty('--bg-image-url', 'none');
             
             if (mode === 'black') body.classList.add('mode-black');
@@ -389,25 +379,22 @@
                 body.classList.add('mode-photo');
                 document.documentElement.style.setProperty('--bg-image-url', `url('${PHOTO_BASE}${photoIdx}.png')`);
             }
-            toggleBgModal(); // Close
+            toggleBgModal();
         };
 
-        // Init Photo Buttons in Modal
         const bgGrid = document.getElementById('bg-grid');
         for (let i = 1; i <= 5; i++) {
             const div = document.createElement('div');
             div.className = 'bg-option';
-            div.textContent = `PHOTO ${i}`;
             div.style.backgroundImage = `url('${PHOTO_BASE}${i}.png')`;
             div.onclick = () => window.setBgMode('photo', i);
             bgGrid.appendChild(div);
         }
 
-
         // --- News Ticker ---
         async function initNews() {
             const el = document.getElementById('news-content');
-            const paths = ['./report.json', './TOP/report.json', '../TOP/report.json', '../../TOP/report.json'];
+            const paths = ['./report.json', './TOP/report.json', '../TOP/report.json'];
             let data = null;
             for (const path of paths) {
                 try {
@@ -450,13 +437,10 @@
             const char = charDataList[currentIndex];
             imgEl.classList.remove('visible');
             bubbleEl.classList.remove('show');
-
             const nextImgSrc = await resolveImage(char.name, char.image);
-            const theme = char.color || char.inpThemeColor || DEFAULT_THEME;
-            
+            const theme = char.color || DEFAULT_THEME;
             rootStyles.setProperty('--accent-color', theme);
             targetColor.set(theme);
-
             let dialogue = char.remarks || char.txtRoleplay || "……。";
             dialogue = dialogue.replace(/<br>/g, "\n");
 
@@ -493,7 +477,6 @@
             const renderer = new THREE.WebGLRenderer({ alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.getElementById('canvas-container').appendChild(renderer.domElement);
-
             function getTexture() {
                 const c = document.createElement('canvas'); c.width = 32; c.height = 32;
                 const ctx = c.getContext('2d');
@@ -502,21 +485,13 @@
                 ctx.fillStyle = g; ctx.fillRect(0,0,32,32);
                 const tex = new THREE.Texture(c); tex.needsUpdate = true; return tex;
             }
-
             const geometry = new THREE.BufferGeometry();
             const vertices = [];
-            for (let i = 0; i < 5000; i++) {
-                vertices.push(THREE.MathUtils.randFloatSpread(2000), THREE.MathUtils.randFloatSpread(2000), THREE.MathUtils.randFloatSpread(2000));
-            }
+            for (let i = 0; i < 5000; i++) vertices.push(THREE.MathUtils.randFloatSpread(2000), THREE.MathUtils.randFloatSpread(2000), THREE.MathUtils.randFloatSpread(2000));
             geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            
-            particleMaterial = new THREE.PointsMaterial({ 
-                color: new THREE.Color(DEFAULT_THEME), size: 5, map: getTexture(),
-                transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false
-            });
+            particleMaterial = new THREE.PointsMaterial({ color: new THREE.Color(DEFAULT_THEME), size: 5, map: getTexture(), transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false });
             const points = new THREE.Points(geometry, particleMaterial);
             scene.add(points); camera.position.z = 1000;
-
             function animate() {
                 requestAnimationFrame(animate);
                 points.rotation.x += 0.0003; points.rotation.y += 0.0005;
@@ -524,10 +499,7 @@
                 renderer.render(scene, camera);
             }
             animate();
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight);
-            });
+            window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
         }
 
         // --- Auth ---
@@ -541,11 +513,9 @@
                 connectBtn.textContent = "NEXT";
                 const data = await loadFromCloud();
                 if (data && Object.keys(data).length > 0) charDataList = Object.values(data);
-                else charDataList = [{ name: "No Data", remarks: "データがありません。", inpThemeColor: "#555" }];
+                else charDataList = [{ name: "No Data", remarks: "データがありません。", color: "#555" }];
                 currentIndex = Math.floor(Math.random() * charDataList.length);
                 updateDisplay();
-                // BGM Auto Start Attempt (Might be blocked)
-                // bgmPlayer.play().catch(()=>{}); 
             },
             () => {
                 currentUser = null; userDisplay.textContent = "GUEST"; connectBtn.textContent = "CONNECT";
@@ -554,8 +524,7 @@
         );
 
         window.handleConnect = () => {
-            // User interaction triggers BGM
-            if(bgmPlayer.paused) toggleBGM();
+            if (bgmPlayer.paused) { try { toggleBGM(); } catch(e){} }
             if (!currentUser) login(); else nextChar();
         };
         window.handleCharClick = () => { if (currentUser) nextChar(); };
@@ -566,7 +535,6 @@
         }
 
         createParticles(); initNews();
-
     </script>
 </body>
 </html>
