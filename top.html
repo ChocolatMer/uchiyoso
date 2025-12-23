@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChocolatMer | Visual Novel Mode</title>
+    <title>ChocolatMer | Home</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,10 +12,9 @@
     
     <style>
         :root {
-            /* デフォルトテーマ（JSでキャラごとに書き換えます） */
+            /* JSでキャラのテーマカラーに書き換わります */
             --theme-color: #81D4FA; 
             --glass-surface: rgba(255, 255, 255, 0.1);
-            --glass-border: rgba(255, 255, 255, 0.3);
             --text-primary: #1A237E;
             --text-secondary: #455A64;
         }
@@ -32,23 +31,22 @@
             transition: background 1s ease;
         }
 
-        /* --- Ambient Background --- */
+        /* --- Backgrounds --- */
         .ambient-bg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: radial-gradient(circle at 50% 50%, #ECEFF1 0%, #CFD8DC 100%);
             z-index: 0;
         }
         
-        /* キャラクター固有のオーロラ背景 */
         .aurora {
             position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
             background: 
-                radial-gradient(circle at 50% 50%, var(--theme-color), transparent 50%),
-                radial-gradient(circle at 80% 20%, #ffffff, transparent 30%);
-            opacity: 0.4;
+                radial-gradient(circle at 50% 50%, var(--theme-color), transparent 60%),
+                radial-gradient(circle at 80% 20%, #ffffff, transparent 40%);
+            opacity: 0.5;
             animation: auroraRotate 40s linear infinite;
-            filter: blur(80px); z-index: 1;
-            transition: background 1s ease; /* 色変更時のフェード */
+            filter: blur(90px); z-index: 1;
+            transition: background 1s ease;
         }
         
         #particle-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
@@ -68,21 +66,24 @@
 
         /* --- NEWS TICKER --- */
         #news-bar {
-            position: absolute; top: 0; left: 0; width: 100%; height: 40px;
-            background: rgba(255, 255, 255, 0.6);
+            position: absolute; top: 0; left: 0; width: 100%; height: 45px;
+            background: rgba(255, 255, 255, 0.85); /* 視認性を上げるため少し濃く */
             backdrop-filter: blur(10px);
             border-bottom: 1px solid rgba(255,255,255,0.4);
             z-index: 100;
             display: flex; align-items: center; padding: 0 2rem;
             overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
         }
         .news-label {
-            font-family: 'Jost'; font-weight: 700; font-size: 0.7rem; letter-spacing: 0.2em;
+            font-family: 'Jost'; font-weight: 700; font-size: 0.75rem; letter-spacing: 0.2em;
             color: var(--text-primary); margin-right: 2rem; white-space: nowrap;
+            border-right: 1px solid rgba(0,0,0,0.1); padding-right: 1rem;
         }
         .news-content {
-            font-family: 'Zen Old Mincho'; font-size: 0.85rem; color: var(--text-secondary);
-            white-space: nowrap; opacity: 0; transform: translateY(10px); transition: all 0.5s ease;
+            font-family: 'Zen Old Mincho'; font-size: 0.9rem; color: var(--text-secondary);
+            white-space: nowrap; opacity: 0; transform: translateY(15px); transition: all 0.6s ease;
+            font-weight: 600;
         }
         .news-content.active { opacity: 1; transform: translateY(0); }
 
@@ -90,7 +91,7 @@
         #interface-layer {
             position: relative; z-index: 10; width: 100%; height: 100%;
             display: grid;
-            grid-template-columns: 100px 1fr 350px;
+            grid-template-columns: 100px 1fr 380px;
             grid-template-rows: 80px 1fr 100px;
         }
 
@@ -100,123 +101,137 @@
             color: var(--text-primary);
         }
 
-        .nav-rail {
-            grid-column: 1; grid-row: 2; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; gap: 3rem;
-            border-right: 1px solid rgba(255,255,255,0.2);
-        }
-        .nav-item {
-            writing-mode: vertical-rl; text-orientation: mixed;
-            font-family: 'Jost'; text-transform: uppercase; letter-spacing: 0.25em;
-            cursor: pointer; font-size: 0.75rem; color: var(--text-secondary);
-            transition: all 0.4s; padding: 10px 0;
-        }
-        .nav-item:hover, .nav-item.active { color: var(--text-primary); font-weight: 600; text-shadow: 0 0 8px rgba(255,255,255,0.8); }
-
-        /* --- Character & Dialogue --- */
+        /* --- Character & Dialogue (上半身アップ調整) --- */
         .char-container {
             grid-column: 2 / 3; grid-row: 1 / 4; position: relative;
             display: flex; justify-content: center; align-items: flex-end;
-            perspective: 1000px; cursor: pointer;
+            /* はみ出した部分を隠す */
+            overflow: hidden; 
+            cursor: pointer;
         }
         
         .char-img {
-            height: 105%; width: auto; object-fit: contain;
-            /* 高画質表示のためのレンダリング指定 */
+            /* 初期状態：かなり大きく表示して位置を下げる（上半身だけ映す） */
+            height: auto; width: 80%; 
+            object-fit: cover;
+            object-position: top center;
+
+            /* 画像拡大と位置調整 */
+            transform: scale(1.7) translateY(20%);
+            transform-origin: top center;
+
+            /* 描画設定 */
             image-rendering: -webkit-optimize-contrast;
             filter: drop-shadow(0 20px 40px rgba(0,0,0,0.15));
-            mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
             
-            opacity: 0; transform: scale(1.05) translateY(20px);
-            transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            opacity: 0; 
+            transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
-        .char-img.visible { opacity: 1; transform: scale(1) translateY(0); }
-        .char-img.breathing { animation: breathe 6s ease-in-out infinite; }
+
+        /* 表示時のアニメーション用クラス */
+        .char-img.visible {
+            opacity: 1;
+            /* 登場時に少しだけ動かす（フェードイン＋ズームアウト効果） */
+            transform: scale(1.6) translateY(18%);
+        }
+        
+        /* 待機中の呼吸アニメーション */
+        .char-img.breathing {
+            animation: breathe 7s ease-in-out infinite alternate;
+        }
 
         .dialogue-wrapper {
-            position: absolute; bottom: 12%; left: 0%; 
+            position: absolute; bottom: 8%; left: 0; 
             width: 100%; display: flex; justify-content: center;
             pointer-events: none;
+            z-index: 20;
         }
         .dialogue-card {
-            width: 500px; max-width: 90%;
-            background: rgba(255, 255, 255, 0.75);
+            width: 550px; max-width: 90%;
+            background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(20px) saturate(150%);
-            border: 1px solid rgba(255,255,255,0.8);
+            border: 1px solid rgba(255,255,255,0.9);
             padding: 2rem 2.5rem;
-            border-radius: 2px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.05);
-            transform: translateY(20px); opacity: 0;
+            border-radius: 4px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.1);
+            transform: translateY(30px); opacity: 0;
             transition: all 0.5s ease;
             position: relative;
         }
         .dialogue-card.show { opacity: 1; transform: translateY(0); }
-        /* 喋っている人を示す装飾 */
         .dialogue-card::before {
-            content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 4px;
+            content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 5px;
             background: var(--theme-color); transition: background 1s;
         }
 
         .char-name {
-            font-family: 'Zen Old Mincho'; font-size: 1.2rem; font-weight: 900;
-            margin-bottom: 0.5rem; color: var(--text-primary); letter-spacing: 0.1em;
+            font-family: 'Zen Old Mincho'; font-size: 1.3rem; font-weight: 900;
+            margin-bottom: 0.6rem; color: var(--text-primary); letter-spacing: 0.1em;
             display: block;
         }
         .char-text {
-            font-size: 1rem; line-height: 1.8; color: var(--text-secondary);
-            font-feature-settings: "palt"; min-height: 3.6em; /* 文字がない時も高さを確保 */
+            font-size: 1.05rem; line-height: 1.8; color: var(--text-secondary);
+            font-feature-settings: "palt"; min-height: 3.6em;
         }
-        /* カーソル点滅 */
         .cursor {
-            display: inline-block; width: 2px; height: 1em; background: var(--text-primary);
-            animation: blink 1s infinite; margin-left: 2px; vertical-align: middle;
+            display: inline-block; width: 2px; height: 1.2em; background: var(--theme-color);
+            animation: blink 1s infinite; margin-left: 3px; vertical-align: bottom;
         }
 
-        /* --- Right Panel --- */
+        /* --- Right Panel (Links) --- */
         .info-panel {
             grid-column: 3; grid-row: 1 / 4;
-            background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(15px);
-            border-left: 1px solid rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.4); backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(255, 255, 255, 0.5);
             display: flex; flex-direction: column; padding: 3rem 2rem;
             justify-content: space-between;
             transform: translateX(100%); animation: slideInRight 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s forwards;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.02);
         }
         
         .user-status-area { text-align: right; margin-bottom: 2rem; }
-        .status-label { font-size: 0.6rem; letter-spacing: 0.2em; color: var(--text-secondary); display: block; }
-        .status-val { font-family: 'Cormorant Garamond'; font-size: 1.4rem; font-weight: 600; color: var(--text-primary); }
+        .status-label { font-size: 0.65rem; letter-spacing: 0.2em; color: var(--text-secondary); display: block; margin-bottom: 5px; }
+        .status-val { font-family: 'Cormorant Garamond'; font-size: 1.5rem; font-weight: 600; color: var(--text-primary); }
 
-        .menu-list { display: flex; flex-direction: column; gap: 1.5rem; margin: auto 0; }
+        .menu-list { display: flex; flex-direction: column; gap: 1rem; margin: auto 0; }
+        
         .menu-btn {
             display: flex; align-items: center; justify-content: space-between;
             text-decoration: none; color: var(--text-primary);
-            font-family: 'Zen Old Mincho'; font-size: 1.1rem;
-            cursor: pointer; padding: 1rem 0; border-bottom: 1px solid rgba(0,0,0,0.05);
-            transition: all 0.3s;
+            font-family: 'Zen Old Mincho'; font-size: 1rem;
+            cursor: pointer; padding: 1.2rem 1rem; 
+            border: 1px solid rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.3);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
-        .menu-btn:hover { padding-left: 10px; border-bottom-color: var(--theme-color); }
-        .menu-meta { font-family: 'Jost'; font-size: 0.7rem; color: var(--text-secondary); letter-spacing: 0.1em; }
+        .menu-btn:hover {
+            background: #fff;
+            transform: translateX(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border-color: var(--theme-color);
+        }
+        .menu-meta { font-family: 'Jost'; font-size: 0.7rem; color: var(--text-secondary); letter-spacing: 0.1em; opacity: 0.7; }
 
         .action-btn {
-            margin-top: 2rem; background: #fff; color: var(--text-primary);
-            border: 1px solid rgba(0,0,0,0.05);
+            margin-top: 2rem; background: var(--text-primary); color: #fff;
+            border: none;
             padding: 1.2rem; font-family: 'Jost'; letter-spacing: 0.2em; font-weight: 600;
-            cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            cursor: pointer; box-shadow: 0 10px 20px rgba(26, 35, 126, 0.2);
             transition: all 0.3s;
         }
         .action-btn:hover {
             transform: translateY(-3px); 
-            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
-            border-color: var(--theme-color);
-            color: var(--theme-color);
+            box-shadow: 0 15px 30px rgba(26, 35, 126, 0.3);
+            background: var(--theme-color);
         }
 
         /* Keyframes */
         @keyframes auroraRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* 呼吸＋ゆらぎアニメーション */
         @keyframes breathe {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
+            0% { transform: scale(1.6) translateY(18%) rotate(0deg); }
+            50% { transform: scale(1.61) translateY(17.5%) rotate(0.5deg); }
+            100% { transform: scale(1.6) translateY(18%) rotate(0deg); }
         }
         @keyframes slideInRight { to { transform: translateX(0); } }
         @keyframes blink { 50% { opacity: 0; } }
@@ -233,8 +248,8 @@
 
     <!-- News Ticker -->
     <div id="news-bar">
-        <span class="news-label">REPORT</span>
-        <div id="news-content" class="news-content">Connecting...</div>
+        <span class="news-label">LATEST REPORT</span>
+        <div id="news-content" class="news-content">Connecting to database...</div>
     </div>
 
     <!-- Background Typography -->
@@ -245,21 +260,15 @@
         
         <div class="logo-area">CM</div>
 
-        <nav class="nav-rail">
-            <div class="nav-item active">HOME</div>
-            <div class="nav-item">LOGS</div>
-            <div class="nav-item">ALBUM</div>
-        </nav>
-
-        <!-- Character Stage -->
+        <!-- Character Stage (Zoomed in for Close-up) -->
         <main class="char-container" onclick="handleCharClick()">
-            <!-- 画像ソースはJSで制御 -->
+            <!-- JSで画像パス設定 -->
             <img id="char-img" class="char-img" src="" alt="">
             
             <div class="dialogue-wrapper">
                 <div class="dialogue-card">
                     <span id="char-name" class="char-name">...</span>
-                    <!-- テキストはJSでタイプライター表示 -->
+                    <!-- タイプライター用エリア -->
                     <div class="char-text">
                         <span id="typewriter-text"></span><span class="cursor"></span>
                     </div>
@@ -267,7 +276,7 @@
             </div>
         </main>
 
-        <!-- Right Panel -->
+        <!-- Right Panel with Links -->
         <aside class="info-panel">
             <div class="user-status-area">
                 <span class="status-label">LOGGED IN AS</span>
@@ -275,17 +284,22 @@
             </div>
 
             <div class="menu-list">
-                <a class="menu-btn" onclick="alert('キャラクター管理画面へ')">
-                    <span>Character</span>
-                    <span class="menu-meta">EDIT</span>
+                <!-- リンク修正: 指定されたパスへ遷移 -->
+                <a href="./character/edit.html" class="menu-btn">
+                    <span>Edit Data</span>
+                    <span class="menu-meta">INPUT</span>
                 </a>
-                <a class="menu-btn" onclick="alert('日常ログ画面へ')">
-                    <span>Daily Log</span>
-                    <span class="menu-meta">VIEW</span>
+                <a href="./character/list.html" class="menu-btn">
+                    <span>Character List</span>
+                    <span class="menu-meta">LIST</span>
                 </a>
-                <a class="menu-btn" onclick="alert('投票画面へ')">
+                <a href="./character/Squestionnaire.html" class="menu-btn">
                     <span>Art Polls</span>
-                    <span class="menu-meta">VOTE</span>
+                    <span class="menu-meta">SOLO</span>
+                </a>
+                <a href="./character/Mquestionnaire.html" class="menu-btn">
+                    <span>Questions</span>
+                    <span class="menu-meta">PAIR</span>
                 </a>
             </div>
 
@@ -308,15 +322,15 @@
         let currentUser = null;
         let charDataList = [];
         let currentIndex = 0;
-        let typeWriterTimeout = null; // タイピング中断用
+        let typeWriterTimeout = null;
 
-        // ダミーデータ（データゼロの場合）
+        // データがない場合のフォールバック
         const fallbackData = [
             {
                 name: "System",
                 inpThemeColor: "#90A4AE",
-                remarks: "クラウドに接続されていません。CONNECTボタンからログインしてください。",
-                image: "https://placehold.co/600x900/eceff1/ffffff?text=No+Data"
+                remarks: "クラウドに接続されていません。<br>右下のCONNECTボタンからログインしてください。",
+                image: "https://placehold.co/800x1200/eceff1/ffffff?text=No+Connection"
             }
         ];
 
@@ -330,18 +344,17 @@
                     return;
                 }
 
-                // 1. ローカル画像を試す
+                // ローカル画像を試す
                 const localPath = `${LOCAL_IMG_BASE}${charName}.png`;
                 const img = new Image();
                 
                 img.onload = () => {
-                    // 読み込み成功ならローカルパスを使用
                     resolve(localPath);
                 };
                 
                 img.onerror = () => {
-                    // 読み込み失敗ならクラウドURL、それもなければダミー
-                    resolve(cloudUrl || `https://placehold.co/600x900/81D4FA/ffffff?text=${encodeURIComponent(charName)}`);
+                    // 失敗したらクラウドURL、なければダミー
+                    resolve(cloudUrl || `https://placehold.co/800x1200/81D4FA/ffffff?text=${encodeURIComponent(charName)}`);
                 };
 
                 img.src = localPath;
@@ -349,26 +362,35 @@
         }
 
         // ==========================================
-        // 2. ニュースティッカー (report.json)
+        // 2. ニュースティッカー (report.json 修正版)
         // ==========================================
         async function initNews() {
             const el = document.getElementById('news-content');
+            
             try {
-                const res = await fetch('./report.json');
-                if(!res.ok) throw new Error();
+                // キャッシュ回避のタイムスタンプ付与
+                const res = await fetch(`./report.json?t=${new Date().getTime()}`);
+                
+                if(!res.ok) throw new Error("JSON load failed");
                 const data = await res.json();
                 
+                if(!Array.isArray(data) || data.length === 0) throw new Error("Empty Data");
+
                 const cycle = () => {
                     el.classList.remove('active');
                     setTimeout(() => {
+                        // ランダム選出
                         el.textContent = data[Math.floor(Math.random() * data.length)];
                         el.classList.add('active');
-                    }, 500);
+                    }, 600);
                 };
                 cycle();
-                setInterval(cycle, 6000);
+                setInterval(cycle, 6000); // 6秒ごとに更新
+
             } catch(e) {
-                el.textContent = "Welcome to ChocolatMer";
+                console.error("News Error:", e);
+                // エラー時のデフォルト表示
+                el.textContent = "Welcome to ChocolatMer - Uchiyoso Portal";
                 el.classList.add('active');
             }
         }
@@ -385,50 +407,44 @@
         async function updateDisplay() {
             const char = charDataList[currentIndex];
 
-            // 1. 退場アニメーション
+            // 退場
             imgEl.classList.remove('visible', 'breathing');
             cardEl.classList.remove('show');
             
-            // 2. 次のデータ準備
+            // 画像パス解決
             const nextImgSrc = await resolveImage(char.name, char.image);
             
-            // テーマカラー反映 (schema.js: inpThemeColor -> var(--theme-color))
-            // ※未設定ならデフォルトの水色
+            // テーマカラー適用 (未設定なら水色)
             const theme = char.inpThemeColor || "#81D4FA";
             rootStyles.setProperty('--theme-color', theme);
 
             // セリフ決定 (remarks -> txtRoleplay -> Default)
             let dialogue = char.remarks || char.txtRoleplay || "……。";
-            // 改行コードなどはスペースに置換して一行っぽく流す（あるいは<br>対応させる）
-            // ここではシンプルにテキストとして扱います
-            dialogue = dialogue.replace(/<br>/g, "\n");
+            dialogue = dialogue.replace(/<br>/g, "\n"); // brタグを改行に
 
             setTimeout(() => {
-                // 画像セット
                 imgEl.src = nextImgSrc;
                 imgEl.onload = () => {
-                    // 3. 入場アニメーション
                     nameEl.textContent = char.name;
+                    
+                    // 登場 (CSSクラス付与)
                     imgEl.classList.add('visible');
                     
                     setTimeout(() => {
                         imgEl.classList.add('breathing');
                         cardEl.classList.add('show');
-                        
-                        // 4. 文字送り開始
                         startTypewriter(dialogue);
-                    }, 300);
+                    }, 400);
                 };
             }, 600);
         }
 
-        // タイプライター演出関数
         function startTypewriter(text) {
             textContainer.textContent = "";
             if (typeWriterTimeout) clearTimeout(typeWriterTimeout);
 
             let i = 0;
-            const speed = 40; // 打鍵スピード(ms)
+            const speed = 50; // 打鍵速度
 
             function type() {
                 if (i < text.length) {
@@ -448,9 +464,10 @@
 
         monitorAuth(
             async (user) => {
+                // Login時
                 currentUser = user;
-                userDisplay.textContent = user.displayName;
-                mainBtn.textContent = "NEXT";
+                userDisplay.textContent = user.displayName || "MEMBER";
+                mainBtn.textContent = "NEXT CHAR";
                 
                 const data = await loadFromCloud();
                 if (data && Object.keys(data).length > 0) {
@@ -458,15 +475,15 @@
                 } else {
                     charDataList = [{
                         name: "No Data",
-                        remarks: "データが見つかりません。",
+                        remarks: "データが見つかりません。Character Editから登録してください。",
                         inpThemeColor: "#CFD8DC"
                     }];
                 }
-                // ランダムスタート
                 currentIndex = Math.floor(Math.random() * charDataList.length);
                 updateDisplay();
             },
             () => {
+                // Logout時
                 currentUser = null;
                 userDisplay.textContent = "GUEST";
                 mainBtn.textContent = "CONNECT";
@@ -487,7 +504,7 @@
 
         function nextChar() {
             if (charDataList.length <= 1) return;
-            // 背景文字の演出
+            // 背景文字演出
             const typo = document.querySelector('.background-typo');
             typo.style.transform = "translate(-50%, -50%) scale(1.1)";
             setTimeout(() => typo.style.transform = "translate(-50%, -50%) scale(1)", 300);
@@ -533,7 +550,7 @@
         }
         animate();
 
-        // Init
+        // 初期化実行
         initNews();
 
     </script>
