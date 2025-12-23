@@ -2,53 +2,113 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Dialogue - Uchiyoso Archive</title>
     <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Noto+Sans+JP:wght@300;500&display=swap" rel="stylesheet">
     <style>
         body {
             background: #080808; color: #fff; font-family: 'Noto Sans JP', sans-serif;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh; margin: 0;
+            display: flex; flex-direction: column; align-items: center; 
+            min-height: 100vh; margin: 0; padding: 40px 0;
+            box-sizing: border-box;
         }
         .container {
-            width: 90%; max-width: 500px;
+            width: 90%; max-width: 600px;
             background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);
             padding: 40px; border-radius: 8px;
         }
-        h2 { font-family: 'Syncopate'; margin-bottom: 30px; letter-spacing: 0.1em; color: #00ffcc; text-align: center; }
+        h2 { font-family: 'Syncopate'; margin-bottom: 10px; letter-spacing: 0.1em; color: #00ffcc; text-align: center; }
+        .sub-title { text-align: center; font-size: 10px; color: #888; margin-bottom: 30px; letter-spacing: 0.2em; font-family: 'Syncopate'; }
         
-        select, textarea {
-            width: 100%; background: #111; color: #fff; border: 1px solid #333;
-            padding: 10px; margin-bottom: 20px; font-size: 14px;
+        /* Select */
+        select {
+            width: 100%; height: 45px; background: #111; color: #fff; 
+            border: 1px solid #00ffcc; padding: 0 15px; margin-bottom: 30px; 
+            font-size: 14px; outline: none; border-radius: 4px;
         }
-        select { height: 40px; }
-        textarea { height: 120px; resize: vertical; }
-        
+
+        /* Form Group */
+        .form-group { margin-bottom: 25px; }
+        .label {
+            display: block; font-size: 11px; color: #00ffcc; margin-bottom: 8px;
+            font-family: 'Syncopate'; letter-spacing: 0.1em; border-left: 3px solid #00ffcc;
+            padding-left: 10px;
+        }
+        .desc { font-size: 10px; color: #888; margin-bottom: 5px; display: block; }
+
+        textarea {
+            width: 100%; height: 80px; background: rgba(0,0,0,0.3); 
+            color: #eee; border: 1px solid #444;
+            padding: 10px; font-size: 13px; line-height: 1.6;
+            resize: vertical; box-sizing: border-box; border-radius: 4px;
+            transition: 0.3s;
+        }
+        textarea:focus { border-color: #00ffcc; background: rgba(0,0,0,0.5); }
+
+        /* Save Button */
         button {
             width: 100%; padding: 15px; background: #00ffcc; border: none; font-weight: bold;
-            letter-spacing: 0.2em; cursor: pointer; transition: 0.3s;
+            letter-spacing: 0.2em; cursor: pointer; transition: 0.3s; margin-top: 20px;
+            color: #000; font-family: 'Syncopate';
         }
-        button:hover { background: #fff; }
-        .back-link { display: block; text-align: center; margin-top: 20px; color: #888; text-decoration: none; font-size: 12px; }
+        button:hover { background: #fff; box-shadow: 0 0 15px #00ffcc; }
+        
+        .back-link { display: block; text-align: center; margin-top: 30px; color: #888; text-decoration: none; font-size: 11px; font-family: 'Syncopate'; }
         .back-link:hover { color: #fff; }
+
+        /* Status */
+        #auth-status { text-align:center; margin-bottom:20px; font-size:10px; letter-spacing: 0.1em; color:#555; font-family: 'Syncopate'; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>EDIT TOP DIALOGUE</h2>
+        <h2>EDIT DIALOGUE</h2>
+        <div class="sub-title">MULTI-PATTERN RESPONSE SYSTEM</div>
         
-        <div id="auth-status" style="text-align:center; margin-bottom:20px; font-size:12px; color:#888;">Checking Auth...</div>
+        <div id="auth-status">INITIALIZING...</div>
 
         <select id="char-select" onchange="loadCharData()">
             <option value="">-- SELECT CHARACTER --</option>
         </select>
 
-        <textarea id="dialogue-input" placeholder="Enter new dialogue here..."></textarea>
+        <!-- 1. 常時 (DEFAULT) -->
+        <div class="form-group">
+            <span class="label">DEFAULT (ALWAYS)</span>
+            <span class="desc">基本の挨拶。条件に当てはまらない場合に表示されます。</span>
+            <textarea id="txtDialogueDefault" placeholder="……。"></textarea>
+        </div>
+
+        <!-- 2. 時間帯別 (TIME) -->
+        <div class="form-group">
+            <span class="label">MORNING (05:00 - 10:59)</span>
+            <textarea id="txtDialogueMorning" placeholder="おはようございます。"></textarea>
+        </div>
+        <div class="form-group">
+            <span class="label">DAY (11:00 - 17:59)</span>
+            <textarea id="txtDialogueDay" placeholder="こんにちは。"></textarea>
+        </div>
+        <div class="form-group">
+            <span class="label">NIGHT (18:00 - 04:59)</span>
+            <textarea id="txtDialogueNight" placeholder="こんばんは。"></textarea>
+        </div>
+
+        <!-- 3. 特殊条件 (SPECIAL) -->
+        <div class="form-group">
+            <span class="label">DUO MODE (PAIR)</span>
+            <span class="desc">「DUO」モードで2人表示されている時に優先されます。相手への呼びかけなど。</span>
+            <textarea id="txtDialogueDuo" placeholder="隣に誰かいるな……。"></textarea>
+        </div>
+
+        <div class="form-group">
+            <span class="label">LOW SANITY (CRITICAL)</span>
+            <span class="desc">SAN値が低い場合（例: 20以下）に優先されます。</span>
+            <textarea id="txtDialogueLowSan" placeholder="あ……あ……。"></textarea>
+        </div>
 
         <button onclick="saveDialogue()">SAVE UPDATE</button>
 
-        <a href="../index.html" class="back-link">← RETURN TO TOP</a>
+        <a href="../zo.html" class="back-link">← RETURN TO SYSTEM</a>
     </div>
 
     <script type="module">
@@ -57,16 +117,36 @@
         let allData = {};
         let currentUser = null;
 
+        // 定義したフィールドIDのリスト
+        const DIALOGUE_IDS = [
+            'txtDialogueDefault',
+            'txtDialogueMorning',
+            'txtDialogueDay',
+            'txtDialogueNight',
+            'txtDialogueDuo',
+            'txtDialogueLowSan'
+        ];
+
+        // キーとのマッピング (schema.jsに合わせたキー名)
+        const KEY_MAP = {
+            'txtDialogueDefault': 'dialogue_default',
+            'txtDialogueMorning': 'dialogue_morning',
+            'txtDialogueDay':     'dialogue_day',
+            'txtDialogueNight':   'dialogue_night',
+            'txtDialogueDuo':     'dialogue_duo',
+            'txtDialogueLowSan':  'dialogue_lowsan'
+        };
+
         monitorAuth(async (user) => {
             const statusEl = document.getElementById('auth-status');
             if (user) {
                 currentUser = user;
-                statusEl.textContent = "LOGGED IN: " + user.displayName;
+                statusEl.textContent = "CONNECTED: " + user.displayName.toUpperCase();
                 statusEl.style.color = "#00ffcc";
                 await initData();
             } else {
-                statusEl.textContent = "NOT LOGGED IN. CLICK TO LOGIN.";
-                statusEl.style.color = "red";
+                statusEl.textContent = "DISCONNECTED - CLICK TO LOGIN";
+                statusEl.style.color = "#ff4444";
                 statusEl.style.cursor = "pointer";
                 statusEl.onclick = login;
             }
@@ -90,31 +170,49 @@
 
         window.loadCharData = () => {
             const name = document.getElementById('char-select').value;
+            
             if (name && allData[name]) {
-                // remarks または txtRoleplay から読み込む
-                document.getElementById('dialogue-input').value = allData[name].remarks || allData[name].txtRoleplay || "";
+                const char = allData[name];
+                
+                // 各フィールドに値をセット
+                DIALOGUE_IDS.forEach(id => {
+                    const key = KEY_MAP[id];
+                    // データが無ければ空文字、なければ既存のremarks等をフォールバックにするか？
+                    // ここでは明確に分けるため、remarksはDefaultのフォールバックとしてのみ使用
+                    if (id === 'txtDialogueDefault' && !char[key]) {
+                        document.getElementById(id).value = char.remarks || char.txtRoleplay || "";
+                    } else {
+                        document.getElementById(id).value = char[key] || "";
+                    }
+                });
             } else {
-                document.getElementById('dialogue-input').value = "";
+                DIALOGUE_IDS.forEach(id => document.getElementById(id).value = "");
             }
         };
 
         window.saveDialogue = async () => {
             if (!currentUser) { alert("Please login first."); return; }
             const name = document.getElementById('char-select').value;
-            const text = document.getElementById('dialogue-input').value;
 
             if (!name || !allData[name]) {
                 alert("Please select a character.");
                 return;
             }
 
-            // 更新 (データ全体を取得してremarksだけ書き換えて保存)
-            // ※ firestore.jsの仕様上、オブジェクト全体を渡す必要があるため
+            // 更新対象のキャラデータ
             const charData = allData[name];
-            charData.remarks = text;
+
+            // フォームから値を回収してオブジェクト更新
+            DIALOGUE_IDS.forEach(id => {
+                const val = document.getElementById(id).value;
+                const key = KEY_MAP[id];
+                charData[key] = val;
+            });
+            
+            // 互換性のため、remarks にはDefaultを入れておく
+            charData.remarks = document.getElementById('txtDialogueDefault').value;
 
             await saveToCloud(charData);
-            alert("Updated: " + name);
         };
     </script>
 </body>

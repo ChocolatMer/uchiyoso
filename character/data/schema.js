@@ -41,17 +41,15 @@ export const VITALS_MAPPING = [
     { key: 'hp', id: 'v_hp' }, { key: 'mp', id: 'v_mp' }, { key: 'san', id: 'v_san' }
 ];
 
-export const FIELD_MAPPING = [
-  
-    // ▼▼▼ 新規追加: 台詞設定用フィールド ▼▼▼
+// ■ 台詞項目の定義マップ (新規追加)
+export const DIALOGUE_MAPPING = [
     { key: 'dialogue_default', id: 'txtDialogueDefault' }, // 常時 (デフォルト)
     { key: 'dialogue_morning', id: 'txtDialogueMorning' }, // 朝
     { key: 'dialogue_day',     id: 'txtDialogueDay' },     // 昼
     { key: 'dialogue_night',   id: 'txtDialogueNight' },   // 夜
     { key: 'dialogue_duo',     id: 'txtDialogueDuo' },     // 2人 (DUOモード)
-    { key: 'dialogue_lowsan',  id: 'txtDialogueLowSan' },  // 低SAN値 (発狂/不定など)
+    { key: 'dialogue_lowsan',  id: 'txtDialogueLowSan' }   // 低SAN値
 ];
-
 
 /**
  * 編集画面用: フォームのデータを収集して保存用オブジェクトを作成する
