@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChocolatMer | Connected</title>
+    <title>ChocolatMer | Visual Novel Mode</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,11 +12,12 @@
     
     <style>
         :root {
-            --glass-surface: rgba(255, 255, 255, 0.15);
+            /* デフォルトテーマ（JSでキャラごとに書き換えます） */
+            --theme-color: #81D4FA; 
+            --glass-surface: rgba(255, 255, 255, 0.1);
             --glass-border: rgba(255, 255, 255, 0.3);
             --text-primary: #1A237E;
-            --text-secondary: #546E7A;
-            --accent-glow: rgba(129, 212, 250, 0.8);
+            --text-secondary: #455A64;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,70 +29,75 @@
             font-family: 'Jost', 'Zen Old Mincho', serif;
             color: var(--text-primary);
             position: relative;
+            transition: background 1s ease;
         }
 
-        /* --- Background Effects --- */
+        /* --- Ambient Background --- */
         .ambient-bg {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at 50% 50%, #E1F5FE 0%, #ECEFF1 100%);
+            background: radial-gradient(circle at 50% 50%, #ECEFF1 0%, #CFD8DC 100%);
             z-index: 0;
         }
+        
+        /* キャラクター固有のオーロラ背景 */
         .aurora {
             position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
             background: 
-                radial-gradient(circle at 50% 50%, rgba(129, 212, 250, 0.2), transparent 40%),
-                radial-gradient(circle at 80% 20%, rgba(206, 147, 216, 0.15), transparent 30%);
-            animation: auroraRotate 30s linear infinite;
-            filter: blur(60px); z-index: 1;
+                radial-gradient(circle at 50% 50%, var(--theme-color), transparent 50%),
+                radial-gradient(circle at 80% 20%, #ffffff, transparent 30%);
+            opacity: 0.4;
+            animation: auroraRotate 40s linear infinite;
+            filter: blur(80px); z-index: 1;
+            transition: background 1s ease; /* 色変更時のフェード */
         }
+        
         #particle-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+        
         .noise-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMDAiIGhlaWdodD0iMjAwIj48ZmlsdGVyIGlkPSJnoiPjgoBmZVR1cmJ1bGVuY2UgdHlwZT0iZnJhY3RhbE5vaXNlIiBiYXNlRnJlcXVlbmN5PSIwLjY1IiBudW1PY3RhdmVzPSIzIiBzdGl0Y2hUaWxlcz0ic3RpdGNoIi8+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI2cpIiBvcGFjaXR5PSIwLjAzIi8+PC9zdmc+');
-            pointer-events: none; z-index: 3; opacity: 0.4;
-        }
-        .background-typo {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-family: 'Cormorant Garamond', serif; font-size: 16vw; font-style: italic; font-weight: 100;
-            color: rgba(255,255,255, 0.6); white-space: nowrap; z-index: 4; pointer-events: none; mix-blend-mode: overlay;
+            pointer-events: none; z-index: 3; opacity: 0.3; mix-blend-mode: overlay;
         }
 
-        /* --- NEWS TICKER (New Feature) --- */
+        .background-typo {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-family: 'Cormorant Garamond', serif; font-size: 18vw; font-style: italic; font-weight: 100;
+            color: rgba(255,255,255, 0.8); white-space: nowrap; z-index: 4; pointer-events: none; 
+            mix-blend-mode: soft-light;
+        }
+
+        /* --- NEWS TICKER --- */
         #news-bar {
             position: absolute; top: 0; left: 0; width: 100%; height: 40px;
-            background: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.6);
             backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255,255,255,0.5);
+            border-bottom: 1px solid rgba(255,255,255,0.4);
             z-index: 100;
-            display: flex; align-items: center;
-            padding: 0 2rem;
+            display: flex; align-items: center; padding: 0 2rem;
             overflow: hidden;
         }
         .news-label {
-            font-family: 'Jost'; font-weight: 700; font-size: 0.75rem; letter-spacing: 0.2em;
+            font-family: 'Jost'; font-weight: 700; font-size: 0.7rem; letter-spacing: 0.2em;
             color: var(--text-primary); margin-right: 2rem; white-space: nowrap;
         }
         .news-content {
-            font-family: 'Zen Old Mincho'; font-size: 0.9rem; color: var(--text-secondary);
-            white-space: nowrap;
-            opacity: 0; transform: translateY(10px);
-            transition: all 0.5s ease;
+            font-family: 'Zen Old Mincho'; font-size: 0.85rem; color: var(--text-secondary);
+            white-space: nowrap; opacity: 0; transform: translateY(10px); transition: all 0.5s ease;
         }
         .news-content.active { opacity: 1; transform: translateY(0); }
 
-        /* --- Interface Layout --- */
+        /* --- Interface --- */
         #interface-layer {
             position: relative; z-index: 10; width: 100%; height: 100%;
             display: grid;
-            grid-template-columns: 120px 1fr 380px;
-            grid-template-rows: 100px 1fr 120px;
-            padding-top: 40px; /* News bar height */
+            grid-template-columns: 100px 1fr 350px;
+            grid-template-rows: 80px 1fr 100px;
         }
 
         .logo-area {
             grid-column: 1; grid-row: 1; display: flex; justify-content: center; align-items: center;
             font-family: 'Cormorant Garamond'; font-weight: bold; font-size: 1.5rem; letter-spacing: 0.1em;
-            opacity: 0; animation: fadeIn 1s ease 0.5s forwards;
+            color: var(--text-primary);
         }
 
         .nav-rail {
@@ -103,107 +109,118 @@
             writing-mode: vertical-rl; text-orientation: mixed;
             font-family: 'Jost'; text-transform: uppercase; letter-spacing: 0.25em;
             cursor: pointer; font-size: 0.75rem; color: var(--text-secondary);
-            transition: all 0.4s; position: relative; padding: 10px 0;
-            opacity: 0; animation: slideInLeft 0.8s ease forwards;
+            transition: all 0.4s; padding: 10px 0;
         }
-        .nav-item:nth-child(1) { animation-delay: 0.6s; }
-        .nav-item:nth-child(2) { animation-delay: 0.7s; }
-        .nav-item:nth-child(3) { animation-delay: 0.8s; }
-        .nav-item:hover, .nav-item.active { color: var(--text-primary); font-weight: 500; transform: translateY(-5px); }
-        .nav-item.active::before {
-            content: ''; position: absolute; top: 50%; right: -20px;
-            width: 40px; height: 1px; background: var(--text-primary);
-        }
+        .nav-item:hover, .nav-item.active { color: var(--text-primary); font-weight: 600; text-shadow: 0 0 8px rgba(255,255,255,0.8); }
 
-        /* --- Character Display --- */
+        /* --- Character & Dialogue --- */
         .char-container {
             grid-column: 2 / 3; grid-row: 1 / 4; position: relative;
             display: flex; justify-content: center; align-items: flex-end;
             perspective: 1000px; cursor: pointer;
         }
+        
         .char-img {
             height: 105%; width: auto; object-fit: contain;
-            filter: drop-shadow(0 30px 50px rgba(129, 212, 250, 0.3));
-            mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
-            opacity: 0; transform: scale(0.95) translateY(20px);
+            /* 高画質表示のためのレンダリング指定 */
+            image-rendering: -webkit-optimize-contrast;
+            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.15));
+            mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+            
+            opacity: 0; transform: scale(1.05) translateY(20px);
             transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
         .char-img.visible { opacity: 1; transform: scale(1) translateY(0); }
-        .char-img.breathing { animation: floatingBreathe 6s ease-in-out infinite; }
+        .char-img.breathing { animation: breathe 6s ease-in-out infinite; }
 
-        .dialogue-wrapper { position: absolute; bottom: 15%; left: 5%; width: 450px; perspective: 1000px; pointer-events: none; }
+        .dialogue-wrapper {
+            position: absolute; bottom: 12%; left: 0%; 
+            width: 100%; display: flex; justify-content: center;
+            pointer-events: none;
+        }
         .dialogue-card {
-            background: rgba(255, 255, 255, 0.65);
-            backdrop-filter: blur(25px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            padding: 2.5rem; border-radius: 4px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.05);
-            transform-origin: left bottom; transform: rotateX(10deg) rotateY(5deg) translateY(20px);
-            opacity: 0; transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            width: 500px; max-width: 90%;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px) saturate(150%);
+            border: 1px solid rgba(255,255,255,0.8);
+            padding: 2rem 2.5rem;
+            border-radius: 2px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.05);
+            transform: translateY(20px); opacity: 0;
+            transition: all 0.5s ease;
+            position: relative;
         }
-        .dialogue-card.show { opacity: 1; transform: rotateX(0) rotateY(0) translateY(0); }
-        
-        .char-name {
-            font-family: 'Zen Old Mincho'; font-size: 1.8rem; font-weight: 900;
-            margin-bottom: 0.8rem; display: inline-block; position: relative;
+        .dialogue-card.show { opacity: 1; transform: translateY(0); }
+        /* 喋っている人を示す装飾 */
+        .dialogue-card::before {
+            content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 4px;
+            background: var(--theme-color); transition: background 1s;
         }
-        .char-name::after {
-            content: ''; position: absolute; bottom: 0; left: 0; width: 0%; height: 6px;
-            background: rgba(129, 212, 250, 0.5); z-index: -1; transition: width 0.8s ease 0.3s;
-        }
-        .dialogue-card.show .char-name::after { width: 100%; }
-        .char-text { font-size: 1rem; line-height: 1.9; color: var(--text-secondary); font-feature-settings: "palt"; }
 
-        /* --- Right Info Panel --- */
+        .char-name {
+            font-family: 'Zen Old Mincho'; font-size: 1.2rem; font-weight: 900;
+            margin-bottom: 0.5rem; color: var(--text-primary); letter-spacing: 0.1em;
+            display: block;
+        }
+        .char-text {
+            font-size: 1rem; line-height: 1.8; color: var(--text-secondary);
+            font-feature-settings: "palt"; min-height: 3.6em; /* 文字がない時も高さを確保 */
+        }
+        /* カーソル点滅 */
+        .cursor {
+            display: inline-block; width: 2px; height: 1em; background: var(--text-primary);
+            animation: blink 1s infinite; margin-left: 2px; vertical-align: middle;
+        }
+
+        /* --- Right Panel --- */
         .info-panel {
             grid-column: 3; grid-row: 1 / 4;
-            background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(15px);
-            border-left: 1px solid rgba(255, 255, 255, 0.3);
-            display: flex; flex-direction: column; padding: 3rem 2.5rem;
+            background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(15px);
+            border-left: 1px solid rgba(255, 255, 255, 0.4);
+            display: flex; flex-direction: column; padding: 3rem 2rem;
             justify-content: space-between;
-            transform: translateX(100%); animation: slideInRight 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s forwards;
+            transform: translateX(100%); animation: slideInRight 1s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s forwards;
         }
         
-        .user-status-area {
-            text-align: right; border-bottom: 1px solid rgba(0,0,0,0.1); padding-bottom: 1rem;
-        }
-        .status-label { font-size: 0.7rem; letter-spacing: 0.2em; color: var(--text-secondary); display: block; }
-        .status-val { font-family: 'Cormorant Garamond'; font-size: 1.5rem; font-weight: 600; }
+        .user-status-area { text-align: right; margin-bottom: 2rem; }
+        .status-label { font-size: 0.6rem; letter-spacing: 0.2em; color: var(--text-secondary); display: block; }
+        .status-val { font-family: 'Cormorant Garamond'; font-size: 1.4rem; font-weight: 600; color: var(--text-primary); }
 
-        .menu-list { display: flex; flex-direction: column; gap: 2rem; margin: auto 0; }
+        .menu-list { display: flex; flex-direction: column; gap: 1.5rem; margin: auto 0; }
         .menu-btn {
-            display: flex; align-items: baseline; justify-content: space-between;
+            display: flex; align-items: center; justify-content: space-between;
             text-decoration: none; color: var(--text-primary);
-            font-family: 'Zen Old Mincho'; font-size: 1.3rem;
-            cursor: pointer; position: relative; padding-bottom: 5px; transition: transform 0.3s;
+            font-family: 'Zen Old Mincho'; font-size: 1.1rem;
+            cursor: pointer; padding: 1rem 0; border-bottom: 1px solid rgba(0,0,0,0.05);
+            transition: all 0.3s;
         }
-        .menu-btn:hover { transform: translateX(-10px); }
-        .menu-btn::before {
-            content: ''; position: absolute; bottom: 0; right: 0; width: 0; height: 1px;
-            background: var(--text-primary); transition: width 0.3s;
-        }
-        .menu-btn:hover::before { width: 100%; }
+        .menu-btn:hover { padding-left: 10px; border-bottom-color: var(--theme-color); }
         .menu-meta { font-family: 'Jost'; font-size: 0.7rem; color: var(--text-secondary); letter-spacing: 0.1em; }
 
-        /* Action Button */
         .action-btn {
             margin-top: 2rem; background: #fff; color: var(--text-primary);
-            border: none; padding: 1.5rem; font-family: 'Jost'; letter-spacing: 0.2em; font-weight: 500;
-            cursor: pointer; box-shadow: 0 10px 30px rgba(176, 190, 197, 0.2);
-            transition: all 0.3s; position: relative; overflow: hidden;
+            border: 1px solid rgba(0,0,0,0.05);
+            padding: 1.2rem; font-family: 'Jost'; letter-spacing: 0.2em; font-weight: 600;
+            cursor: pointer; box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            transition: all 0.3s;
         }
-        .action-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(129, 212, 250, 0.4); }
+        .action-btn:hover {
+            transform: translateY(-3px); 
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-color: var(--theme-color);
+            color: var(--theme-color);
+        }
 
         /* Keyframes */
         @keyframes auroraRotate { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes fadeIn { to { opacity: 1; } }
-        @keyframes slideInLeft { from { opacity: 0; transform: translateX(-20px); } to { opacity: 0.6; transform: translateX(0); } }
-        @keyframes slideInRight { to { transform: translateX(0); } }
-        @keyframes floatingBreathe {
-            0%, 100% { transform: translateY(0) scale(1); filter: brightness(1) drop-shadow(0 30px 50px rgba(129, 212, 250, 0.3)); }
-            50% { transform: translateY(-10px) scale(1.01); filter: brightness(1.05) drop-shadow(0 40px 60px rgba(129, 212, 250, 0.5)); }
+        @keyframes breathe {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
         }
+        @keyframes slideInRight { to { transform: translateX(0); } }
+        @keyframes blink { 50% { opacity: 0; } }
+
     </style>
 </head>
 <body>
@@ -214,58 +231,61 @@
     <canvas id="particle-canvas"></canvas>
     <div class="noise-overlay"></div>
 
-    <!-- NEWS TICKER BAR -->
+    <!-- News Ticker -->
     <div id="news-bar">
         <span class="news-label">REPORT</span>
-        <div id="news-content" class="news-content">Connecting to network...</div>
+        <div id="news-content" class="news-content">Connecting...</div>
     </div>
 
+    <!-- Background Typography -->
     <div class="background-typo">CHOCOLAT MER</div>
 
-    <!-- Main UI -->
+    <!-- Main Interface -->
     <div id="interface-layer">
         
-        <!-- Logo -->
         <div class="logo-area">CM</div>
 
-        <!-- Left Nav -->
         <nav class="nav-rail">
             <div class="nav-item active">HOME</div>
             <div class="nav-item">LOGS</div>
-            <div class="nav-item">SYSTEM</div>
+            <div class="nav-item">ALBUM</div>
         </nav>
 
         <!-- Character Stage -->
         <main class="char-container" onclick="handleCharClick()">
-            <img id="char-img" class="char-img" src="" alt="Character">
+            <!-- 画像ソースはJSで制御 -->
+            <img id="char-img" class="char-img" src="" alt="">
             
             <div class="dialogue-wrapper">
                 <div class="dialogue-card">
                     <span id="char-name" class="char-name">...</span>
-                    <p id="char-text" class="char-text">Initialize...</p>
+                    <!-- テキストはJSでタイプライター表示 -->
+                    <div class="char-text">
+                        <span id="typewriter-text"></span><span class="cursor"></span>
+                    </div>
                 </div>
             </div>
         </main>
 
-        <!-- Right Info Panel -->
+        <!-- Right Panel -->
         <aside class="info-panel">
             <div class="user-status-area">
-                <span class="status-label">USER ACCOUNT</span>
+                <span class="status-label">LOGGED IN AS</span>
                 <div id="user-display" class="status-val">GUEST</div>
             </div>
 
             <div class="menu-list">
-                <a class="menu-btn" onclick="alert('キャラクター管理画面へ遷移')">
-                    <span class="menu-meta">01 / EDIT</span>
+                <a class="menu-btn" onclick="alert('キャラクター管理画面へ')">
                     <span>Character</span>
+                    <span class="menu-meta">EDIT</span>
                 </a>
-                <a class="menu-btn" onclick="alert('日常ログ画面へ遷移')">
-                    <span class="menu-meta">02 / VIEW</span>
+                <a class="menu-btn" onclick="alert('日常ログ画面へ')">
                     <span>Daily Log</span>
+                    <span class="menu-meta">VIEW</span>
                 </a>
-                <a class="menu-btn" onclick="alert('投票画面へ遷移')">
-                    <span class="menu-meta">03 / VOTE</span>
+                <a class="menu-btn" onclick="alert('投票画面へ')">
                     <span>Art Polls</span>
+                    <span class="menu-meta">VOTE</span>
                 </a>
             </div>
 
@@ -276,171 +296,208 @@
 
     </div>
 
-    <!-- JavaScript Logic -->
+    <!-- Logic -->
     <script type="module">
-        // 1. Firebase Imports
         import { login, logout, monitorAuth, loadFromCloud } from "./character/firestore.js";
 
-        // ==========================================
-        // STATE & DATA
-        // ==========================================
+        // --- 設定 ---
+        // サーバー(ローカル)画像のベースパス
+        const LOCAL_IMG_BASE = "./images/character/";
+
+        // --- State ---
         let currentUser = null;
-        let charDataList = []; // DBから取得したリスト
-        let currentCharIndex = 0;
-        
-        // ログインしていない時のダミーデータ（デザイン維持用）
+        let charDataList = [];
+        let currentIndex = 0;
+        let typeWriterTimeout = null; // タイピング中断用
+
+        // ダミーデータ（データゼロの場合）
         const fallbackData = [
             {
                 name: "System",
-                remarks: "クラウドに接続されていません。<br>CONNECTボタンからログインしてください。",
-                image: "https://placehold.co/800x1200/eceff1/ffffff?text=No+Data"
+                inpThemeColor: "#90A4AE",
+                remarks: "クラウドに接続されていません。CONNECTボタンからログインしてください。",
+                image: "https://placehold.co/600x900/eceff1/ffffff?text=No+Data"
             }
         ];
 
         // ==========================================
-        // 1. NEWS TICKER (report.json)
+        // 1. 画像解決ロジック (高画質優先)
         // ==========================================
-        async function initNewsTicker() {
-            const newsEl = document.getElementById('news-content');
-            try {
-                // 同じ階層にあるreport.jsonを読み込み
-                const response = await fetch('./TOP/report.json');
-                if(!response.ok) throw new Error("JSON Not Found");
+        function resolveImage(charName, cloudUrl) {
+            return new Promise((resolve) => {
+                if (!charName) {
+                    resolve(cloudUrl || fallbackData[0].image);
+                    return;
+                }
+
+                // 1. ローカル画像を試す
+                const localPath = `${LOCAL_IMG_BASE}${charName}.png`;
+                const img = new Image();
                 
-                const newsList = await response.json();
+                img.onload = () => {
+                    // 読み込み成功ならローカルパスを使用
+                    resolve(localPath);
+                };
                 
-                // ニュースを定期的に切り替え
-                const cycleNews = () => {
-                    // フェードアウト
-                    newsEl.classList.remove('active');
-                    
-                    setTimeout(() => {
-                        // ランダム選択
-                        const text = newsList[Math.floor(Math.random() * newsList.length)];
-                        newsEl.textContent = text;
-                        // フェードイン
-                        newsEl.classList.add('active');
-                    }, 500);
+                img.onerror = () => {
+                    // 読み込み失敗ならクラウドURL、それもなければダミー
+                    resolve(cloudUrl || `https://placehold.co/600x900/81D4FA/ffffff?text=${encodeURIComponent(charName)}`);
                 };
 
-                cycleNews(); // 初回
-                setInterval(cycleNews, 5000); // 5秒ごとに更新
+                img.src = localPath;
+            });
+        }
 
-            } catch (e) {
-                console.error("News Load Error:", e);
-                newsEl.textContent = "News system offline.";
-                newsEl.classList.add('active');
+        // ==========================================
+        // 2. ニュースティッカー (report.json)
+        // ==========================================
+        async function initNews() {
+            const el = document.getElementById('news-content');
+            try {
+                const res = await fetch('./report.json');
+                if(!res.ok) throw new Error();
+                const data = await res.json();
+                
+                const cycle = () => {
+                    el.classList.remove('active');
+                    setTimeout(() => {
+                        el.textContent = data[Math.floor(Math.random() * data.length)];
+                        el.classList.add('active');
+                    }, 500);
+                };
+                cycle();
+                setInterval(cycle, 6000);
+            } catch(e) {
+                el.textContent = "Welcome to ChocolatMer";
+                el.classList.add('active');
             }
         }
 
         // ==========================================
-        // 2. FIREBASE & CHARACTERS
+        // 3. 表示更新 & 演出
+        // ==========================================
+        const imgEl = document.getElementById('char-img');
+        const nameEl = document.getElementById('char-name');
+        const textContainer = document.getElementById('typewriter-text');
+        const cardEl = document.querySelector('.dialogue-card');
+        const rootStyles = document.documentElement.style;
+
+        async function updateDisplay() {
+            const char = charDataList[currentIndex];
+
+            // 1. 退場アニメーション
+            imgEl.classList.remove('visible', 'breathing');
+            cardEl.classList.remove('show');
+            
+            // 2. 次のデータ準備
+            const nextImgSrc = await resolveImage(char.name, char.image);
+            
+            // テーマカラー反映 (schema.js: inpThemeColor -> var(--theme-color))
+            // ※未設定ならデフォルトの水色
+            const theme = char.inpThemeColor || "#81D4FA";
+            rootStyles.setProperty('--theme-color', theme);
+
+            // セリフ決定 (remarks -> txtRoleplay -> Default)
+            let dialogue = char.remarks || char.txtRoleplay || "……。";
+            // 改行コードなどはスペースに置換して一行っぽく流す（あるいは<br>対応させる）
+            // ここではシンプルにテキストとして扱います
+            dialogue = dialogue.replace(/<br>/g, "\n");
+
+            setTimeout(() => {
+                // 画像セット
+                imgEl.src = nextImgSrc;
+                imgEl.onload = () => {
+                    // 3. 入場アニメーション
+                    nameEl.textContent = char.name;
+                    imgEl.classList.add('visible');
+                    
+                    setTimeout(() => {
+                        imgEl.classList.add('breathing');
+                        cardEl.classList.add('show');
+                        
+                        // 4. 文字送り開始
+                        startTypewriter(dialogue);
+                    }, 300);
+                };
+            }, 600);
+        }
+
+        // タイプライター演出関数
+        function startTypewriter(text) {
+            textContainer.textContent = "";
+            if (typeWriterTimeout) clearTimeout(typeWriterTimeout);
+
+            let i = 0;
+            const speed = 40; // 打鍵スピード(ms)
+
+            function type() {
+                if (i < text.length) {
+                    textContainer.textContent += text.charAt(i);
+                    i++;
+                    typeWriterTimeout = setTimeout(type, speed);
+                }
+            }
+            type();
+        }
+
+        // ==========================================
+        // 4. Firebase Auth & Controls
         // ==========================================
         const userDisplay = document.getElementById('user-display');
         const mainBtn = document.getElementById('main-btn');
 
-        // 認証監視
         monitorAuth(
-            // Login
             async (user) => {
                 currentUser = user;
-                userDisplay.textContent = user.displayName || "MEMBER";
-                mainBtn.textContent = "NEXT CHAR"; // ボタン機能を変更
+                userDisplay.textContent = user.displayName;
+                mainBtn.textContent = "NEXT";
                 
-                // DBからデータ取得
                 const data = await loadFromCloud();
-                
                 if (data && Object.keys(data).length > 0) {
-                    // オブジェクトを配列に変換 { "Name": {...} } -> [ {...}, {...} ]
                     charDataList = Object.values(data);
                 } else {
-                    // データが無い場合
                     charDataList = [{
                         name: "No Data",
-                        remarks: "保存されたキャラクターデータがありません。<br>管理画面から登録してください。",
-                        image: "https://placehold.co/800x1200/81D4FA/ffffff?text=Empty"
+                        remarks: "データが見つかりません。",
+                        inpThemeColor: "#CFD8DC"
                     }];
                 }
-                
-                // 画面更新
-                currentCharIndex = Math.floor(Math.random() * charDataList.length);
-                updateCharacterDisplay();
+                // ランダムスタート
+                currentIndex = Math.floor(Math.random() * charDataList.length);
+                updateDisplay();
             },
-            // Logout
             () => {
                 currentUser = null;
                 userDisplay.textContent = "GUEST";
                 mainBtn.textContent = "CONNECT";
                 charDataList = fallbackData;
-                currentCharIndex = 0;
-                updateCharacterDisplay();
+                currentIndex = 0;
+                updateDisplay();
             }
         );
 
-        // ボタンアクション (ログイン状態によって分岐)
         window.handleMainButton = () => {
-            if (!currentUser) {
-                login();
-            } else {
-                nextCharacter();
-            }
+            if (!currentUser) login();
+            else nextChar();
         };
 
-        // キャラ画像クリック
         window.handleCharClick = () => {
-            if(currentUser) nextCharacter();
+            if (currentUser) nextChar();
         };
 
-        // 次のキャラへ
-        function nextCharacter() {
-            if(charDataList.length <= 1) return;
-            
-            // 背景文字演出
+        function nextChar() {
+            if (charDataList.length <= 1) return;
+            // 背景文字の演出
             const typo = document.querySelector('.background-typo');
             typo.style.transform = "translate(-50%, -50%) scale(1.1)";
             setTimeout(() => typo.style.transform = "translate(-50%, -50%) scale(1)", 300);
 
-            currentCharIndex = (currentCharIndex + 1) % charDataList.length;
-            updateCharacterDisplay();
-        }
-
-        // 表示更新ロジック
-        const imgEl = document.getElementById('char-img');
-        const nameEl = document.getElementById('char-name');
-        const textEl = document.getElementById('char-text');
-        const cardEl = document.querySelector('.dialogue-card');
-
-        function updateCharacterDisplay() {
-            const char = charDataList[currentCharIndex];
-
-            // Exit Animation
-            imgEl.classList.remove('visible', 'breathing');
-            cardEl.classList.remove('show');
-
-            setTimeout(() => {
-                nameEl.textContent = char.name;
-                // remarksが無い場合の安全策
-                textEl.innerHTML = char.remarks || "...";
-                
-                // 画像が無い場合の安全策
-                const imgSrc = char.image || `https://placehold.co/800x1200/81D4FA/ffffff?text=${encodeURIComponent(char.name)}`;
-                
-                const tempImg = new Image();
-                tempImg.src = imgSrc;
-                tempImg.onload = () => {
-                    imgEl.src = imgSrc;
-                    // Enter Animation
-                    imgEl.classList.add('visible');
-                    setTimeout(() => {
-                        imgEl.classList.add('breathing');
-                        cardEl.classList.add('show');
-                    }, 300);
-                };
-            }, 500);
+            currentIndex = (currentIndex + 1) % charDataList.length;
+            updateDisplay();
         }
 
         // ==========================================
-        // 3. PARTICLES (Visual Effect)
+        // 5. Particles (Canvas)
         // ==========================================
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
@@ -450,30 +507,25 @@
         window.addEventListener('resize', resize); resize();
 
         class Particle {
-            constructor() {
-                this.reset();
-            }
+            constructor() { this.reset(); }
             reset() {
                 this.x = Math.random() * width;
                 this.y = Math.random() * height;
                 this.size = Math.random() * 2 + 0.5;
-                this.speedX = (Math.random() - 0.5) * 0.5;
-                this.speedY = (Math.random() - 0.5) * 0.5;
-                this.life = Math.random() * 100;
+                this.speedX = (Math.random() - 0.5) * 0.3;
+                this.speedY = (Math.random() - 0.5) * 0.3;
+                this.alpha = Math.random() * 0.5 + 0.1;
             }
             update() {
-                this.x += this.speedX; this.y += this.speedY; this.life++;
-                if (this.x > width || this.x < 0 || this.y > height || this.y < 0) this.reset();
+                this.x += this.speedX; this.y += this.speedY;
+                if(this.x > width || this.x < 0 || this.y > height || this.y < 0) this.reset();
             }
             draw() {
-                const opacity = (Math.sin(this.life * 0.05) + 1) / 2 * 0.5;
-                ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
                 ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fill();
             }
         }
-
-        for(let i=0; i<80; i++) particles.push(new Particle());
-
+        for(let i=0; i<60; i++) particles.push(new Particle());
         function animate() {
             ctx.clearRect(0,0,width,height);
             particles.forEach(p => { p.update(); p.draw(); });
@@ -481,8 +533,8 @@
         }
         animate();
 
-        // 初期化実行
-        initNewsTicker();
+        // Init
+        initNews();
 
     </script>
 </body>
