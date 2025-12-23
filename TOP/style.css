@@ -27,7 +27,8 @@ html {
 
 body {
     /* body側ではスクロールさせない（二重防止） */
-    overflow-y: visible; 
+    overflow-y: visible !important; 
+    
     overflow-x: hidden;
     
     /* 既存のデザイン設定 */
