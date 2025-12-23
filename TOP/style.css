@@ -18,11 +18,11 @@
 * { box-sizing: border-box; margin: 0; padding: 0; text-decoration: none; -webkit-tap-highlight-color: transparent; }
 
 /* 修正: 二重スクロールバー防止 */
-html, body { 
-    width: 100%; 
-    overflow-x: hidden; 
-    /* ▼これを追加 */
-    scrollbar-gutter: stable; 
+html, body {
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: hidden; /* ロード直後は縦スクロールを隠しておく */
+    /* scrollbar-gutter: stable; は削除 */
 }
 
 body {
