@@ -17,22 +17,30 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; text-decoration: none; -webkit-tap-highlight-color: transparent; }
 
-/* === 最終構造：スクロールバー一本化計画 === */
+/* === 修正完了版：デザイン崩れなし＆揺れ防止 === */
 html {
     width: 100%;
-    height: 100%;         /* 画面の高さいっぱいに固定 */
-    overflow: hidden;     /* 【重要】html側は絶対にスクロールさせない（ロック） */
+    /* 高さを固定せず、中身に合わせて伸びるように戻します */
+    height: auto;
+    
+    /* html側でスクロールを管理（これが一番フッターが安定します） */
+    overflow-y: auto; 
+    overflow-x: hidden; /* 横スクロールは絶対禁止 */
 }
 
 body {
     width: 100%;
-    height: 100%;         /* htmlの枠いっぱいに広げる */
+    /* 画面より中身が少なくても、最低限画面の高さは確保する */
+    min-height: 100vh;
+    /* 高さは自動で伸びるようにする */
+    height: auto; 
     
-    /* スクロール機能はbodyが担当する */
-    overflow-y: auto !important; /* JSが何を言ってもスクロール許可 */
-    overflow-x: hidden;          /* 横スクロールは禁止 */
+    /* body側はスクロールバーを出さない（二重防止） */
+    overflow-y: visible !important; 
+    overflow-x: hidden;
     
-    margin: 0;            /* 余白リセット */
+    /* 余白リセット（謎の空間防止） */
+    margin: 0;
     
     /* === 既存のデザイン設定 === */
     font-family: "Zen Maru Gothic", sans-serif;
@@ -40,15 +48,12 @@ body {
     background-image: url('../images/background/fur-texture-pink.jpg');
     background-size: cover;
     background-position: center;
-    /* bodyがスクロールするので、背景を固定して動かないようにする */
-    background-attachment: fixed; 
+    
+    /* 背景を固定（スクロールしても背景が動かないようにするならfixed推奨） */
+    background-attachment: scroll; /* もし背景も一緒に動かしたいなら scroll、固定なら fixed */
     
     display: flex;
     flex-direction: column;
-    
-    /* height: 100%にしたので min-height は削除してOKですが、
-       中身が少ない時のために一応残しても無害です */
-    min-height: 100vh;
     
     color: var(--text-main);
     perspective: 1500px;
