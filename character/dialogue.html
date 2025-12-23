@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Dialogue - Uchiyoso Archive</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Noto+Sans+JP:wght@300;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #080808; color: #fff; font-family: 'Noto Sans JP', sans-serif;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh; margin: 0;
+        }
+        .container {
+            width: 90%; max-width: 500px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);
+            padding: 40px; border-radius: 8px;
+        }
+        h2 { font-family: 'Syncopate'; margin-bottom: 30px; letter-spacing: 0.1em; color: #00ffcc; text-align: center; }
+        
+        select, textarea {
+            width: 100%; background: #111; color: #fff; border: 1px solid #333;
+            padding: 10px; margin-bottom: 20px; font-size: 14px;
+        }
+        select { height: 40px; }
+        textarea { height: 120px; resize: vertical; }
+        
+        button {
+            width: 100%; padding: 15px; background: #00ffcc; border: none; font-weight: bold;
+            letter-spacing: 0.2em; cursor: pointer; transition: 0.3s;
+        }
+        button:hover { background: #fff; }
+        .back-link { display: block; text-align: center; margin-top: 20px; color: #888; text-decoration: none; font-size: 12px; }
+        .back-link:hover { color: #fff; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>EDIT TOP DIALOGUE</h2>
+        
+        <div id="auth-status" style="text-align:center; margin-bottom:20px; font-size:12px; color:#888;">Checking Auth...</div>
+
+        <select id="char-select" onchange="loadCharData()">
+            <option value="">-- SELECT CHARACTER --</option>
+        </select>
+
+        <textarea id="dialogue-input" placeholder="Enter new dialogue here..."></textarea>
+
+        <button onclick="saveDialogue()">SAVE UPDATE</button>
+
+        <a href="../index.html" class="back-link">← RETURN TO TOP</a>
+    </div>
+
+    <script type="module">
+        import { login, monitorAuth, loadFromCloud, saveToCloud } from "./firestore.js";
+
+        let allData = {};
+        let currentUser = null;
+
+        monitorAuth(async (user) => {
+            const statusEl = document.getElementById('auth-status');
+            if (user) {
+                currentUser = user;
+                statusEl.textContent = "LOGGED IN: " + user.displayName;
+                statusEl.style.color = "#00ffcc";
+                await initData();
+            } else {
+                statusEl.textContent = "NOT LOGGED IN. CLICK TO LOGIN.";
+                statusEl.style.color = "red";
+                statusEl.style.cursor = "pointer";
+                statusEl.onclick = login;
+            }
+        });
+
+        async function initData() {
+            const data = await loadFromCloud();
+            if (!data) return;
+            allData = data;
+
+            const select = document.getElementById('char-select');
+            select.innerHTML = '<option value="">-- SELECT CHARACTER --</option>';
+            
+            Object.values(data).forEach(char => {
+                const opt = document.createElement('option');
+                opt.value = char.name;
+                opt.textContent = char.name;
+                select.appendChild(opt);
+            });
+        }
+
+        window.loadCharData = () => {
+            const name = document.getElementById('char-select').value;
+            if (name && allData[name]) {
+                // remarks または txtRoleplay から読み込む
+                document.getElementById('dialogue-input').value = allData[name].remarks || allData[name].txtRoleplay || "";
+            } else {
+                document.getElementById('dialogue-input').value = "";
+            }
+        };
+
+        window.saveDialogue = async () => {
+            if (!currentUser) { alert("Please login first."); return; }
+            const name = document.getElementById('char-select').value;
+            const text = document.getElementById('dialogue-input').value;
+
+            if (!name || !allData[name]) {
+                alert("Please select a character.");
+                return;
+            }
+
+            // 更新 (データ全体を取得してremarksだけ書き換えて保存)
+            // ※ firestore.jsの仕様上、オブジェクト全体を渡す必要があるため
+            const charData = allData[name];
+            charData.remarks = text;
+
+            await saveToCloud(charData);
+            alert("Updated: " + name);
+        };
+    </script>
+</body>
+</html>

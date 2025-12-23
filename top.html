@@ -4,185 +4,166 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Uchiyoso Maker - Luxe Archive</title>
-    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Noto+Sans+JP:wght@100;300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         :root {
-            /* 基本色設定 */
             --bg-color: #080808;
             --text-main: #ffffff;
             --text-sub: #8899a6;
             --ui-border: rgba(255, 255, 255, 0.15);
             --ui-bg: rgba(255, 255, 255, 0.03);
-            
             --font-en: 'Syncopate', sans-serif;
             --font-jp: 'Noto Sans JP', sans-serif;
-            
-            /* テーマカラー（JSで動的に変わります） */
-            --accent-color: #00ffcc; 
-            
-            /* 背景画像用 */
+            --accent-color: #00ffcc; /* JSで書き換え */
             --bg-image-url: none;
         }
 
-        /* --- 背景モードごとのスタイル定義 --- */
-        
-        /* [黒モード] デフォルト */
-        body.mode-black {
-            --bg-color: #080808;
-            --text-main: #ffffff;
-            --ui-border: rgba(255, 255, 255, 0.15);
-            --ui-bg: rgba(255, 255, 255, 0.03);
-        }
-
-        /* [白モード] 文字色反転 */
-        body.mode-white {
-            --bg-color: #f4f4f4;
-            --text-main: #1a1a1a;
-            --text-sub: #555555;
-            --ui-border: rgba(0, 0, 0, 0.1);
-            --ui-bg: rgba(0, 0, 0, 0.03);
-        }
-
-        /* [写真モード] 背景画像設定 + 文字を見やすくするオーバーレイ */
+        body.mode-black { --bg-color: #080808; --text-main: #ffffff; }
+        body.mode-white { --bg-color: #f4f4f4; --text-main: #1a1a1a; --text-sub: #555; }
         body.mode-photo {
-            --bg-color: #000000;
-            --text-main: #ffffff;
+            --bg-color: #000000; --text-main: #ffffff;
             background-image: var(--bg-image-url);
-            background-size: cover;
-            background-position: center;
+            background-size: cover; background-position: center;
         }
-        /* 写真モード時は背景を暗くして文字とパーティクルを目立たせる */
         body.mode-photo::before {
             content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.5); z-index: -1;
-            pointer-events: none;
+            background: rgba(0, 0, 0, 0.5); z-index: -1; pointer-events: none;
         }
 
         body, html {
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: var(--font-jp);
-            overflow: hidden;
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background-color: var(--bg-color); color: var(--text-main);
+            font-family: var(--font-jp); overflow: hidden;
             transition: background-color 0.5s, color 0.5s;
         }
 
-        /* --- 1. Background (Three.js) --- */
         #canvas-container {
             position: fixed; top: 0; left: 0; z-index: 0;
-            opacity: 1.0; pointer-events: none;
-            /* スクリーン合成で光らせる */
-            mix-blend-mode: screen; 
+            opacity: 1.0; pointer-events: none; mix-blend-mode: screen;
         }
 
-        /* --- 2. News Ticker --- */
+        /* --- Updated News Ticker (More Visible) --- */
         #news-ticker {
-            position: fixed; top: 0; left: 0; width: 100%; height: 28px;
-            background: rgba(0, 0, 0, 0.85); /* 常に黒帯で見やすく */
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(4px);
+            position: fixed; top: 10px; left: 50%; transform: translateX(-50%);
+            width: 90%; max-width: 1200px; height: 36px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 1px solid var(--accent-color); /* テーマカラーの枠線 */
+            border-radius: 4px;
+            box-shadow: 0 0 15px var(--accent-color); /* 発光 */
             z-index: 100;
             display: flex; align-items: center; padding: 0 20px;
-            font-family: var(--font-en); font-size: 9px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.5);
+            font-family: var(--font-en); font-size: 11px;
+            animation: pulseBorder 4s infinite;
         }
+        @keyframes pulseBorder {
+            0%, 100% { box-shadow: 0 0 10px var(--accent-color); }
+            50% { box-shadow: 0 0 25px var(--accent-color); }
+        }
+
         .ticker-label {
-            color: var(--accent-color); font-weight: bold; margin-right: 20px;
-            letter-spacing: 0.1em; white-space: nowrap;
-            text-shadow: 0 0 10px var(--accent-color);
-            transition: color 1s, text-shadow 1s;
-            border-right: 1px solid rgba(255,255,255,0.2); padding-right: 15px;
+            color: #fff; background: var(--accent-color);
+            font-weight: bold; margin-right: 20px;
+            padding: 2px 8px; border-radius: 2px;
+            color: #000; letter-spacing: 0.1em; white-space: nowrap;
         }
         .ticker-content {
-            color: #ddd; font-family: var(--font-jp); font-weight: 300;
+            color: #fff; font-family: var(--font-jp); font-weight: 500;
             opacity: 0; transform: translateY(5px); transition: all 0.5s;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            width: 100%;
         }
         .ticker-content.active { opacity: 1; transform: translateY(0); }
 
-        /* --- 3. Layout --- */
+        /* --- Layout --- */
         .viewport {
-            position: relative;
-            width: 100vw; height: 100vh;
+            position: relative; width: 100vw; height: 100vh;
             display: grid;
-            /* 左メニュー / キャラエリア(左寄せ) / 右メニュー */
             grid-template-columns: 80px 45% 1fr;
             grid-template-rows: 60px 1fr 150px;
             z-index: 10;
         }
 
-        /* Left Sub Nav */
+        /* --- Left Nav & Controls --- */
         .sub-nav {
-            grid-row: 1 / 4;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            gap: 60px;
+            grid-row: 1 / 4; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; gap: 40px;
             border-right: 1px solid var(--ui-border);
             background: linear-gradient(to right, rgba(0,0,0,0.2), transparent);
-            transition: border-color 0.5s;
-        }
-        .sub-nav-item {
-            writing-mode: vertical-rl;
-            font-family: var(--font-en); font-size: 9px; letter-spacing: 0.6em;
-            color: var(--text-main); opacity: 0.4;
-            text-transform: uppercase; cursor: pointer; transition: 0.4s;
-        }
-        .sub-nav-item:hover {
-            color: var(--accent-color); opacity: 1;
-            transform: translateY(-8px);
-            text-shadow: 0 0 15px var(--accent-color);
         }
 
-        /* 背景切り替えボタン (左メニューに追加) */
+        /* BGM Player */
+        .sound-control {
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+        }
+        .sound-icon {
+            color: var(--text-main); font-size: 20px; cursor: pointer;
+            opacity: 0.5; transition: 0.3s;
+        }
+        .sound-icon:hover, .sound-icon.playing { opacity: 1; color: var(--accent-color); text-shadow: 0 0 10px var(--accent-color); }
+        
+        /* BG Select Button */
         .bg-trigger {
-            margin-top: 40px;
-            font-size: 14px; 
-            border: 1px solid var(--ui-border);
-            padding: 10px 4px;
-            border-radius: 4px;
+            writing-mode: vertical-rl; font-family: var(--font-en); font-size: 10px; letter-spacing: 0.2em;
+            color: var(--text-main); border: 1px solid var(--ui-border);
+            padding: 15px 6px; cursor: pointer; transition: 0.3s;
         }
         .bg-trigger:hover {
-            border-color: var(--accent-color);
-            background: var(--accent-color);
-            color: #000;
+            border-color: var(--accent-color); background: var(--accent-color); color: #000;
         }
 
-        /* Character Area (Left Aligned) */
+        /* --- BG Selection Modal --- */
+        #bg-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+            z-index: 200; display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: 0.3s;
+        }
+        #bg-modal.open { opacity: 1; pointer-events: auto; }
+        
+        .modal-content {
+            background: rgba(20,20,20,0.9); border: 1px solid var(--accent-color);
+            padding: 40px; border-radius: 8px; max-width: 600px; width: 90%;
+            text-align: center;
+        }
+        .modal-title { font-family: var(--font-en); color: var(--text-main); margin-bottom: 20px; }
+        .bg-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 15px;
+        }
+        .bg-option {
+            aspect-ratio: 1; border: 2px solid #555; cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 10px; color: #fff; background-size: cover; background-position: center;
+            transition: 0.2s;
+        }
+        .bg-option:hover { border-color: var(--accent-color); transform: scale(1.05); }
+        .bg-black { background: #000; }
+        .bg-white { background: #fff; color: #000; }
+        .close-modal { margin-top: 20px; background: none; border: none; color: #888; cursor: pointer; }
+
+        /* --- Character --- */
         .character-stage {
             grid-column: 2; grid-row: 1 / 4;
-            display: flex; align-items: flex-end; 
-            justify-content: flex-start; /* 左寄せ */
-            padding-left: 5%; 
-            position: relative; overflow: hidden;
+            display: flex; align-items: flex-end; justify-content: flex-start;
+            padding-left: 5%; position: relative; overflow: hidden;
             pointer-events: auto; cursor: pointer;
         }
-
         .char-img {
             height: 92%; width: auto; max-width: 100%;
             object-fit: cover; object-position: top center;
-            
-            /* 足元フェード (黒モードと写真モード用) */
             mask-image: linear-gradient(to top, transparent 5%, black 25%);
             -webkit-mask-image: linear-gradient(to top, transparent 5%, black 25%);
-            
             filter: drop-shadow(-10px 0 40px rgba(0,0,0,0.6));
-            
             opacity: 0; transform: translateY(30px) scale(0.98);
             transition: opacity 1s ease, transform 1s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        /* 白モードの時だけ足元のフェードを弱めるなどの調整も可能ですが、今回は統一 */
         .char-img.visible { opacity: 1; transform: translateY(0) scale(1); }
 
-        /* Speech Bubble */
         .speech-bubble {
-            position: absolute; bottom: 25%; left: 0%; 
+            position: absolute; bottom: 25%; left: 0%;
             font-family: var(--font-jp); font-weight: 300; letter-spacing: 0.05em;
-            color: #fff; /* 吹き出し内は常に白文字 */
-            background: rgba(10, 10, 10, 0.85);
-            padding: 25px 35px;
-            backdrop-filter: blur(12px);
+            color: #fff; background: rgba(10, 10, 10, 0.85);
+            padding: 25px 35px; backdrop-filter: blur(12px);
             border-left: 3px solid var(--accent-color);
             border-top: 1px solid rgba(255,255,255,0.1);
             box-shadow: 0 15px 40px rgba(0,0,0,0.6);
@@ -191,39 +172,28 @@
             transition: all 0.5s ease 0.3s, border-color 1s;
         }
         .speech-bubble.show { opacity: 1; transform: translateX(20px); }
-        
         .char-name-label {
             font-family: var(--font-en); font-size: 11px; color: var(--accent-color);
             margin-bottom: 12px; display: block; font-weight: bold; letter-spacing: 0.2em;
-            transition: color 1s, text-shadow 1s;
         }
-        .cursor {
-            display: inline-block; width: 2px; height: 1em; background: var(--accent-color);
-            animation: blink 1s infinite; vertical-align: middle; transition: background 1s;
-        }
+        .cursor { display: inline-block; width: 2px; height: 1em; background: var(--accent-color); animation: blink 1s infinite; vertical-align: middle; }
 
-        /* Right Column */
+        /* --- Right Column --- */
         .header-title {
-            grid-column: 3; grid-row: 1;
-            padding: 25px 40px; text-align: right;
+            grid-column: 3; grid-row: 1; padding: 25px 40px; text-align: right;
         }
         .header-title h1 {
             font-family: var(--font-en); font-size: 26px; margin: 0;
             color: var(--text-main); letter-spacing: 0.2em;
             text-shadow: 0 0 20px rgba(255,255,255,0.1);
-            transition: color 0.5s;
         }
         .header-sub { font-size: 9px; color: var(--text-sub); letter-spacing: 0.4em; margin-top: 5px; opacity: 0.7; }
 
-        /* User Status */
         .user-status {
-            position: absolute; top: 110px; right: 40px;
-            text-align: right;
-            border-right: 1px solid var(--ui-border);
-            padding-right: 20px;
-            transition: border-color 0.5s;
+            position: absolute; top: 110px; right: 40px; text-align: right;
+            border-right: 1px solid var(--ui-border); padding-right: 20px;
         }
-        .status-label { font-size: 8px; color: var(--accent-color); letter-spacing: 0.2em; font-family: var(--font-en); transition: color 1s; }
+        .status-label { font-size: 8px; color: var(--accent-color); letter-spacing: 0.2em; font-family: var(--font-en); }
         .status-name { font-size: 15px; margin-top: 5px; font-weight: 500; letter-spacing: 0.1em; color: var(--text-main); }
         .connect-btn {
             background: none; border: 1px solid var(--accent-color); color: var(--accent-color);
@@ -232,94 +202,101 @@
         }
         .connect-btn:hover { background: var(--accent-color); color: #000; box-shadow: 0 0 15px var(--accent-color); }
 
-        /* Main Nav */
         .main-nav {
             grid-column: 3; grid-row: 2 / 4;
-            display: flex; flex-direction: column; 
-            justify-content: flex-end; align-items: flex-end;
+            display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end;
             padding: 0 40px 50px 0; gap: 24px;
         }
-
         .nav-btn-group { display: flex; flex-direction: column; align-items: flex-end; }
-        .btn-label {
-            font-family: var(--font-en); font-size: 8px; color: var(--text-sub);
-            margin-bottom: 6px; letter-spacing: 0.2em;
-        }
-
+        .btn-label { font-family: var(--font-en); font-size: 8px; color: var(--text-sub); margin-bottom: 6px; letter-spacing: 0.2em; }
+        
         .nav-btn {
             display: flex; align-items: center; justify-content: center;
             width: 230px; height: 50px;
-            background: var(--ui-bg); 
-            border: 1px solid var(--ui-border);
+            background: var(--ui-bg); border: 1px solid var(--ui-border);
             color: var(--text-main); text-decoration: none;
             font-family: var(--font-en); font-size: 11px; letter-spacing: 0.2em;
             position: relative; overflow: hidden;
             transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
         }
-        
         .nav-btn::before {
-            content: ''; position: absolute;
-            top: 0; left: -100%; width: 50%; height: 100%;
+            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
             background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
             transform: skewX(-20deg); transition: 0.5s;
         }
         .nav-btn::after {
             content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%;
-            background: var(--accent-color);
-            transform: scaleY(0); transition: transform 0.4s, background-color 1s;
+            background: var(--accent-color); transform: scaleY(0); transition: transform 0.4s;
         }
-
         .nav-btn:hover {
-            border-color: var(--accent-color);
-            background: rgba(128,128,128, 0.1);
-            letter-spacing: 0.35em;
-            box-shadow: 0 0 20px rgba(0,0,0,0.2), inset 0 0 10px rgba(0,0,0,0.1);
+            border-color: var(--accent-color); background: rgba(128,128,128, 0.1);
+            letter-spacing: 0.35em; box-shadow: 0 0 20px rgba(0,0,0,0.2);
             text-shadow: 0 0 8px var(--accent-color);
         }
         .nav-btn:hover::before { left: 150%; transition: 0.7s; }
         .nav-btn:hover::after { transform: scaleY(1); }
 
         @keyframes blink { 50% { opacity: 0; } }
-
     </style>
 </head>
 <body class="mode-black">
 
-    <!-- 1. Particle Canvas -->
+    <!-- Audio Player -->
+    <audio id="bgm-player" loop>
+        <source src="./sound/aoren.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Canvas -->
     <div id="canvas-container"></div>
 
-    <!-- 2. News Ticker -->
+    <!-- Background Select Modal -->
+    <div id="bg-modal">
+        <div class="modal-content">
+            <h3 class="modal-title">SELECT BACKGROUND</h3>
+            <div class="bg-grid" id="bg-grid">
+                <!-- JSでボタン生成 -->
+                <div class="bg-option bg-black" onclick="setBgMode('black')">BLACK</div>
+                <div class="bg-option bg-white" onclick="setBgMode('white')">WHITE</div>
+                <!-- Photo 1-5 will be added here -->
+            </div>
+            <button class="close-modal" onclick="toggleBgModal()">CLOSE</button>
+        </div>
+    </div>
+
+    <!-- News Ticker -->
     <div id="news-ticker">
         <span class="ticker-label">LATEST REPORT</span>
-        <span id="news-content" class="ticker-content">System Booting...</span>
+        <span id="news-content" class="ticker-content">Initializing System...</span>
     </div>
 
     <div class="viewport">
-        
-        <!-- Left Sub Nav & BG Trigger -->
+        <!-- Left Nav -->
         <nav class="sub-nav">
+            <!-- BGM Controls -->
+            <div class="sound-control">
+                <span class="material-icons sound-icon" id="btn-play" onclick="toggleBGM()">play_arrow</span>
+                <span class="material-icons sound-icon" onclick="changeVolume()" style="font-size:16px;">volume_up</span>
+            </div>
+            
+            <div style="flex-grow:1"></div>
+
             <div class="sub-nav-item">System Log</div>
             <div class="sub-nav-item">Archive</div>
-            <!-- 背景変更ボタン -->
-            <div class="sub-nav-item bg-trigger" onclick="cycleBackground()">DISPLAY MODE</div>
+            <div class="bg-trigger" onclick="toggleBgModal()">BG SELECT</div>
         </nav>
 
-        <!-- Header Title -->
         <div class="header-title">
             <h1>UCHIYOSO<br>ARCHIVE</h1>
-            <div class="header-sub">PREMIUM INTERFACE v2.0</div>
+            <div class="header-sub">PREMIUM INTERFACE v2.1</div>
         </div>
 
-        <!-- User Status -->
         <div class="user-status">
             <div class="status-label">LOGGED IN AS</div>
             <div id="user-display" class="status-name">GUEST</div>
             <button id="main-connect-btn" class="connect-btn" onclick="handleConnect()">CONNECT</button>
         </div>
 
-        <!-- Character Stage -->
         <section class="character-stage" onclick="handleCharClick()">
-            <!-- 左寄せ配置 -->
             <img id="char-img" class="char-img" src="" alt="Character">
             <div class="speech-bubble">
                 <span id="char-name-label" class="char-name-label">SYSTEM</span>
@@ -327,8 +304,11 @@
             </div>
         </section>
 
-        <!-- Main Navigation -->
         <nav class="main-nav">
+            <div class="nav-btn-group">
+                <span class="btn-label">QUICK EDIT</span>
+                <a href="./character/dialogue.html" class="nav-btn">EDIT DIALOGUE</a>
+            </div>
             <div class="nav-btn-group">
                 <span class="btn-label">DATA ENTRY</span>
                 <a href="./character/edit.html" class="nav-btn">EDIT DATA</a>
@@ -348,9 +328,7 @@
         </nav>
     </div>
 
-    <!-- Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    
     <script type="module">
         import { login, logout, monitorAuth, loadFromCloud } from "./character/firestore.js";
 
@@ -362,86 +340,84 @@
         let charDataList = [];
         let currentIndex = 0;
         let typeWriterTimeout = null;
-        
-        // Three.js
         let particleMaterial;
         let targetColor = new THREE.Color(DEFAULT_THEME);
 
-        // Background State
-        let bgMode = 0; // 0:Black, 1:White, 2:Photo
-        let photoIndex = 1; 
-
         const fallbackData = [{
             name: "System",
-            color: "#00ffcc", // colorキーを優先
+            color: "#00ffcc",
             remarks: "アーカイブへようこそ。<br>接続を確立するにはCONNECTボタンを押してください。",
             image: "https://via.placeholder.com/800x1200/111/333?text=STANDBY"
         }];
 
-        // ==========================================
-        // 1. Background Switch Logic
-        // ==========================================
-        window.cycleBackground = () => {
-            const body = document.body;
-            
-            if (bgMode === 0) {
-                // Black -> White
-                bgMode = 1;
-                body.className = "mode-white";
-            } else if (bgMode === 1) {
-                // White -> Photo 1
-                bgMode = 2;
-                photoIndex = 1;
-                setPhotoBackground();
-            } else if (bgMode === 2) {
-                // Photo X -> Photo X+1 (Try)
-                photoIndex++;
-                setPhotoBackground();
+        // --- BGM Logic ---
+        const bgmPlayer = document.getElementById('bgm-player');
+        const playBtn = document.getElementById('btn-play');
+        bgmPlayer.volume = 0.3;
+
+        window.toggleBGM = () => {
+            if (bgmPlayer.paused) {
+                bgmPlayer.play().then(() => {
+                    playBtn.textContent = 'pause';
+                    playBtn.classList.add('playing');
+                }).catch(e => console.log("Audio Error:", e));
+            } else {
+                bgmPlayer.pause();
+                playBtn.textContent = 'play_arrow';
+                playBtn.classList.remove('playing');
             }
         };
 
-        function setPhotoBackground() {
-            const imgPath = `${PHOTO_BASE}${photoIndex}.png`;
-            const img = new Image();
-            img.onload = () => {
-                // 成功
-                document.body.className = "mode-photo";
-                document.documentElement.style.setProperty('--bg-image-url', `url('${imgPath}')`);
-            };
-            img.onerror = () => {
-                // 失敗(画像切れ) -> Blackに戻る
-                bgMode = 0;
-                photoIndex = 1;
-                document.body.className = "mode-black";
-                document.documentElement.style.setProperty('--bg-image-url', 'none');
-            };
-            img.src = imgPath;
+        window.changeVolume = () => {
+            bgmPlayer.volume = bgmPlayer.volume >= 0.9 ? 0.1 : bgmPlayer.volume + 0.2;
+            alert("Volume: " + Math.round(bgmPlayer.volume * 10));
+        };
+
+        // --- BG Modal Logic ---
+        window.toggleBgModal = () => {
+            document.getElementById('bg-modal').classList.toggle('open');
+        };
+
+        window.setBgMode = (mode, photoIdx) => {
+            const body = document.body;
+            body.className = ""; // Reset
+            document.documentElement.style.setProperty('--bg-image-url', 'none');
+            
+            if (mode === 'black') body.classList.add('mode-black');
+            else if (mode === 'white') body.classList.add('mode-white');
+            else if (mode === 'photo') {
+                body.classList.add('mode-photo');
+                document.documentElement.style.setProperty('--bg-image-url', `url('${PHOTO_BASE}${photoIdx}.png')`);
+            }
+            toggleBgModal(); // Close
+        };
+
+        // Init Photo Buttons in Modal
+        const bgGrid = document.getElementById('bg-grid');
+        for (let i = 1; i <= 5; i++) {
+            const div = document.createElement('div');
+            div.className = 'bg-option';
+            div.textContent = `PHOTO ${i}`;
+            div.style.backgroundImage = `url('${PHOTO_BASE}${i}.png')`;
+            div.onclick = () => window.setBgMode('photo', i);
+            bgGrid.appendChild(div);
         }
 
-        // ==========================================
-        // 2. News Ticker
-        // ==========================================
+
+        // --- News Ticker ---
         async function initNews() {
             const el = document.getElementById('news-content');
             const paths = ['./report.json', './TOP/report.json', '../TOP/report.json', '../../TOP/report.json'];
             let data = null;
-
             for (const path of paths) {
                 try {
                     const res = await fetch(`${path}?t=${Date.now()}`);
-                    if (res.ok) {
-                        data = await res.json();
-                        break;
-                    }
+                    if (res.ok) { data = await res.json(); break; }
                 } catch (e) {}
             }
-
-            if (!data || !Array.isArray(data) || data.length === 0) {
-                el.textContent = "Welcome to Uchiyoso Archive.";
-                el.classList.add('active');
-                return;
+            if (!data || !data.length) {
+                el.textContent = "Welcome to Uchiyoso Archive."; el.classList.add('active'); return;
             }
-
             const cycle = () => {
                 el.classList.remove('active');
                 setTimeout(() => {
@@ -449,13 +425,10 @@
                     el.classList.add('active');
                 }, 500);
             };
-            cycle();
-            setInterval(cycle, 6000);
+            cycle(); setInterval(cycle, 6000);
         }
 
-        // ==========================================
-        // 3. Display Logic (Fix: Check 'color' key)
-        // ==========================================
+        // --- Char Display ---
         function resolveImage(charName, cloudUrl) {
             return new Promise((resolve) => {
                 if (!charName) { resolve(cloudUrl || fallbackData[0].image); return; }
@@ -475,17 +448,12 @@
 
         async function updateDisplay() {
             const char = charDataList[currentIndex];
-
             imgEl.classList.remove('visible');
             bubbleEl.classList.remove('show');
 
             const nextImgSrc = await resolveImage(char.name, char.image);
-            
-            // ★重要：schema.jsに合わせて 'color' キーを優先的に見る
-            // inpThemeColorは入力フォームIDなので、保存データは color に入っている可能性が高い
             const theme = char.color || char.inpThemeColor || DEFAULT_THEME;
             
-            // 色更新
             rootStyles.setProperty('--accent-color', theme);
             targetColor.set(theme);
 
@@ -511,17 +479,14 @@
             let i = 0;
             function type() {
                 if (i < text.length) {
-                    textContainer.textContent += text.charAt(i);
-                    i++;
+                    textContainer.textContent += text.charAt(i); i++;
                     typeWriterTimeout = setTimeout(type, 30);
                 }
             }
             type();
         }
 
-        // ==========================================
-        // 4. Three.js Particles
-        // ==========================================
+        // --- Particles ---
         function createParticles() {
             const scene = new THREE.Scene();
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -530,63 +495,42 @@
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
             function getTexture() {
-                const c = document.createElement('canvas');
-                c.width = 32; c.height = 32;
+                const c = document.createElement('canvas'); c.width = 32; c.height = 32;
                 const ctx = c.getContext('2d');
                 const g = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
-                g.addColorStop(0, 'rgba(255,255,255,1)');
-                g.addColorStop(0.4, 'rgba(255,255,255,0.5)');
-                g.addColorStop(1, 'rgba(0,0,0,0)');
+                g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.4, 'rgba(255,255,255,0.5)'); g.addColorStop(1, 'rgba(0,0,0,0)');
                 ctx.fillStyle = g; ctx.fillRect(0,0,32,32);
-                const tex = new THREE.Texture(c);
-                tex.needsUpdate = true;
-                return tex;
+                const tex = new THREE.Texture(c); tex.needsUpdate = true; return tex;
             }
 
             const geometry = new THREE.BufferGeometry();
             const vertices = [];
             for (let i = 0; i < 5000; i++) {
-                vertices.push(
-                    THREE.MathUtils.randFloatSpread(2000), 
-                    THREE.MathUtils.randFloatSpread(2000), 
-                    THREE.MathUtils.randFloatSpread(2000)
-                );
+                vertices.push(THREE.MathUtils.randFloatSpread(2000), THREE.MathUtils.randFloatSpread(2000), THREE.MathUtils.randFloatSpread(2000));
             }
             geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
             
             particleMaterial = new THREE.PointsMaterial({ 
-                color: new THREE.Color(DEFAULT_THEME), 
-                size: 5, 
-                map: getTexture(),
-                transparent: true, 
-                opacity: 0.8,
-                blending: THREE.AdditiveBlending,
-                depthWrite: false
+                color: new THREE.Color(DEFAULT_THEME), size: 5, map: getTexture(),
+                transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false
             });
-            
             const points = new THREE.Points(geometry, particleMaterial);
-            scene.add(points);
-            camera.position.z = 1000;
+            scene.add(points); camera.position.z = 1000;
 
             function animate() {
                 requestAnimationFrame(animate);
-                points.rotation.x += 0.0003;
-                points.rotation.y += 0.0005;
+                points.rotation.x += 0.0003; points.rotation.y += 0.0005;
                 particleMaterial.color.lerp(targetColor, 0.05);
                 renderer.render(scene, camera);
             }
             animate();
-
             window.addEventListener('resize', () => {
                 camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
+                camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight);
             });
         }
 
-        // ==========================================
-        // 5. Auth
-        // ==========================================
+        // --- Auth ---
         const userDisplay = document.getElementById('user-display');
         const connectBtn = document.getElementById('main-connect-btn');
 
@@ -596,25 +540,24 @@
                 userDisplay.textContent = (user.displayName || "MEMBER").toUpperCase();
                 connectBtn.textContent = "NEXT";
                 const data = await loadFromCloud();
-                if (data && Object.keys(data).length > 0) {
-                    charDataList = Object.values(data);
-                } else {
-                    charDataList = [{ name: "No Data", remarks: "データがありません。", inpThemeColor: "#555" }];
-                }
+                if (data && Object.keys(data).length > 0) charDataList = Object.values(data);
+                else charDataList = [{ name: "No Data", remarks: "データがありません。", inpThemeColor: "#555" }];
                 currentIndex = Math.floor(Math.random() * charDataList.length);
                 updateDisplay();
+                // BGM Auto Start Attempt (Might be blocked)
+                // bgmPlayer.play().catch(()=>{}); 
             },
             () => {
-                currentUser = null;
-                userDisplay.textContent = "GUEST";
-                connectBtn.textContent = "CONNECT";
-                charDataList = fallbackData;
-                currentIndex = 0;
-                updateDisplay();
+                currentUser = null; userDisplay.textContent = "GUEST"; connectBtn.textContent = "CONNECT";
+                charDataList = fallbackData; currentIndex = 0; updateDisplay();
             }
         );
 
-        window.handleConnect = () => { if (!currentUser) login(); else nextChar(); };
+        window.handleConnect = () => {
+            // User interaction triggers BGM
+            if(bgmPlayer.paused) toggleBGM();
+            if (!currentUser) login(); else nextChar();
+        };
         window.handleCharClick = () => { if (currentUser) nextChar(); };
         function nextChar() {
             if (charDataList.length <= 1) return;
@@ -622,9 +565,7 @@
             updateDisplay();
         }
 
-        // Init
-        createParticles();
-        initNews();
+        createParticles(); initNews();
 
     </script>
 </body>
