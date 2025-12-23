@@ -2,664 +2,260 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <!-- スマホでもPC等のレイアウトを崩さず、デバイス幅に合わせて初期表示 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Uchiyoso Maker - Luxe Archive v2.3</title>
-    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Dialogue - Uchiyoso Archive</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Noto+Sans+JP:wght@300;500&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-color: #080808;
-            --text-main: #ffffff;
-            --text-sub: #8899a6;
-            --ui-border: rgba(255, 255, 255, 0.15);
-            --ui-bg: rgba(255, 255, 255, 0.03);
-            --font-en: 'Syncopate', sans-serif;
-            --font-jp: 'Noto Sans JP', sans-serif;
-            --accent-color: #00ffcc;
-            --bg-image-url: none;
-            --canvas-blend: screen;
-            --canvas-opacity: 1.0;
+        body {
+            background: #080808; color: #fff; font-family: 'Noto Sans JP', sans-serif;
+            display: flex; flex-direction: column; align-items: center; 
+            min-height: 100vh; margin: 0; padding: 40px 0; box-sizing: border-box;
         }
+        .container {
+            width: 90%; max-width: 700px;
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2);
+            padding: 30px; border-radius: 8px;
+        }
+        h2 { font-family: 'Syncopate'; margin-bottom: 20px; letter-spacing: 0.1em; color: #00ffcc; text-align: center; }
+        
+        /* Tab Styles */
+        .tabs { display: flex; justify-content: center; margin-bottom: 30px; border-bottom: 1px solid #333; }
+        .tab-btn {
+            background: transparent; border: none; color: #666; font-family: 'Syncopate';
+            font-size: 12px; padding: 10px 20px; cursor: pointer; border-bottom: 2px solid transparent;
+            transition: 0.3s;
+        }
+        .tab-btn:hover { color: #fff; }
+        .tab-btn.active { color: #00ffcc; border-bottom-color: #00ffcc; }
 
-        /* --- 画面回転用ラッパー (スマホ強制横画面対応) --- */
-        #app-wrapper {
-            position: relative; width: 100vw; height: 100vh; overflow: hidden; background: var(--bg-color);
+        /* Panels */
+        .panel { display: none; }
+        .panel.active { display: block; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Form Elements */
+        select, textarea, input[type="text"] {
+            width: 100%; background: #111; color: #fff; border: 1px solid #444;
+            padding: 10px; margin-bottom: 15px; font-size: 14px; box-sizing: border-box;
         }
-        .content-body {
-            position: absolute; top: 0; left: 0; width: 1280px; height: 720px;
-            transform-origin: top left; transition: background-color 0.5s; overflow: hidden;
+        select { height: 45px; border-color: #00ffcc; }
+        textarea { height: 70px; resize: vertical; }
+
+        .form-group { margin-bottom: 20px; border-bottom: 1px dashed #333; padding-bottom: 20px; }
+        .label { display: block; color: #00ffcc; font-size: 11px; margin-bottom: 5px; font-family: 'Syncopate'; }
+        
+        /* Duo Edit Specific */
+        .conv-row {
+            display: grid; grid-template-columns: 1fr 1fr 30px; gap: 10px;
+            background: rgba(255,255,255,0.03); padding: 10px; margin-bottom: 10px; border: 1px solid #333;
+        }
+        .del-btn {
+            background: #331111; color: #f44; border: none; cursor: pointer; font-size: 18px;
         }
         
-        /* 背景モード定義 */
-        .content-body.mode-black { --bg-color: #080808; --canvas-blend: screen; }
-        .content-body.mode-white { 
-            --bg-color: #f0f0f0; --text-main: #111111; --text-sub: #555555;
-            --ui-border: rgba(0, 0, 0, 0.15); --ui-bg: rgba(0, 0, 0, 0.03);
-            --canvas-blend: normal; --canvas-opacity: 0.6;
+        button.action-btn {
+            width: 100%; padding: 15px; background: #00ffcc; border: none; font-weight: bold;
+            letter-spacing: 0.2em; cursor: pointer; transition: 0.3s; margin-top: 10px; color: #000;
         }
-        .content-body.mode-photo {
-            --bg-color: #000000; --text-main: #ffffff;
-            background-image: var(--bg-image-url); background-size: cover; background-position: center;
-            --canvas-blend: screen;
-        }
-        .content-body.mode-photo::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6); z-index: -1; pointer-events: none;
-        }
+        button.action-btn:hover { background: #fff; }
 
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #000; overflow: hidden; }
-
-        /* --- UI Components --- */
-        #canvas-container {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;
-            opacity: var(--canvas-opacity); pointer-events: none; 
-            mix-blend-mode: var(--canvas-blend); transition: opacity 0.5s;
-        }
-
-        #news-ticker {
-            position: absolute; top: 0; left: 0; width: 100%; height: 32px;
-            background: rgba(0, 0, 0, 0.9); border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; padding: 0 20px;
-        }
-        .ticker-label {
-            font-family: var(--font-en); font-size: 10px; color: var(--accent-color); 
-            font-weight: bold; margin-right: 20px; letter-spacing: 0.1em; white-space: nowrap;
-            text-shadow: 0 0 10px var(--accent-color); border-right: 1px solid rgba(255,255,255,0.2); padding-right: 15px;
-        }
-        .ticker-content {
-            font-family: var(--font-jp); font-weight: 500; font-size: 13px; color: #eee;
-            opacity: 0; transform: translateY(5px); transition: all 0.5s; white-space: nowrap;
-        }
-        .ticker-content.active { opacity: 1; transform: translateY(0); }
-
-        .viewport-grid {
-            position: relative; width: 100%; height: 100%; display: grid;
-            grid-template-columns: 80px 1fr 350px; grid-template-rows: 60px 1fr 120px;
-            z-index: 10; padding-top: 32px; box-sizing: border-box;
-        }
-
-        /* Nav & Controls */
-        .sub-nav {
-            grid-row: 1 / 4; display: flex; flex-direction: column; justify-content: center; align-items: center;
-            border-right: 1px solid var(--ui-border); background: linear-gradient(to right, rgba(0,0,0,0.05), transparent);
-        }
-        .sub-nav-content { display: flex; flex-direction: column; align-items: center; gap: 50px; margin-bottom: 150px; }
-        .sub-nav-item {
-            writing-mode: vertical-rl; font-family: var(--font-en); font-size: 9px; letter-spacing: 0.6em;
-            color: var(--text-main); opacity: 0.4; text-transform: uppercase; cursor: pointer; transition: 0.4s;
-        }
-        .sub-nav-item:hover { color: var(--accent-color); opacity: 1; transform: translateY(-8px); text-shadow: 0 0 15px var(--accent-color); }
-
-        .left-controls-overlay {
-            position: absolute; bottom: 30px; left: 20px; display: flex; flex-direction: column; gap: 20px; z-index: 150;
-        }
-        .bg-trigger-horiz {
-            font-family: var(--font-en); font-size: 10px; letter-spacing: 0.2em;
-            color: var(--text-main); border: 1px solid var(--ui-border); padding: 8px 16px; 
-            cursor: pointer; transition: 0.3s; background: var(--ui-bg); text-transform: uppercase; width: 140px; text-align: center;
-        }
-        .bg-trigger-horiz:hover { background: var(--accent-color); color: #000; border-color: var(--accent-color); box-shadow: 0 0 15px var(--accent-color); }
-        .sound-row { display: flex; align-items: center; gap: 10px; }
-        .sound-icon { color: var(--text-main); font-size: 20px; cursor: pointer; opacity: 0.6; transition: 0.3s; }
-        .sound-icon:hover { opacity: 1; color: var(--accent-color); text-shadow: 0 0 8px var(--accent-color); }
-        .volume-bar-horiz {
-            -webkit-appearance: none; appearance: none; width: 100px; height: 3px;
-            background: var(--ui-border); outline: none; border-radius: 2px; cursor: pointer;
-        }
-        .volume-bar-horiz::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none; width: 8px; height: 8px;
-            background: var(--accent-color); border-radius: 50%; cursor: pointer; box-shadow: 0 0 5px var(--accent-color);
-        }
-
-        /* Character Stage & Bubbles */
-        .character-stage {
-            grid-column: 2; grid-row: 1 / 4; display: flex; align-items: flex-end; justify-content: flex-start;
-            padding-left: 5%; position: relative; overflow: hidden; pointer-events: auto; cursor: pointer; transition: all 0.5s ease;
-        }
-        .character-stage.duo-mode { justify-content: space-between; padding-left: 0; padding-right: 0; }
-        
-        .char-img {
-            height: 90%; width: auto; max-width: 100%; object-fit: cover; object-position: top center;
-            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.6s ease, opacity 1s;
-            transform-origin: center bottom; opacity: 0; transform: translateY(30px) scale(0.98); position: relative; z-index: 5;
-        }
-        .duo-mode .char-img { max-width: 45%; height: 85%; }
-        .duo-mode #char-img-1 { margin-left: -2%; }
-        .duo-mode #char-img-2 { margin-right: -2%; }
-        .char-img.visible { opacity: 1; transform: translateY(0) scale(1); }
-        .char-img.visible:hover { transform: translateY(-5px) scale(1.02); filter: brightness(1.1); }
-
-        .bubbles-layer { position: absolute; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none; z-index: 10; }
-        .speech-bubble {
-            position: absolute; font-family: var(--font-jp); font-weight: 300; letter-spacing: 0.05em;
-            color: #fff; background: rgba(10, 10, 10, 0.85); padding: 25px 35px; backdrop-filter: blur(12px);
-            border-left: 3px solid var(--accent-color); border-top: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.6); max-width: 450px; line-height: 1.8;
-            opacity: 0; transition: all 0.5s ease 0.3s, border-color 1s;
-        }
-        .speech-bubble.show { opacity: 1; }
-        
-        /* Solo Bubble */
-        .mode-solo .speech-bubble { bottom: 25%; left: 2%; transform: translateX(-20px); }
-        .mode-solo .speech-bubble.show { transform: translateX(0); }
-        
-        /* Duo Bubbles */
-        .mode-duo .speech-bubble { width: 450px; max-width: 40vw; text-align: left; }
-        .mode-duo #bubble-1 { 
-            top: 45%; left: 50%; transform: translate(-105%, -50%) translateY(10px); border-left-width: 5px; 
-        }
-        .mode-duo #bubble-1.show { transform: translate(-105%, -50%) translateY(0); }
-        .mode-duo #bubble-2 { 
-            top: 55%; left: 50%; transform: translate(5%, -50%) translateY(10px); border-left-width: 5px; 
-        }
-        .mode-duo #bubble-2.show { transform: translate(5%, -50%) translateY(0); }
-
-        .char-name-label {
-            font-family: var(--font-en); font-size: 11px; color: var(--accent-color);
-            margin-bottom: 12px; display: block; font-weight: bold; letter-spacing: 0.2em;
-        }
-        .cursor { display: inline-block; width: 2px; height: 1em; background: var(--accent-color); animation: blink 1s infinite; vertical-align: middle; }
-
-        /* Right Column */
-        .header-title {
-            grid-column: 3; grid-row: 1; padding: 20px 40px 0 0; text-align: right; white-space: nowrap; 
-        }
-        .header-title h1 {
-            font-family: var(--font-en); font-size: 24px; margin: 0; color: var(--text-main);
-            letter-spacing: 0.1em; text-shadow: 0 0 20px rgba(255,255,255,0.1); transition: color 0.5s;
-        }
-        .header-sub { font-size: 9px; color: var(--text-sub); letter-spacing: 0.4em; margin-top: 5px; opacity: 0.7; }
-
-        /* Mode Toggle */
-        .mode-toggle-container { position: absolute; top: 120px; right: 280px; z-index: 120; }
-        .mode-switch-btn {
-            background: transparent; border: 1px solid var(--ui-border); color: var(--text-sub);
-            padding: 5px 15px; font-family: var(--font-en); font-size: 10px; letter-spacing: 0.1em;
-            cursor: pointer; transition: 0.3s;
-        }
-        .mode-switch-btn:hover, .mode-switch-btn.active {
-            color: var(--accent-color); border-color: var(--accent-color); text-shadow: 0 0 8px var(--accent-color);
-        }
-
-        .user-status {
-            position: absolute; top: 120px; right: 40px; text-align: right;
-            border-right: 1px solid var(--ui-border); padding-right: 20px; transition: border-color 0.5s;
-        }
-        .status-label { font-size: 8px; color: var(--accent-color); letter-spacing: 0.2em; font-family: var(--font-en); }
-        .status-name { font-size: 14px; margin-top: 5px; font-weight: 500; letter-spacing: 0.1em; color: var(--text-main); }
-        .connect-btn {
-            background: none; border: 1px solid var(--accent-color); color: var(--accent-color);
-            font-size: 10px; padding: 6px 20px; margin-top: 12px; cursor: pointer; font-family: var(--font-en); transition: 0.3s;
-        }
-        .connect-btn:hover { background: var(--accent-color); color: #000; box-shadow: 0 0 15px var(--accent-color); }
-
-        .main-nav {
-            grid-column: 3; grid-row: 2 / 4; display: flex; flex-direction: column;
-            justify-content: flex-end; align-items: flex-end; padding: 0 40px 100px 0; gap: 24px;
-        }
-        .nav-btn-group { display: flex; flex-direction: column; align-items: flex-end; }
-        .btn-label { font-family: var(--font-en); font-size: 8px; color: var(--text-sub); margin-bottom: 6px; letter-spacing: 0.2em; }
-        .nav-btn {
-            display: flex; align-items: center; justify-content: center; width: 220px; height: 45px;
-            background: var(--ui-bg); border: 1px solid var(--ui-border); color: var(--text-main);
-            text-decoration: none; font-family: var(--font-en); font-size: 10px; letter-spacing: 0.2em;
-            position: relative; overflow: hidden; transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-        }
-        .nav-btn::before {
-            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            transform: skewX(-20deg); transition: 0.5s;
-        }
-        .nav-btn::after {
-            content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%;
-            background: var(--accent-color); transform: scaleY(0); transition: transform 0.4s;
-        }
-        .nav-btn:hover {
-            border-color: var(--accent-color); background: rgba(128,128,128, 0.1); letter-spacing: 0.35em;
-            box-shadow: 0 0 20px rgba(0,0,0,0.2); text-shadow: 0 0 8px var(--accent-color);
-        }
-        .nav-btn:hover::before { left: 150%; transition: 0.7s; }
-        .nav-btn:hover::after { transform: scaleY(1); }
-
-        /* Modal */
-        #bg-modal {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 200;
-            display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s;
-        }
-        #bg-modal.open { opacity: 1; pointer-events: auto; }
-        .modal-content {
-            background: rgba(20,20,20,0.9); border: 1px solid var(--accent-color);
-            padding: 40px; border-radius: 4px; max-width: 600px; width: 90%; text-align: center;
-        }
-        .modal-title { font-family: var(--font-en); color: #fff; margin-bottom: 20px; letter-spacing: 0.1em; }
-        .bg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; }
-        .bg-option {
-            aspect-ratio: 16/9; border: 2px solid #444; cursor: pointer; display: flex; justify-content: center; align-items: center;
-            font-family: var(--font-en); font-size: 12px; color: #fff; background-size: cover; background-position: center; transition: 0.2s;
-        }
-        .bg-option:hover { border-color: var(--accent-color); transform: scale(1.05); }
-        .close-modal { margin-top: 20px; background: none; border: 1px solid #555; color: #aaa; padding: 8px 20px; cursor: pointer; transition: 0.2s; }
-        .close-modal:hover { color: #fff; border-color: #fff; }
-        @keyframes blink { 50% { opacity: 0; } }
+        .back-link { display: block; text-align: center; margin-top: 30px; color: #888; text-decoration: none; font-size: 11px; }
+        #auth-status { text-align:center; margin-bottom:20px; font-size:10px; color:#555; }
     </style>
 </head>
-<body class="mode-solo">
-    <div id="app-wrapper">
-        <div id="content-body" class="content-body mode-black">
-            
-            <audio id="bgm-player" loop><source src="./sound/aoren.mp3" type="audio/mpeg"></audio>
-            <div id="canvas-container"></div>
-            
-            <!-- BG Modal -->
-            <div id="bg-modal">
-                <div class="modal-content">
-                    <h3 class="modal-title">SELECT BACKGROUND</h3>
-                    <div class="bg-grid" id="bg-grid">
-                        <div class="bg-option" style="background:#000" onclick="setBgMode('black')">BLACK</div>
-                        <div class="bg-option" style="background:#fff;color:#000" onclick="setBgMode('white')">WHITE</div>
-                    </div>
-                    <button class="close-modal" onclick="toggleBgModal()">CLOSE</button>
-                </div>
-            </div>
+<body>
 
-            <div id="news-ticker">
-                <span class="ticker-label">LATEST REPORT</span>
-                <span id="news-content" class="ticker-content">Initializing System...</span>
-            </div>
+    <div class="container">
+        <h2>DIALOGUE EDITOR</h2>
+        <div id="auth-status">INITIALIZING...</div>
 
-            <div class="viewport-grid">
-                <!-- Left Nav -->
-                <nav class="sub-nav">
-                    <div class="sub-nav-content">
-                        <div class="sub-nav-item">System Log</div>
-                        <div class="sub-nav-item">Archive</div>
-                    </div>
-                </nav>
-                
-                <!-- Controls -->
-                <div class="left-controls-overlay">
-                    <div class="bg-trigger-horiz" onclick="toggleBgModal()">DISPLAY</div>
-                    <div class="sound-row">
-                        <span class="material-icons sound-icon" id="btn-play" onclick="toggleBGM()">play_arrow</span>
-                        <input type="range" class="volume-bar-horiz" id="volume-slider" min="0" max="1" step="0.1" value="0.3" oninput="changeVolume(this.value)">
-                    </div>
-                </div>
-
-                <!-- Header -->
-                <div class="header-title">
-                    <h1>UCHIYOSO<br>ARCHIVE</h1>
-                    <div class="header-sub">PREMIUM INTERFACE v2.3</div>
-                </div>
-
-                <!-- Mode Toggle (Solo / Duo) -->
-                <div class="mode-toggle-container">
-                    <button id="btn-solo" class="mode-switch-btn active" onclick="setMode('solo')">SOLO</button>
-                    <button id="btn-duo" class="mode-switch-btn" onclick="setMode('duo')">DUO</button>
-                </div>
-
-                <div class="user-status">
-                    <div class="status-label">LOGGED IN AS</div>
-                    <div id="user-display" class="status-name">GUEST</div>
-                    <button id="main-connect-btn" class="connect-btn" onclick="handleConnect()">CONNECT</button>
-                </div>
-
-                <!-- Stage -->
-                <section id="char-stage" class="character-stage" onclick="handleCharClick()">
-                    <img id="char-img-1" class="char-img" src="" alt="Character 1">
-                    <img id="char-img-2" class="char-img" src="" alt="Character 2" style="display: none;">
-
-                    <div class="bubbles-layer">
-                        <div id="bubble-1" class="speech-bubble">
-                            <span id="name-label-1" class="char-name-label">SYSTEM</span>
-                            <span id="text-1"></span><span class="cursor"></span>
-                        </div>
-                        <div id="bubble-2" class="speech-bubble" style="opacity: 0;">
-                            <span id="name-label-2" class="char-name-label">SYSTEM</span>
-                            <span id="text-2"></span><span class="cursor"></span>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Right Nav -->
-                <nav class="main-nav">
-                    <div class="nav-btn-group">
-                        <span class="btn-label">QUICK EDIT (SOLO)</span>
-                        <a href="./character/dialogue.html" class="nav-btn">EDIT DIALOGUE</a>
-                    </div>
-                    <div class="nav-btn-group">
-                        <span class="btn-label">SCENARIO EDIT (DUO)</span>
-                        <a href="./character/duo_edit.html" class="nav-btn">EDIT DUO TALK</a>
-                    </div>
-                    <div class="nav-btn-group">
-                        <span class="btn-label">DATA ENTRY</span>
-                        <a href="./character/edit.html" class="nav-btn">EDIT DATA</a>
-                    </div>
-                    <div class="nav-btn-group">
-                        <span class="btn-label">DATABASE</span>
-                        <a href="./character/list.html" class="nav-btn">MEMBER LIST</a>
-                    </div>
-                </nav>
-            </div>
+        <!-- TABS -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('solo')">SOLO SETTINGS</button>
+            <button class="tab-btn" onclick="switchTab('duo')">DUO CONVERSATION</button>
         </div>
+
+        <!-- === SOLO PANEL === -->
+        <div id="panel-solo" class="panel active">
+            <select id="char-select-solo" onchange="loadSoloData()">
+                <option value="">-- SELECT CHARACTER --</option>
+            </select>
+
+            <div class="form-group">
+                <span class="label">DEFAULT (ALWAYS)</span>
+                <textarea id="txtDialogueDefault"></textarea>
+            </div>
+            <div class="form-group">
+                <span class="label">MORNING / NIGHT</span>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <textarea id="txtDialogueMorning" placeholder="Morning..."></textarea>
+                    <textarea id="txtDialogueNight" placeholder="Night..."></textarea>
+                </div>
+            </div>
+            <div class="form-group">
+                <span class="label">CONDITIONS</span>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <textarea id="txtDialogueDuo" placeholder="Generic Duo response..."></textarea>
+                    <textarea id="txtDialogueLowSan" placeholder="Low SANity..."></textarea>
+                </div>
+            </div>
+
+            <button class="action-btn" onclick="saveSolo()">SAVE SOLO DATA</button>
+        </div>
+
+        <!-- === DUO PANEL === -->
+        <div id="panel-duo" class="panel">
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <div style="flex:1;">
+                    <span class="label">CHAR A (LEFT)</span>
+                    <select id="char-a" onchange="loadDuoData()"><option value="">--</option></select>
+                </div>
+                <div style="flex:1;">
+                    <span class="label">CHAR B (RIGHT)</span>
+                    <select id="char-b" onchange="loadDuoData()"><option value="">--</option></select>
+                </div>
+            </div>
+
+            <div id="conv-list"></div>
+            
+            <button class="action-btn" style="background:transparent; border:1px dashed #555; color:#888; margin-bottom:20px;" onclick="addConvRow()">+ ADD PATTERN</button>
+            <button class="action-btn" onclick="saveDuo()">SAVE CONVERSATION</button>
+        </div>
+
+        <a href="../zo.html" class="back-link">← RETURN TO SYSTEM</a>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script type="module">
-        import { login, logout, monitorAuth, loadFromCloud } from "./character/firestore.js";
+        import { login, monitorAuth, loadFromCloud, saveToCloud } from "./firestore.js";
 
-        const LOCAL_IMG_BASE = "./images/character/";
-        const PHOTO_BASE = "./images/photo/";
-        const DEFAULT_THEME = "#00ffcc";
-        
+        let allData = {};
         let currentUser = null;
-        let charDataList = [];
-        let currentIndex = 0;
-        let typeWriterTimeout1 = null;
-        let typeWriterTimeout2 = null;
-        let isDuo = false; 
 
-        let particleMaterial;
-        let targetColor = new THREE.Color(DEFAULT_THEME);
-
-        const fallbackData = [{
-            name: "System",
-            color: "#00ffcc",
-            remarks: "アーカイブへようこそ。",
-            image: "https://via.placeholder.com/800x1200/111/333?text=STANDBY"
-        }];
-
-        // --- Screen Fit ---
-        function fitContent() {
-            const wrapper = document.getElementById('app-wrapper');
-            const content = document.getElementById('content-body');
-            const winW = window.innerWidth, winH = window.innerHeight;
-            const baseW = 1280, baseH = 720;
-
-            if (winH > winW) { // Portrait
-                content.style.width = `${baseW}px`; content.style.height = `${baseH}px`;
-                content.style.transform = `rotate(90deg) translateY(-100%) scale(${winH / baseW})`;
-                content.style.transformOrigin = "top left";
-            } else { // Landscape
-                const scale = Math.min(winW / baseW, winH / baseH);
-                content.style.width = `${baseW}px`; content.style.height = `${baseH}px`;
-                content.style.transform = `scale(${scale})`;
-                content.style.transformOrigin = "top left";
-                content.style.left = `${(winW - baseW * scale) / 2}px`;
-                content.style.top = `${(winH - baseH * scale) / 2}px`;
-            }
-        }
-        window.addEventListener('resize', fitContent);
-        window.addEventListener('load', fitContent);
-
-        // --- Dialogue Logic (The Brain) ---
-        // 会話セットを取得する関数
-        function getDuoConversation(char1, char2) {
-            if (!char1 || !char2) return null;
-            
-            // 1. Char1の中に Char2 との会話データがあるか
-            if (char1.duo_conversations) {
-                const pairData = char1.duo_conversations.find(p => p.partner === char2.name);
-                if (pairData && pairData.scripts && pairData.scripts.length > 0) {
-                    const script = pairData.scripts[Math.floor(Math.random() * pairData.scripts.length)];
-                    return { text1: script.a, text2: script.b };
-                }
-            }
-            // 2. Char2の中に Char1 との会話データがあるか (逆)
-            if (char2.duo_conversations) {
-                const pairData = char2.duo_conversations.find(p => p.partner === char1.name);
-                if (pairData && pairData.scripts && pairData.scripts.length > 0) {
-                    const script = pairData.scripts[Math.floor(Math.random() * pairData.scripts.length)];
-                    return { text1: script.b, text2: script.a }; // 左右反転して返す
-                }
-            }
-            return null;
-        }
-
-        // 個別の台詞を取得する関数
-        function getSoloDialogue(selfChar, isDuoMode) {
-            const currentSan = (selfChar.vitals && selfChar.vitals.san) ? parseInt(selfChar.vitals.san) : 99;
-            if (currentSan <= 20 && selfChar.dialogue_lowsan) return selfChar.dialogue_lowsan;
-            if (isDuoMode && selfChar.dialogue_duo) return selfChar.dialogue_duo;
-            
-            const hour = new Date().getHours();
-            if (hour >= 5 && hour < 11 && selfChar.dialogue_morning) return selfChar.dialogue_morning;
-            if (selfChar.dialogue_day && hour >= 11 && hour < 18) return selfChar.dialogue_day;
-            if ((hour >= 18 || hour < 5) && selfChar.dialogue_night) return selfChar.dialogue_night;
-
-            return selfChar.dialogue_default || selfChar.remarks || selfChar.txtRoleplay || "……。";
-        }
-
-        // --- Main Update ---
-        function resolveImage(charName, cloudUrl) {
-            return new Promise((resolve) => {
-                if (!charName) { resolve(cloudUrl || fallbackData[0].image); return; }
-                const localPath = `${LOCAL_IMG_BASE}${charName}.png`;
-                const img = new Image();
-                img.onload = () => resolve(localPath);
-                img.onerror = () => resolve(cloudUrl || `https://via.placeholder.com/800x1200/111/333?text=${encodeURIComponent(charName)}`);
-                img.src = localPath;
-            });
-        }
-
-        const imgEl1 = document.getElementById('char-img-1');
-        const imgEl2 = document.getElementById('char-img-2');
-        const bubble1 = document.getElementById('bubble-1');
-        const bubble2 = document.getElementById('bubble-2');
-        const nameLabel1 = document.getElementById('name-label-1');
-        const nameLabel2 = document.getElementById('name-label-2');
-        const textContainer1 = document.getElementById('text-1');
-        const textContainer2 = document.getElementById('text-2');
-        const rootStyles = document.documentElement.style;
-
-        async function updateDisplay() {
-            const char1 = charDataList[currentIndex];
-            const nextIdx = (currentIndex + 1) % charDataList.length;
-            const char2 = charDataList[nextIdx];
-
-            // Reset
-            imgEl1.classList.remove('visible');
-            if (isDuo) imgEl2.classList.remove('visible');
-            bubble1.classList.remove('show');
-            bubble2.classList.remove('show');
-
-            const src1 = await resolveImage(char1.name, char1.image);
-            let src2 = null;
-            if (isDuo) src2 = await resolveImage(char2.name, char2.image);
-
-            const theme = char1.color || char1.inpThemeColor || DEFAULT_THEME;
-            rootStyles.setProperty('--accent-color', theme);
-            if (!document.getElementById('content-body').classList.contains('mode-white')) targetColor.set(theme);
-
-            // Determine Texts
-            let text1 = "", text2 = "";
-            if (isDuo) {
-                const convSet = getDuoConversation(char1, char2);
-                if (convSet) {
-                    text1 = convSet.text1;
-                    text2 = convSet.text2;
-                } else {
-                    text1 = getSoloDialogue(char1, true);
-                    text2 = getSoloDialogue(char2, true);
-                }
-            } else {
-                text1 = getSoloDialogue(char1, false);
-            }
-            if(text1) text1 = text1.replace(/<br>/g, "\n");
-            if(text2) text2 = text2.replace(/<br>/g, "\n");
-
-            setTimeout(() => {
-                imgEl1.src = src1;
-                imgEl1.onload = () => {
-                    imgEl1.classList.add('visible');
-                    nameLabel1.textContent = char1.name.toUpperCase();
-                    setTimeout(() => {
-                        bubble1.classList.add('show');
-                        startTypewriter(text1, textContainer1, 1);
-                    }, 400);
-                };
-
-                if (isDuo) {
-                    imgEl2.src = src2;
-                    imgEl2.onload = () => {
-                        imgEl2.classList.add('visible');
-                        nameLabel2.textContent = char2.name.toUpperCase();
-                        setTimeout(() => {
-                            bubble2.classList.add('show');
-                            const theme2 = char2.color || char2.inpThemeColor || "#fff";
-                            bubble2.style.borderLeftColor = theme2;
-                            nameLabel2.style.color = theme2;
-                            startTypewriter(text2, textContainer2, 2);
-                        }, 800);
-                    };
-                }
-            }, 600);
-        }
-
-        function startTypewriter(text, container, id) {
-            container.textContent = "";
-            let timerVar = (id === 1) ? typeWriterTimeout1 : typeWriterTimeout2;
-            if (timerVar) clearTimeout(timerVar);
-            let i = 0;
-            function type() {
-                if (i < text.length) {
-                    container.textContent += text.charAt(i); i++;
-                    const next = setTimeout(type, 30);
-                    if (id === 1) typeWriterTimeout1 = next; else typeWriterTimeout2 = next;
-                }
-            }
-            type();
-        }
-
-        // --- Other Systems (BGM, Particles, Auth) ---
-        const bgmPlayer = document.getElementById('bgm-player');
-        window.toggleBGM = () => {
-            if (bgmPlayer.paused) { bgmPlayer.play(); document.getElementById('btn-play').classList.add('playing'); }
-            else { bgmPlayer.pause(); document.getElementById('btn-play').classList.remove('playing'); }
-        };
-        window.changeVolume = (v) => { bgmPlayer.volume = v; };
-        
-        window.toggleBgModal = () => document.getElementById('bg-modal').classList.toggle('open');
-        window.setBgMode = (mode, photoIdx) => {
-            const content = document.getElementById('content-body');
-            content.classList.remove('mode-black', 'mode-white', 'mode-photo');
-            document.documentElement.style.setProperty('--bg-image-url', 'none');
-            if (mode === 'black') { content.classList.add('mode-black'); updateParticlesForBg('dark'); }
-            else if (mode === 'white') { content.classList.add('mode-white'); updateParticlesForBg('light'); }
-            else if (mode === 'photo') { 
-                content.classList.add('mode-photo'); 
-                document.documentElement.style.setProperty('--bg-image-url', `url('${PHOTO_BASE}${photoIdx}.png')`);
-                updateParticlesForBg('dark');
-            }
-            toggleBgModal();
-        };
-        const bgGrid = document.getElementById('bg-grid');
-        for (let i = 1; i <= 5; i++) {
-            const div = document.createElement('div'); div.className = 'bg-option';
-            div.style.backgroundImage = `url('${PHOTO_BASE}${i}.png')`;
-            div.onclick = () => window.setBgMode('photo', i);
-            bgGrid.appendChild(div);
-        }
-
-        // Particles
-        function createParticles() {
-            const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(75, 1280/720, 0.1, 1000);
-            const renderer = new THREE.WebGLRenderer({ alpha: true });
-            renderer.setSize(1280, 720);
-            const container = document.getElementById('canvas-container');
-            container.appendChild(renderer.domElement);
-            renderer.domElement.style.width = '100%'; renderer.domElement.style.height = '100%';
-
-            function getTexture() {
-                const c = document.createElement('canvas'); c.width = 32; c.height = 32;
-                const ctx = c.getContext('2d');
-                const g = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
-                g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.4, 'rgba(255,255,255,0.5)'); g.addColorStop(1, 'rgba(0,0,0,0)');
-                ctx.fillStyle = g; ctx.fillRect(0,0,32,32); return new THREE.Texture(c);
-            }
-            const geometry = new THREE.BufferGeometry();
-            const vertices = [];
-            for (let i = 0; i < 5000; i++) vertices.push(THREE.MathUtils.randFloatSpread(2000), THREE.MathUtils.randFloatSpread(2000), THREE.MathUtils.randFloatSpread(2000));
-            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-            particleMaterial = new THREE.PointsMaterial({ 
-                color: new THREE.Color(DEFAULT_THEME), size: 5, map: getTexture(), 
-                transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false 
-            });
-            particleMaterial.map.needsUpdate = true;
-            const points = new THREE.Points(geometry, particleMaterial);
-            scene.add(points); camera.position.z = 1000;
-
-            function animate() {
-                requestAnimationFrame(animate);
-                points.rotation.x += 0.0003; points.rotation.y += 0.0005;
-                if (!document.getElementById('content-body').classList.contains('mode-white')) particleMaterial.color.lerp(targetColor, 0.05);
-                renderer.render(scene, camera);
-            }
-            animate();
-        }
-        function updateParticlesForBg(type) {
-            if (type === 'light') {
-                particleMaterial.blending = THREE.NormalBlending; particleMaterial.opacity = 0.4;
-                particleMaterial.color.setHex(0x555555); targetColor.setHex(0x555555);
-            } else {
-                particleMaterial.blending = THREE.AdditiveBlending; particleMaterial.opacity = 0.8;
-                const char = charDataList[currentIndex];
-                const theme = char ? (char.color || char.inpThemeColor || DEFAULT_THEME) : DEFAULT_THEME;
-                targetColor.set(theme);
-            }
-            particleMaterial.needsUpdate = true;
-        }
-
-        // Auth & Mode
-        const userDisplay = document.getElementById('user-display');
-        const connectBtn = document.getElementById('main-connect-btn');
-        monitorAuth(
-            async (user) => {
+        monitorAuth(async (user) => {
+            const el = document.getElementById('auth-status');
+            if (user) {
                 currentUser = user;
-                userDisplay.textContent = (user.displayName || "MEMBER").toUpperCase();
-                connectBtn.textContent = "NEXT";
-                const data = await loadFromCloud();
-                if (data && Object.keys(data).length > 0) charDataList = Object.values(data);
-                else charDataList = [{ name: "No Data", remarks: "データがありません。", color: "#555" }];
-                currentIndex = Math.floor(Math.random() * charDataList.length);
-                updateDisplay();
-            },
-            () => {
-                currentUser = null; userDisplay.textContent = "GUEST"; connectBtn.textContent = "CONNECT";
-                charDataList = fallbackData; currentIndex = 0; updateDisplay();
+                el.textContent = "CONNECTED: " + user.displayName;
+                el.style.color = "#00ffcc";
+                await initData();
+            } else {
+                el.textContent = "CLICK TO LOGIN";
+                el.style.cursor = "pointer"; el.style.color = "red";
+                el.onclick = login;
             }
-        );
+        });
 
-        window.handleConnect = () => { if (bgmPlayer.paused) try { toggleBGM(); } catch(e){} if (!currentUser) login(); else nextChar(); };
-        window.handleCharClick = () => { if (currentUser) nextChar(); };
-        
-        function nextChar() {
-            if (charDataList.length <= 1) return;
-            currentIndex = (currentIndex + 1) % charDataList.length;
-            updateDisplay();
+        async function initData() {
+            const data = await loadFromCloud();
+            if (!data) return;
+            allData = data;
+            
+            const opts = ['<option value="">-- SELECT --</option>'];
+            Object.values(data).forEach(c => opts.push(`<option value="${c.name}">${c.name}</option>`));
+            
+            document.getElementById('char-select-solo').innerHTML = opts.join('');
+            document.getElementById('char-a').innerHTML = opts.join('');
+            document.getElementById('char-b').innerHTML = opts.join('');
         }
 
-        window.setMode = (mode) => {
-            isDuo = (mode === 'duo');
-            document.getElementById('btn-solo').classList.toggle('active', !isDuo);
-            document.getElementById('btn-duo').classList.toggle('active', isDuo);
-            const stage = document.getElementById('char-stage');
-            if (isDuo) {
-                stage.classList.add('duo-mode'); document.body.classList.add('mode-duo'); document.body.classList.remove('mode-solo');
-                document.getElementById('char-img-2').style.display = 'block';
+        window.switchTab = (mode) => {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            
+            if(mode === 'solo') {
+                document.querySelector('button[onclick="switchTab(\'solo\')"]').classList.add('active');
+                document.getElementById('panel-solo').classList.add('active');
             } else {
-                stage.classList.remove('duo-mode'); document.body.classList.add('mode-solo'); document.body.classList.remove('mode-duo');
-                document.getElementById('char-img-2').style.display = 'none';
-                document.getElementById('bubble-2').classList.remove('show');
+                document.querySelector('button[onclick="switchTab(\'duo\')"]').classList.add('active');
+                document.getElementById('panel-duo').classList.add('active');
             }
-            updateDisplay();
         };
 
-        createParticles(); 
-        // News logic abbreviated for space but init here
-        document.getElementById('news-content').classList.add('active');
+        // --- SOLO LOGIC ---
+        const SOLO_FIELDS = ['txtDialogueDefault', 'txtDialogueMorning', 'txtDialogueNight', 'txtDialogueDuo', 'txtDialogueLowSan'];
+        const KEY_MAP = {
+            'txtDialogueDefault': 'dialogue_default', 'txtDialogueMorning': 'dialogue_morning',
+            'txtDialogueNight': 'dialogue_night', 'txtDialogueDuo': 'dialogue_duo', 'txtDialogueLowSan': 'dialogue_lowsan'
+        };
+
+        window.loadSoloData = () => {
+            const name = document.getElementById('char-select-solo').value;
+            if (name && allData[name]) {
+                const c = allData[name];
+                SOLO_FIELDS.forEach(id => {
+                    const k = KEY_MAP[id];
+                    document.getElementById(id).value = c[k] || (id === 'txtDialogueDefault' ? (c.remarks||"") : "");
+                });
+            } else {
+                SOLO_FIELDS.forEach(id => document.getElementById(id).value = "");
+            }
+        };
+
+        window.saveSolo = async () => {
+            const name = document.getElementById('char-select-solo').value;
+            if (!name) return alert("Select Character");
+            const c = allData[name];
+            SOLO_FIELDS.forEach(id => c[KEY_MAP[id]] = document.getElementById(id).value);
+            c.remarks = document.getElementById('txtDialogueDefault').value; // sync
+            await saveToCloud(c);
+        };
+
+        // --- DUO LOGIC ---
+        window.addConvRow = (a="", b="") => {
+            const div = document.createElement('div'); div.className = 'conv-row';
+            div.innerHTML = `
+                <div><span class="label">A says:</span><textarea class="txt-a">${a}</textarea></div>
+                <div><span class="label">B says:</span><textarea class="txt-b">${b}</textarea></div>
+                <button class="del-btn" onclick="this.parentElement.remove()">×</button>
+            `;
+            document.getElementById('conv-list').appendChild(div);
+        };
+
+        window.loadDuoData = () => {
+            const nA = document.getElementById('char-a').value;
+            const nB = document.getElementById('char-b').value;
+            const list = document.getElementById('conv-list');
+            list.innerHTML = "";
+            
+            if (!nA || !nB || nA === nB) return;
+
+            // Search in A's data
+            const cA = allData[nA];
+            if (cA.duo_conversations) {
+                const pair = cA.duo_conversations.find(p => p.partner === nB);
+                if (pair && pair.scripts) {
+                    pair.scripts.forEach(s => window.addConvRow(s.a, s.b));
+                    return;
+                }
+            }
+            // Add empty row if none
+            window.addConvRow();
+        };
+
+        window.saveDuo = async () => {
+            const nA = document.getElementById('char-a').value;
+            const nB = document.getElementById('char-b').value;
+            if (!nA || !nB || nA === nB) return alert("Invalid Pair");
+
+            const cA = allData[nA];
+            if (!cA.duo_conversations) cA.duo_conversations = [];
+            
+            // Remove existing for this partner
+            cA.duo_conversations = cA.duo_conversations.filter(p => p.partner !== nB);
+
+            const scripts = [];
+            document.querySelectorAll('.conv-row').forEach(row => {
+                const a = row.querySelector('.txt-a').value;
+                const b = row.querySelector('.txt-b').value;
+                if(a || b) scripts.push({a, b});
+            });
+
+            if (scripts.length > 0) {
+                cA.duo_conversations.push({ partner: nB, scripts });
+            }
+
+            await saveToCloud(cA);
+        };
     </script>
 </body>
 </html>

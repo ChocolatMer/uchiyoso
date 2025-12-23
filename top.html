@@ -643,6 +643,51 @@
             updateDisplay();
         };
 
+                // 会話セットを取得 (dialogue.htmlで保存したデータを検索)
+        function getDuoConversation(char1, char2) {
+            if (!char1 || !char2) return null;
+
+            // 1. Char1の中に Char2 との会話データがあるか
+            if (char1.duo_conversations) {
+                const pairData = char1.duo_conversations.find(p => p.partner === char2.name);
+                if (pairData && pairData.scripts && pairData.scripts.length > 0) {
+                    const script = pairData.scripts[Math.floor(Math.random() * pairData.scripts.length)];
+                    // script = {a: "...", b: "..."} -> char1がa, char2がb
+                    return { text1: script.a, text2: script.b };
+                }
+            }
+            // 2. Char2の中に Char1 との会話データがあるか (逆)
+            if (char2.duo_conversations) {
+                const pairData = char2.duo_conversations.find(p => p.partner === char1.name);
+                if (pairData && pairData.scripts && pairData.scripts.length > 0) {
+                    const script = pairData.scripts[Math.floor(Math.random() * pairData.scripts.length)];
+                    // script = {a: "...", b: "..."} -> char2がa, char1がb (左右反転)
+                    return { text1: script.b, text2: script.a };
+                }
+            }
+            return null;
+        }
+
+        // ソロ用台詞を取得 (時間帯・SAN値など)
+        function getSoloDialogue(selfChar, isDuoMode) {
+            const currentSan = (selfChar.vitals && selfChar.vitals.san) ? parseInt(selfChar.vitals.san) : 99;
+            
+            // 優先順位 1: 低SAN値
+            if (currentSan <= 20 && selfChar.dialogue_lowsan) return selfChar.dialogue_lowsan;
+            
+            // 優先順位 2: 汎用DUO (会話セットがない場合用)
+            if (isDuoMode && selfChar.dialogue_duo) return selfChar.dialogue_duo;
+
+            // 優先順位 3: 時間帯
+            const hour = new Date().getHours();
+            if (hour >= 5 && hour < 11 && selfChar.dialogue_morning) return selfChar.dialogue_morning;
+            if (selfChar.dialogue_day && hour >= 11 && hour < 18) return selfChar.dialogue_day;
+            if ((hour >= 18 || hour < 5) && selfChar.dialogue_night) return selfChar.dialogue_night;
+
+            // 優先順位 4: デフォルト
+            return selfChar.dialogue_default || selfChar.remarks || selfChar.txtRoleplay || "……。";
+        }
+
         // --- Display ---
         function resolveImage(charName, cloudUrl) {
             return new Promise((resolve) => {
@@ -681,16 +726,34 @@
 
             const theme = char1.color || char1.inpThemeColor || DEFAULT_THEME;
             rootStyles.setProperty('--accent-color', theme);
+            // ※ bodyタグのクラス判定は、ご使用のコードに合わせて適宜読み替えてください
             if (!document.body.classList.contains('mode-white')) targetColor.set(theme);
 
-            let text1 = char1.remarks || char1.txtRoleplay || "……。";
-            text1 = text1.replace(/<br>/g, "\n");
-            
+            // ▼▼▼ 台詞決定ロジック (変更点) ▼▼▼
+            let text1 = "";
             let text2 = "";
+
             if (isDuo) {
-                text2 = char2.remarks || char2.txtRoleplay || "……。";
-                text2 = text2.replace(/<br>/g, "\n");
+                // 会話セットを探す
+                const convSet = getDuoConversation(char1, char2);
+                if (convSet) {
+                    // 会話セットが見つかれば適用
+                    text1 = convSet.text1;
+                    text2 = convSet.text2;
+                } else {
+                    // なければそれぞれのソロ(DUO用汎用)台詞
+                    text1 = getSoloDialogue(char1, true);
+                    text2 = getSoloDialogue(char2, true);
+                }
+            } else {
+                // ソロモード
+                text1 = getSoloDialogue(char1, false);
             }
+
+            // 改行変換
+            if(text1) text1 = text1.replace(/<br>/g, "\n");
+            if(text2) text2 = text2.replace(/<br>/g, "\n");
+            // ▲▲▲▲▲▲
 
             setTimeout(() => {
                 imgEl1.src = src1;
@@ -711,6 +774,7 @@
                         
                         setTimeout(() => {
                             bubble2.classList.add('show');
+                            // 相方の色を取得して吹き出し枠色に反映
                             const theme2 = char2.color || char2.inpThemeColor || "#fff";
                             bubble2.style.borderLeftColor = theme2;
                             nameLabel2.style.color = theme2;
