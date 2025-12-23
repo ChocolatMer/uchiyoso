@@ -17,12 +17,70 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; text-decoration: none; -webkit-tap-highlight-color: transparent; }
 
-/* 修正: 二重スクロールバー防止 */
-html, body {
+/* === 修正版：スクロール設定（決定版） === */
+html {
     width: 100%;
     overflow-x: hidden;
-    overflow-y: hidden; /* ロード直後は縦スクロールを隠しておく */
-    /* scrollbar-gutter: stable; は削除 */
+    /* 必要な時だけスクロールバーを出す設定に戻します */
+    overflow-y: auto; 
+}
+
+body {
+    /* body側ではスクロールさせない（二重防止） */
+    overflow-y: visible; 
+    overflow-x: hidden;
+    
+    /* 既存のデザイン設定 */
+    font-family: "Zen Maru Gothic", sans-serif;
+    background-color: #fce4ec;
+    background-image: url('../images/background/fur-texture-pink.jpg');
+    background-size: cover;
+    background-position: center;
+    
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    width: 100%;
+    color: var(--text-main);
+    perspective: 1500px;
+    padding-top: calc(var(--top-bar-height) + 20px);
+    padding-bottom: calc(var(--bottom-ribbon-height) + 20px);
+    position: relative;
+}
+
+/* === 右端パーツの「見切れ」防止調整 === */
+
+/* マスコットの位置を少し左にずらす（スクロールバー回避） */
+.floating-mascot {
+    right: 25px; /* 元の20pxから少し余裕を持たせる */
+}
+
+/* リボン収納ボタンの位置調整 */
+.ribbon-toggle-btn {
+    right: 25px; /* こちらも少し内側へ */
+}
+
+/* ニュースバー右側の時計などが詰まらないようにする */
+.header-right-area {
+    padding-right: 15px; /* 右側に余白を追加 */
+}
+
+/* === スクロールバーのカスタマイズ === */
+/* Webkitブラウザ（Chrome, Edge, Safari等）用 */
+::-webkit-scrollbar {
+    width: 10px; /* 標準(17px)より細くする */
+}
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.5); /* レールの色 */
+}
+::-webkit-scrollbar-thumb {
+    background: var(--accent-pink); /* バーの色 */
+    border-radius: 10px; /* 丸くする */
+    border: 2px solid transparent; /* 余白を作るテクニック */
+    background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+    background-color: #ff80ab;
 }
 
 body {
