@@ -304,9 +304,8 @@
         .char-unit:hover .screen-img {
             filter: grayscale(0) contrast(1.05) brightness(1.0);
             opacity: 1;
-            /* ★修正点: テーマカラーを「薄く」残すため、color-mixで透明度を85%にする */
-            /* これにより、色は残るが画像が見えなくなるほど濃くはならなくなる */
-            background-color: color-mix(in srgb, var(--accent), transparent 85%);
+            /* ★修正点: 色をもう少し濃くするため、transparentを60%に設定 */
+            background-color: color-mix(in srgb, var(--accent), transparent 60%);
             background-blend-mode: overlay;
         }
         
@@ -369,7 +368,8 @@
         import { loadFromCloud, saveToCloud } from "./firestore.js";
 
         const stage = document.getElementById('stage');
-        const LOCAL_IMG_BASE = './images/character/';
+        // ★修正点: HTMLがcharacterフォルダ内にあるため、一つ上の階層(../)に戻ってからimagesに入る
+        const LOCAL_IMG_BASE = '../images/character/';
 
         function initParticles() {
             const container = document.getElementById('particleContainer');
@@ -448,22 +448,19 @@
             return new Promise((resolve) => {
                 if (!charName) { resolve(cloudUrl || 'https://placehold.co/400x800/222/555?text=NO+IMG'); return; }
                 
-                // ★修正点: ファイル名をエンコードしてパスを生成する
-                // これにより日本語やスペースを含むファイル名が正しくURLとして扱われるようにする
+                // ★修正点: 見本コードに倣い、encodeURIComponentを使用して正しいパスを生成
                 const encodedName = encodeURIComponent(charName);
                 const localPath = `${LOCAL_IMG_BASE}${encodedName}.png`;
                 
                 const img = new Image();
                 img.onload = () => resolve(localPath);
                 img.onerror = () => {
-                    // エラーが出てもフォールバックURLを返す
                     resolve(cloudUrl || `https://via.placeholder.com/800x1200/111/333?text=${encodedName}`);
                 };
                 img.src = localPath;
             });
         }
 
-        // async に変更
         window.renderCharacterList = async function(data) {
             stage.innerHTML = ''; 
             const spacer = document.createElement('div');
@@ -477,14 +474,11 @@
 
             const entries = Object.entries(data);
 
-            // 全ての画像判定を待つ (順序維持のため Promise.all 推奨)
             const units = await Promise.all(entries.map(async ([key, char], idx) => {
                 if (!char.id) char.id = key;
                 const charId = char.id;
 
-                // 画像を解決
                 const img = await resolveImage(char.name, char.image);
-                // アイコンも必要なら判定するが、今回はimgと同じにする
                 const icon = char.icon || img;
 
                 const unit = document.createElement('div');
@@ -510,7 +504,6 @@
                 const sanPct = Math.min(sanVal, 99) / 99;
                 const sanOffset = maxDash - (sanPct * maxDash);
 
-                // HTML生成
                 unit.innerHTML = `
                     <!-- 1. SCREEN -->
                     <div class="unit-screen">
@@ -597,7 +590,6 @@
                     unit.querySelectorAll('.count-up').forEach(el => animateValue(el, parseInt(el.dataset.target)));
                 });
                 
-                // 初期アニメーション用タイマーを登録
                 unit._animateStats = () => {
                     setTimeout(() => {
                         unit.querySelectorAll('.count-up').forEach(el => animateValue(el, parseInt(el.dataset.target)));
@@ -607,10 +599,8 @@
                 return unit;
             }));
 
-            // DOM追加
             units.forEach(unit => {
                 stage.appendChild(unit);
-                // アニメーション発火
                 if (unit._animateStats) unit._animateStats();
             });
 
