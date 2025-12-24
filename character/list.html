@@ -144,13 +144,20 @@
         }
 
         .screen-img {
-            width: 100%; height: 100%;
-            background-size: cover; background-position: top center;
-            background-color: var(--accent); 
-            background-blend-mode: var(--screen-overlay);
-            filter: grayscale(1) contrast(1.2) brightness(0.8);
-            opacity: 0.7;
-            transition: all 0.5s ease;
+         width: 100%;
+         height: 100%;
+         /* 背景画像(background-image)設定を削除し、imgタグの設定を追加 */
+         object-fit: cover;
+         object-position: top center;
+         filter: grayscale(1) contrast(1.1) brightness(0.7);
+         opacity: 0.8;
+         transition: all 0.5s ease;
+        }
+
+        /* ホバー時の画質低下を防ぐ */
+       .char-unit:hover .screen-img {
+         filter: grayscale(0) contrast(1.0) brightness(1.0);
+         opacity: 1;
         }
         
         .screen-deco-corner {
@@ -443,13 +450,27 @@
         }
         
         // 画像解決関数
-        function resolveImage(charName, cloudUrl) {
+        async function resolveImage(charName, cloudUrl) {
             return new Promise((resolve) => {
-                if (!charName) { resolve(cloudUrl || 'https://placehold.co/400x800/222/555?text=NO+IMG'); return; }
-                const localPath = `${LOCAL_IMG_BASE}${charName}.png`;
+                if (!charName) { 
+                    resolve(cloudUrl || 'https://placehold.co/600x800/222/555?text=NO+IMAGE'); 
+                    return; 
+                }
+
+                // 日本語ファイル名とスペースの対策（デコードして純粋な文字列にする）
+                const decodedName = decodeURIComponent(charName).trim();
+                const localPath = `${LOCAL_IMG_BASE}${decodedName}.png`;
+
                 const img = new Image();
                 img.onload = () => resolve(localPath);
-                img.onerror = () => resolve(cloudUrl || `https://via.placeholder.com/800x1200/111/333?text=${encodeURIComponent(charName)}`);
+                img.onerror = () => {
+                    // ローカルになければ、FirestoreのURL、それもなければ高画質なダミー
+                    if (cloudUrl && cloudUrl.startsWith('http')) {
+                        resolve(cloudUrl);
+                    } else {
+                        resolve(`https://placehold.co/600x900/111/444?text=${encodeURIComponent(decodedName)}`);
+                    }
+                };
                 img.src = localPath;
             });
         }
@@ -503,14 +524,13 @@
 
                 // HTML生成
                 unit.innerHTML = `
-                    <!-- 1. SCREEN -->
-                    <div class="unit-screen">
-                        <div class="screen-img-container">
-                            <div class="screen-img" style="background-image: url('${img}');"></div>
-                        </div>
-                        <div class="screen-deco-corner corner-tl"></div>
-                        <div class="screen-deco-corner corner-br"></div>
-                    </div>
+                  <div class="unit-screen">
+                          <div class="screen-img-container">
+                              <img src="${img}" class="screen-img" alt="">
+                          </div>
+                          <div class="screen-deco-corner corner-tl"></div>
+                          <div class="screen-deco-corner corner-br"></div>
+                      </div>
 
                     <!-- 2. UI HEADER -->
                     <div class="ui-header-group">
@@ -557,8 +577,8 @@
 
                     <!-- 6. FIGURE -->
                     <div class="unit-figure-group">
-                        <img src="${img}" class="char-figure" alt="${char.name}">
-                    </div>
+                            <img src="${img}" class="char-figure" alt="${char.name}">
+                   </div>
 
                     <!-- 7. SHADOW -->
                     <div class="unit-shadow-container">
