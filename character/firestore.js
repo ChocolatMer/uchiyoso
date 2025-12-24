@@ -1,9 +1,8 @@
-// --- firestore.js (共有設定・分割保存対応版) ---
+// --- firestore.js (共有設定版) ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } 
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-// 【修正】 importに collection, getDocs, deleteDoc を追加しました
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc } 
+import { getFirestore, doc, setDoc, getDoc } 
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -56,12 +55,12 @@ export function monitorAuth(onLogin, onLogout) {
     });
 }
 
-// --- データベース機能 (共有設定・分割保存) ---
+// --- データベース機能 (共有設定) ---
 
+// 2人で共有するための固定された場所を指定
+// ※セキュリティルールで許可した "rooms" コレクションを使用します
 const SHARED_COLLECTION = "rooms";
 const SHARED_DOC_ID = "couple_shared_data"; 
-// 【修正】 分割保存用のサブコレクション名を定義
-const CHAR_SUB_COLLECTION = "characters"; 
 
 // 保存 (SAVE CLOUD)
 export async function saveToCloud(charData) {
@@ -75,16 +74,24 @@ export async function saveToCloud(charData) {
     }
 
     try {
-        // 【修正】 保存先を「個別のドキュメント」に変更
-        // rooms > couple_shared_data > characters > [キャラクター名]
-        const charRef = doc(db, SHARED_COLLECTION, SHARED_DOC_ID, CHAR_SUB_COLLECTION, charData.name);
+        // 【修正】個人のUIDではなく、共有用の固定IDを指定
+        const sharedRef = doc(db, SHARED_COLLECTION, SHARED_DOC_ID);
         
-        // 上書き保存
-        await setDoc(charRef, charData);
-        alert("SHARED UPLOAD COMPLETE (Split Mode): " + charData.name);
+        // 既存データを取得してマージ
+        const docSnap = await getDoc(sharedRef);
+        let currentStore = {};
+        if (docSnap.exists()) {
+            currentStore = docSnap.data().store || {};
+        }
+        
+        currentStore[charData.name] = charData;
+
+        await setDoc(sharedRef, { store: currentStore }, { merge: true });
+        alert("SHARED UPLOAD COMPLETE: " + charData.name);
         
     } catch (e) {
         console.error("Error adding document: ", e);
+        // エラー詳細：権限がない場合はここに引っかかります
         alert("UPLOAD ERROR: " + e.message);
     }
 }
@@ -97,57 +104,19 @@ export async function loadFromCloud() {
     }
 
     try {
-        const store = {};
+        // 【修正】読み込みも共有用の固定IDから取得
+        const sharedRef = doc(db, SHARED_COLLECTION, SHARED_DOC_ID);
+        const docSnap = await getDoc(sharedRef);
 
-        // 【修正】 読み込み処理を「サブコレクション内の全ファイル取得」に変更
-        const subColRef = collection(db, SHARED_COLLECTION, SHARED_DOC_ID, CHAR_SUB_COLLECTION);
-        const querySnapshot = await getDocs(subColRef);
-
-        // 取得した個別のキャラデータを store オブジェクトにまとめる
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            if (data.name) {
-                store[data.name] = data;
-            }
-        });
-
-        // 【修正】 移行期間用の処理 (旧データがあれば読み込んでマージ)
-        // ※以前のデータを読み込めなくならないようにするための保険です
-        try {
-            const oldRef = doc(db, SHARED_COLLECTION, SHARED_DOC_ID);
-            const oldSnap = await getDoc(oldRef);
-            if (oldSnap.exists()) {
-                const oldStore = oldSnap.data().store || {};
-                for (const key in oldStore) {
-                    // 新しい保存先にまだないキャラだけ、旧データから読み込む
-                    if (!store[key]) {
-                        store[key] = oldStore[key];
-                    }
-                }
-            }
-        } catch(e) {
-            console.warn("Old data load skip:", e);
+        if (docSnap.exists()) {
+            return docSnap.data().store || {};
+        } else {
+            // まだデータがひとつもない場合
+            return {};
         }
-
-        return store;
-
     } catch (e) {
         console.error("Error loading document: ", e);
         alert("LOAD ERROR: " + e.message);
         return null;
-    }
-}
-
-// 【新規追加】 削除機能
-// 分割保存されたデータを個別に削除するための関数です
-export async function deleteFromCloud(charName) {
-    if (!currentUser || !charName) return;
-    try {
-        const charRef = doc(db, SHARED_COLLECTION, SHARED_DOC_ID, CHAR_SUB_COLLECTION, charName);
-        await deleteDoc(charRef);
-        alert("DELETED: " + charName);
-    } catch (e) {
-        console.error("Delete error:", e);
-        alert("DELETE ERROR: " + e.message);
     }
 }
