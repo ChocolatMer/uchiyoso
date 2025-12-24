@@ -50,15 +50,28 @@ export const DUO_SITUATIONS = [
 // =========================================================
 
 /**
- * テキストからランダムに1行を取得
+ * テキストからランダムに1行を取得 (修正版)
+ * [NEXT] という合言葉で区切ります。なければ改行で区切ります。
  */
 export function pickRandomLine(text) {
     if (!text) return null;
-    // <br>タグがある場合は改行コードに変換してから分割
-    const cleanText = text.replace(/<br>/gi, '\n');
-    const lines = cleanText.split('\n').map(l => l.trim()).filter(l => l !== "");
-    if (lines.length === 0) return null;
-    return lines[Math.floor(Math.random() * lines.length)];
+
+    // 1. 新しい形式 ([NEXT]区切り) かチェック
+    if (text.includes('[NEXT]')) {
+        const patterns = text.split('[NEXT]').map(l => l.trim()).filter(l => l !== "");
+        if (patterns.length === 0) return null;
+        return patterns[Math.floor(Math.random() * patterns.length)];
+    }
+    
+    // 2. 古い形式 (改行区切り) の場合の救済措置
+    // [NEXT] がなくて改行があるなら、昔のデータとして扱う
+    if (text.includes('\n')) {
+        const lines = text.split('\n').map(l => l.trim()).filter(l => l !== "");
+        return lines[Math.floor(Math.random() * lines.length)];
+    }
+
+    // 3. 1行だけの場合
+    return text;
 }
 
 /**
