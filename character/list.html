@@ -301,10 +301,14 @@
             background: rgba(20, 20, 30, 0.95);
         }
         .char-unit:hover .screen-img-container { transform: rotate(0deg) scale(1.1); }
+        
+        /* 修正: ホバー時の背景色透明化を削除し、テーマカラーを残す */
         .char-unit:hover .screen-img {
             filter: grayscale(0) contrast(1.05) brightness(1.0);
-            background-color: transparent; opacity: 1;
+            /* background-color: transparent; <-- 削除 */
+            opacity: 1;
         }
+        
         .char-unit:hover .unit-figure-group {
             animation: none;
             transform: translateX(-50%) translateZ(calc(var(--z-fig) + 50px)) scale(1.08);
@@ -364,6 +368,7 @@
         import { loadFromCloud, saveToCloud } from "./firestore.js";
 
         const stage = document.getElementById('stage');
+        const LOCAL_IMG_BASE = './images/character/';
 
         function initParticles() {
             const container = document.getElementById('particleContainer');
@@ -436,8 +441,21 @@
             };
             window.requestAnimationFrame(step);
         }
+        
+        // 画像解決関数
+        function resolveImage(charName, cloudUrl) {
+            return new Promise((resolve) => {
+                if (!charName) { resolve(cloudUrl || 'https://placehold.co/400x800/222/555?text=NO+IMG'); return; }
+                const localPath = `${LOCAL_IMG_BASE}${charName}.png`;
+                const img = new Image();
+                img.onload = () => resolve(localPath);
+                img.onerror = () => resolve(cloudUrl || `https://via.placeholder.com/800x1200/111/333?text=${encodeURIComponent(charName)}`);
+                img.src = localPath;
+            });
+        }
 
-        window.renderCharacterList = function(data) {
+        // async に変更
+        window.renderCharacterList = async function(data) {
             stage.innerHTML = ''; 
             const spacer = document.createElement('div');
             spacer.style.minWidth = "50vw";
@@ -448,23 +466,23 @@
                 return;
             }
 
-            // ★変更点: Object.values ではなく Object.entries を使い、[id, char] の形でIDを確実に取得する
-             Object.entries(data).forEach(([key, char], idx) => {
-                
-                // ★修正: データの中にidが無い場合、キーをidとして採用してあげる
-                // これで詳細画面へ渡すIDと、データの中身のIDが一致します
-                if (!char.id) {
-                    char.id = key; 
-                }
+            const entries = Object.entries(data);
+
+            // 全ての画像判定を待つ (順序維持のため Promise.all 推奨)
+            const units = await Promise.all(entries.map(async ([key, char], idx) => {
+                if (!char.id) char.id = key;
                 const charId = char.id;
+
+                // 画像を解決
+                const img = await resolveImage(char.name, char.image);
+                // アイコンも必要なら判定するが、今回はimgと同じにする
+                const icon = char.icon || img;
 
                 const unit = document.createElement('div');
                 unit.className = 'char-unit';
                 unit.style.opacity = '0';
                 unit.style.animation = `fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards ${idx * 0.15}s`;
 
-                const img = char.image || 'https://placehold.co/400x800/222/555?text=NO+IMG';
-                const icon = char.icon || img;
                 const accent = (char.color && char.color.length > 1) ? char.color : getDefaultColor(char.job);
                 unit.style.setProperty('--accent', accent);
                 
@@ -483,7 +501,7 @@
                 const sanPct = Math.min(sanVal, 99) / 99;
                 const sanOffset = maxDash - (sanPct * maxDash);
 
-                // HTML生成（内容は変更なし）
+                // HTML生成
                 unit.innerHTML = `
                     <!-- 1. SCREEN -->
                     <div class="unit-screen">
@@ -562,7 +580,6 @@
                 enableDrag(unit.querySelector('.ui-stats-container'));
                 enableDrag(unit.querySelector('.ui-vitals'));
 
-                // ★ここがリンクの肝です。charIdを使います。
                 unit.querySelector('.click-layer').onclick = () => {
                     window.location.href = `https://chocolatmer.github.io/uchiyoso/character/detail.html?id=${charId}`;
                 };
@@ -570,11 +587,23 @@
                 unit.addEventListener('mouseenter', () => {
                     unit.querySelectorAll('.count-up').forEach(el => animateValue(el, parseInt(el.dataset.target)));
                 });
-                setTimeout(() => {
-                    unit.querySelectorAll('.count-up').forEach(el => animateValue(el, parseInt(el.dataset.target)));
-                }, 800 + idx*100);
+                
+                // 初期アニメーション用タイマーを登録
+                // (DOMに追加後でないと動かない場合があるが、ここではクロージャで保持)
+                unit._animateStats = () => {
+                    setTimeout(() => {
+                        unit.querySelectorAll('.count-up').forEach(el => animateValue(el, parseInt(el.dataset.target)));
+                    }, 800 + idx*100);
+                };
 
+                return unit;
+            }));
+
+            // DOM追加
+            units.forEach(unit => {
                 stage.appendChild(unit);
+                // アニメーション発火
+                if (unit._animateStats) unit._animateStats();
             });
 
             const spacerEnd = document.createElement('div');
