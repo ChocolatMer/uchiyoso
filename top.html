@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=1280">
-    <title>Uchiyoso Maker - Luxe Archive v2.8</title>
+    <title>Uchiyoso Maker - Luxe Archive v2.9</title>
     <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
@@ -202,7 +202,7 @@
 
         <div class="header-title">
             <h1>UCHIYOSO<br>ARCHIVE</h1>
-            <div class="header-sub">PREMIUM INTERFACE v2.8</div>
+            <div class="header-sub">PREMIUM INTERFACE v2.9</div>
         </div>
 
         <div class="mode-toggle-container">
@@ -241,7 +241,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-   <script type="module">
+    <script type="module">
         import { login, logout, monitorAuth, loadFromCloud } from "./character/firestore.js";
         // dialogue.jsから表示ロジックを読み込み
         import { getHomeDialogue } from "./character/data/dialogue.js";
@@ -330,7 +330,6 @@
             document.addEventListener('mouseup', dragEnd);
             document.addEventListener('mousemove', drag);
 
-            // タッチ対応
             elm.addEventListener('touchstart', dragStart, {passive: false});
             document.addEventListener('touchend', dragEnd);
             document.addEventListener('touchmove', drag, {passive: false});
@@ -375,6 +374,13 @@
                 if (!isDragging) return;
                 isDragging = false;
                 elm.style.transition = 'opacity 0.5s ease'; 
+
+                // ★追加: ドラッグ後のクリックイベント伝播を防止
+                function preventClick(e) {
+                    e.stopPropagation();
+                    elm.removeEventListener('click', preventClick);
+                }
+                elm.addEventListener('click', preventClick, { once: true });
             }
         }
 
@@ -431,7 +437,9 @@
                 img.onload = () => resolve(localPath); // ローカルにあれば採用
                 img.onerror = () => {
                     // ローカルになければクラウドURLを採用（それもなければプレースホルダ）
-                    resolve(cloudUrl || `https://via.placeholder.com/200x200?text=${encodeURIComponent(charName)}`);
+                    // アイコンの場合、プレースホルダは小さめにする
+                    const placeholderSize = (basePath === LOCAL_ICON_BASE) ? "200x200" : "800x1200";
+                    resolve(cloudUrl || `https://via.placeholder.com/${placeholderSize}?text=${encodeURIComponent(charName)}`);
                 };
                 img.src = localPath;
             });
@@ -440,7 +448,7 @@
         // --- ★ キャラクター選択リスト (アイコン優先) ---
         async function renderCharList() {
             const container = document.getElementById('char-list');
-            container.innerHTML = '';
+            container.innerHTML = ''; // ★既存要素をクリアして重複防止
             
             for (let i = 0; i < charDataList.length; i++) {
                 const char = charDataList[i];
@@ -661,12 +669,11 @@
                 if (data && Object.keys(data).length > 0) charDataList = Object.values(data);
                 else charDataList = [{ name: "No Data", remarks: "データがありません。", color: "#555" }];
                 
-                // データロード後にリスト生成
-                renderCharList();
+                // データロード後に音楽リストは生成
                 renderMusicList();
 
                 currentIndex = Math.floor(Math.random() * charDataList.length);
-                updateDisplay();
+                updateDisplay(); // ★renderCharList() の呼び出しは updateDisplay() に任せる
             },
             () => {
                 currentUser = null; userDisplay.textContent = "GUEST"; connectBtn.textContent = "CONNECT";
@@ -775,5 +782,3 @@
         }, CHARACTER_INTERVAL);
         
     </script>
-</body>
-</html>
