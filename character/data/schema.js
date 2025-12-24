@@ -51,6 +51,74 @@ export const DIALOGUE_MAPPING = [
     { key: 'dialogue_lowsan',  id: 'txtDialogueLowSan' }   // 低SAN値
 ];
 
+// --- アンケート保存用ルール ---
+
+/**
+ * 1人用アンケート (Morning Desk Survey) のレコード作成ルール
+ * @param {Object} answers - 回答オブジェクト {q1: "回答...", q2: "..."}
+ * @returns {Object} 保存用レコード
+ */
+export function createSoloSurveyRecord(answers) {
+    const timestamp = new Date().toISOString();
+    
+    // サマリー生成: 最初の回答を抜粋、なければ固定文言
+    const firstAnswer = Object.values(answers).find(v => v && v.trim().length > 0);
+    const summary = firstAnswer ? firstAnswer : 'No answer';
+
+    return {
+        id: Date.now().toString(),      // ユニークID
+        type: 'solo_survey',            // データタイプ識別用
+        timestamp: timestamp,           // 記録日時
+        summary: summary,               // 履歴リスト表示用の短い説明
+        answers: { ...answers }         // 回答データのコピー
+    };
+}
+
+/**
+ * 2人用アンケート (Pair Harmony Survey) のレコード作成ルール
+ * @param {Object} myAnswers - 自分の回答 {p1: "...", p2: "..."}
+ * @param {string} partnerName - 相手の名前
+ * @param {Object} partnerAnswers - 相手の回答
+ * @returns {Object} 保存用レコード
+ */
+export function createPairSurveyRecord(myAnswers, partnerName, partnerAnswers) {
+    const timestamp = new Date().toISOString();
+
+    return {
+        id: Date.now().toString(),
+        type: 'pair_survey',
+        timestamp: timestamp,
+        summary: `Pair Survey with ${partnerName}`, // 履歴リスト表示用
+        partner: partnerName,                       // 相手の名前
+        answers: { ...myAnswers },                  // 自分の回答
+        partnerAnswers: { ...partnerAnswers }       // 相手の回答
+    };
+}
+
+/**
+ * キャラクターデータにアンケート履歴を追加・統合する
+ * @param {Object} originalCharData - サーバーから読み込んだ元のキャラクターデータ
+ * @param {Object} newRecord - 作成したアンケートレコード
+ * @returns {Object} 更新用キャラクターデータ
+ */
+export function addSurveyToCharacter(originalCharData, newRecord) {
+    // 元データのコピーを作成
+    const updatedData = { ...originalCharData };
+
+    // surveys配列がなければ作成
+    if (!updatedData.surveys) {
+        updatedData.surveys = [];
+    }
+
+    // 配列の先頭に追加 (新しい順)
+    updatedData.surveys.unshift(newRecord);
+
+    // 履歴が増えすぎた場合の制限（例: 最新50件まで）が必要ならここで記述
+    // if (updatedData.surveys.length > 50) updatedData.surveys.pop();
+
+    return updatedData;
+}
+
 /**
  * 編集画面用: フォームのデータを収集して保存用オブジェクトを作成する
  */
