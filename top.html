@@ -2,202 +2,53 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <!-- スマホでもPCの幅(1280px)で強制表示させる設定 -->
     <meta name="viewport" content="width=1280">
     <title>Uchiyoso Maker - Luxe Archive v2.5</title>
     <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
         :root {
-            /* Default (Black Mode) */
-            --bg-color: #080808;
-            --text-main: #ffffff;
-            --text-sub: #8899a6;
-            --ui-border: rgba(255, 255, 255, 0.15);
-            --ui-bg: rgba(255, 255, 255, 0.03);
-            --font-en: 'Syncopate', sans-serif;
-            --font-jp: 'Noto Sans JP', sans-serif;
-            --accent-color: #00ffcc; /* JSで書き換え */
-            --bg-image-url: none;
-            
-            /* Particle Setting */
-            --canvas-blend: screen;
-            --canvas-opacity: 1.0;
+            --bg-color: #080808; --text-main: #ffffff; --text-sub: #8899a6;
+            --ui-border: rgba(255, 255, 255, 0.15); --ui-bg: rgba(255, 255, 255, 0.03);
+            --font-en: 'Syncopate', sans-serif; --font-jp: 'Noto Sans JP', sans-serif;
+            --accent-color: #00ffcc; --bg-image-url: none;
+            --canvas-blend: screen; --canvas-opacity: 1.0;
         }
-
-        /* --- 背景モード定義 --- */
-        body.mode-black { 
-            --bg-color: #080808; 
-            --text-main: #ffffff; 
-            --text-sub: #8899a6;
-            --ui-border: rgba(255, 255, 255, 0.15);
-            --canvas-blend: screen;
-        }
-        
-        body.mode-white { 
-            --bg-color: #f0f0f0; 
-            --text-main: #111111; 
-            --text-sub: #555555;
-            --ui-border: rgba(0, 0, 0, 0.15);
-            --ui-bg: rgba(0, 0, 0, 0.03);
-            --canvas-blend: normal;
-            --canvas-opacity: 0.6;
-        }
-        
-        body.mode-photo {
-            --bg-color: #000000; --text-main: #ffffff;
-            background-image: var(--bg-image-url);
-            background-size: cover; background-position: center;
-            --canvas-blend: screen;
-        }
-        body.mode-photo::before {
-            content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6); z-index: -1; pointer-events: none;
-        }
-
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            background-color: var(--bg-color); color: var(--text-main);
-            font-family: var(--font-jp); overflow: hidden;
-            transition: background-color 0.5s, color 0.5s;
-        }
-
-        /* --- Canvas (Particles) --- */
-        #canvas-container {
-            position: fixed; top: 0; left: 0; z-index: 0;
-            opacity: var(--canvas-opacity); 
-            pointer-events: none; 
-            mix-blend-mode: var(--canvas-blend);
-            transition: opacity 0.5s;
-        }
-
-        /* --- News Ticker --- */
-        #news-ticker {
-            position: fixed; top: 0; left: 0; width: 100%; height: 32px;
-            background: rgba(0, 0, 0, 0.9);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(4px); z-index: 100;
-            display: flex; align-items: center; padding: 0 20px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-        }
-        .ticker-label {
-            font-family: var(--font-en); font-size: 10px;
-            color: var(--accent-color); font-weight: bold; margin-right: 20px;
-            letter-spacing: 0.1em; white-space: nowrap;
-            text-shadow: 0 0 10px var(--accent-color);
-            transition: color 1s, text-shadow 1s;
-            border-right: 1px solid rgba(255,255,255,0.2); padding-right: 15px;
-        }
-        .ticker-content {
-            font-family: var(--font-jp); font-weight: 500; font-size: 13px;
-            color: #eee;
-            opacity: 0; transform: translateY(5px); transition: all 0.5s;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
+        body.mode-black { --bg-color: #080808; --text-main: #ffffff; --text-sub: #8899a6; --ui-border: rgba(255, 255, 255, 0.15); --canvas-blend: screen; }
+        body.mode-white { --bg-color: #f0f0f0; --text-main: #111111; --text-sub: #555555; --ui-border: rgba(0, 0, 0, 0.15); --ui-bg: rgba(0, 0, 0, 0.03); --canvas-blend: normal; --canvas-opacity: 0.6; }
+        body.mode-photo { --bg-color: #000000; --text-main: #ffffff; background-image: var(--bg-image-url); background-size: cover; background-position: center; --canvas-blend: screen; }
+        body.mode-photo::before { content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); z-index: -1; pointer-events: none; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: var(--bg-color); color: var(--text-main); font-family: var(--font-jp); overflow: hidden; transition: background-color 0.5s, color 0.5s; }
+        #canvas-container { position: fixed; top: 0; left: 0; z-index: 0; opacity: var(--canvas-opacity); pointer-events: none; mix-blend-mode: var(--canvas-blend); transition: opacity 0.5s; }
+        #news-ticker { position: fixed; top: 0; left: 0; width: 100%; height: 32px; background: rgba(0, 0, 0, 0.9); border-bottom: 1px solid rgba(255, 255, 255, 0.15); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; padding: 0 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); }
+        .ticker-label { font-family: var(--font-en); font-size: 10px; color: var(--accent-color); font-weight: bold; margin-right: 20px; letter-spacing: 0.1em; white-space: nowrap; text-shadow: 0 0 10px var(--accent-color); transition: color 1s, text-shadow 1s; border-right: 1px solid rgba(255,255,255,0.2); padding-right: 15px; }
+        .ticker-content { font-family: var(--font-jp); font-weight: 500; font-size: 13px; color: #eee; opacity: 0; transform: translateY(5px); transition: all 0.5s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .ticker-content.active { opacity: 1; transform: translateY(0); }
-
-        /* --- Layout --- */
-        .viewport {
-            position: relative; width: 100%; height: 100vh;
-            display: grid;
-            grid-template-columns: 80px 1fr 350px;
-            grid-template-rows: 60px 1fr 120px;
-            z-index: 10;
-            padding-top: 32px;
-        }
-
-        /* --- Left Nav --- */
-        .sub-nav {
-            grid-row: 1 / 4; display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            border-right: 1px solid var(--ui-border);
-            background: linear-gradient(to right, rgba(0,0,0,0.05), transparent);
-            transition: border-color 0.5s;
-        }
-        .sub-nav-content {
-            display: flex; flex-direction: column; align-items: center; gap: 50px;
-            margin-bottom: 150px; 
-        }
-        .sub-nav-item {
-            writing-mode: vertical-rl; font-family: var(--font-en); font-size: 9px; letter-spacing: 0.6em;
-            color: var(--text-main); opacity: 0.4;
-            text-transform: uppercase; cursor: pointer; transition: 0.4s;
-        }
-        .sub-nav-item:hover {
-            color: var(--accent-color); opacity: 1;
-            transform: translateY(-8px); text-shadow: 0 0 15px var(--accent-color);
-        }
-
-        /* --- Left Floating Controls --- */
-        .left-controls-overlay {
-            position: fixed; bottom: 30px; left: 20px;
-            display: flex; flex-direction: column; 
-            align-items: flex-start; gap: 20px; z-index: 150;
-        }
-        .bg-trigger-horiz {
-            font-family: var(--font-en); font-size: 10px; letter-spacing: 0.2em;
-            color: var(--text-main); border: 1px solid var(--ui-border);
-            padding: 8px 16px; cursor: pointer; transition: 0.3s;
-            background: var(--ui-bg); text-transform: uppercase;
-            width: 140px; text-align: center;
-        }
-        .bg-trigger-horiz:hover { 
-            background: var(--accent-color); color: #000; border-color: var(--accent-color);
-            box-shadow: 0 0 15px var(--accent-color);
-        }
-        .sound-row {
-            display: flex; align-items: center; gap: 10px;
-        }
-        .sound-icon {
-            color: var(--text-main); font-size: 20px; cursor: pointer;
-            opacity: 0.6; transition: 0.3s;
-        }
+        .viewport { position: relative; width: 100%; height: 100vh; display: grid; grid-template-columns: 80px 1fr 350px; grid-template-rows: 60px 1fr 120px; z-index: 10; padding-top: 32px; }
+        .sub-nav { grid-row: 1 / 4; display: flex; flex-direction: column; justify-content: center; align-items: center; border-right: 1px solid var(--ui-border); background: linear-gradient(to right, rgba(0,0,0,0.05), transparent); transition: border-color 0.5s; }
+        .sub-nav-content { display: flex; flex-direction: column; align-items: center; gap: 50px; margin-bottom: 150px; }
+        .sub-nav-item { writing-mode: vertical-rl; font-family: var(--font-en); font-size: 9px; letter-spacing: 0.6em; color: var(--text-main); opacity: 0.4; text-transform: uppercase; cursor: pointer; transition: 0.4s; }
+        .sub-nav-item:hover { color: var(--accent-color); opacity: 1; transform: translateY(-8px); text-shadow: 0 0 15px var(--accent-color); }
+        .left-controls-overlay { position: fixed; bottom: 30px; left: 20px; display: flex; flex-direction: column; align-items: flex-start; gap: 20px; z-index: 150; }
+        .bg-trigger-horiz { font-family: var(--font-en); font-size: 10px; letter-spacing: 0.2em; color: var(--text-main); border: 1px solid var(--ui-border); padding: 8px 16px; cursor: pointer; transition: 0.3s; background: var(--ui-bg); text-transform: uppercase; width: 140px; text-align: center; }
+        .bg-trigger-horiz:hover { background: var(--accent-color); color: #000; border-color: var(--accent-color); box-shadow: 0 0 15px var(--accent-color); }
+        .sound-row { display: flex; align-items: center; gap: 10px; }
+        .sound-icon { color: var(--text-main); font-size: 20px; cursor: pointer; opacity: 0.6; transition: 0.3s; }
         .sound-icon:hover { opacity: 1; color: var(--accent-color); text-shadow: 0 0 8px var(--accent-color); }
         .sound-icon.playing { color: var(--accent-color); opacity: 1; }
-        
-        .volume-bar-horiz {
-            -webkit-appearance: none; appearance: none; width: 100px; height: 3px;
-            background: var(--ui-border); outline: none; border-radius: 2px; cursor: pointer;
-        }
-        .volume-bar-horiz::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none; width: 8px; height: 8px;
-            background: var(--accent-color); border-radius: 50%; cursor: pointer;
-            box-shadow: 0 0 5px var(--accent-color); transition: transform 0.2s;
-        }
+        .volume-bar-horiz { -webkit-appearance: none; appearance: none; width: 100px; height: 3px; background: var(--ui-border); outline: none; border-radius: 2px; cursor: pointer; }
+        .volume-bar-horiz::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 8px; height: 8px; background: var(--accent-color); border-radius: 50%; cursor: pointer; box-shadow: 0 0 5px var(--accent-color); transition: transform 0.2s; }
         .volume-bar-horiz:hover::-webkit-slider-thumb { transform: scale(1.2); }
-
-        /* --- Character Stage --- */
-        .character-stage {
-            grid-column: 2; grid-row: 1 / 4;
-            display: flex; align-items: flex-end; justify-content: flex-start;
-            padding-left: 5%; position: relative; overflow: hidden;
-            pointer-events: auto; cursor: pointer;
-            transition: all 0.5s ease;
-        }
-        .character-stage.duo-mode {
-            justify-content: space-between; padding-left: 0; padding-right: 0;
-        }
-
-        .char-img {
-            height: 90%; width: auto; max-width: 100%;
-            object-fit: cover; object-position: top center;
-            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.6s ease, opacity 1s;
-            transform-origin: center bottom;
-            opacity: 0; transform: translateY(30px) scale(0.98);
-            position: relative; z-index: 5;
-        }
+        .character-stage { grid-column: 2; grid-row: 1 / 4; display: flex; align-items: flex-end; justify-content: flex-start; padding-left: 5%; position: relative; overflow: hidden; pointer-events: auto; cursor: pointer; transition: all 0.5s ease; }
+        .character-stage.duo-mode { justify-content: space-between; padding-left: 0; padding-right: 0; }
+        .char-img { height: 90%; width: auto; max-width: 100%; object-fit: cover; object-position: top center; transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.6s ease, opacity 1s; transform-origin: center bottom; opacity: 0; transform: translateY(30px) scale(0.98); position: relative; z-index: 5; }
         .duo-mode .char-img { max-width: 45%; height: 85%; }
         .duo-mode #char-img-1 { margin-left: -2%; } 
         .duo-mode #char-img-2 { margin-right: -2%; }
-
         .char-img.visible { opacity: 1; transform: translateY(0) scale(1); }
         .char-img.visible:hover { transform: translateY(-5px) scale(1.02); filter: brightness(1.1); }
-
-        /* Speech Bubbles */
-        .bubbles-layer {
-            position: absolute; width: 100%; height: 100%; top: 0; left: 0;
-            pointer-events: none; z-index: 10;
-        }
+        .bubbles-layer { position: absolute; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none; z-index: 10; }
+        
         .speech-bubble {
             position: absolute;
             font-family: var(--font-jp); font-weight: 300; letter-spacing: 0.05em;
@@ -208,125 +59,55 @@
             box-shadow: 0 15px 40px rgba(0,0,0,0.6);
             max-width: 450px; line-height: 1.8;
             opacity: 0; transition: all 0.5s ease 0.3s, border-color 1s;
-            
-            /* ★修正点1: 改行を反映させるためのCSSを追加 */
+            /* ★修正: 親要素からは white-space を削除し、下の #text-1, #text-2 に適用します */
+        }
+        
+        /* ★修正: ここに設定することで、台詞部分だけ改行が有効になり、枠の謎空白が消えます */
+        #text-1, #text-2 {
             white-space: pre-wrap;
         }
-        .speech-bubble.show { opacity: 1; transform: translateX(0) translateY(0); }
 
-        /* SOLO Mode Position */
+        .speech-bubble.show { opacity: 1; transform: translateX(0) translateY(0); }
         .mode-solo .speech-bubble { bottom: 25%; left: 2%; transform: translateX(-20px); }
         .mode-solo .speech-bubble.show { transform: translateX(0); }
-
-        /* DUO Mode Position */
         .mode-duo .speech-bubble { width: 450px; max-width: 40vw; text-align: left; }
-        .mode-duo #bubble-1 {
-            top: 45%; left: 50%; transform: translate(-105%, -50%) translateY(10px); border-left-width: 5px;
-        }
+        .mode-duo #bubble-1 { top: 45%; left: 50%; transform: translate(-105%, -50%) translateY(10px); border-left-width: 5px; }
         .mode-duo #bubble-1.show { transform: translate(-105%, -50%) translateY(0); }
-        .mode-duo #bubble-2 {
-            top: 55%; left: 50%; transform: translate(5%, -50%) translateY(10px); border-left-width: 5px;
-        }
+        .mode-duo #bubble-2 { top: 55%; left: 50%; transform: translate(5%, -50%) translateY(10px); border-left-width: 5px; }
         .mode-duo #bubble-2.show { transform: translate(5%, -50%) translateY(0); }
-        
-        .char-name-label {
-            font-family: var(--font-en); font-size: 11px; color: var(--accent-color);
-            margin-bottom: 12px; display: block; font-weight: bold; letter-spacing: 0.2em;
-        }
+        .char-name-label { font-family: var(--font-en); font-size: 11px; color: var(--accent-color); margin-bottom: 12px; display: block; font-weight: bold; letter-spacing: 0.2em; }
         .cursor { display: inline-block; width: 2px; height: 1em; background: var(--accent-color); animation: blink 1s infinite; vertical-align: middle; }
-
-        /* --- Right Column --- */
-        .header-title {
-            grid-column: 3; grid-row: 1; padding: 20px 40px 0 0; text-align: right; white-space: nowrap; 
-        }
-        .header-title h1 {
-            font-family: var(--font-en); font-size: 24px; margin: 0; color: var(--text-main);
-            letter-spacing: 0.1em; text-shadow: 0 0 20px rgba(255,255,255,0.1); transition: color 0.5s;
-        }
+        .header-title { grid-column: 3; grid-row: 1; padding: 20px 40px 0 0; text-align: right; white-space: nowrap; }
+        .header-title h1 { font-family: var(--font-en); font-size: 24px; margin: 0; color: var(--text-main); letter-spacing: 0.1em; text-shadow: 0 0 20px rgba(255,255,255,0.1); transition: color 0.5s; }
         .header-sub { font-size: 9px; color: var(--text-sub); letter-spacing: 0.4em; margin-top: 5px; opacity: 0.7; }
-
-        .mode-toggle-container {
-            position: absolute; top: 120px; right: 280px; z-index: 120;
-        }
-        .mode-switch-btn {
-            background: transparent; border: 1px solid var(--ui-border);
-            color: var(--text-sub); padding: 5px 15px;
-            font-family: var(--font-en); font-size: 10px; letter-spacing: 0.1em;
-            cursor: pointer; transition: 0.3s;
-        }
-        .mode-switch-btn:hover, .mode-switch-btn.active {
-            color: var(--accent-color); border-color: var(--accent-color); text-shadow: 0 0 8px var(--accent-color);
-        }
-
-        .user-status {
-            position: absolute; top: 120px; right: 40px; text-align: right;
-            border-right: 1px solid var(--ui-border); padding-right: 20px; transition: border-color 0.5s;
-        }
+        .mode-toggle-container { position: absolute; top: 120px; right: 280px; z-index: 120; }
+        .mode-switch-btn { background: transparent; border: 1px solid var(--ui-border); color: var(--text-sub); padding: 5px 15px; font-family: var(--font-en); font-size: 10px; letter-spacing: 0.1em; cursor: pointer; transition: 0.3s; }
+        .mode-switch-btn:hover, .mode-switch-btn.active { color: var(--accent-color); border-color: var(--accent-color); text-shadow: 0 0 8px var(--accent-color); }
+        .user-status { position: absolute; top: 120px; right: 40px; text-align: right; border-right: 1px solid var(--ui-border); padding-right: 20px; transition: border-color 0.5s; }
         .status-label { font-size: 8px; color: var(--accent-color); letter-spacing: 0.2em; font-family: var(--font-en); }
         .status-name { font-size: 14px; margin-top: 5px; font-weight: 500; letter-spacing: 0.1em; color: var(--text-main); }
-        .connect-btn {
-            background: none; border: 1px solid var(--accent-color); color: var(--accent-color);
-            font-size: 10px; padding: 6px 20px; margin-top: 12px; cursor: pointer;
-            font-family: var(--font-en); transition: 0.3s;
-        }
+        .connect-btn { background: none; border: 1px solid var(--accent-color); color: var(--accent-color); font-size: 10px; padding: 6px 20px; margin-top: 12px; cursor: pointer; font-family: var(--font-en); transition: 0.3s; }
         .connect-btn:hover { background: var(--accent-color); color: #000; box-shadow: 0 0 15px var(--accent-color); }
-
-        .main-nav {
-            grid-column: 3; grid-row: 2 / 4;
-            display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end;
-            padding: 0 40px 100px 0; gap: 24px;
-        }
+        .main-nav { grid-column: 3; grid-row: 2 / 4; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end; padding: 0 40px 100px 0; gap: 24px; }
         .nav-btn-group { display: flex; flex-direction: column; align-items: flex-end; }
         .btn-label { font-family: var(--font-en); font-size: 8px; color: var(--text-sub); margin-bottom: 6px; letter-spacing: 0.2em; }
-        
-        .nav-btn {
-            display: flex; align-items: center; justify-content: center; width: 220px; height: 45px;
-            background: var(--ui-bg); border: 1px solid var(--ui-border);
-            color: var(--text-main); text-decoration: none; font-family: var(--font-en); font-size: 10px; letter-spacing: 0.2em;
-            position: relative; overflow: hidden; transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
-        }
-        .nav-btn::before {
-            content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-            transform: skewX(-20deg); transition: 0.5s;
-        }
-        .nav-btn::after {
-            content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%;
-            background: var(--accent-color); transform: scaleY(0); transition: transform 0.4s;
-        }
-        .nav-btn:hover {
-            border-color: var(--accent-color); background: rgba(128,128,128, 0.1);
-            letter-spacing: 0.35em; box-shadow: 0 0 20px rgba(0,0,0,0.2); text-shadow: 0 0 8px var(--accent-color);
-        }
+        .nav-btn { display: flex; align-items: center; justify-content: center; width: 220px; height: 45px; background: var(--ui-bg); border: 1px solid var(--ui-border); color: var(--text-main); text-decoration: none; font-family: var(--font-en); font-size: 10px; letter-spacing: 0.2em; position: relative; overflow: hidden; transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1); }
+        .nav-btn::before { content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); transform: skewX(-20deg); transition: 0.5s; }
+        .nav-btn::after { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--accent-color); transform: scaleY(0); transition: transform 0.4s; }
+        .nav-btn:hover { border-color: var(--accent-color); background: rgba(128,128,128, 0.1); letter-spacing: 0.35em; box-shadow: 0 0 20px rgba(0,0,0,0.2); text-shadow: 0 0 8px var(--accent-color); }
         .nav-btn:hover::before { left: 150%; transition: 0.7s; }
         .nav-btn:hover::after { transform: scaleY(1); }
-
-        /* --- Modal --- */
-        #bg-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
-            z-index: 200; display: flex; justify-content: center; align-items: center;
-            opacity: 0; pointer-events: none; transition: 0.3s;
-        }
+        #bg-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 200; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s; }
         #bg-modal.open { opacity: 1; pointer-events: auto; }
-        .modal-content {
-            background: rgba(20,20,20,0.9); border: 1px solid var(--accent-color);
-            padding: 40px; border-radius: 4px; max-width: 600px; width: 90%; text-align: center;
-        }
+        .modal-content { background: rgba(20,20,20,0.9); border: 1px solid var(--accent-color); padding: 40px; border-radius: 4px; max-width: 600px; width: 90%; text-align: center; }
         .modal-title { font-family: var(--font-en); color: #fff; margin-bottom: 20px; letter-spacing: 0.1em; }
         .bg-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 15px; }
-        .bg-option {
-            aspect-ratio: 16/9; border: 2px solid #444; cursor: pointer;
-            display: flex; justify-content: center; align-items: center;
-            font-family: var(--font-en); font-size: 12px; color: #fff;
-            background-size: cover; background-position: center; transition: 0.2s;
-        }
+        .bg-option { aspect-ratio: 16/9; border: 2px solid #444; cursor: pointer; display: flex; justify-content: center; align-items: center; font-family: var(--font-en); font-size: 12px; color: #fff; background-size: cover; background-position: center; transition: 0.2s; }
         .bg-option:hover { border-color: var(--accent-color); transform: scale(1.05); }
         .bg-black { background: #000; }
         .bg-white { background: #fff; color: #000; }
         .close-modal { margin-top: 20px; background: none; border: 1px solid #555; color: #aaa; padding: 8px 20px; cursor: pointer; transition: 0.2s; }
         .close-modal:hover { color: #fff; border-color: #fff; }
-
         @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
@@ -405,7 +186,6 @@
                     <span id="name-label-1" class="char-name-label">SYSTEM</span>
                     <span id="text-1"></span><span class="cursor"></span>
                 </div>
-                <!-- ▼▼▼ 修正: style="opacity: 0;" を削除しました ▼▼▼ -->
                 <div id="bubble-2" class="speech-bubble">
                     <span id="name-label-2" class="char-name-label">SYSTEM</span>
                     <span id="text-2"></span><span class="cursor"></span>
@@ -441,6 +221,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script type="module">
         import { login, logout, monitorAuth, loadFromCloud } from "./character/firestore.js";
+        // ★dialogue.js の関数を読み込み
+        import { getHomeDialogue } from "./character/data/dialogue.js";
 
         const LOCAL_IMG_BASE = "./images/character/";
         const PHOTO_BASE = "./images/photo/";
@@ -466,7 +248,7 @@
         // --- BGM ---
         const bgmPlayer = document.getElementById('bgm-player');
         const playBtn = document.getElementById('btn-play');
-        bgmPlayer.volume = 0.3;
+        if(bgmPlayer) bgmPlayer.volume = 0.3;
 
         window.toggleBGM = () => {
             if (bgmPlayer.paused) {
@@ -508,25 +290,6 @@
             bgGrid.appendChild(div);
         }
 
-        // --- ★修正点2: [NEXT]を区切ってランダム選択する関数を追加 ---
-        function pickRandomLine(text) {
-            if (!text) return null;
-            
-            // 1. [NEXT]で区切ってランダム選択 (新仕様)
-            if (text.includes('[NEXT]')) {
-                const patterns = text.split('[NEXT]');
-                return patterns[Math.floor(Math.random() * patterns.length)].trim();
-            }
-            // 2. 改行で区切ってランダム選択 (旧データ救済)
-            const cleanText = text.replace(/<br>/gi, '\n');
-            if (cleanText.includes('\n')) {
-                const lines = cleanText.split('\n').map(l => l.trim()).filter(l => l !== "");
-                if (lines.length > 0) return lines[Math.floor(Math.random() * lines.length)];
-            }
-            // 3. そのまま
-            return text;
-        }
-
         // --- Logic: Dialogue Selection ---
         function getDuoConversation(char1, char2) {
             if (!char1 || !char2) return null;
@@ -547,20 +310,6 @@
                 }
             }
             return null;
-        }
-
-        // ★修正点3: pickRandomLineを使うように変更
-        function getSoloDialogue(selfChar, isDuoMode) {
-            const currentSan = (selfChar.vitals && selfChar.vitals.san) ? parseInt(selfChar.vitals.san) : 99;
-            if (currentSan <= 20 && selfChar.dialogue_lowsan) return pickRandomLine(selfChar.dialogue_lowsan);
-            if (isDuoMode && selfChar.dialogue_duo) return pickRandomLine(selfChar.dialogue_duo);
-            
-            const hour = new Date().getHours();
-            if (hour >= 5 && hour < 11 && selfChar.dialogue_morning) return pickRandomLine(selfChar.dialogue_morning);
-            if (selfChar.dialogue_day && hour >= 11 && hour < 18) return pickRandomLine(selfChar.dialogue_day);
-            if ((hour >= 18 || hour < 5) && selfChar.dialogue_night) return pickRandomLine(selfChar.dialogue_night);
-
-            return pickRandomLine(selfChar.dialogue_default) || pickRandomLine(selfChar.remarks) || selfChar.txtRoleplay || "……。";
         }
 
         // --- Display ---
@@ -611,12 +360,16 @@
                     text1 = convSet.text1;
                     text2 = convSet.text2;
                 } else {
-                    text1 = getSoloDialogue(char1, true);
-                    text2 = getSoloDialogue(char2, true);
+                    // ★ dialogue.js の関数を使用
+                    text1 = getHomeDialogue(char1, {});
+                    text2 = getHomeDialogue(char2, {});
                 }
             } else {
-                text1 = getSoloDialogue(char1, false);
+                // ★ dialogue.js の関数を使用
+                text1 = getHomeDialogue(char1, {});
             }
+            
+            // 安全のために改行コードの統一などは行いますが、基本はJS側で処理済み
             if(text1) text1 = text1.replace(/<br>/g, "\n");
             if(text2) text2 = text2.replace(/<br>/g, "\n");
 
@@ -799,23 +552,21 @@
             let text1 = "", text2 = "";
 
             if (isDuo) {
-                // DUOモード: 会話の再抽選
                 const convSet = getDuoConversation(char1, char2);
                 if (convSet) {
                     text1 = convSet.text1;
                     text2 = convSet.text2;
                 } else {
-                    text1 = getSoloDialogue(char1, true);
-                    text2 = getSoloDialogue(char2, true);
+                    text1 = getHomeDialogue(char1, {});
+                    text2 = getHomeDialogue(char2, {});
                 }
             } else {
-                // SOLOモード: セリフの再取得
-                text1 = getSoloDialogue(char1, false);
+                text1 = getHomeDialogue(char1, {});
             }
             if(text1) text1 = text1.replace(/<br>/g, "\n");
             if(text2) text2 = text2.replace(/<br>/g, "\n");
 
-            // バブルを一度非表示にしてから再表示（タイプライター演出を実行）
+            // バブルを一度非表示にしてから再表示
             bubble1.classList.remove('show');
             if(isDuo) bubble2.classList.remove('show');
 
@@ -834,19 +585,12 @@
 
         // タイマーのセット
         setInterval(() => {
-            // ログイン中かつ、手動操作中でない場合に実行
-            if (currentUser) {
-                refreshDialogueOnly();
-            }
+            if (currentUser) refreshDialogueOnly();
         }, DIALOGUE_INTERVAL);
 
         setInterval(() => {
-            // ログイン中かつ、キャラクターデータが2件以上ある場合のみ実行
-            if (currentUser && charDataList.length > 1) {
-                nextChar(); // 既存のキャラ送り関数を利用（画像も変わります）
-            }
+            if (currentUser && charDataList.length > 1) nextChar();
         }, CHARACTER_INTERVAL);
-        // -----------------------------------------------------
         
     </script>
 </body>
