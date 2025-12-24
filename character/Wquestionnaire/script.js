@@ -1,4 +1,5 @@
 import { PAIR_QUESTIONS } from "./questions.js";
+import { createPairSurveyRecord, addSurveyToCharacter } from "../data/schema.js";
 import { loadFromCloud, saveToCloud, login, monitorAuth } from "../firestore.js";
 
 const { createApp, ref, reactive, computed, onMounted } = Vue;
@@ -89,20 +90,17 @@ createApp({
                 timestamp: timestamp,
             };
 
+            // 保存用ヘルパー関数（書き換え後）
             const saveForChar = async (charObj, myAnswers, partnerName, partnerAnswers) => {
                 if (currentUserUid.value && charObj.original) {
-                    const dataToSave = { ...charObj.original };
-                    if (!dataToSave.surveys) dataToSave.surveys = [];
                     
-                    const myRecord = { 
-                        ...pairResultBase,
-                        summary: `Pair Survey with ${partnerName}`,
-                        partner: partnerName,
-                        answers: { ...myAnswers },
-                        partnerAnswers: { ...partnerAnswers } 
-                    };
+                    // ★ 1. ルールに従ってレコード作成
+                    const myRecord = createPairSurveyRecord(myAnswers, partnerName, partnerAnswers);
 
-                    dataToSave.surveys.push(myRecord);
+                    // ★ 2. ルールに従ってデータ統合
+                    const dataToSave = addSurveyToCharacter(charObj.original, myRecord);
+
+                    // 保存実行
                     await saveToCloud(dataToSave);
                 }
             };

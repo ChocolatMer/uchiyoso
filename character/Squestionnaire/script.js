@@ -1,5 +1,6 @@
 import { QUESTIONS_DATA } from "./questions.js";
 // ルートにある firestore.js を読み込む
+import { createSoloSurveyRecord, addSurveyToCharacter } from "../data/schema.js";
 import { loadFromCloud, saveToCloud, login, monitorAuth } from "../firestore.js";
 
 const { createApp, ref, reactive, onMounted, computed } = Vue;
@@ -170,30 +171,21 @@ createApp({
             showStamp.value = true;
             setTimeout(() => showStamp.value = false, 2500);
 
-            // 保存データ構築
-            const newRecord = {
-                id: Date.now().toString(), // 一意のID
-                timestamp: new Date().toISOString(),
-                summary: Object.values(answers)[0] || 'No answer',
-                answers: { ...answers } // 回答のコピー
-            };
+            // ★ 1. ルールに従って保存用データを作る
+            const newRecord = createSoloSurveyRecord(answers);
 
-            // ローカルの履歴に追加
+            // ローカルの履歴に追加（画面表示用）
             history.value.unshift(newRecord);
 
             // サーバー保存処理
             if (currentUser.uid && currentUser.originalData) {
-                // 既存データがあれば、そこにsurveysを追加して保存
-                const charData = { ...currentUser.originalData };
-                if (!charData.surveys) charData.surveys = [];
+                // ★ 2. ルールに従ってキャラデータに履歴を統合
+                const charData = addSurveyToCharacter(currentUser.originalData, newRecord);
                 
-                charData.surveys.push(newRecord);
-                
-                // サーバーへ送信 (firestore.js)
-                // ※ saveToCloudは alert を出すので、連続保存時は注意
+                // サーバーへ送信
                 await saveToCloud(charData);
                 
-                // 元データも更新しておく
+                // 次回のために手元のデータも更新
                 currentUser.originalData = charData;
             }
         };
