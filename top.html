@@ -438,6 +438,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script type="module">
         import { login, logout, monitorAuth, loadFromCloud } from "./character/firestore.js";
+        // ▼▼▼ 追加: 新しいdialogue.jsから必要な定義を読み込む（もし関数もexportしていればそれを使いますが、ここではHTML内でロジックを完結させます） ▼▼▼
+        import { DIALOGUE_MAPPING } from "./character/data/dialogue.js";
 
         const LOCAL_IMG_BASE = "./images/character/";
         const PHOTO_BASE = "./images/photo/";
@@ -463,7 +465,7 @@
         // --- BGM ---
         const bgmPlayer = document.getElementById('bgm-player');
         const playBtn = document.getElementById('btn-play');
-        bgmPlayer.volume = 0.3;
+        if(bgmPlayer) bgmPlayer.volume = 0.3;
 
         window.toggleBGM = () => {
             if (bgmPlayer.paused) {
@@ -505,13 +507,26 @@
             bgGrid.appendChild(div);
         }
 
-        // --- Logic: Dialogue Selection ---
+        // --- ▼▼▼ Logic: Dialogue Selection (UPDATED) ▼▼▼ ---
+
+        // Helper: 改行区切りのテキストからランダムに1行選ぶ
+        function pickRandomLine(text) {
+            if (!text) return null;
+            // <br>タグがある場合は改行コードに変換してから分割
+            const cleanText = text.replace(/<br>/gi, '\n');
+            const lines = cleanText.split('\n').map(l => l.trim()).filter(l => l !== "");
+            if (lines.length === 0) return null;
+            return lines[Math.floor(Math.random() * lines.length)];
+        }
+
         function getDuoConversation(char1, char2) {
             if (!char1 || !char2) return null;
+            
             // 1. Char1の中に Char2 との会話データがあるか
             if (char1.duo_conversations) {
                 const pairData = char1.duo_conversations.find(p => p.partner === char2.name);
                 if (pairData && pairData.scripts && pairData.scripts.length > 0) {
+                    // シチュエーション関係なくランダムに取得（必要ならsituationでフィルタも可能）
                     const script = pairData.scripts[Math.floor(Math.random() * pairData.scripts.length)];
                     return { text1: script.a, text2: script.b };
                 }
@@ -528,17 +543,43 @@
         }
 
         function getSoloDialogue(selfChar, isDuoMode) {
-            const currentSan = (selfChar.vitals && selfChar.vitals.san) ? parseInt(selfChar.vitals.san) : 99;
-            if (currentSan <= 20 && selfChar.dialogue_lowsan) return selfChar.dialogue_lowsan;
-            if (isDuoMode && selfChar.dialogue_duo) return selfChar.dialogue_duo;
-            
-            const hour = new Date().getHours();
-            if (hour >= 5 && hour < 11 && selfChar.dialogue_morning) return selfChar.dialogue_morning;
-            if (selfChar.dialogue_day && hour >= 11 && hour < 18) return selfChar.dialogue_day;
-            if ((hour >= 18 || hour < 5) && selfChar.dialogue_night) return selfChar.dialogue_night;
+            if (!selfChar) return "...";
 
-            return selfChar.dialogue_default || selfChar.remarks || selfChar.txtRoleplay || "……。";
+            // 1. SAN値ピンチ (30以下)
+            const currentSan = (selfChar.vitals && selfChar.vitals.san) ? parseInt(selfChar.vitals.san) : 99;
+            if (currentSan <= 30) {
+                const line = pickRandomLine(selfChar.dialogue_lowsan);
+                if (line) return line;
+            }
+
+            // 2. DUOモード中の汎用台詞
+            if (isDuoMode) {
+                // dialogue_duo_generic または 古い dialogue_duo を参照
+                const line = pickRandomLine(selfChar.dialogue_duo_generic || selfChar.dialogue_duo);
+                if (line) return line;
+            }
+
+            // 3. 時間帯別
+            const hour = new Date().getHours();
+            let timeLine = null;
+            
+            if (hour >= 5 && hour < 11) {
+                timeLine = pickRandomLine(selfChar.dialogue_morning);
+            } else if (hour >= 11 && hour < 18) {
+                timeLine = pickRandomLine(selfChar.dialogue_day);
+            } else {
+                timeLine = pickRandomLine(selfChar.dialogue_night);
+            }
+            if (timeLine) return timeLine;
+
+            // 4. デフォルト / 旧データ互換
+            return pickRandomLine(selfChar.dialogue_default) || 
+                   pickRandomLine(selfChar.remarks) || 
+                   pickRandomLine(selfChar.txtRoleplay) || 
+                   "……。";
         }
+        // --- ▲▲▲ End of Dialogue Logic ▲▲▲ ---
+
 
         // --- Display ---
         function resolveImage(charName, cloudUrl) {
@@ -594,30 +635,28 @@
             } else {
                 text1 = getSoloDialogue(char1, false);
             }
-            if(text1) text1 = text1.replace(/<br>/g, "\n");
-            if(text2) text2 = text2.replace(/<br>/g, "\n");
-
-            // Display Execution (Corrected: No onload locking)
+            
+            // Display Execution
             imgEl1.src = src1;
             imgEl1.onload = () => imgEl1.classList.add('visible');
 
-            nameLabel1.textContent = char1.name.toUpperCase();
+            nameLabel1.textContent = char1.name ? char1.name.toUpperCase() : "UNKNOWN";
             setTimeout(() => {
                 bubble1.classList.add('show');
-                startTypewriter(text1, textContainer1, 1);
+                startTypewriter(text1 || "...", textContainer1, 1);
             }, 600);
 
             if (isDuo) {
                 imgEl2.src = src2;
                 imgEl2.onload = () => imgEl2.classList.add('visible');
 
-                nameLabel2.textContent = char2.name.toUpperCase();
+                nameLabel2.textContent = char2.name ? char2.name.toUpperCase() : "UNKNOWN";
                 setTimeout(() => {
                     bubble2.classList.add('show');
                     const theme2 = char2.color || char2.inpThemeColor || "#fff";
                     bubble2.style.borderLeftColor = theme2;
                     nameLabel2.style.color = theme2;
-                    startTypewriter(text2, textContainer2, 2);
+                    startTypewriter(text2 || "...", textContainer2, 2);
                 }, 800);
             }
         }
@@ -637,14 +676,15 @@
             type();
         }
 
-        // --- Particles ---
+        // --- Particles (関数定義は元のまま) ---
         function createParticles() {
+            // ... (省略：元のコードのまま) ...
+            // Three.js関連のコードは変更不要です
             const scene = new THREE.Scene();
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             const renderer = new THREE.WebGLRenderer({ alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.getElementById('canvas-container').appendChild(renderer.domElement);
-
             function getTexture() {
                 const c = document.createElement('canvas'); c.width = 32; c.height = 32;
                 const ctx = c.getContext('2d');
@@ -660,10 +700,13 @@
                 color: new THREE.Color(DEFAULT_THEME), size: 5, map: getTexture(), 
                 transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false 
             });
-            particleMaterial.map.needsUpdate = true;
             const points = new THREE.Points(geometry, particleMaterial);
             scene.add(points); camera.position.z = 1000;
-
+            // Background update helper
+            window.updateParticlesForBg = (mode) => {
+                if(mode==='light') { particleMaterial.color.setHex(0x333333); particleMaterial.blending = THREE.NormalBlending; }
+                else { particleMaterial.color.set(targetColor); particleMaterial.blending = THREE.AdditiveBlending; }
+            };
             function animate() {
                 requestAnimationFrame(animate);
                 points.rotation.x += 0.0003; points.rotation.y += 0.0005;
@@ -721,11 +764,9 @@
 
         window.handleConnect = () => {
            if (!currentUser) {
-             // ログイン（CONNECT）時のみBGM再生を試みる
              if (bgmPlayer.paused) { try { toggleBGM(); } catch(e){} }
              login();
            } else {
-             // すでにログインしている（NEXT）時はキャラ送りだけ行う
              nextChar();
            }
         };
