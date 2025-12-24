@@ -49,7 +49,7 @@
         .char-img.visible:hover { transform: translateY(-5px) scale(1.02); filter: brightness(1.1); }
         .bubbles-layer { position: absolute; width: 100%; height: 100%; top: 0; left: 0; pointer-events: none; z-index: 10; }
         
-        /* ★修正: 吹き出しのデザイン調整 */
+        /* 吹き出しのスタイル */
         .speech-bubble {
             position: absolute;
             font-family: var(--font-jp); font-weight: 300; letter-spacing: 0.05em;
@@ -59,15 +59,14 @@
             border-top: 1px solid rgba(255,255,255,0.1);
             box-shadow: 0 15px 40px rgba(0,0,0,0.6);
             
-            /* 横幅の制御: 最低300px確保、最大500pxまで伸びる */
-            min-width: 300px;
-            max-width: 500px;
+            min-width: 300px; /* 最小幅 */
+            max-width: 500px; /* 最大幅 */
             
             line-height: 1.8;
-            opacity: 0; transition: opacity 0.5s ease; /* フェードイン・アウト用 */
+            opacity: 0; transition: opacity 0.5s ease;
         }
         
-        /* 中身のテキスト用: ここで改行を有効にする */
+        /* 改行コードを有効にする設定 */
         #text-1, #text-2 {
             white-space: pre-wrap;
         }
@@ -198,7 +197,7 @@
             </div>
         </section>
 
-        <!-- Right Nav (Added Duo Edit Link) -->
+        <!-- Right Nav -->
         <nav class="main-nav">
             <div class="nav-btn-group">
                 <span class="btn-label">QUICK EDIT</span>
@@ -226,16 +225,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script type="module">
         import { login, logout, monitorAuth, loadFromCloud } from "./character/firestore.js";
+        // dialogue.jsから表示ロジックを読み込み
         import { getHomeDialogue } from "./character/data/dialogue.js";
 
         const LOCAL_IMG_BASE = "./images/character/";
         const PHOTO_BASE = "./images/photo/";
         const DEFAULT_THEME = "#00ffcc";
         
+        // ★修正: 変数をここにまとめて宣言（エラー防止）
         let currentUser = null;
         let charDataList = [];
         let currentIndex = 0;
-        let lastUpdateTime = 0; 
+        let lastUpdateTime = 0; // 自動更新タイマー制御用
         let typeWriterTimeout1 = null;
         let typeWriterTimeout2 = null;
         let isDuo = false; 
@@ -295,27 +296,26 @@
             bgGrid.appendChild(div);
         }
 
-        // --- Logic: Dialogue Selection ---
+        // --- Logic ---
         function getDuoConversation(char1, char2) {
             if (!char1 || !char2) return null;
             if (char1.duo_conversations) {
-                const pairData = char1.duo_conversations.find(p => p.partner === char2.name);
-                if (pairData && pairData.scripts && pairData.scripts.length > 0) {
-                    const script = pairData.scripts[Math.floor(Math.random() * pairData.scripts.length)];
+                const pair = char1.duo_conversations.find(p => p.partner === char2.name);
+                if (pair && pair.scripts && pair.scripts.length > 0) {
+                    const script = pair.scripts[Math.floor(Math.random() * pair.scripts.length)];
                     return { text1: script.a, text2: script.b };
                 }
             }
             if (char2.duo_conversations) {
-                const pairData = char2.duo_conversations.find(p => p.partner === char1.name);
-                if (pairData && pairData.scripts && pairData.scripts.length > 0) {
-                    const script = pairData.scripts[Math.floor(Math.random() * pairData.scripts.length)];
-                    return { text1: script.b, text2: script.a }; 
+                const pair = char2.duo_conversations.find(p => p.partner === char1.name);
+                if (pair && pair.scripts && pair.scripts.length > 0) {
+                    const script = pair.scripts[Math.floor(Math.random() * pair.scripts.length)];
+                    return { text1: script.b, text2: script.a }; // 反転
                 }
             }
             return null;
         }
 
-        // --- Display ---
         function resolveImage(charName, cloudUrl) {
             return new Promise((resolve) => {
                 if (!charName) { resolve(cloudUrl || fallbackData[0].image); return; }
@@ -327,6 +327,7 @@
             });
         }
 
+        // --- Display ---
         const imgEl1 = document.getElementById('char-img-1');
         const imgEl2 = document.getElementById('char-img-2');
         const bubble1 = document.getElementById('bubble-1');
@@ -393,7 +394,9 @@
                     startTypewriter(text2, textContainer2, 2);
                 }, 800);
             }
-              lastUpdateTime = Date.now(); 
+            
+            // ★修正: 更新時間を記録（初期連打防止）
+            lastUpdateTime = Date.now();
         }
 
         function startTypewriter(text, container, id) {
@@ -509,13 +512,11 @@
             updateDisplay();
         }
 
-        // ★修正: モード切替時に静かにフェードアウトさせる処理を追加
         window.setMode = (mode) => {
-            // 1. まず吹き出しを消す (透明にする)
+            // モード切替のフェードアウト演出
             document.getElementById('bubble-1').classList.remove('show');
             document.getElementById('bubble-2').classList.remove('show');
 
-            // 2. フェードアウトの時間 (0.5秒) だけ待ってからモードを切り替える
             setTimeout(() => {
                 isDuo = (mode === 'duo');
                 document.getElementById('btn-solo').classList.toggle('active', !isDuo);
@@ -531,31 +532,19 @@
                     document.getElementById('char-img-2').style.display = 'none';
                 }
                 
-                // 3. データ更新 (ここで新しい台詞が表示され、フェードインする)
                 updateDisplay();
             }, 500);
         };
 
         createParticles(); initNews();
 
- // -----------------------------------------------------
-        // ▼ 追加: オートプレイ機能（会話更新とキャラクター変更） ▼
-        // -----------------------------------------------------
-
-        // 設定時間（ミリ秒）: 会話=15秒, キャラ変更=45秒
+        // --- Auto Play Logic ---
         const DIALOGUE_INTERVAL = 15000; 
         const CHARACTER_INTERVAL = 45000; 
-        
-        // ★修正点1: 最後に更新した時間を記録する変数を追加
-        let lastUpdateTime = 0;
 
-        // 画像はそのままで、会話テキストだけリフレッシュする関数
         function refreshDialogueOnly() {
-            // データが無い場合はスキップ
             if (!charDataList || charDataList.length === 0) return;
-
-            // ★修正点2: 前回の更新から時間が経っていないなら何もしない (読み込み直後の連打防止)
-            // (まだ5秒も経っていないならスキップする設定)
+            // 連打防止: 5秒未満の再更新はスキップ
             if (Date.now() - lastUpdateTime < 5000) return;
 
             const char1 = charDataList[currentIndex];
@@ -593,33 +582,20 @@
                     startTypewriter(text2, textContainer2, 2);
                 }, 700);
             }
-            
-            // ★修正点3: 更新時間を記録
             lastUpdateTime = Date.now();
         }
 
-        // また、初期表示の updateDisplay 関数内でも時間を記録する必要があります。
-        // updateDisplay関数の一部も修正が必要ですが、
-        // ここで簡易的に、updateDisplayが呼ばれるであろうタイミングで時間を更新するようにします。
-        
-        // 元の updateDisplay 関数の中に「lastUpdateTime = Date.now();」を1行足すのがベストですが、
-        // 既存コードをあまり触りたくない場合は、以下のハックでも機能します。
-        
-        // タイマーのセット
         setInterval(() => {
-            if (currentUser) {
-                refreshDialogueOnly();
-            }
+            if (currentUser) refreshDialogueOnly();
         }, DIALOGUE_INTERVAL);
 
         setInterval(() => {
             if (currentUser && charDataList.length > 1) {
                 nextChar();
-                // キャラ変更時も更新時間をリセット扱いに
                 lastUpdateTime = Date.now();
             }
         }, CHARACTER_INTERVAL);
-
+        
     </script>
 </body>
 </html>
