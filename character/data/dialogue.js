@@ -64,11 +64,13 @@ export function pickRandomLine(text) {
     }
     
     // 2. 古い形式 (改行区切り) の場合の救済措置
-    // [NEXT] がなくて改行があるなら、昔のデータとして扱う
+    // 削除：改行を「表示上の改行」として扱うため、ここでは分割しない
+    /*
     if (text.includes('\n')) {
         const lines = text.split('\n').map(l => l.trim()).filter(l => l !== "");
         return lines[Math.floor(Math.random() * lines.length)];
     }
+    */
 
     // 3. 1行だけの場合
     return text;

@@ -318,13 +318,10 @@
                 const rawText = charData[field.key] || "";
                 const containerId = `container-${field.id}`;
                 
-                // [NEXT] または 改行 で分割 (pickRandomLineのロジックに合わせる)
+                // [NEXT] で分割。なければ全体を1つのパターン（改行含む）とする
                 let patterns = [];
                 if (rawText.includes('[NEXT]')) {
                     patterns = rawText.split('[NEXT]');
-                } else if (rawText.includes('\n')) {
-                    // 古いデータ形式の救済（改行区切り）
-                    patterns = rawText.split('\n');
                 } else {
                     patterns = [rawText];
                 }
