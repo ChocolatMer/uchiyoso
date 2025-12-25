@@ -131,7 +131,6 @@
         .toggle-switch.active .toggle-knob { left: 22px; background: #000; }
         .close-modal { margin-top: 10px; background: none; border: 1px solid #555; color: #aaa; padding: 8px 20px; cursor: pointer; transition: 0.2s; font-family: var(--font-en); font-size: 10px; letter-spacing: 0.2em; }
         .close-modal:hover { color: #fff; border-color: #fff; }
-        /* --- 追加: Duoモード選択用UI --- */
         .slot-selector { display: flex; gap: 10px; width: 100%; margin-bottom: 15px; justify-content: center; }
         .slot-btn { 
             flex: 1; border: 1px solid var(--ui-border); color: var(--text-sub); 
@@ -143,7 +142,6 @@
             background: var(--accent-color); color: #000; border-color: var(--accent-color); 
             box-shadow: 0 0 10px var(--accent-color); font-weight: bold;
         }
-        /* ソロモード時は右側選択ボタンを隠す */
         .mode-solo .slot-selector { display: none; }
         @keyframes blink { 50% { opacity: 0; } }
     </style>
@@ -180,7 +178,6 @@
         <div class="modal-content">
             <h3 class="modal-title">SELECT CHARACTER</h3>
             
-            <!-- 追加: 左右選択ボタン -->
             <div class="slot-selector">
                 <button id="slot-btn-1" class="slot-btn active" onclick="selectEditSlot(1)">LEFT CHAR</button>
                 <button id="slot-btn-2" class="slot-btn" onclick="selectEditSlot(2)">RIGHT CHAR</button>
@@ -272,13 +269,12 @@
         const PHOTO_BASE = "./images/photo/";
         const DEFAULT_THEME = "#00ffcc";
         
-        // ★状態変数（変更: 2人分管理するように分離）
         let currentUser = null;
         let charDataList = [];
         
-        let currentIndex1 = 0; // 左側（またはソロ）
-        let currentIndex2 = 1; // 右側
-        let editingSlot = 1;   // 現在モーダルで選ぼうとしているのはどちらか (1 or 2)
+        let currentIndex1 = 0; 
+        let currentIndex2 = 1; 
+        let editingSlot = 1;
 
         let lastUpdateTime = 0;
         let typeWriterTimeout1 = null;
@@ -286,10 +282,8 @@
         let isDuo = false; 
         let isAutoRotate = true;
         
-        // 音楽リスト
         const musicList = [
             { title: "Aoren", url: "./sound/aoren.mp3" },
-            // 必要に応じて追加
         ];
 
         let particleMaterial;
@@ -318,7 +312,6 @@
         };
         window.changeVolume = (v) => { bgmPlayer.volume = v; };
 
-        // Music Selection Logic
         window.playTrack = (url, index) => {
             bgmPlayer.src = url;
             const items = document.querySelectorAll('#music-list .list-item');
@@ -342,7 +335,7 @@
             });
         }
 
-        // --- Draggable Bubbles Logic ---
+        // --- Draggable Bubbles ---
         function makeDraggable(elm) {
             let isDragging = false;
             let startX, startY;
@@ -351,95 +344,61 @@
             elm.addEventListener('mousedown', dragStart);
             document.addEventListener('mouseup', dragEnd);
             document.addEventListener('mousemove', drag);
-
             elm.addEventListener('touchstart', dragStart, {passive: false});
             document.addEventListener('touchend', dragEnd);
             document.addEventListener('touchmove', drag, {passive: false});
 
             function dragStart(e) {
                 if (e.target.closest('.char-name-label')) return; 
-
                 isDragging = true;
                 elm.style.transition = 'none'; 
-                
                 const clientX = e.type === 'mousedown' ? e.clientX : e.touches[0].clientX;
                 const clientY = e.type === 'mousedown' ? e.clientY : e.touches[0].clientY;
-
-                startX = clientX;
-                startY = clientY;
-                
+                startX = clientX; startY = clientY;
                 if(!elm.style.left) elm.style.left = elm.offsetLeft + 'px';
                 if(!elm.style.top) elm.style.top = elm.offsetTop + 'px';
-                
-                elm.style.bottom = 'auto'; 
-                elm.style.transform = 'none'; 
-
+                elm.style.bottom = 'auto'; elm.style.transform = 'none'; 
                 initialLeft = parseInt(elm.style.left || 0);
                 initialTop = parseInt(elm.style.top || 0);
             }
-
             function drag(e) {
                 if (!isDragging) return;
                 e.preventDefault(); 
-
                 const clientX = e.type === 'mousemove' ? e.clientX : e.touches[0].clientX;
                 const clientY = e.type === 'mousemove' ? e.clientY : e.touches[0].clientY;
-
-                const dx = clientX - startX;
-                const dy = clientY - startY;
-
+                const dx = clientX - startX; const dy = clientY - startY;
                 elm.style.left = (initialLeft + dx) + 'px';
                 elm.style.top = (initialTop + dy) + 'px';
             }
-
             function dragEnd() {
                 if (!isDragging) return;
                 isDragging = false;
                 elm.style.transition = 'opacity 0.5s ease'; 
-
-                // ★追加: ドラッグ後のクリックイベント伝播を防止
-                function preventClick(e) {
-                    e.stopPropagation();
-                    elm.removeEventListener('click', preventClick);
-                }
+                function preventClick(e) { e.stopPropagation(); elm.removeEventListener('click', preventClick); }
                 elm.addEventListener('click', preventClick, { once: true });
             }
         }
-
         makeDraggable(document.getElementById('bubble-1'));
         makeDraggable(document.getElementById('bubble-2'));
 
-        // --- Modals Logic ---
-        window.closeAllModals = () => {
-            document.querySelectorAll('.modal-overlay').forEach(el => el.classList.remove('open'));
-        };
+        // --- Modals ---
+        window.closeAllModals = () => { document.querySelectorAll('.modal-overlay').forEach(el => el.classList.remove('open')); };
         window.openBgModal = () => { window.closeAllModals(); document.getElementById('bg-modal').classList.add('open'); };
         window.openMusicModal = () => { window.closeAllModals(); document.getElementById('music-modal').classList.add('open'); };
-        
-        // ★ここを書き換えました
         window.openCharModal = () => { 
             window.closeAllModals(); 
             document.getElementById('char-modal').classList.add('open');
-            
-            // ▼ リストを描画する（これがないと空っぽになります）
             renderCharList(); 
-            
-            // ソロモードなら強制的に左側(スロット1)選択状態に戻す
-            if(!isDuo) {
-                selectEditSlot(1);
-            }
+            if(!isDuo) selectEditSlot(1);
         };
 
         window.setBgMode = (mode, photoIdx) => {
             const body = document.body;
             body.classList.remove('mode-black', 'mode-white', 'mode-photo');
             document.documentElement.style.setProperty('--bg-image-url', 'none');
-            
-            if (mode === 'black') {
-                body.classList.add('mode-black'); updateParticlesForBg('dark');
-            } else if (mode === 'white') {
-                body.classList.add('mode-white'); updateParticlesForBg('light');
-            } else if (mode === 'photo') {
+            if (mode === 'black') { body.classList.add('mode-black'); updateParticlesForBg('dark'); }
+            else if (mode === 'white') { body.classList.add('mode-white'); updateParticlesForBg('light'); }
+            else if (mode === 'photo') {
                 body.classList.add('mode-photo');
                 document.documentElement.style.setProperty('--bg-image-url', `url('${PHOTO_BASE}${photoIdx}.png')`);
                 updateParticlesForBg('dark');
@@ -456,19 +415,13 @@
             bgGrid.appendChild(div);
         }
 
-        // --- ★画像解決ロジック (軽量化・非同期化) ---
         function resolveImage(charName, cloudUrl, basePath = LOCAL_IMG_BASE) {
-            // Promiseを返しますが、待機はさせません
             return new Promise((resolve) => {
-                if (!charName) { 
-                    resolve(cloudUrl || "https://via.placeholder.com/800x1200?text=NO+IMAGE"); 
-                    return; 
-                }
+                if (!charName) { resolve(cloudUrl || "https://via.placeholder.com/800x1200?text=NO+IMAGE"); return; }
                 const localPath = `${basePath}${charName}.png`;
                 const img = new Image();
                 img.onload = () => resolve(localPath);
                 img.onerror = () => {
-                    // アイコンの場合のサイズ調整
                     const size = (basePath === LOCAL_ICON_BASE) ? "200x200" : "800x1200";
                     resolve(cloudUrl || `https://via.placeholder.com/${size}?text=${encodeURIComponent(charName)}`);
                 };
@@ -476,34 +429,20 @@
             });
         }
 
-        // --- ★ キャラクター選択リスト (重複バグ修正・高速化版) ---
         function renderCharList() {
             const container = document.getElementById('char-list');
-            // 一度中身を完全に空にする
             container.innerHTML = '';
-            
-            // 現在編集中のスロット（左か右か）に合わせて、ターゲットとなるインデックスを決める
             const targetIndex = (editingSlot === 1) ? currentIndex1 : currentIndex2;
-
-            // ★修正点: awaitを使わず、forEachで一気にHTML要素を作ってしまう
             charDataList.forEach((char, i) => {
                 const div = document.createElement('div');
                 div.className = 'char-select-item';
-                
-                // 選択中のキャラには色をつける
                 if(i === targetIndex) div.classList.add('selected');
                 
-                // まず仮の画像要素を作る
                 const img = document.createElement('img');
                 img.className = 'char-select-thumb';
                 img.alt = char.name;
-                // 仮の画像（ローディング用、または空）
                 img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"; 
-
-                // 非同期で本画像を取得し、完了次第差し替える（これでリスト生成を邪魔しない）
-                resolveImage(char.name, char.icon || char.image, LOCAL_ICON_BASE).then(src => {
-                    img.src = src;
-                });
+                resolveImage(char.name, char.icon || char.image, LOCAL_ICON_BASE).then(src => { img.src = src; });
 
                 const nameSpan = document.createElement('span');
                 nameSpan.className = 'char-select-name';
@@ -511,73 +450,40 @@
                 
                 div.appendChild(img);
                 div.appendChild(nameSpan);
-                
-                // クリック時の動作
                 div.onclick = () => {
-                    if (editingSlot === 1) {
-                        currentIndex1 = i;
-                    } else {
-                        currentIndex2 = i;
-                    }
-                    
-                    // 画面全体の表示更新
+                    if (editingSlot === 1) currentIndex1 = i; else currentIndex2 = i;
                     updateDisplay();
-                    
-                    // リストの選択表示だけを更新（リスト全体の再描画はしない）
                     document.querySelectorAll('.char-select-item').forEach(el => el.classList.remove('selected'));
                     div.classList.add('selected');
                 };
-                
                 container.appendChild(div);
             });
         }
 
-        // ★追加: 編集スロット切り替え関数（リスト再描画ではなく、選択状態の更新のみ行う）
         window.selectEditSlot = (slot) => {
             editingSlot = slot;
-            
-            // ボタンの見た目更新
             document.getElementById('slot-btn-1').classList.toggle('active', slot === 1);
             document.getElementById('slot-btn-2').classList.toggle('active', slot === 2);
-            
-            // リストの「選択状態(selectedクラス)」を新しいスロットに合わせて更新
             const targetIndex = (slot === 1) ? currentIndex1 : currentIndex2;
-            const items = document.querySelectorAll('.char-select-item');
-            
-            items.forEach((item, index) => {
-                if (index === targetIndex) {
-                    item.classList.add('selected');
-                    // 選択されているアイテムが見えるようにスクロール
-                    item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                } else {
-                    item.classList.remove('selected');
-                }
+            document.querySelectorAll('.char-select-item').forEach((item, index) => {
+                if (index === targetIndex) { item.classList.add('selected'); item.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+                else item.classList.remove('selected');
             });
         };
 
-
-        // --- Logic ---
         function getDuoConversation(char1, char2) {
             if (!char1 || !char2) return null;
             if (char1.duo_conversations) {
                 const pair = char1.duo_conversations.find(p => p.partner === char2.name);
-                if (pair && pair.scripts && pair.scripts.length > 0) {
-                    const script = pair.scripts[Math.floor(Math.random() * pair.scripts.length)];
-                    return { text1: script.a, text2: script.b };
-                }
+                if (pair && pair.scripts && pair.scripts.length > 0) return { text1: pair.scripts[Math.floor(Math.random() * pair.scripts.length)].a, text2: pair.scripts[Math.floor(Math.random() * pair.scripts.length)].b };
             }
             if (char2.duo_conversations) {
                 const pair = char2.duo_conversations.find(p => p.partner === char1.name);
-                if (pair && pair.scripts && pair.scripts.length > 0) {
-                    const script = pair.scripts[Math.floor(Math.random() * pair.scripts.length)];
-                    return { text1: script.b, text2: script.a }; // 反転
-                }
+                if (pair && pair.scripts && pair.scripts.length > 0) return { text1: pair.scripts[Math.floor(Math.random() * pair.scripts.length)].b, text2: pair.scripts[Math.floor(Math.random() * pair.scripts.length)].a };
             }
             return null;
         }
 
-        // --- Display Update (ロジック修正) ---
-        // 要素取得変数はそのまま
         const imgEl1 = document.getElementById('char-img-1');
         const imgEl2 = document.getElementById('char-img-2');
         const bubble1 = document.getElementById('bubble-1');
@@ -590,19 +496,12 @@
 
         async function updateDisplay() {
             if (!charDataList.length) return;
-
-            // インデックス範囲チェック
             if (currentIndex1 >= charDataList.length) currentIndex1 = 0;
             if (currentIndex2 >= charDataList.length) currentIndex2 = 0;
-
-            // ★変更: 個別のインデックスを使用
+            
             const char1 = charDataList[currentIndex1];
             const char2 = charDataList[currentIndex2]; 
-
-            // モーダルが開いている場合、リストを更新（現在の選択状態を反映）
-            if(document.getElementById('char-modal').classList.contains('open')) {
-                await renderCharList();
-            }
+            if(document.getElementById('char-modal').classList.contains('open')) await renderCharList();
 
             imgEl1.classList.remove('visible');
             if (isDuo) imgEl2.classList.remove('visible');
@@ -613,22 +512,17 @@
             let src2 = null;
             if (isDuo) src2 = await resolveImage(char2.name, char2.image);
 
-            // テーマカラーは左側のキャラ優先
             const theme = char1.color || char1.inpThemeColor || DEFAULT_THEME;
             rootStyles.setProperty('--accent-color', theme);
             if (!document.body.classList.contains('mode-white')) targetColor.set(theme);
 
-            // 会話ロジック
             let text1 = "", text2 = "";
             if (isDuo) {
                 const convSet = getDuoConversation(char1, char2);
-                if (convSet) {
-                    text1 = convSet.text1;
-                    text2 = convSet.text2;
-                } else {
+                if (convSet) { text1 = convSet.text1; text2 = convSet.text2; }
+                else {
                     text1 = pickRandomLine(char1.dialogue_duo_generic);
                     if (!text1) text1 = getHomeDialogue(char1, {});
-
                     text2 = pickRandomLine(char2.dialogue_duo_generic);
                     if (!text2) text2 = getHomeDialogue(char2, {});
                 }
@@ -651,7 +545,6 @@
             if (isDuo) {
                 imgEl2.src = src2;
                 imgEl2.onload = () => imgEl2.classList.add('visible');
-
                 nameLabel2.textContent = char2.name.toUpperCase();
                 setTimeout(() => {
                     bubble2.classList.add('show');
@@ -661,7 +554,6 @@
                     startTypewriter(text2, textContainer2, 2);
                 }, 800);
             }
-            
             lastUpdateTime = Date.now();
         }
 
@@ -680,14 +572,12 @@
             type();
         }
 
-        // --- Particles ---
         function createParticles() {
             const scene = new THREE.Scene();
             const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             const renderer = new THREE.WebGLRenderer({ alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.getElementById('canvas-container').appendChild(renderer.domElement);
-
             function getTexture() {
                 const c = document.createElement('canvas'); c.width = 32; c.height = 32;
                 const ctx = c.getContext('2d');
@@ -706,7 +596,6 @@
             particleMaterial.map.needsUpdate = true;
             const points = new THREE.Points(geometry, particleMaterial);
             scene.add(points); camera.position.z = 1000;
-
             function animate() {
                 requestAnimationFrame(animate);
                 points.rotation.x += 0.0003; points.rotation.y += 0.0005;
@@ -715,12 +604,9 @@
             }
             animate();
             window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
-            window.updateParticlesForBg = (mode) => {
-                // Background color change logic helper if needed in future
-            };
+            window.updateParticlesForBg = (mode) => {};
         }
 
-        // --- News ---
         async function initNews() {
             const el = document.getElementById('news-content');
             const paths = ['./report.json', './TOP/report.json', '../TOP/report.json'];
@@ -731,9 +617,7 @@
                     if (res.ok) { data = await res.json(); break; }
                 } catch (e) {}
             }
-            if (!data || !data.length) {
-                el.textContent = "Welcome to Uchiyoso Archive."; el.classList.add('active'); return;
-            }
+            if (!data || !data.length) { el.textContent = "Welcome to Uchiyoso Archive."; el.classList.add('active'); return; }
             const cycle = () => {
                 el.classList.remove('active');
                 setTimeout(() => {
@@ -744,26 +628,41 @@
             cycle(); setInterval(cycle, 6000);
         }
 
-        // --- Auth & Mode ---
-        const userDisplay = document.getElementById('user-display');
-        const connectBtn = document.getElementById('main-connect-btn');
+        function setNewsError(msg) {
+            const el = document.getElementById('news-content');
+            el.textContent = "SYSTEM ALERT: " + msg;
+            el.style.color = "#ff4444";
+            el.classList.add('active');
+        }
 
-         // --- Auth & Mode ---
+        // --- Auth & Data Loading ---
         monitorAuth(
             async (user) => {
-                currentUser = user;
-                document.getElementById('user-display').textContent = (user.displayName || "MEMBER").toUpperCase();
-                document.getElementById('main-connect-btn').textContent = "NEXT";
-                const data = await loadFromCloud();
-                if (data && Object.keys(data).length > 0) charDataList = Object.values(data);
-                else charDataList = [{ name: "No Data", remarks: "データがありません。", color: "#555" }];
-                
-                renderMusicList();
-
-                // 初期化：ランダムに2人選ぶ
-                currentIndex1 = Math.floor(Math.random() * charDataList.length);
-                currentIndex2 = (currentIndex1 + 1) % charDataList.length;
-                updateDisplay();
+                try {
+                    currentUser = user;
+                    document.getElementById('user-display').textContent = (user.displayName || "MEMBER").toUpperCase();
+                    document.getElementById('main-connect-btn').textContent = "NEXT";
+                    
+                    // データの読み込み
+                    const data = await loadFromCloud();
+                    
+                    if (data && Object.keys(data).length > 0) {
+                        charDataList = Object.values(data);
+                    } else {
+                        // データが無い、または空の場合
+                        charDataList = [{ name: "No Data", remarks: "データが見つかりません。", color: "#555" }];
+                        setNewsError("NO DATA FOUND. PLEASE REGISTER.");
+                    }
+                    
+                    renderMusicList();
+                    currentIndex1 = Math.floor(Math.random() * charDataList.length);
+                    currentIndex2 = (currentIndex1 + 1) % charDataList.length;
+                    updateDisplay();
+                    
+                } catch(e) {
+                    console.error(e);
+                    setNewsError("LOAD FAILED: " + e.message);
+                }
             },
             () => {
                 currentUser = null; 
@@ -777,125 +676,79 @@
             }
         );
 
-        // NEXTボタンクリック時の動作（自動送りに近い挙動）
         function nextChar() {
             if (charDataList.length <= 1) return;
-            // NEXTボタンを押したときは、1人目を進め、2人目はその隣にする（スライドショー的挙動）
-            // ※完全にランダムにしたい場合はここを変えてください
             currentIndex1 = (currentIndex1 + 1) % charDataList.length;
             currentIndex2 = (currentIndex1 + 1) % charDataList.length;
             updateDisplay();
         }
 
         window.handleConnect = () => {
-           if (!currentUser) {
-             if (bgmPlayer.paused) { try { toggleBGM(); } catch(e){} }
-             login();
-           } else {
-             nextChar();
-           }
+           if (!currentUser) { if (bgmPlayer.paused) { try { toggleBGM(); } catch(e){} } login(); } else { nextChar(); }
         };
         
         window.handleCharClick = () => { if (currentUser) nextChar(); };
 
-        // --- Mode Setting ---
         window.setMode = (mode) => {
             document.getElementById('bubble-1').classList.remove('show');
             document.getElementById('bubble-2').classList.remove('show');
-
             setTimeout(() => {
                 isDuo = (mode === 'duo');
                 document.getElementById('btn-solo').classList.toggle('active', !isDuo);
                 document.getElementById('btn-duo').classList.toggle('active', isDuo);
                 const stage = document.getElementById('char-stage');
                 const body = document.body;
-                
-                // モーダルが開いていた場合、ボタン表示状態を更新
                 const slotSelector = document.querySelector('.slot-selector');
-                
                 if (isDuo) {
                     stage.classList.add('duo-mode'); body.classList.add('mode-duo'); body.classList.remove('mode-solo');
                     document.getElementById('char-img-2').style.display = 'block';
-                    // Duoになったら2人目が同じだと変なのでずらす
-                    if (currentIndex1 === currentIndex2 && charDataList.length > 1) {
-                        currentIndex2 = (currentIndex1 + 1) % charDataList.length;
-                    }
+                    if (currentIndex1 === currentIndex2 && charDataList.length > 1) currentIndex2 = (currentIndex1 + 1) % charDataList.length;
                     if(slotSelector) slotSelector.style.display = "flex";
                 } else {
                     stage.classList.remove('duo-mode'); body.classList.add('mode-solo'); body.classList.remove('mode-duo');
                     document.getElementById('char-img-2').style.display = 'none';
                     if(slotSelector) slotSelector.style.display = "none";
-                    // ソロに戻ったらスロット1を選択状態に戻しておく
                     selectEditSlot(1);
                 }
-                
                 updateDisplay();
             }, 500);
         };
 
         createParticles(); initNews();
 
-        // --- Auto Play Logic ---
-        const DIALOGUE_INTERVAL = 15000; 
-        const CHARACTER_INTERVAL = 45000; 
-
-        // --- Auto Play Logic (ロジック修正) ---
         function refreshDialogueOnly() {
             if (!charDataList || charDataList.length === 0) return;
             if (Date.now() - lastUpdateTime < 5000) return;
-
-            // ★変更: 変数名修正 currentIndex -> currentIndex1 / currentIndex2
             const char1 = charDataList[currentIndex1];
             const char2 = charDataList[currentIndex2];
-
             let text1 = "", text2 = "";
-
             if (isDuo) {
                 const convSet = getDuoConversation(char1, char2);
-                if (convSet) {
-                    text1 = convSet.text1;
-                    text2 = convSet.text2;
-                } else {
+                if (convSet) { text1 = convSet.text1; text2 = convSet.text2; }
+                else {
                     text1 = pickRandomLine(char1.dialogue_duo_generic);
                     if (!text1) text1 = getHomeDialogue(char1, {});
-
                     text2 = pickRandomLine(char2.dialogue_duo_generic);
                     if (!text2) text2 = getHomeDialogue(char2, {});
                 }
-            } else {
-                text1 = getHomeDialogue(char1, {});
-            }
-
+            } else { text1 = getHomeDialogue(char1, {}); }
             if(text1) text1 = text1.replace(/<br>/g, "\n");
             if(text2) text2 = text2.replace(/<br>/g, "\n");
-
             bubble1.classList.remove('show');
             if(isDuo) bubble2.classList.remove('show');
-
-            setTimeout(() => {
-                bubble1.classList.add('show');
-                startTypewriter(text1, textContainer1, 1);
-            }, 500);
-
-            if(isDuo) {
-                setTimeout(() => {
-                    bubble2.classList.add('show');
-                    startTypewriter(text2, textContainer2, 2);
-                }, 700);
-            }
+            setTimeout(() => { bubble1.classList.add('show'); startTypewriter(text1, textContainer1, 1); }, 500);
+            if(isDuo) { setTimeout(() => { bubble2.classList.add('show'); startTypewriter(text2, textContainer2, 2); }, 700); }
             lastUpdateTime = Date.now();
         }
 
-        // 定期更新処理（setIntervalは変更なし）
-        setInterval(() => {
-            if (currentUser) refreshDialogueOnly();
-        }, 15000); // DIALOGUE_INTERVAL
+        setInterval(() => { if (currentUser) refreshDialogueOnly(); }, 15000); 
+        setInterval(() => { if (currentUser && charDataList.length > 1 && isAutoRotate) { nextChar(); lastUpdateTime = Date.now(); } }, 45000); 
 
-        setInterval(() => {
-            if (currentUser && charDataList.length > 1 && isAutoRotate) {
-                nextChar();
-                lastUpdateTime = Date.now();
-            }
-        }, 45000); // CHARACTER_INTERVAL
-        
+        window.toggleAutoRotation = () => {
+            isAutoRotate = !isAutoRotate;
+            const toggle = document.getElementById('rotation-toggle');
+            toggle.classList.toggle('active', isAutoRotate);
+        };
     </script>
+</body>
+</html>
