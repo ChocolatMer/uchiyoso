@@ -20,12 +20,21 @@
 
     <button id="themeSwitcher" class="theme-switch-btn">◆ THEME: CYBER</button>
     
+    <!-- ★追加: 初期判定用ローディング画面 -->
+    <div id="global-loader">
+        <div class="boot-terminal">
+            <h1 class="glitch" style="font-size: 2rem;">SYSTEM CHECK...</h1>
+            <div class="loader-bar"><div class="bar-fill"></div></div>
+            <p class="sys-msg" id="loader-msg">> VERIFYING CONNECTION PARAMETERS...</p>
+        </div>
+    </div>
 
-    <div id="boot-screen">
+    <!-- ★変更: 初期状態では hidden を付与 -->
+    <div id="boot-screen" class="hidden">
         <div class="boot-terminal">
             <h1 class="glitch" data-text="DATA DETAIL">DATA DETAIL</h1>
             <div class="loader-bar"><div class="bar-fill"></div></div>
-            <p class="sys-msg">> EXPANDING VISUAL MODULES...</p>
+            <p class="sys-msg">> MANUAL INPUT MODE STANDBY</p>
             
             <div class="upload-area">
                 <label class="cyber-btn large">
@@ -207,8 +216,6 @@
     </dialog>
 
     <script type="module">
-        // "../header.js" だと「1つ上」を探してしまいますが、
-        // detail.html は外にあるので、header.js は「同じ場所（./）」にあります。
         import { initHeader } from "./header.js"; 
         initHeader();
     </script>

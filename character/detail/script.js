@@ -4,11 +4,12 @@ import { parseIaChara } from "../data/parser_ia.js";
 
 // --- GLOBAL STATE ---
 let charData = null;
-// rawTextData は削除（保存されたデータを正とするため不要）
 let charts = { main: null, category: null };
 
 // DOM Elements
 const els = {
+    globalLoader: document.getElementById('global-loader'), // ★追加
+    loaderMsg: document.getElementById('loader-msg'),       // ★追加
     boot: document.getElementById('boot-screen'),
     file: document.getElementById('fileInput'),
     tabs: document.getElementById('skillTabs'),
@@ -51,12 +52,11 @@ function adjustHeight(el) {
 // --- EVENTS ---
 const btnLogin = document.getElementById('btnLogin');
 const btnLogout = document.getElementById('btnLogout');
-const btnCloudSave = document.getElementById('btnLocalSave');
-const btnCloudLoad = document.getElementById('btnLocalLoad');
 
 if(btnLogin) btnLogin.addEventListener('click', login);
 if(btnLogout) btnLogout.addEventListener('click', logout);
 
+// --- ★修正: 認証とロードのロジック ---
 monitorAuth(
     async (user) => {
         // 1. ログイン/ログアウトボタンの表示切替
@@ -66,51 +66,72 @@ monitorAuth(
             btnLogout.textContent = "DISCONNECT (" + user.displayName + ")";
         }
 
-        // 2. URLからIDを取得して自動ロード
+        // 2. URLパラメータチェック
         const urlParams = new URLSearchParams(window.location.search);
         const targetId = urlParams.get('id');
 
         if (targetId) {
+            // IDがある場合: ロード試行
+            if(els.loaderMsg) els.loaderMsg.textContent = "> SEARCHING ARCHIVES...";
+            
             try {
-                // クラウドから全データを取得
                 const cloudStore = await loadFromCloud();
-                
                 let foundData = null;
                 
                 if (cloudStore) {
-                    // 【検索パターンA】 IDがそのままキーになっている場合
                     if (cloudStore[targetId]) {
                         foundData = cloudStore[targetId];
-                    } 
-                    // 【検索パターンB】 データの中身の .id プロパティと一致する場合 (全検索)
-                    else {
-                        // 全データを配列にして、中身のidが一致するものを探す (型違いも考慮して == で比較)
+                    } else {
                         foundData = Object.values(cloudStore).find(char => char && char.id == targetId);
                     }
                 }
                 
                 if (foundData) {
-                    // IDが見つかった場合、そのデータでダッシュボードを起動
-                    // (後で保存できるように、念のためIDをデータ自体に埋め込んでおく)
+                    // データが見つかった -> ダッシュボード起動
                     if(!foundData.id) foundData.id = targetId; 
-                    
                     launchDashboard(foundData);
+                    // グローバルローダーを隠す (boot画面は最初からhiddenなのでそのまま)
+                    hideGlobalLoader();
                 } else {
+                    // データが見つからない -> 手動画面へ
                     console.warn("Target ID not found:", targetId);
-                    alert("指定されたキャラクターが見つかりませんでした。\n(ID: " + targetId + ")");
+                    alert("指定されたキャラクターが見つかりませんでした。\n手動モードに移行します。");
+                    showManualMode();
                 }
             } catch (e) {
                 console.error("Auto load failed:", e);
-                alert("データの読み込み中にエラーが発生しました。");
+                alert("データ読み込みエラー。\n手動モードに移行します。");
+                showManualMode();
             }
+        } else {
+            // IDがない場合 -> 即座に手動画面へ
+            showManualMode();
         }
     },
     () => {
         // ログアウト時の処理
         if(btnLogin) btnLogin.classList.remove('hidden');
         if(btnLogout) btnLogout.classList.add('hidden');
+        
+        // 未ログイン状態でID指定がないなら手動画面へ
+        const urlParams = new URLSearchParams(window.location.search);
+        if (!urlParams.get('id')) {
+            showManualMode();
+        }
     }
 );
+
+// ★追加: モード切り替え用ヘルパー
+function hideGlobalLoader() {
+    if(els.globalLoader) els.globalLoader.classList.add('hidden');
+}
+
+function showManualMode() {
+    hideGlobalLoader();
+    if(els.boot) els.boot.classList.remove('hidden');
+}
+
+// ------------------------------------
 
 els.file.addEventListener('change', handleFile);
 els.hideToggle.addEventListener('change', () => renderCurrentTab());
@@ -174,9 +195,10 @@ function handleFile(e) {
     const r = new FileReader();
     r.onload = (ev) => {
         try {
-            // テキスト読み込み時も schema.js の統一ロジックを通す
             const d = parseIaChara(ev.target.result);
             launchDashboard(d);
+            // 手動読み込み成功時もブート画面を消す
+            if(els.boot) els.boot.classList.add('hidden');
         } catch(err) { console.error(err); alert('Parse Error: ' + err.message); }
     };
     r.readAsText(f);
@@ -185,17 +207,14 @@ function handleFile(e) {
 function launchDashboard(data) {
     charData = data;
     
-    // ★修正: テキスト再解析処理を廃止し、保存されたデータをそのまま使用
     renderProfile(data);
     renderSkillSection('summary'); 
     renderItems(data.items);
     
-    // メモ欄
     const memoEl = document.getElementById('memoArea');
     memoEl.value = data.memo || "";
     requestAnimationFrame(() => adjustHeight(memoEl));
     
-    // シナリオ一覧
     const histBox = document.getElementById('scenarioList');
     if(histBox) {
         histBox.innerHTML = '';
@@ -216,10 +235,13 @@ function launchDashboard(data) {
     setTxt('spellsList', data.spells);
     setTxt('entitiesList', data.encountered);
 
-    els.boot.classList.add('hidden');
+    // ブート画面、グローバルローダーの両方を確実に消す
+    hideGlobalLoader();
+    if(els.boot) els.boot.classList.add('hidden');
     document.body.classList.add('loaded');
 }
 
+// (以下、renderCurrentTab, renderProfile 等の関数は変更なしのため省略。元のコードのまま維持してください)
 function renderCurrentTab() {
     const activeCat = document.querySelector('.tab.active').dataset.cat;
     renderSkillSection(activeCat);
@@ -229,17 +251,14 @@ function renderProfile(d) {
     document.getElementById('charName').textContent = d.name;
     document.getElementById('charKana').textContent = d.kana;
     
-    // ★修正: アイコン(d.icon)を優先、なければ立ち絵(d.image)
     const displayImage = d.icon || d.image || 'https://placehold.co/400x600/000/333?text=NO+IMAGE';
     document.getElementById('charImage').src = displayImage;
     
     document.getElementById('valDB').textContent = d.db; 
 
-    // メタ情報エリア
     const metaInfo = document.querySelector('.meta-info');
     metaInfo.innerHTML = ''; 
 
-    // ★修正: 保存されたデータ(d.gender等)を直接使用して表示
     const infoItems = [
         { label: "JOB", val: d.job },
         { label: "AGE", val: d.age },
@@ -256,13 +275,11 @@ function renderProfile(d) {
         metaInfo.appendChild(div);
     });
 
-    // COLOR MODULE
     const existingColorMod = document.querySelector('.color-module');
     if(existingColorMod) existingColorMod.remove();
 
     const colorMod = document.createElement('div');
     colorMod.className = 'panel color-module';
-    // ★修正: 保存されたカラー情報(d.colorHair等)を使用
     colorMod.innerHTML = `
         <h3>COLOR DATA</h3>
         <div class="color-grid">
@@ -295,7 +312,6 @@ function renderProfile(d) {
     if(d.tags) d.tags.split(' ').forEach(t=>{if(t.trim()) tags.innerHTML+=`<span class="tag">${t}</span>`});
 
     const stats = d.stats || {};
-    // HP/MPの最大値計算
     const maxHP = (stats.CON && stats.SIZ) ? Math.ceil((parseInt(stats.CON) + parseInt(stats.SIZ)) / 2) : (d.vitals.hp || 1);
     const maxMP = stats.POW ? parseInt(stats.POW) : (d.vitals.mp || 1);
     
@@ -316,7 +332,6 @@ function renderProfile(d) {
     const sGrid = document.getElementById('rawStatsGrid'); sGrid.innerHTML='';
     Object.keys(d.stats).forEach(k => sGrid.innerHTML+=`<div class="stat-box"><small>${k}</small><span>${d.stats[k]}</span></div>`);
 
-    // チャート描画
     setTimeout(() => {
         const ctx = document.getElementById('mainStatsChart').getContext('2d');
         if(charts.main) charts.main.destroy();

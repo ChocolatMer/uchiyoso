@@ -70,6 +70,24 @@ body {
     box-shadow: 0 0 20px var(--secondary);
 }
 
+/* --- GLOBAL LOADER (Initial Check) --- */
+#global-loader {
+    position: fixed; inset: 0; background: #000; z-index: 3000;
+    display: flex; justify-content: center; align-items: center;
+    transition: opacity 0.8s ease;
+}
+#global-loader.hidden { opacity: 0; pointer-events: none; }
+
+/* --- BOOT SCREEN (Manual Entry) --- */
+/* (既存の記述) */
+#boot-screen {
+    position: fixed; inset: 0; background: #000; z-index: 2000;
+    display: flex; justify-content: center; align-items: center;
+    transition: opacity 0.8s ease;
+}
+#boot-screen.hidden { opacity: 0; pointer-events: none; }
+/* (以下略) */
+
 /* --- BOOT SCREEN --- */
 #boot-screen {
     position: fixed; inset: 0; background: #000; z-index: 2000;
