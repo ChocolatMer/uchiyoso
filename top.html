@@ -415,7 +415,20 @@
         };
         window.openBgModal = () => { window.closeAllModals(); document.getElementById('bg-modal').classList.add('open'); };
         window.openMusicModal = () => { window.closeAllModals(); document.getElementById('music-modal').classList.add('open'); };
-        window.openCharModal = () => { window.closeAllModals(); document.getElementById('char-modal').classList.add('open'); };
+        
+        // ★ここを書き換えました
+        window.openCharModal = () => { 
+            window.closeAllModals(); 
+            document.getElementById('char-modal').classList.add('open');
+            
+            // ▼ リストを描画する（これがないと空っぽになります）
+            renderCharList(); 
+            
+            // ソロモードなら強制的に左側(スロット1)選択状態に戻す
+            if(!isDuo) {
+                selectEditSlot(1);
+            }
+        };
 
         window.setBgMode = (mode, photoIdx) => {
             const body = document.body;
