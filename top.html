@@ -7,7 +7,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-        /* CSSは変更なしのため省略。以前のデザインをそのまま維持します */
         :root {
             --bg-color: #080808; --text-main: #ffffff; --text-sub: #8899a6;
             --ui-border: rgba(255, 255, 255, 0.15); --ui-bg: rgba(255, 255, 255, 0.03);
@@ -144,6 +143,17 @@
         }
         .mode-solo .slot-selector { display: none; }
         @keyframes blink { 50% { opacity: 0; } }
+
+        /* Loader CSS */
+        #system-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; justify-content: center; align-items: center; transition: opacity 0.8s ease, visibility 0.8s; }
+        #system-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .loader-content { width: 300px; text-align: center; font-family: var(--font-en); color: var(--accent-color); }
+        .loader-title { font-size: 20px; letter-spacing: 0.2em; margin-bottom: 20px; text-shadow: 0 0 10px var(--accent-color); border-bottom: 1px solid rgba(255,255,255,0.2); padding-bottom: 10px; }
+        .loader-status { font-size: 10px; letter-spacing: 0.1em; color: #fff; margin-bottom: 5px; }
+        .loader-log { font-family: var(--font-jp); font-size: 11px; height: 20px; color: var(--text-sub); margin-bottom: 20px; white-space: nowrap; overflow: hidden; }
+        .loader-bar { width: 100%; height: 2px; background: #333; position: relative; overflow: hidden; }
+        .loader-progress { position: absolute; top: 0; left: 0; height: 100%; width: 100%; background: var(--accent-color); transform: translateX(-100%); animation: loading 2s infinite cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes loading { 0% { transform: translateX(-100%); } 50% { transform: translateX(0%); } 100% { transform: translateX(100%); } }
     </style>
 </head>
 <body class="mode-black mode-solo">
@@ -151,6 +161,16 @@
     <audio id="bgm-player" loop>
         <source src="./sound/aoren.mp3" type="audio/mpeg">
     </audio>
+
+    <!-- ローディング画面 -->
+    <div id="system-loader">
+        <div class="loader-content">
+            <div class="loader-title">UCHIYOSO ARCHIVE</div>
+            <div class="loader-status">SYSTEM BOOT SEQUENCE...</div>
+            <div class="loader-log" id="loader-log-text">CONNECTING TO DATABASE...</div>
+            <div class="loader-bar"><div class="loader-progress"></div></div>
+        </div>
+    </div>
 
     <div id="canvas-container"></div>
     
@@ -607,27 +627,6 @@
             window.updateParticlesForBg = (mode) => {};
         }
 
-        async function initNews() {
-            const el = document.getElementById('news-content');
-            const paths = ['./report.json', './TOP/report.json', '../TOP/report.json'];
-            let data = null;
-            for (const path of paths) {
-                try {
-                    const res = await fetch(`${path}?t=${Date.now()}`);
-                    if (res.ok) { data = await res.json(); break; }
-                } catch (e) {}
-            }
-            if (!data || !data.length) { el.textContent = "Welcome to Uchiyoso Archive."; el.classList.add('active'); return; }
-            const cycle = () => {
-                el.classList.remove('active');
-                setTimeout(() => {
-                    el.textContent = data[Math.floor(Math.random() * data.length)];
-                    el.classList.add('active');
-                }, 500);
-            };
-            cycle(); setInterval(cycle, 6000);
-        }
-
         function setNewsError(msg) {
             const el = document.getElementById('news-content');
             el.textContent = "SYSTEM ALERT: " + msg;
@@ -635,46 +634,125 @@
             el.classList.add('active');
         }
 
-        // --- Auth & Data Loading ---
-        monitorAuth(
-            async (user) => {
+        // ★ローディング制御関数
+        function updateLoaderLog(text) {
+            const el = document.getElementById('loader-log-text');
+            if(el) el.textContent = text;
+        }
+
+        function hideLoader() {
+            const loader = document.getElementById('system-loader');
+            if(loader) loader.classList.add('hidden');
+        }
+
+        async function initNews() {
+            const el = document.getElementById('news-content');
+            const paths = ['./report.json', './TOP/report.json', '../TOP/report.json'];
+            let data = null;
+            
+            updateLoaderLog("FETCHING ARCHIVE REPORTS..."); 
+
+            for (const path of paths) {
                 try {
-                    currentUser = user;
-                    document.getElementById('user-display').textContent = (user.displayName || "MEMBER").toUpperCase();
-                    document.getElementById('main-connect-btn').textContent = "NEXT";
-                    
-                    // データの読み込み
-                    const data = await loadFromCloud();
-                    
-                    if (data && Object.keys(data).length > 0) {
-                        charDataList = Object.values(data);
-                    } else {
-                        // データが無い、または空の場合
-                        charDataList = [{ name: "No Data", remarks: "データが見つかりません。", color: "#555" }];
-                        setNewsError("NO DATA FOUND. PLEASE REGISTER.");
-                    }
-                    
-                    renderMusicList();
-                    currentIndex1 = Math.floor(Math.random() * charDataList.length);
-                    currentIndex2 = (currentIndex1 + 1) % charDataList.length;
-                    updateDisplay();
-                    
-                } catch(e) {
-                    console.error(e);
-                    setNewsError("LOAD FAILED: " + e.message);
-                }
-            },
-            () => {
-                currentUser = null; 
-                document.getElementById('user-display').textContent = "GUEST"; 
-                document.getElementById('main-connect-btn').textContent = "CONNECT";
-                charDataList = fallbackData; 
-                currentIndex1 = 0; 
-                currentIndex2 = 0;
-                updateDisplay();
-                renderMusicList();
+                    const res = await fetch(`${path}?t=${Date.now()}`);
+                    if (res.ok) { data = await res.json(); break; }
+                } catch (e) {}
             }
-        );
+
+            if (!data || !data.length) {
+                el.textContent = "Welcome to Uchiyoso Archive.";
+                el.classList.add('active');
+                return ["System Ready."]; 
+            } else {
+                const cycle = () => {
+                    el.classList.remove('active');
+                    setTimeout(() => {
+                        el.textContent = data[Math.floor(Math.random() * data.length)];
+                        el.classList.add('active');
+                    }, 500);
+                };
+                cycle(); setInterval(cycle, 6000);
+                return data; 
+            }
+        }
+
+        // --- Auth & Data Loading with Loader Sequence ---
+        initNews().then(reportData => {
+            let reportIndex = 0;
+            
+            // ローディング中のテキスト演出
+            const logTimer = setInterval(() => {
+                if(reportData && reportData.length > 0) {
+                    updateLoaderLog(reportData[reportIndex % reportData.length]);
+                    reportIndex++;
+                }
+            }, 300);
+
+            monitorAuth(
+                async (user) => {
+                    try {
+                        currentUser = user;
+                        updateLoaderLog("USER AUTHENTICATED. ID: " + (user.displayName || "UNKNOWN"));
+                        
+                        document.getElementById('user-display').textContent = (user.displayName || "MEMBER").toUpperCase();
+                        document.getElementById('main-connect-btn').textContent = "NEXT";
+                        
+                        updateLoaderLog("DOWNLOADING CHARACTER DATA...");
+                        const data = await loadFromCloud();
+                        
+                        if (data && Object.keys(data).length > 0) {
+                            charDataList = Object.values(data);
+                            updateLoaderLog(`DATA LOADED: ${charDataList.length} ENTITIES FOUND.`);
+                        } else {
+                            charDataList = [{ name: "No Data", remarks: "データが見つかりません。", color: "#555" }];
+                            setNewsError("NO DATA FOUND. PLEASE REGISTER.");
+                        }
+                        
+                        renderMusicList();
+                        currentIndex1 = Math.floor(Math.random() * charDataList.length);
+                        currentIndex2 = (currentIndex1 + 1) % charDataList.length;
+                        
+                        // 画像読み込み待機
+                        const firstChar = charDataList[currentIndex1];
+                        updateLoaderLog(`INITIALIZING VISUAL: ${firstChar.name}...`);
+                        const imgUrl = await resolveImage(firstChar.name, firstChar.image);
+                        await new Promise((resolve) => {
+                            const img = new Image();
+                            img.onload = resolve;
+                            img.onerror = resolve; 
+                            img.src = imgUrl;
+                        });
+
+                        clearInterval(logTimer);
+                        updateLoaderLog("SYSTEM READY. WELCOME.");
+                        await updateDisplay();
+                        
+                        setTimeout(hideLoader, 800);
+
+                    } catch(e) {
+                        console.error(e);
+                        clearInterval(logTimer);
+                        updateLoaderLog("FATAL ERROR: " + e.message);
+                        setNewsError("LOAD FAILED: " + e.message);
+                        setTimeout(hideLoader, 2000); 
+                    }
+                },
+                () => {
+                    clearInterval(logTimer);
+                    currentUser = null; 
+                    document.getElementById('user-display').textContent = "GUEST"; 
+                    document.getElementById('main-connect-btn').textContent = "CONNECT";
+                    charDataList = fallbackData; 
+                    currentIndex1 = 0; 
+                    currentIndex2 = 0;
+                    
+                    updateLoaderLog("GUEST MODE INITIALIZED.");
+                    updateDisplay();
+                    renderMusicList();
+                    setTimeout(hideLoader, 500);
+                }
+            );
+        });
 
         function nextChar() {
             if (charDataList.length <= 1) return;
@@ -714,7 +792,7 @@
             }, 500);
         };
 
-        createParticles(); initNews();
+        createParticles();
 
         function refreshDialogueOnly() {
             if (!charDataList || charDataList.length === 0) return;
