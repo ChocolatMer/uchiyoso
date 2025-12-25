@@ -98,14 +98,9 @@
             position: absolute;
             width: var(--card-w);
             height: var(--card-h);
-            
-            /* ★修正点: margin-top/left を削除し、top/leftのみにしました。
-               JS側の translate(-50%, -50%) と組み合わせて正確に中央に来ます。
-               また、少し視覚的なバランスを取るため 50% ではなく 52% にしています。 */
             left: 50%; 
             top: 52%; 
             margin: 0;
-            
             transform-style: preserve-3d;
             transition: transform 0.6s cubic-bezier(0.1, 0.6, 0.2, 1), opacity 0.6s ease, filter 0.6s ease;
             will-change: transform, opacity;
@@ -335,13 +330,46 @@
         }
         .nav-btn:hover { background: var(--accent); color: #fff; box-shadow: 0 0 20px var(--accent); }
         .prev { left: 40px; } .next { right: 40px; }
-        .loading { font-family: 'Teko'; font-size: 2.5rem; color: var(--accent); letter-spacing: 0.2em; text-shadow: 0 0 10px var(--accent); }
         
         .click-layer { position: absolute; inset: 0; z-index: 40; cursor: pointer; }
+
+        /* ★ SYSTEM LOADER CSS ★ */
+        #system-loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transition: opacity 0.8s ease, visibility 0.8s;
+        }
+        #system-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        
+        .loader-content { text-align: center; font-family: 'Teko', sans-serif; color: var(--accent); }
+        .loader-title { font-size: 3rem; letter-spacing: 0.2em; margin-bottom: 10px; text-shadow: 0 0 15px var(--accent); }
+        .loader-text { font-family: 'Share Tech Mono', monospace; font-size: 1rem; color: #fff; margin-bottom: 20px; }
+        
+        .loader-bar-bg { width: 300px; height: 2px; background: #333; position: relative; overflow: hidden; margin: 0 auto; }
+        .loader-bar-fill {
+            position: absolute; top: 0; left: 0; height: 100%; width: 100%; background: var(--accent);
+            transform: translateX(-100%);
+            animation: loadingBar 2s infinite cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes loadingBar {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(0); }
+            100% { transform: translateX(100%); }
+        }
     </style>
 </head>
 <body>
     <script type="module">import { initHeader } from "./header.js"; initHeader();</script>
+
+    <!-- ★ LOADING SCREEN ★ -->
+    <div id="system-loader">
+        <div class="loader-content">
+            <div class="loader-title">SYSTEM BOOT</div>
+            <div class="loader-text" id="loader-log-text">INITIALIZING SQUAD DATA...</div>
+            <div class="loader-bar-bg"><div class="loader-bar-fill"></div></div>
+        </div>
+    </div>
 
     <div class="sub-header">
         <div style="font-family:'Teko'; font-size:1.8rem; letter-spacing:0.05em; color:var(--text-main);">
@@ -358,7 +386,7 @@
         <div class="nav-btn prev" id="btnPrev">◀</div>
         <div class="nav-btn next" id="btnNext">▶</div>
         <div class="stage-container" id="stage">
-            <div class="loading">CONNECTING...</div>
+            <!-- JSによってユニットが生成されます -->
         </div>
     </div>
 
@@ -491,7 +519,6 @@
                 const tz = -Math.abs(diff) * zSpread;
                 const ry = diff * -rotateAngle;
 
-                // 中央配置のための translate(-50%, -50%) は維持
                 unit.style.transform = `translate(-50%, -50%) translateX(${tx}px) translateZ(${tz}px) rotateY(${ry}deg)`;
             });
 
@@ -503,12 +530,13 @@
             }
         }
 
-        window.renderCharacterList = async function(data) {
+        // --- ★ MAIN INITIALIZATION LOGIC ★ ---
+        async function renderCharacterList(data) {
             stage.innerHTML = ''; 
             unitElements = [];
 
             if (!data || Object.keys(data).length === 0) {
-                stage.innerHTML = '<div class="loading">NO DATA</div>';
+                stage.innerHTML = '<div style="color:#fff; font-family:\'Teko\'">NO DATA FOUND</div>';
                 return;
             }
 
@@ -523,7 +551,7 @@
 
                 const unit = document.createElement('div');
                 unit.className = 'char-unit';
-                unit.style.opacity = '0';
+                unit.style.opacity = '0'; // 初期状態は見せない
 
                 const accent = (char.color && char.color.length > 1) ? char.color : getDefaultColor(char.job);
                 unit.style.setProperty('--accent', accent);
@@ -535,7 +563,7 @@
                 };
                 const v = char.vitals || {};
                 
-                const hpPct = 100;
+                const hpPct = 100; // 仮の値
                 const mpPct = 100;
                 
                 const sanVal = v.san || 50;
@@ -620,7 +648,52 @@
 
             currentIndex = 0;
             updateCarousel();
-        };
+        }
+
+        // データロード実行
+        async function bootSystem() {
+            const loaderText = document.getElementById('loader-log-text');
+            const loader = document.getElementById('system-loader');
+
+            try {
+                loaderText.textContent = "ESTABLISHING DATABASE CONNECTION...";
+                const data = await loadFromCloud();
+                
+                if (!data) {
+                    loaderText.textContent = "WARNING: NO DATA RETRIEVED.";
+                    setTimeout(() => loader.classList.add('hidden'), 1000);
+                    return;
+                }
+
+                loaderText.textContent = "CONFIGURING UNIT DISPLAYS...";
+                await renderCharacterList(data);
+
+                // 最初のキャラの画像読み込みを待つ（立ち絵画像）
+                if (unitElements.length > 0) {
+                    loaderText.textContent = "SYNCING VISUAL ASSETS...";
+                    const firstFig = unitElements[0].querySelector('.char-figure');
+                    if (firstFig) {
+                        await new Promise(resolve => {
+                            if (firstFig.complete) resolve();
+                            else { firstFig.onload = resolve; firstFig.onerror = resolve; }
+                        });
+                    }
+                }
+
+                loaderText.textContent = "SYSTEM READY.";
+                setTimeout(() => {
+                    loader.classList.add('hidden');
+                }, 600);
+
+            } catch (e) {
+                console.error(e);
+                loaderText.textContent = "CRITICAL ERROR: " + e.message;
+                loaderText.style.color = "#ff4444";
+            }
+        }
+
+        // 起動処理開始
+        bootSystem();
 
         document.getElementById('btnNext').onclick = () => {
             if(unitElements.length === 0) return;
