@@ -290,7 +290,7 @@
         
         // --- ★ REPORT DATA FETCH LOGIC ★ ---
         async function fetchReportData() {
-            const paths = ['../report.json', './report.json'];
+            const paths = ['../TOP/report.json', '../TOP/report.json'];
             for (const path of paths) {
                 try {
                     const res = await fetch(`${path}?t=${Date.now()}`);
