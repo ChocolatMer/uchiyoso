@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CHRONICLE LOG BOOK</title>
     
-    <!-- フォント読み込み -->
+    <!-- フォント -->
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     
     <!-- 共通ヘッダー -->
     <link href="../edit/header.css" rel="stylesheet">
 
     <style>
-        /* --- 世界観: アンティークな書斎 --- */
+        /* --- 世界観設定 --- */
         body { 
             background-color: #1a1512; 
             background-image: radial-gradient(#2a201a 1px, transparent 1px);
@@ -24,103 +24,92 @@
             display: flex; flex-direction: column; align-items: center;
         }
 
-        /* --- 本体: 魔導書/日誌 (幅広) --- */
+        /* --- 本のレイアウト --- */
         .book-wrapper {
             position: relative;
             margin: 40px auto 80px;
-            width: 1400px; /* 幅を拡張 */
+            width: 1400px;
             max-width: 96vw;
         }
 
         .book-container {
             background: #fdfbf7;
             box-shadow: 
-                0 0 0 5px #3e2723, /* 表紙コバ */
+                0 0 0 5px #3e2723,
                 0 20px 60px rgba(0,0,0,0.8), 
-                inset 0 0 150px rgba(139, 69, 19, 0.1); /* 紙の質感 */
+                inset 0 0 150px rgba(139, 69, 19, 0.1);
             border-radius: 4px;
             display: flex;
             position: relative;
             overflow: hidden;
-            min-height: 850px;
+            min-height: 900px; /* 高さを確保 */
             z-index: 1;
         }
 
-        /* センターの影（綴じ目） */
+        /* センターの綴じ目 */
         .book-container::before {
             content: ""; position: absolute; left: 50%; top: 0; bottom: 0; width: 60px; margin-left: -30px;
             background: linear-gradient(to right, rgba(0,0,0,0), rgba(0,0,0,0.15) 40%, rgba(0,0,0,0.25) 50%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0));
             z-index: 10; pointer-events: none;
         }
 
-        /* --- ページレイアウト --- */
+        /* ページ背景 */
         .page { flex: 1; padding: 40px 50px; position: relative; box-sizing: border-box; }
         .page-left { border-right: 1px solid #e0dcd0; background: url('https://www.transparenttextures.com/patterns/aged-paper.png'); }
         .page-right { background: url('https://www.transparenttextures.com/patterns/aged-paper.png'); }
 
-        /* --- 付箋（タブ）ナビゲーション --- */
+        /* --- タブナビゲーション (右側) --- */
         .tabs-container {
-            position: absolute;
-            top: 60px; right: -50px; /* 本の外側に出す */
-            width: 60px;
-            z-index: 0;
+            position: absolute; top: 60px; right: -50px; width: 60px; z-index: 0;
             display: flex; flex-direction: column; gap: 15px;
         }
-        
         .tab {
-            width: 70px; height: 50px;
+            width: 70px; height: 60px;
             background: #d7ccc8;
             border-radius: 0 5px 5px 0;
             box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
-            cursor: pointer;
-            transition: 0.3s;
+            cursor: pointer; transition: 0.3s;
             display: flex; align-items: center; justify-content: center;
             writing-mode: vertical-rl;
             font-family: 'Cinzel', serif; font-size: 0.8rem; font-weight: bold; color: #5d4037;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             position: relative; left: -10px;
         }
         .tab:hover { transform: translateX(5px); }
-        .tab.active { 
-            background: #8b5a2b; color: #fff; 
-            width: 85px; transform: translateX(5px);
-            box-shadow: 4px 4px 10px rgba(0,0,0,0.4);
-        }
-        /* 各タブの色分け */
-        .tab[data-target="section-story"] { background: #e0f2f1; color: #004d40; } .tab[data-target="section-story"].active { background: #00695c; color: #fff; }
-        .tab[data-target="section-result"] { background: #ffebee; color: #b71c1c; } .tab[data-target="section-result"].active { background: #c62828; color: #fff; }
-        .tab[data-target="section-detail"] { background: #e8eaf6; color: #1a237e; } .tab[data-target="section-detail"].active { background: #283593; color: #fff; }
-        .tab[data-target="section-memo"] { background: #fff3e0; color: #e65100; } .tab[data-target="section-memo"].active { background: #ef6c00; color: #fff; }
+        .tab.active { width: 85px; transform: translateX(5px); color: #fff; box-shadow: 4px 4px 10px rgba(0,0,0,0.4); }
+        
+        /* タブごとの色 */
+        .tab[data-target="section-info"] { background: #e0f2f1; color: #004d40; } .tab[data-target="section-info"].active { background: #00695c; }
+        .tab[data-target="section-session"] { background: #ffebee; color: #b71c1c; } .tab[data-target="section-session"].active { background: #c62828; }
+        .tab[data-target="section-memo"] { background: #fff3e0; color: #e65100; } .tab[data-target="section-memo"].active { background: #ef6c00; }
 
-
-        /* --- 右ページのコンテンツ切り替え --- */
-        .tab-content { display: none; animation: fadeIn 0.5s; height: 100%; position: relative; }
+        .tab-content { display: none; animation: fadeIn 0.5s; }
         .tab-content.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* --- タイポグラフィ --- */
-        h1.title-input-wrapper { margin: 0 0 30px; position: relative; }
+        /* --- タイポグラフィ & 入力 --- */
+        h1.title-wrapper { margin: 0 0 20px; text-align:center; }
         input.scenario-title {
             width: 100%; text-align: center; font-family: 'Shippori Mincho', serif; font-size: 1.8rem; font-weight: bold;
             border: none; background: transparent; padding: 10px 0; 
             border-bottom: 3px double #5d4037; color: #3e2723;
         }
-        input.scenario-title:placeholder-shown { font-style: italic; opacity: 0.5; }
+        input.scenario-title::placeholder { font-style: italic; opacity: 0.5; font-size: 1.5rem; }
         input.scenario-title:focus { outline: none; border-color: #d4b346; }
 
         h2 {
             font-family: 'Cinzel', serif; font-size: 1.1rem; color: #5d4037; 
-            border-bottom: 1px solid #bcaaa4; margin: 20px 0 15px; padding-bottom: 5px;
+            border-bottom: 1px solid #bcaaa4; margin: 25px 0 15px; padding-bottom: 5px;
+            display: flex; align-items: center; justify-content: space-between;
         }
-        
-        /* --- フォーム --- */
+
         .form-row { margin-bottom: 15px; }
         label { display: block; font-size: 0.75rem; color: #795548; font-family: 'Cinzel', serif; font-weight: bold; margin-bottom: 4px; }
         
         input[type="text"], input[type="date"], input[type="number"], input[type="url"], select {
             width: 100%; background: rgba(0,0,0,0.03); border: none; border-bottom: 1px dashed #8d6e63;
-            padding: 8px 5px; font-family: 'Shippori Mincho', serif; font-size: 1rem; color: #333; transition: 0.3s;
-            box-sizing: border-box;
+            padding: 8px 5px; font-family: 'Shippori Mincho', serif; font-size: 0.95rem; color: #333; 
+            box-sizing: border-box; transition: 0.3s;
         }
         input:focus, select:focus, textarea:focus { outline: none; background: rgba(139, 90, 43, 0.1); border-bottom-style: solid; }
         
@@ -131,7 +120,7 @@
             background-image: linear-gradient(transparent 95%, #eee 95%); background-size: 100% 1.8em;
         }
 
-        /* --- キャラクター選択（2人対応） --- */
+        /* --- キャラクター選択 --- */
         .char-select-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 15px;
             padding: 15px; border: 2px solid #d7ccc8; border-radius: 4px; background: rgba(255,255,255,0.4);
@@ -140,9 +129,7 @@
         .char-portrait {
             display: flex; flex-direction: column; align-items: center; cursor: pointer; opacity: 0.5; transition: 0.3s; position: relative;
         }
-        .char-portrait:hover { opacity: 0.8; transform: translateY(-3px); }
-        
-        /* 選択状態 */
+        .char-portrait:hover { opacity: 0.9; transform: translateY(-2px); }
         .char-portrait.selected { opacity: 1; transform: scale(1.05); }
         .char-portrait img {
             width: 60px; height: 60px; border-radius: 50%; object-fit: cover; 
@@ -150,226 +137,216 @@
             transition: 0.3s;
         }
         .char-portrait.selected img { border-color: #8b5a2b; box-shadow: 0 0 0 3px #8b5a2b; }
-        .char-portrait span { font-size: 0.7rem; margin-top: 5px; font-weight: bold; text-align: center; color: #5d4037; line-height: 1.2; }
-        
-        /* 役割バッジ (PC/KPC) */
+        .char-portrait span { font-size: 0.7rem; margin-top: 5px; font-weight: bold; text-align: center; color: #5d4037; }
+
+        /* 役割バッジ */
         .role-badge {
             position: absolute; top: -5px; right: -5px; 
-            background: #d32f2f; color: #fff; font-size: 0.6rem; padding: 2px 6px; border-radius: 10px;
-            box-shadow: 1px 1px 3px rgba(0,0,0,0.3); font-family: 'Cinzel', serif;
-            display: none;
+            font-size: 0.6rem; padding: 2px 6px; border-radius: 10px; color: #fff;
+            box-shadow: 1px 1px 3px rgba(0,0,0,0.3); font-family: 'Cinzel', serif; display: none;
         }
         .char-portrait.selected .role-badge { display: block; }
-        .char-portrait.role-pc .role-badge { background: #1976d2; content: "PC"; } /* 青 */
-        .char-portrait.role-kpc .role-badge { background: #d32f2f; content: "KPC"; } /* 赤 */
-
-
-        /* --- スタンプ演出 --- */
-        .stamp-box {
-            position: absolute; bottom: 20px; right: 20px; 
-            font-family: 'Cinzel', serif; font-weight: bold; font-size: 3rem; 
-            border: 4px solid; padding: 5px 30px; border-radius: 8px;
-            opacity: 0.2; transform: rotate(-10deg); pointer-events: none;
-            transition: 0.5s;
-        }
-        .stamp-cleared { color: #2e7d32; border-color: #2e7d32; opacity: 0.8; }
-        .stamp-lost { color: #b71c1c; border-color: #b71c1c; opacity: 0.8; }
+        .role-pc .role-badge { background: #1976d2; }
+        .role-kpc .role-badge { background: #d32f2f; }
 
         /* --- 画像プレビュー --- */
-        .img-polaroid {
-            background: #fff; padding: 8px 8px 25px 8px; box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
-            transform: rotate(-1deg); text-align: center; transition: 0.3s; cursor: pointer;
-            border: 1px solid #eee;
+        .polaroid {
+            background: #fff; padding: 6px 6px 20px 6px; box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+            transform: rotate(-1deg); text-align: center; transition: 0.3s; cursor: pointer; border: 1px solid #eee;
         }
-        .img-polaroid:hover { transform: scale(1.02) rotate(0deg); z-index: 10; }
-        .img-frame { width: 100%; height: 140px; background: #eee; overflow: hidden; display:flex; align-items:center; justify-content:center; }
-        .img-frame img { width: 100%; height: 100%; object-fit: cover; }
+        .polaroid:hover { transform: scale(1.02) rotate(0deg); z-index: 5; }
+        .polaroid img { width: 100%; height: 140px; object-fit: cover; background: #eee; }
 
         /* --- 保存ボタン --- */
         .btn-seal {
-            position: absolute; bottom: 40px; right: 40px;
-            width: 120px; height: 120px; border-radius: 50%;
-            background: radial-gradient(circle at 30% 30%, #a1887f, #5d4037);
-            color: #fff; font-family: 'Cinzel', serif; font-size: 1rem;
-            border: 4px double #d7ccc8; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-            cursor: pointer; transition: 0.3s; z-index: 20;
+            position: absolute; bottom: 30px; right: 30px;
+            width: 110px; height: 110px; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #8d6e63, #3e2723);
+            color: #fff; font-family: 'Cinzel', serif; border: 4px double #d7ccc8; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); cursor: pointer; transition: 0.3s; z-index: 20;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-        .btn-seal:hover { transform: scale(1.1); background: radial-gradient(circle at 30% 30%, #8d6e63, #3e2723); }
-        .btn-seal span { font-size: 1.5rem; display: block; }
+        .btn-seal:hover { transform: scale(1.05); background: radial-gradient(circle at 30% 30%, #a1887f, #5d4037); }
+        .btn-seal span { font-size: 1.2rem; display: block; margin-bottom: 2px; }
 
         /* グリッド */
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        
+        /* エラー表示 */
+        #errorMsg { color: #b71c1c; text-align: center; margin: 10px; font-weight: bold; font-size: 0.9rem; }
     </style>
 </head>
 <body>
     <script type="module">import { initHeader } from "../edit/header.js"; initHeader();</script>
 
     <div class="book-wrapper">
-        <!-- 付箋タブ -->
+        <!-- タブ -->
         <div class="tabs-container">
-            <div class="tab active" onclick="switchTab('section-story', this)">STORY</div>
-            <div class="tab" onclick="switchTab('section-result', this)">RESULT</div>
-            <div class="tab" onclick="switchTab('section-detail', this)">DETAIL</div>
+            <div class="tab active" onclick="switchTab('section-info', this)">SCENARIO</div>
+            <div class="tab" onclick="switchTab('section-session', this)">SESSION</div>
             <div class="tab" onclick="switchTab('section-memo', this)">MEMO</div>
         </div>
 
         <div class="book-container">
-            <!-- ■ 左ページ：基本情報＆参加者 -->
+            <!-- ■ 左ページ：基本情報（冒険の記録） -->
             <div class="page page-left">
-                <h1 class="title-input-wrapper">
+                <h1 class="title-wrapper">
                     <input type="text" id="inpTitle" class="scenario-title" placeholder="SCENARIO TITLE">
                 </h1>
-
-                <!-- キャラクター選択 (2人対応) -->
-                <h2>Protagonists <span style="font-size:0.7rem; color:#888;">(Click to Select PC & KPC)</span></h2>
-                <div id="charSelectArea" class="char-select-grid">
-                    <div style="grid-column:1/-1; text-align:center; padding:20px;">Loading Characters...</div>
+                
+                <div class="grid-2">
+                    <div class="form-row"><label>DATE</label><input type="date" id="inpDate"></div>
+                    <div class="form-row"><label>PLAYER NAME</label><input type="text" id="inpPlayerName" placeholder="Your Name"></div>
                 </div>
-                <div style="text-align:right; font-size:0.75rem; color:#8b5a2b; margin-top:5px;">
-                    ※選択順に <span style="background:#1976d2; color:#fff; padding:0 4px; border-radius:4px;">PC</span> <span style="background:#d32f2f; color:#fff; padding:0 4px; border-radius:4px;">KPC</span> となります
+
+                <!-- キャラ選択 -->
+                <h2>Protagonists <span style="font-size:0.7rem; color:#888;">(PC & KPC)</span></h2>
+                <div id="charSelectArea" class="char-select-grid">
+                    <div style="grid-column:1/-1; text-align:center; padding:20px; color:#888;">Loading Characters...</div>
+                </div>
+                <div id="errorMsg"></div>
+
+                <div class="form-row" style="text-align:right; font-size:0.75rem; color:#6d4c41; margin-top:5px;">
+                    ※選択順: <span style="background:#1976d2; color:#fff; padding:0 5px; border-radius:3px;">1. PC</span> <span style="background:#d32f2f; color:#fff; padding:0 5px; border-radius:3px;">2. KPC</span>
                 </div>
 
                 <!-- 基本ログ -->
-                <h2>Mission Log</h2>
-                <div class="grid-2">
-                    <div class="form-row"><label>DATE</label><input type="date" id="inpDate"></div>
-                    <div class="form-row"><label>SYSTEM</label>
-                        <select id="inpSystem">
-                            <option value="CoC6">Call of Cthulhu (6th)</option>
-                            <option value="CoC7">Call of Cthulhu (7th)</option>
-                            <option value="Emoklore">エモクロアTRPG</option>
-                            <option value="Other">Other System</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="grid-2">
-                    <div class="form-row"><label>GM / KEEPER</label><input type="text" id="inpGM"></div>
-                    <div class="form-row"><label>PLAYERS</label><input type="number" id="inpPlCount" value="1"></div>
-                </div>
-                <div class="form-row">
-                    <label>ATTRIBUTES (時間/形式/舞台など)</label>
-                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
-                        <input type="text" id="inpDuration" placeholder="Time">
-                        <select id="inpFormat"><option value="Voice">Voice</option><option value="Text">Text</option></select>
-                        <input type="text" id="inpStage" placeholder="Stage">
-                    </div>
-                </div>
+                <h2>Game Master</h2>
+                <div class="form-row"><input type="text" id="inpGM" placeholder="GM Name"></div>
 
-                <!-- 画像 -->
-                <h2>Imagery</h2>
+                <h2>Visuals</h2>
                 <div class="grid-2">
                     <div>
-                        <div class="img-polaroid" id="dropTrailer">
-                            <div class="img-frame"><img id="previewTrailer" src=""></div>
+                        <div class="polaroid" id="dropTrailer">
+                            <img id="previewTrailer" src="">
                             <div style="font-size:0.7rem; color:#888; margin-top:5px;">TRAILER</div>
                         </div>
-                        <input type="text" id="inpImgTrailer" placeholder="URL..." style="font-size:0.7rem; margin-top:5px; width:100%;">
+                        <input type="text" id="inpImgTrailer" placeholder="Trailer URL..." style="font-size:0.7rem; margin-top:5px; width:100%;">
                     </div>
                     <div>
-                        <div class="img-polaroid" id="dropRoom">
-                            <div class="img-frame"><img id="previewRoom" src=""></div>
+                        <div class="polaroid" id="dropRoom">
+                            <img id="previewRoom" src="">
                             <div style="font-size:0.7rem; color:#888; margin-top:5px;">MEMORY</div>
                         </div>
-                        <input type="text" id="inpImgRoom" placeholder="URL..." style="font-size:0.7rem; margin-top:5px; width:100%;">
+                        <input type="text" id="inpImgRoom" placeholder="Room/Memory URL..." style="font-size:0.7rem; margin-top:5px; width:100%;">
                     </div>
                 </div>
             </div>
 
-            <!-- ■ 右ページ：タブコンテンツ -->
+            <!-- ■ 右ページ：詳細情報（タブ切り替え） -->
             <div class="page page-right">
-                
-                <!-- 1. STORY (概要) -->
-                <div id="section-story" class="tab-content active">
-                    <h2>Scenario Overview</h2>
-                    <div class="form-row"><label>TYPE / HO</label><input type="text" id="inpType" placeholder="秘匿HO / シティ / R18G 等"></div>
-                    <div class="form-row"><label>URL (Distribution)</label><input type="url" id="inpUrlShop"></div>
+
+                <!-- 1. SCENARIO INFO (シナリオ情報) -->
+                <div id="section-info" class="tab-content active">
+                    <h2>Scenario Intel <span style="font-size:0.7rem; font-weight:normal;">(シナリオ公式情報)</span></h2>
+                    
                     <div class="form-row">
-                        <label>INTRODUCTION / SYNOPSIS</label>
-                        <textarea id="inpOverview" style="height:250px;" placeholder="シナリオの概要、あらすじ、導入など..."></textarea>
+                        <label>INTRODUCTION (導入)</label>
+                        <textarea id="inpIntro" style="height:80px; font-style:italic; color:#555;" placeholder="「この一瞬が、永遠に続けば良いとさえ思った...」"></textarea>
                     </div>
+
                     <div class="form-row">
-                        <label>WARNINGS / NOTES</label>
-                        <textarea id="inpWarnings" style="height:100px;" placeholder="注意事項、地雷チェック..."></textarea>
+                        <label>ATTRIBUTES (概要)</label>
+                        <div class="grid-2" style="margin-bottom:10px;">
+                            <div><label>SYSTEM</label>
+                                <select id="inpSystem">
+                                    <option value="CoC6">CoC 6th</option>
+                                    <option value="CoC7">CoC 7th</option>
+                                    <option value="Emoklore">Emoklore</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div><label>ESTIMATED TIME</label><input type="text" id="inpEstTime" placeholder="ボイセ5～6時間"></div>
+                        </div>
+                        <div class="grid-2" style="margin-bottom:10px;">
+                            <div><label>STAGE</label><input type="text" id="inpStage" placeholder="現代日本 / シティ"></div>
+                            <div><label>PLAYERS (人数)</label><input type="text" id="inpPlayerNum" placeholder="タイマン (1PC+KPC)"></div>
+                        </div>
+                        <div><label>RECOMMENDED SKILLS</label><input type="text" id="inpRecSkills" placeholder="目星、聞き耳、図書館..."></div>
+                    </div>
+
+                    <div class="form-row">
+                        <label>TAGS / TYPE</label>
+                        <input type="text" id="inpType" placeholder="うちよそ、デート、記憶喪失...">
+                    </div>
+
+                    <div class="form-row">
+                        <label>SYNOPSIS (あらすじ)</label>
+                        <textarea id="inpOverview" style="height:150px;" placeholder="シナリオのあらすじ..."></textarea>
+                    </div>
+
+                    <details>
+                        <summary>WARNINGS (注意事項)</summary>
+                        <textarea id="inpWarnings" style="height:80px; margin-top:5px;" placeholder="神話生物の独自解釈、後遺症の可能性..."></textarea>
+                    </details>
+
+                    <div class="form-row" style="margin-top:10px;">
+                        <label>URL (Distribution)</label>
+                        <input type="url" id="inpUrlShop" placeholder="https://booth.pm/...">
                     </div>
                 </div>
 
-                <!-- 2. RESULT (結果) -->
-                <div id="section-result" class="tab-content">
-                    <h2>Mission Result</h2>
-                    <div style="text-align:center; padding:30px; border:2px solid #d7ccc8; margin-bottom:20px;">
-                        <label>FINAL STATUS</label>
-                        <select id="inpResult" onchange="updateStamp()" style="font-size:1.5rem; text-align:center; padding:10px; border-bottom:2px solid #8b5a2b; background:transparent;">
+                <!-- 2. SESSION LOG (通過ログ) -->
+                <div id="section-session" class="tab-content">
+                    <h2>Session Log <span style="font-size:0.7rem; font-weight:normal;">(通過記録)</span></h2>
+                    
+                    <div class="grid-2">
+                        <div class="form-row">
+                            <label>PLAY STYLE</label>
+                            <div style="display:flex; gap:5px;">
+                                <select id="inpFormat" style="flex:1;"><option value="Voice">ボイセ</option><option value="Text">テキセ</option><option value="Half">半テキ</option></select>
+                                <input type="text" id="inpDuration" placeholder="経過時間" style="flex:1;">
+                            </div>
+                        </div>
+                        <div class="form-row"><label>CHAR STATUS</label>
+                            <select id="inpCharStatus"><option value="Continue">継続</option><option value="New">新規</option></select>
+                        </div>
+                    </div>
+
+                    <div style="border:2px solid #bcaaa4; padding:15px; border-radius:4px; margin:20px 0; background:rgba(255,255,255,0.4); text-align:center;">
+                        <label>RESULT</label>
+                        <select id="inpResult" style="font-size:1.4rem; text-align:center; background:transparent; border-bottom:2px solid #5d4037; font-weight:bold;">
                             <option value="Cleared">生還 (CLEARED)</option>
                             <option value="Lost">ロスト (LOST)</option>
                             <option value="Retired">リタイア (RETIRED)</option>
                             <option value="Unknown">不明 (UNKNOWN)</option>
                         </select>
-                        <div style="margin-top:15px;">
-                            <input type="text" id="inpEndName" placeholder="Ending Name (e.g. End A)" style="text-align:center;">
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <label>CHARACTER STATUS CHANGE</label>
-                        <select id="inpCharStatus">
-                            <option value="Continue">継続 (Status Quo)</option>
-                            <option value="New">新規作成 (New Character)</option>
-                        </select>
+                        <input type="text" id="inpEndName" placeholder="Ending Name (e.g. End A)" style="text-align:center; margin-top:10px;">
                     </div>
 
                     <div class="form-row">
                         <label>LOST DETAIL / AFTER EFFECT</label>
-                        <textarea id="inpLostDetail" style="height:120px;" placeholder="ロスト理由、後遺症、不定の狂気の内容..."></textarea>
+                        <textarea id="inpLostDetail" style="height:60px;" placeholder="ロスト理由・後遺症..."></textarea>
                     </div>
 
-                    <!-- スタンプ表示エリア -->
-                    <div id="stampDisplay" class="stamp-box">CLEARED</div>
-                </div>
-
-                <!-- 3. DETAIL (詳細) -->
-                <div id="section-detail" class="tab-content">
-                    <h2>Rewards & Growth</h2>
+                    <h2>Spoils & Encounters</h2>
                     <div class="grid-2">
                         <div class="form-row"><label>SAN REWARD</label><input type="text" id="inpSanReward" placeholder="+10 (50→60)"></div>
-                        <div class="form-row"><label>MONEY / ASSETS</label><input type="text" id="inpItemReward"></div>
+                        <div class="form-row"><label>ITEMS / MONEY</label><input type="text" id="inpItemReward"></div>
                     </div>
-                    <div class="form-row">
-                        <label>GROWTH SKILLS</label>
-                        <textarea id="inpGrowth" placeholder="目星+5, 図書館+3..."></textarea>
-                    </div>
-                    
-                    <h2>Encounters</h2>
-                    <div class="form-row">
-                        <label>MYTHOS ENTITIES</label>
-                        <textarea id="inpEntities" style="height:80px;"></textarea>
-                    </div>
-                    <div class="form-row">
-                        <label>SPELLS / ARTIFACTS</label>
-                        <textarea id="inpSpells" style="height:80px;"></textarea>
-                    </div>
+                    <div class="form-row"><label>GROWTH</label><textarea id="inpGrowth" style="height:60px;" placeholder="目星+5..."></textarea></div>
+                    <div class="form-row"><label>ENCOUNTERED / SPELLS</label><textarea id="inpEntities" style="height:60px;" placeholder="神話生物、魔術..."></textarea></div>
                 </div>
 
-                <!-- 4. MEMO (メモ) -->
+                <!-- 3. MEMO (感想) -->
                 <div id="section-memo" class="tab-content">
                     <h2>Personal Notes</h2>
                     <div class="form-row">
                         <label>PUBLIC COMMENT (表の感想)</label>
-                        <textarea id="inpPublicMemo" style="height:150px;" placeholder="SNS等で公開できる感想..."></textarea>
+                        <textarea id="inpPublicMemo" style="height:200px;" placeholder="ふせったー等に流せる感想..."></textarea>
                     </div>
                     <div class="form-row">
-                        <label>SECRET NOTES (ネタバレ・秘匿)</label>
-                        <textarea id="inpSecretMemo" style="height:250px; background-color:rgba(0,0,0,0.05);" placeholder="GM・PL間のみの秘密、ネタバレを含む感想..."></textarea>
+                        <label>SECRET NOTES (秘匿・ネタバレ)</label>
+                        <textarea id="inpSecretMemo" style="height:200px; background-color:rgba(0,0,0,0.05);" placeholder="ネタバレありの感想、秘匿内容..."></textarea>
                     </div>
                 </div>
 
-                <!-- 保存ボタン (常に右下に表示) -->
+                <!-- 保存ボタン -->
                 <button id="btnSave" class="btn-seal"><span>💾</span>SEAL</button>
-                
-                <div class="sync-box" style="position:absolute; bottom:10px; right:180px; font-size:0.75rem; text-align:right;">
-                    <label style="cursor:pointer; color:#5d4037;">
-                        <input type="checkbox" id="chkSync" checked> キャラクターシートへ追記連携
-                    </label>
+                <div style="position:absolute; bottom:10px; right:150px; font-size:0.75rem;">
+                    <label style="cursor:pointer;"><input type="checkbox" id="chkSync" checked> キャラシ更新</label>
                 </div>
             </div>
         </div>
@@ -386,64 +363,34 @@
 
         const getEl = (id) => document.getElementById(id);
         let allChars = {};
-        
-        // 複数選択用配列
-        let selectedMemberIds = []; // [id1, id2, ...]
-
+        let selectedMemberIds = [];
         let currentUid = null;
 
-        // タブ切り替え関数 (グローバルスコープへ)
+        // タブ切り替え
         window.switchTab = (targetId, tabEl) => {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-            
             getEl(targetId).classList.add('active');
             tabEl.classList.add('active');
         };
 
-        // スタンプ更新
-        window.updateStamp = () => {
-            const val = getEl('inpResult').value;
-            const stamp = getEl('stampDisplay');
-            stamp.className = 'stamp-box'; // reset
-            
-            if(val === 'Cleared') {
-                stamp.textContent = "CLEARED";
-                stamp.classList.add('stamp-cleared');
-            } else if(val === 'Lost') {
-                stamp.textContent = "LOST";
-                stamp.classList.add('stamp-lost');
-            } else if(val === 'Retired') {
-                stamp.textContent = "RETIRED";
-                stamp.classList.add('stamp-lost'); // 色は赤系統
-                stamp.style.opacity = '0.5';
-            } else {
-                stamp.style.opacity = '0';
-            }
-        };
-
-        // キャラ選択ロジック（複数選択）
+        // キャラ選択 (PC/KPC)
         const toggleCharSelection = (div, charId) => {
             const idx = selectedMemberIds.indexOf(charId);
-            
             if (idx === -1) {
-                // 追加 (最大2人までなどの制限を入れるならここ)
                 selectedMemberIds.push(charId);
                 div.classList.add('selected');
             } else {
-                // 解除
                 selectedMemberIds.splice(idx, 1);
                 div.classList.remove('selected');
             }
             updateRoleBadges();
         };
 
-        // バッジ更新 (1人目=PC, 2人目=KPC と仮定して表示)
         const updateRoleBadges = () => {
             document.querySelectorAll('.char-portrait').forEach(div => {
                 const uid = div.dataset.uid;
                 const index = selectedMemberIds.indexOf(uid);
-                
                 div.classList.remove('role-pc', 'role-kpc');
                 const badge = div.querySelector('.role-badge');
                 
@@ -452,57 +399,10 @@
                     badge.textContent = "PC";
                 } else if (index > 0) {
                     div.classList.add('role-kpc');
-                    badge.textContent = "KPC"; // 2人目以降はKPC扱い
+                    badge.textContent = "KPC";
                 }
             });
         };
-
-        // 初期化
-        monitorAuth(async (user) => {
-            const area = getEl('charSelectArea');
-            if(!user) {
-                area.innerHTML = '<div style="grid-column:1/-1; text-align:center;">Login Required</div>';
-                return;
-            }
-            currentUid = user.uid;
-
-            try {
-                console.log("Loading Chars...");
-                const storeData = await loadFromCloud();
-                
-                // データが空、または取得失敗時のハンドリング
-                if (!storeData || Object.keys(storeData).length === 0) {
-                    area.innerHTML = '<div style="grid-column:1/-1; text-align:center;">No Characters Found.</div>';
-                    return;
-                }
-
-                allChars = storeData;
-                area.innerHTML = '';
-
-                // キャラリスト生成
-                for(const c of Object.values(allChars)) {
-                    const div = document.createElement('div');
-                    div.className = 'char-portrait';
-                    div.dataset.uid = c.id || c.name; // IDとして使用
-
-                    let imgUrl = "https://via.placeholder.com/60?text=?";
-                    try { imgUrl = await resolveCharacterImage(c.name, c.icon, 'icon'); } catch(e){}
-
-                    div.innerHTML = `
-                        <div class="role-badge"></div>
-                        <img src="${imgUrl}">
-                        <span>${c.name}</span>
-                    `;
-                    
-                    div.onclick = () => toggleCharSelection(div, c.id || c.name);
-                    area.appendChild(div);
-                }
-
-            } catch(e) {
-                console.error(e);
-                area.innerHTML = `<div style="grid-column:1/-1; color:red;">Load Error: ${e.message}</div>`;
-            }
-        });
 
         // 画像D&D
         const setupImg = (boxId, inpId, imgId) => {
@@ -522,66 +422,115 @@
         setupImg('dropTrailer', 'inpImgTrailer', 'previewTrailer');
         setupImg('dropRoom', 'inpImgRoom', 'previewRoom');
 
-        // 保存ボタン
+        // キャラクターロード & エラーハンドリング
+        monitorAuth(async (user) => {
+            const area = getEl('charSelectArea');
+            const errorMsg = getEl('errorMsg');
+            
+            if(!user) {
+                area.innerHTML = '<div style="grid-column:1/-1; text-align:center;">Login Required</div>';
+                return;
+            }
+            currentUid = user.uid;
+
+            try {
+                console.log("Loading Characters from Firestore...");
+                const storeData = await loadFromCloud();
+                
+                if (!storeData || Object.keys(storeData).length === 0) {
+                    area.innerHTML = '<div style="grid-column:1/-1; text-align:center;">No Characters Found in DB.</div>';
+                    return;
+                }
+
+                allChars = storeData;
+                area.innerHTML = '';
+                errorMsg.textContent = ''; // エラーなし
+
+                for(const c of Object.values(allChars)) {
+                    const div = document.createElement('div');
+                    div.className = 'char-portrait';
+                    div.dataset.uid = c.id || c.name;
+
+                    let imgUrl = "https://via.placeholder.com/60?text=?";
+                    try { imgUrl = await resolveCharacterImage(c.name, c.icon, 'icon'); } catch(e){}
+
+                    div.innerHTML = `
+                        <div class="role-badge"></div>
+                        <img src="${imgUrl}">
+                        <span>${c.name}</span>
+                    `;
+                    div.onclick = () => toggleCharSelection(div, c.id || c.name);
+                    area.appendChild(div);
+                }
+
+            } catch(e) {
+                console.error("Load Error:", e);
+                area.innerHTML = '';
+                errorMsg.innerHTML = `⚠ Load Error: ${e.message}<br>Check console for details.`;
+            }
+        });
+
+        // 保存実行
         getEl('btnSave').addEventListener('click', async () => {
             const title = getEl('inpTitle').value;
             if(!title) { alert('タイトルを入力してください'); return; }
-            if(selectedMemberIds.length === 0 && !confirm('キャラクター未選択です。記録しますか？')) return;
+            if(selectedMemberIds.length === 0 && !confirm('キャラ未選択です。保存しますか？')) return;
 
             const btn = getEl('btnSave');
             btn.innerHTML = "<span>⏳</span>Saving...";
 
-            // データ収集
+            // データ収集 (新項目追加)
             const rawInput = {
                 title: title,
+                playerName: getEl('inpPlayerName').value, // 追加
+                
                 system: getEl('inpSystem').value,
                 date: getEl('inpDate').value,
-                duration: getEl('inpDuration').value,
-                stage: getEl('inpStage').value,
-                type: getEl('inpType').value,
                 gm: getEl('inpGM').value,
-                players: getEl('inpPlCount').value,
+                // SCENARIO INFO
+                intro: getEl('inpIntro').value, // 追加
+                estTime: getEl('inpEstTime').value, // 追加
+                stage: getEl('inpStage').value,
+                playerNum: getEl('inpPlayerNum').value, // 追加
+                recSkills: getEl('inpRecSkills').value, // 追加
+                type: getEl('inpType').value,
+                overview: getEl('inpOverview').value,
+                warnings: getEl('inpWarnings').value,
+                
+                // SESSION LOG
                 format: getEl('inpFormat').value,
-                
-                members: selectedMemberIds, // 配列で保存
-                
+                duration: getEl('inpDuration').value,
                 charStatus: getEl('inpCharStatus').value,
                 result: getEl('inpResult').value,
-                lostDetail: getEl('inpLostDetail').value,
-                images: { trailer: getEl('inpImgTrailer').value, room: getEl('inpImgRoom').value },
-                urls: { shop: getEl('inpUrlShop').value, room: getEl('inpUrlRoom').value },
-                details: { overview: getEl('inpOverview').value }, 
                 endName: getEl('inpEndName').value,
+                lostDetail: getEl('inpLostDetail').value,
+                
                 rewards: { san: getEl('inpSanReward').value, items: getEl('inpItemReward').value },
-                entities: getEl('inpEntities').value, 
-                spells: getEl('inpSpells').value, 
                 growth: getEl('inpGrowth').value,
+                entities: getEl('inpEntities').value, // entities + spells をここにまとめるか、別途保存するか
+                
+                members: selectedMemberIds,
+                images: { trailer: getEl('inpImgTrailer').value, room: getEl('inpImgRoom').value },
+                urls: { shop: getEl('inpUrlShop').value },
                 memos: { public: getEl('inpPublicMemo').value, secret: getEl('inpSecretMemo').value }
             };
 
             try {
-                // 1. シナリオ保存
                 const scenarioData = createScenarioRecord(rawInput, currentUid);
                 const newId = await saveScenario(scenarioData);
 
-                // 2. キャラクター連携 (ループ処理)
                 if(selectedMemberIds.length > 0 && getEl('chkSync').checked) {
-                    let updatedCount = 0;
-                    
-                    // 選択された全キャラに対して更新をかける
                     for(const mid of selectedMemberIds) {
                         const targetChar = Object.values(allChars).find(c => (c.id === mid) || (c.name === mid));
                         if(targetChar) {
                             const updatedChar = syncScenarioToCharacter(targetChar, scenarioData, newId);
-                            // ローカルとサーバー両方更新
                             allChars[targetChar.name] = updatedChar;
                             await saveToCloud(updatedChar);
-                            updatedCount++;
                         }
                     }
-                    alert(`記録完了！\nシナリオと、${updatedCount}人のキャラクター情報を更新しました。`);
+                    alert('記録・連携完了！');
                 } else {
-                    alert('シナリオ記録完了！');
+                    alert('記録完了！');
                 }
                 btn.innerHTML = "<span>✔</span>SEALED";
             } catch(e) {
@@ -589,8 +538,6 @@
                 btn.innerHTML = "<span>✕</span>Failed";
             }
         });
-
-        updateStamp(); // init
     </script>
 </body>
 </html>
