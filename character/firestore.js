@@ -143,21 +143,21 @@ export async function deleteFromCloud(charName) {
 }
 
 
+// --- シナリオデータ (Scenarios) ---
 
-// シナリオを新規保存（別コレクション "scenarios" に保存）
+// シナリオを新規保存 (scenariosコレクション)
 export async function saveScenario(scenarioData) {
     if (!currentUser) throw new Error("User not logged in");
     
-    // ログインユーザーIDを紐付け
+    // サーバー時間を付与
     const dataToSave = {
         ...scenarioData,
-        userId: currentUser.uid,
         updatedAt: serverTimestamp()
     };
 
     try {
         const docRef = await addDoc(collection(db, "scenarios"), dataToSave);
-        console.log("Scenario saved with ID: ", docRef.id);
+        console.log("Scenario saved ID:", docRef.id);
         return docRef.id;
     } catch (e) {
         console.error("Error adding scenario: ", e);
@@ -165,28 +165,23 @@ export async function saveScenario(scenarioData) {
     }
 }
 
-// 特定のキャラクターIDが含まれるシナリオを取得
+// キャラクターIDからシナリオを取得
 export async function getScenariosForCharacter(charId) {
     if (!currentUser) return [];
-
     try {
         const q = query(
             collection(db, "scenarios"),
-            where("userId", "==", currentUser.uid),
-            where("members", "array-contains", charId) // members配列にcharIdが含まれるものを検索
+            where("members", "array-contains", charId)
         );
-
         const querySnapshot = await getDocs(q);
         const scenarios = [];
         querySnapshot.forEach((doc) => {
             scenarios.push({ id: doc.id, ...doc.data() });
         });
-        
-        // 日付順などでソートしたい場合はここで行う
+        // 日付順ソート (新しい順)
         return scenarios.sort((a, b) => new Date(b.date) - new Date(a.date));
-
     } catch (e) {
-        console.error("Error fetching scenarios:", e);
+        console.error(e);
         return [];
     }
 }

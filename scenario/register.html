@@ -3,177 +3,320 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>REGISTER SCENARIO LOG</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Zen+Kaku+Gothic+New:wght@300;500;700&display=swap" rel="stylesheet">
-    <!-- 既存のCSSを流用 -->
-    <link href="../detail/style.css" rel="stylesheet">
-    <style>
-        body { padding: 20px; max-width: 800px; margin: 0 auto; }
-        .form-panel { background: rgba(12, 14, 18, 0.95); padding: 30px; border: 1px solid var(--border); box-shadow: 0 0 15px rgba(0,0,0,0.5); }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; color: var(--secondary); font-family: var(--font-head); margin-bottom: 5px; font-size: 0.9rem; }
-        input[type="text"], input[type="date"], textarea, select {
-            width: 100%; background: rgba(255,255,255,0.05); border: 1px solid #444; color: #fff; padding: 10px; font-family: var(--font-body);
-        }
-        input:focus, textarea:focus { border-color: var(--secondary); outline: none; }
-        
-        /* キャラクター選択エリア */
-        .char-select-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px;
-            max-height: 300px; overflow-y: auto; border: 1px solid #333; padding: 10px;
-        }
-        .char-checkbox { display: none; }
-        .char-label {
-            display: block; padding: 10px; background: rgba(255,255,255,0.03); border: 1px solid #444;
-            cursor: pointer; text-align: center; font-size: 0.8rem; transition: 0.2s;
-        }
-        .char-label:hover { background: rgba(255,255,255,0.1); }
-        .char-checkbox:checked + .char-label {
-            background: var(--secondary); color: #000; border-color: var(--secondary); font-weight: bold;
-        }
+    <title>SCENARIO LOG EDITOR</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- CSSパスの調整: scenarioフォルダから見て、editフォルダ等は親階層にある想定 -->
+    <link href="../edit/header.css" rel="stylesheet">
 
-        .submit-btn {
-            background: var(--primary); color: #fff; border: none; padding: 15px; width: 100%;
-            font-family: var(--font-head); font-size: 1.2rem; cursor: pointer; margin-top: 20px;
+    <style>
+        body { background-color: #181818; color: #ddd; font-family: 'Noto Sans JP', sans-serif; margin: 0; padding: 0; }
+        .container { max-width: 960px; margin: 0 auto; padding: 40px 20px 100px; }
+        
+        h1 { color: #00f3ff; border-bottom: 2px solid #00f3ff; padding-bottom: 10px; font-family: 'Roboto Mono', monospace; font-size: 1.5rem; }
+        h2 { 
+            border-left: 4px solid #d4b346; padding-left: 10px; margin-top: 40px; color: #eee; 
+            font-size: 1.0rem; background: #2a2a2a; padding: 8px 10px; border-radius: 0 4px 4px 0;
         }
-        .submit-btn:hover { box-shadow: 0 0 15px var(--primary); }
-        .back-link { display: block; margin-top: 20px; text-align: center; color: #888; text-decoration: none; }
+        
+        .toolbar { 
+            background: #252525; padding: 15px; border-radius: 4px; margin-bottom: 20px; 
+            display: flex; justify-content: space-between; align-items: center; border: 1px solid #444; 
+            position: sticky; top: 0; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+        }
+        .btn-save { 
+            background: #00f3ff; color: #000; border: none; padding: 10px 40px; 
+            font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 1rem; 
+            transition: 0.3s;
+        }
+        .btn-save:hover { background: #fff; box-shadow: 0 0 15px #00f3ff; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .form-row { margin-bottom: 15px; }
+        label { display: block; color: #888; font-size: 0.75rem; margin-bottom: 5px; font-family: 'Roboto Mono', monospace; }
+        
+        input, select, textarea { 
+            width: 100%; padding: 10px; box-sizing: border-box; background: #2a2a2a; 
+            border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.9rem; 
+        }
+        textarea { line-height: 1.6; min-height: 80px; resize: vertical; font-family: inherit; }
+        input:focus, textarea:focus { border-color: #00f3ff; outline: none; background: #333; }
+
+        .char-select-container {
+            background: #252525; border: 1px solid #444; padding: 15px; 
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px;
+            max-height: 250px; overflow-y: auto; border-radius: 4px;
+        }
+        .char-card {
+            background: #151515; border: 1px solid #333; padding: 10px; 
+            border-radius: 4px; cursor: pointer; text-align: center; transition: 0.2s;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        .char-card.selected { background: #003333; border-color: #00f3ff; }
+        .char-card img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-bottom: 5px; background: #000; }
+
+        .img-drop-area {
+            border: 2px dashed #444; background: #1a1a1a; height: 180px; 
+            display: flex; align-items: center; justify-content: center;
+            position: relative; overflow: hidden; border-radius: 4px;
+        }
+        .img-drop-area img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+        .sync-box {
+            background: #2b2b30; border-left: 3px solid #00f3ff; padding: 15px; margin-top: 20px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        
+        details { background: #222; border: 1px solid #333; margin-bottom: 15px; border-radius: 4px; }
+        details summary { padding: 12px; cursor: pointer; color: #aaa; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="scanlines"></div>
+    <!-- Headerの読み込み (JSのimport機能を使う場合) -->
+    <script type="module">import { initHeader } from "../edit/header.js"; initHeader();</script>
 
-    <h1 style="font-family:'Orbitron'; color:#fff; text-align:center; margin-bottom:20px;">SCENARIO ENTRY</h1>
-
-    <div class="form-panel">
-        <div class="form-group">
-            <label>SCENARIO TITLE</label>
-            <input type="text" id="inpTitle" placeholder="シナリオ名を入力">
+    <div class="container">
+        <h1>SCENARIO & SESSION LOG</h1>
+        
+        <div class="toolbar">
+            <div style="font-size: 0.8rem; color:#aaa;">シナリオを保存し、キャラクターシートを更新します。</div>
+            <button id="btnSave" class="btn-save">SAVE & SYNC</button>
         </div>
 
-        <div class="form-group">
-            <label>SYSTEM</label>
-            <select id="inpSystem">
-                <option value="CoC6">Call of Cthulhu (6th)</option>
-                <option value="CoC7">Call of Cthulhu (7th)</option>
-                <option value="Emoklore">Emoklore</option>
-                <option value="Other">Other</option>
-            </select>
+        <!-- 1. 基本情報 -->
+        <div class="grid-2">
+            <div class="form-row"><label>SCENARIO TITLE</label><input type="text" id="inpTitle"></div>
+            <div class="form-row"><label>SYSTEM</label>
+                <select id="inpSystem">
+                    <option value="CoC6">Call of Cthulhu (6th)</option>
+                    <option value="CoC7">Call of Cthulhu (7th)</option>
+                    <option value="Emoklore">エモクロアTRPG</option>
+                    <option value="Other">その他</option>
+                </select>
+            </div>
         </div>
-
-        <div class="form-group">
-            <label>PLAY DATE</label>
-            <input type="date" id="inpDate">
+        <div class="grid-4">
+            <div class="form-row"><label>DATE</label><input type="date" id="inpDate"></div>
+            <div class="form-row"><label>TIME</label><input type="text" id="inpDuration" placeholder="12時間"></div>
+            <div class="form-row"><label>STAGE</label><input type="text" id="inpStage" placeholder="現代日本"></div>
+            <div class="form-row"><label>TYPE</label><input type="text" id="inpType" placeholder="秘匿HO"></div>
         </div>
-
-        <div class="form-group">
-            <label>GAME MASTER (KP/DL)</label>
-            <input type="text" id="inpGM" placeholder="GM名">
-        </div>
-
-        <div class="form-group">
-            <label>RESULT</label>
-            <select id="inpResult">
-                <option value="Cleared">End A (Cleared/Alive)</option>
-                <option value="Lost">Lost (Dead/Insane)</option>
-                <option value="Retired">Retired</option>
-                <option value="Unknown">Unknown</option>
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label>PARTICIPATING MEMBERS (SELECT YOUR CHARACTERS)</label>
-            <div id="charSelector" class="char-select-grid">
-                <div style="color:#888; text-align:center; grid-column:1/-1;">Loading Characters...</div>
+        <div class="grid-4">
+            <div class="form-row"><label>GM / KP</label><input type="text" id="inpGM"></div>
+            <div class="form-row"><label>PL COUNT</label><input type="number" id="inpPlCount" value="1"></div>
+            <div class="form-row"><label>FORMAT</label>
+                <select id="inpFormat"><option value="Voice">ボイス</option><option value="Text">テキスト</option></select>
+            </div>
+            <div class="form-row"><label>PUBLIC</label>
+                <select id="inpPublic"><option value="OK">公開OK</option><option value="NG">非公開</option></select>
             </div>
         </div>
 
-        <div class="form-group">
-            <label>MEMO / IMPRESSIONS</label>
-            <textarea id="inpMemo" rows="4" placeholder="概要や感想など..."></textarea>
+        <!-- 2. キャラクター連携 -->
+        <h2>LINK CHARACTER</h2>
+        <div class="char-select-container" id="charSelectArea">
+            <div style="padding:20px; color:#666;">LOADING...</div>
         </div>
 
-        <button id="btnRegister" class="submit-btn">REGISTER LOG</button>
+        <div class="sync-box">
+            <input type="checkbox" id="chkSync" checked>
+            <div>
+                <strong style="color:#fff;">キャラクターシートと連携する</strong><br>
+                <span style="font-size:0.8rem; color:#888;">選択したキャラの「通過シナリオ」「遭遇」「成長」「所持品」を自動更新します。</span>
+            </div>
+        </div>
+
+        <div class="grid-4" style="margin-top:15px; background:#222; padding:15px; border-radius:4px;">
+            <div class="form-row"><label>STATUS</label>
+                <select id="inpCharStatus"><option value="Continue">継続</option><option value="New">新規</option></select>
+            </div>
+            <div class="form-row"><label>RESULT</label>
+                <select id="inpResult"><option value="Cleared">生還</option><option value="Lost">ロスト</option></select>
+            </div>
+            <div class="form-row" style="grid-column:span 2;"><label>LOST REASON</label>
+                <input type="text" id="inpLostDetail" placeholder="ロスト理由...">
+            </div>
+        </div>
+
+        <!-- 3. 画像・URL -->
+        <h2>ASSETS</h2>
+        <div class="grid-2">
+            <div>
+                <label>TRAILER IMAGE</label>
+                <div class="img-drop-area" id="dropTrailer"><img id="previewTrailer"></div>
+                <input type="text" id="inpImgTrailer" placeholder="URL..." style="margin-top:5px;">
+            </div>
+            <div>
+                <label>ROOM SCREENSHOT</label>
+                <div class="img-drop-area" id="dropRoom"><img id="previewRoom"></div>
+                <input type="text" id="inpImgRoom" placeholder="URL..." style="margin-top:5px;">
+            </div>
+        </div>
+        <div class="grid-2" style="margin-top:15px;">
+            <div class="form-row"><label>SCENARIO URL</label><input type="url" id="inpUrlShop"></div>
+            <div class="form-row"><label>ROOM URL</label><input type="url" id="inpUrlRoom"></div>
+        </div>
+        <div class="form-row"><label>TRAILER TEXT</label>
+            <textarea id="inpTrailerText" style="height:60px;"></textarea>
+        </div>
+
+        <!-- 4. 詳細 (折りたたみ) -->
+        <details open>
+            <summary>詳細 (概要・あらすじ)</summary>
+            <div style="padding:15px;">
+                <div class="form-row"><label>概要</label><textarea id="inpOverview"></textarea></div>
+                <div class="form-row"><label>あらすじ</label><textarea id="inpStory"></textarea></div>
+                <div class="form-row"><label>注意事項</label><textarea id="inpWarnings"></textarea></div>
+                <div class="form-row"><label>その他</label><textarea id="inpOthers"></textarea></div>
+            </div>
+        </details>
+
+        <details open>
+            <summary>報酬・成長</summary>
+            <div style="padding:15px;">
+                <div class="form-row"><label>ENDING NAME</label><input type="text" id="inpEndName"></div>
+                <div class="grid-2">
+                    <div class="form-row"><label>SAN変動</label><input type="text" id="inpSanReward"></div>
+                    <div class="form-row"><label>報酬</label><input type="text" id="inpItemReward"></div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-row"><label>遭遇神話生物</label><textarea id="inpEntities"></textarea></div>
+                    <div class="form-row"><label>魔術/AF</label><textarea id="inpSpells"></textarea></div>
+                </div>
+                <div class="form-row"><label>成長技能</label><textarea id="inpGrowth"></textarea></div>
+            </div>
+        </details>
+
+        <details>
+            <summary>メモ (ネタバレ等)</summary>
+            <div style="padding:15px;">
+                <div class="form-row"><label>公開用メモ</label><textarea id="inpPublicMemo"></textarea></div>
+                <div class="form-row"><label>秘匿メモ</label><textarea id="inpSecretMemo" style="background:#221;"></textarea></div>
+            </div>
+        </details>
     </div>
 
-    <a href="../index.html" class="back-link">BACK TO TOP</a>
-
+    <!-- SCRIPT -->
     <script type="module">
-        import { monitorAuth, loadFromCloud, saveScenario } from "../character/firestore.js"; 
-        // パスは階層に合わせて調整してください (例: ../firestore.js か ../character/firestore.js か)
-
-        const charSelector = document.getElementById('charSelector');
-        let currentUserData = null;
-
-        // 1. 認証チェック＆キャラクター一覧取得
-        monitorAuth(async (user) => {
-            if (!user) {
-                alert("ログインが必要です");
-                window.location.href = "../index.html";
-                return;
-            }
-            currentUserData = user;
-
-            // キャラクター読み込み
-            const data = await loadFromCloud();
-            if (!data) {
-                charSelector.innerHTML = '<div style="color:#888;">No characters found.</div>';
-                return;
-            }
-
-            charSelector.innerHTML = '';
-            // データ形式に応じて配列化
-            const charList = Object.values(data);
+        // Import Paths: scenarioフォルダから見た characterフォルダへの相対パス
+        import { loadFromCloud, saveToCloud, monitorAuth, saveScenario } 
+            from "../character/firestore.js";
+        
+        import { resolveCharacterImage } 
+            from "../character/data/schema.js"; // schema.jsの場所による（character/data内を想定）
             
-            charList.forEach(char => {
-                // IDがない場合は仮生成（Firestore保存時にIDがついているはず）
-                const cid = char.id || char.name; 
-                
-                const wrapper = document.createElement('div');
-                wrapper.innerHTML = `
-                    <input type="checkbox" id="chk_${cid}" class="char-checkbox" value="${cid}">
-                    <label for="chk_${cid}" class="char-label">
-                        <div style="font-weight:bold;">${char.name}</div>
-                        <div style="font-size:0.7rem; color:#888;">${char.job || 'Unknown'}</div>
-                    </label>
-                `;
-                charSelector.appendChild(wrapper);
+        import { createScenarioRecord, syncScenarioToCharacter } 
+            from "../character/data/scenario.js";
+
+        const getEl = (id) => document.getElementById(id);
+        let allChars = {};
+        let selectedCharId = null;
+        let currentUid = null;
+
+        // 画像D&D
+        const setupImg = (boxId, inpId, imgId) => {
+            const box = getEl(boxId);
+            box.addEventListener('dragover', e=>{e.preventDefault(); box.style.borderColor='#00f3ff';});
+            box.addEventListener('drop', e=>{
+                e.preventDefault(); box.style.borderColor='#444';
+                const file = e.dataTransfer.files[0];
+                if(file){
+                    const r = new FileReader();
+                    r.onload=v=>{ getEl(inpId).value=v.target.result; getEl(imgId).src=v.target.result; };
+                    r.readAsDataURL(file);
+                }
             });
+            getEl(inpId).addEventListener('change', e => getEl(imgId).src = e.target.value);
+        };
+        setupImg('dropTrailer', 'inpImgTrailer', 'previewTrailer');
+        setupImg('dropRoom', 'inpImgRoom', 'previewRoom');
+
+        // 初期化
+        monitorAuth(async (user) => {
+            if(!user) return;
+            currentUid = user.uid;
+            const area = getEl('charSelectArea');
+            try {
+                const storeData = await loadFromCloud();
+                allChars = storeData || {};
+                area.innerHTML = '';
+                
+                // 全キャラの表示
+                Object.values(allChars).forEach(async c => {
+                    const div = document.createElement('div');
+                    div.className = 'char-card';
+                    const imgUrl = await resolveCharacterImage(c.name, c.icon, 'icon');
+                    div.innerHTML = `<img src="${imgUrl}"><span>${c.name}</span>`;
+                    div.onclick = () => {
+                        document.querySelectorAll('.char-card').forEach(el=>el.classList.remove('selected'));
+                        div.classList.add('selected');
+                        selectedCharId = c.id || c.name;
+                    };
+                    area.appendChild(div);
+                });
+            } catch(e) { console.error(e); }
         });
 
-        // 2. 登録処理
-        document.getElementById('btnRegister').addEventListener('click', async () => {
-            const title = document.getElementById('inpTitle').value;
-            if(!title) { alert("シナリオ名を入力してください"); return; }
+        // 保存実行
+        getEl('btnSave').addEventListener('click', async () => {
+            const title = getEl('inpTitle').value;
+            if(!title) { alert('タイトルを入力してください'); return; }
+            if(!selectedCharId && !confirm('キャラ未選択です。保存しますか？')) return;
 
-            // 選択されたキャラIDを取得
-            const selectedChars = [];
-            document.querySelectorAll('.char-checkbox:checked').forEach(chk => {
-                selectedChars.push(chk.value);
-            });
-
-            if(selectedChars.length === 0) {
-                if(!confirm("キャラクターが選択されていません。登録しますか？")) return;
-            }
-
-            const scenarioData = {
+            // 1. 入力値の収集
+            const rawInput = {
                 title: title,
-                system: document.getElementById('inpSystem').value,
-                date: document.getElementById('inpDate').value,
-                gm: document.getElementById('inpGM').value,
-                result: document.getElementById('inpResult').value,
-                memo: document.getElementById('inpMemo').value,
-                members: selectedChars // ここで紐付け
+                system: getEl('inpSystem').value,
+                date: getEl('inpDate').value,
+                duration: getEl('inpDuration').value,
+                stage: getEl('inpStage').value,
+                type: getEl('inpType').value,
+                gm: getEl('inpGM').value,
+                players: getEl('inpPlCount').value,
+                format: getEl('inpFormat').value,
+                public: getEl('inpPublic').value,
+                members: selectedCharId ? [selectedCharId] : [],
+                charStatus: getEl('inpCharStatus').value,
+                result: getEl('inpResult').value,
+                lostDetail: getEl('inpLostDetail').value,
+                images: { trailer: getEl('inpImgTrailer').value, room: getEl('inpImgRoom').value },
+                urls: { shop: getEl('inpUrlShop').value, room: getEl('inpUrlRoom').value },
+                trailerText: getEl('inpTrailerText').value,
+                details: {
+                    overview: getEl('inpOverview').value, story: getEl('inpStory').value,
+                    warnings: getEl('inpWarnings').value, others: getEl('inpOthers').value
+                },
+                endName: getEl('inpEndName').value,
+                rewards: { san: getEl('inpSanReward').value, items: getEl('inpItemReward').value },
+                entities: getEl('inpEntities').value, spells: getEl('inpSpells').value, growth: getEl('inpGrowth').value,
+                memos: { public: getEl('inpPublicMemo').value, secret: getEl('inpSecretMemo').value }
             };
 
             try {
-                await saveScenario(scenarioData);
-                alert("シナリオログを登録しました！");
-                // フォームリセット等の処理
-                document.getElementById('inpTitle').value = "";
-                document.getElementById('inpMemo').value = "";
+                // 2. data/scenario.js で保存用データ作成
+                const scenarioData = createScenarioRecord(rawInput, currentUid);
+                
+                // 3. firestore.js でシナリオ保存
+                const newId = await saveScenario(scenarioData);
+
+                // 4. キャラ更新 (連携ONの場合)
+                if(selectedCharId && getEl('chkSync').checked) {
+                    const targetChar = Object.values(allChars).find(c => (c.id === selectedCharId) || (c.name === selectedCharId));
+                    if(targetChar) {
+                        // data/scenario.js でキャラデータを加工
+                        const updatedChar = syncScenarioToCharacter(targetChar, scenarioData, newId);
+                        
+                        // firestore.js でキャラ保存
+                        await saveToCloud(updatedChar);
+                        alert('シナリオ保存・キャラ更新完了！');
+                    }
+                } else {
+                    alert('シナリオ保存完了！');
+                }
             } catch(e) {
-                alert("登録エラー: " + e.message);
+                alert('エラー: ' + e.message);
             }
         });
     </script>
