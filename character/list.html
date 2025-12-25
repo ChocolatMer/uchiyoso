@@ -239,7 +239,7 @@
         #system-loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
         .loader-content { text-align: center; font-family: 'Teko', sans-serif; color: var(--accent); }
         .loader-title { font-size: 3rem; letter-spacing: 0.2em; margin-bottom: 10px; text-shadow: 0 0 15px var(--accent); }
-        .loader-text { font-family: 'Share Tech Mono', monospace; font-size: 1rem; color: #fff; margin-bottom: 20px; }
+        .loader-text { font-family: 'Share Tech Mono', monospace; font-size: 1rem; color: #fff; margin-bottom: 20px; text-align: center; width: 90%; max-width: 600px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .loader-bar-bg { width: 300px; height: 2px; background: #333; position: relative; overflow: hidden; margin: 0 auto; }
         .loader-bar-fill {
             position: absolute; top: 0; left: 0; height: 100%; width: 100%; background: var(--accent);
@@ -250,20 +250,17 @@
 </head>
 <body>
     <script type="module">
-        // header.jsが見つからなくてもエラーで止まらないようにする
         try {
             const module = await import("./header.js");
             if(module.initHeader) module.initHeader();
-        } catch(e) {
-            console.log("Header module not found, skipping.");
-        }
+        } catch(e) { console.log("Header module not found, skipping."); }
     </script>
 
     <!-- ★ LOADING SCREEN ★ -->
     <div id="system-loader">
         <div class="loader-content">
             <div class="loader-title">SYSTEM BOOT</div>
-            <div class="loader-text" id="loader-log-text">INITIALIZING SQUAD DATA...</div>
+            <div class="loader-text" id="loader-log-text">INITIALIZING...</div>
             <div class="loader-bar-bg"><div class="loader-bar-fill"></div></div>
         </div>
     </div>
@@ -286,12 +283,28 @@
     </div>
 
     <script type="module">
-        // ★修正ポイント: importの修正
-        // saveToCloudは削除し、monitorAuthを追加。
         import { loadFromCloud, monitorAuth } from "./firestore.js";
 
         const stage = document.getElementById('stage');
         const LOCAL_IMG_BASE = '../images/character/';
+        
+        // --- ★ REPORT DATA FETCH LOGIC ★ ---
+        async function fetchReportData() {
+            const paths = ['../report.json', './report.json'];
+            for (const path of paths) {
+                try {
+                    const res = await fetch(`${path}?t=${Date.now()}`);
+                    if (res.ok) return await res.json();
+                } catch(e) {}
+            }
+            return [
+                "ESTABLISHING CONNECTION...",
+                "CHECKING NEURAL LINK...",
+                "LOADING ARCHIVES...",
+                "VERIFYING SECURITY CREDENTIALS...",
+                "SYNCING DATABASE..."
+            ];
+        }
 
         function initParticles() {
             const container = document.getElementById('particleContainer');
@@ -470,41 +483,41 @@
             updateCarousel();
         }
 
-        // --- ★ MAIN BOOT LOGIC (修正版) ★ ---
+        // --- ★ MAIN BOOT LOGIC WITH REPORT DISPLAY ★ ---
         async function bootSystem() {
             const loaderText = document.getElementById('loader-log-text');
             const loader = document.getElementById('system-loader');
+            
+            // 1. Reportデータを取得
+            const reports = await fetchReportData();
+            let reportIndex = 0;
 
-            loaderText.textContent = "CHECKING SECURITY CLEARANCE...";
+            // 2. ログ表示タイマー開始（0.15秒ごとにパラパラ表示）
+            const logTimer = setInterval(() => {
+                if(reports.length > 0) {
+                    loaderText.textContent = reports[reportIndex % reports.length];
+                    reportIndex++;
+                }
+            }, 150);
 
-            // monitorAuthを使ってログイン状態を確認してからデータをロードする
+            // 3. 認証＆データロード
             monitorAuth(async (user) => {
                 try {
-                    if (!user) {
-                        loaderText.textContent = "ACCESS DENIED. GUEST MODE.";
-                        // ゲストモードでもデータをロードする場合はここを通過させる
-                        // ログイン必須ならここでリダイレクトなど
-                    } else {
-                        loaderText.textContent = `USER AUTHORIZED: ${user.displayName || 'AGENT'}`;
-                    }
-                    
-                    loaderText.textContent = "DOWNLOADING DATABASE...";
+                    // データロード
                     const data = await loadFromCloud();
-                    
                     if (!data) {
-                         // データがない場合
+                        clearInterval(logTimer);
                         loaderText.textContent = "WARNING: DATABASE EMPTY.";
-                        stage.innerHTML = '<div style="color:#fff; font-family:\'Teko\'; font-size:2rem; text-align:center;">NO DATA FOUND<br>PLEASE REGISTER</div>';
+                        stage.innerHTML = '<div style="color:#fff; font-family:\'Teko\'; font-size:2rem; text-align:center;">NO DATA FOUND</div>';
                         setTimeout(() => loader.classList.add('hidden'), 1000);
                         return;
                     }
 
-                    loaderText.textContent = "RENDERING UNITS...";
+                    // ユニット描画
                     await renderCharacterList(data);
 
-                    // 最初の画像の読み込み完了を待つ
+                    // 画像ロード待機
                     if (unitElements.length > 0) {
-                        loaderText.textContent = "SYNCING VISUALS...";
                         const firstFig = unitElements[0].querySelector('.char-figure');
                         if (firstFig) {
                             await new Promise(resolve => {
@@ -514,16 +527,18 @@
                         }
                     }
 
+                    // 4. 完了処理
+                    clearInterval(logTimer);
                     loaderText.textContent = "SYSTEM READY.";
                     setTimeout(() => {
                         loader.classList.add('hidden');
                     }, 600);
 
                 } catch (e) {
+                    clearInterval(logTimer);
                     console.error(e);
-                    loaderText.textContent = "CRITICAL ERROR: " + e.message;
+                    loaderText.textContent = "ERROR: " + e.message;
                     loaderText.style.color = "#ff4444";
-                    // エラーでも一応画面を開けるようにする
                     setTimeout(() => loader.classList.add('hidden'), 3000);
                 }
             });
