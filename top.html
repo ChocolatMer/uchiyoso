@@ -131,6 +131,20 @@
         .toggle-switch.active .toggle-knob { left: 22px; background: #000; }
         .close-modal { margin-top: 10px; background: none; border: 1px solid #555; color: #aaa; padding: 8px 20px; cursor: pointer; transition: 0.2s; font-family: var(--font-en); font-size: 10px; letter-spacing: 0.2em; }
         .close-modal:hover { color: #fff; border-color: #fff; }
+        /* --- 追加: Duoモード選択用UI --- */
+        .slot-selector { display: flex; gap: 10px; width: 100%; margin-bottom: 15px; justify-content: center; }
+        .slot-btn { 
+            flex: 1; border: 1px solid var(--ui-border); color: var(--text-sub); 
+            padding: 8px 0; font-family: var(--font-en); font-size: 10px; letter-spacing: 0.1em;
+            cursor: pointer; transition: 0.3s; background: rgba(255,255,255,0.05);
+        }
+        .slot-btn:hover { border-color: var(--accent-color); color: #fff; }
+        .slot-btn.active { 
+            background: var(--accent-color); color: #000; border-color: var(--accent-color); 
+            box-shadow: 0 0 10px var(--accent-color); font-weight: bold;
+        }
+        /* ソロモード時は右側選択ボタンを隠す */
+        .mode-solo .slot-selector { display: none; }
         @keyframes blink { 50% { opacity: 0; } }
     </style>
 </head>
@@ -162,9 +176,16 @@
         </div>
     </div>
 
-    <div id="char-modal" class="modal-overlay">
+   <div id="char-modal" class="modal-overlay">
         <div class="modal-content">
             <h3 class="modal-title">SELECT CHARACTER</h3>
+            
+            <!-- 追加: 左右選択ボタン -->
+            <div class="slot-selector">
+                <button id="slot-btn-1" class="slot-btn active" onclick="selectEditSlot(1)">LEFT CHAR</button>
+                <button id="slot-btn-2" class="slot-btn" onclick="selectEditSlot(2)">RIGHT CHAR</button>
+            </div>
+
             <div class="toggle-row">
                 <span class="toggle-label">AUTO ROTATION</span>
                 <div id="rotation-toggle" class="toggle-switch active" onclick="toggleAutoRotation()">
@@ -243,26 +264,27 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script type="module">
         import { login, logout, monitorAuth, loadFromCloud } from "./character/firestore.js";
-        // dialogue.jsから表示ロジックを読み込み
         import { getHomeDialogue, pickRandomLine } from "./character/data/dialogue.js";
 
         // ★設定定数
-        const LOCAL_IMG_BASE = "./images/character/"; // 立ち絵画像のフォルダ
-        const LOCAL_ICON_BASE = "./images/icon/";     // アイコン画像のフォルダ（新規追加）
+        const LOCAL_IMG_BASE = "./images/character/";
+        const LOCAL_ICON_BASE = "./images/icon/";
         const PHOTO_BASE = "./images/photo/";
         const DEFAULT_THEME = "#00ffcc";
         
-        // ★状態変数
+        // ★状態変数（変更: 2人分管理するように分離）
         let currentUser = null;
         let charDataList = [];
-        let currentIndex = 0;
-        let lastUpdateTime = 0; // 自動更新タイマー制御用
+        
+        let currentIndex1 = 0; // 左側（またはソロ）
+        let currentIndex2 = 1; // 右側
+        let editingSlot = 1;   // 現在モーダルで選ぼうとしているのはどちらか (1 or 2)
+
+        let lastUpdateTime = 0;
         let typeWriterTimeout1 = null;
         let typeWriterTimeout2 = null;
         let isDuo = false; 
-        
-        // 新機能用変数
-        let isAutoRotate = true; // 自動キャラ変更のON/OFF
+        let isAutoRotate = true;
         
         // 音楽リスト
         const musicList = [
@@ -445,18 +467,32 @@
             });
         }
         
-        // --- ★ キャラクター選択リスト (アイコン優先) ---
+         // ★追加: 編集スロット切り替え関数
+        window.selectEditSlot = (slot) => {
+            editingSlot = slot;
+            // UI更新
+            document.getElementById('slot-btn-1').classList.toggle('active', slot === 1);
+            document.getElementById('slot-btn-2').classList.toggle('active', slot === 2);
+            // リスト再描画（選択状態を更新するため）
+            renderCharList();
+        };
+
+        // --- ★ キャラクター選択リスト (ロジック修正) ---
         async function renderCharList() {
             const container = document.getElementById('char-list');
-            container.innerHTML = ''; // ★既存要素をクリアして重複防止
+            container.innerHTML = '';
             
+            // 現在の編集対象インデックスを取得
+            const targetIndex = (editingSlot === 1) ? currentIndex1 : currentIndex2;
+
             for (let i = 0; i < charDataList.length; i++) {
                 const char = charDataList[i];
                 const div = document.createElement('div');
                 div.className = 'char-select-item';
-                if(i === currentIndex) div.classList.add('selected');
                 
-                // ★アイコン用フォルダ(LOCAL_ICON_BASE) または d.icon から画像を取得
+                // 編集中のスロットと同じキャラなら選択表示
+                if(i === targetIndex) div.classList.add('selected');
+                
                 const imgSrc = await resolveImage(char.name, char.icon || char.image, LOCAL_ICON_BASE);
                 
                 div.innerHTML = `
@@ -465,8 +501,14 @@
                 `;
                 
                 div.onclick = () => {
-                    currentIndex = i;
+                    // スロットに応じてインデックスを更新
+                    if (editingSlot === 1) {
+                        currentIndex1 = i;
+                    } else {
+                        currentIndex2 = i;
+                    }
                     updateDisplay();
+                    renderCharList(); // 選択表示更新
                 };
                 container.appendChild(div);
             }
@@ -499,7 +541,8 @@
             return null;
         }
 
-        // --- Display Update ---
+        // --- Display Update (ロジック修正) ---
+        // 要素取得変数はそのまま
         const imgEl1 = document.getElementById('char-img-1');
         const imgEl2 = document.getElementById('char-img-2');
         const bubble1 = document.getElementById('bubble-1');
@@ -511,16 +554,20 @@
         const rootStyles = document.documentElement.style;
 
         async function updateDisplay() {
-            const char1 = charDataList[currentIndex];
-            const nextIdx = (currentIndex + 1) % charDataList.length;
-            const char2 = charDataList[nextIdx];
+            if (!charDataList.length) return;
 
-          // ★ ここに await をつけるのがオススメです
-            await renderCharList(); 
+            // インデックス範囲チェック
+            if (currentIndex1 >= charDataList.length) currentIndex1 = 0;
+            if (currentIndex2 >= charDataList.length) currentIndex2 = 0;
 
-            imgEl1.classList.remove('visible');
+            // ★変更: 個別のインデックスを使用
+            const char1 = charDataList[currentIndex1];
+            const char2 = charDataList[currentIndex2]; 
 
-            
+            // モーダルが開いている場合、リストを更新（現在の選択状態を反映）
+            if(document.getElementById('char-modal').classList.contains('open')) {
+                await renderCharList();
+            }
 
             imgEl1.classList.remove('visible');
             if (isDuo) imgEl2.classList.remove('visible');
@@ -531,32 +578,28 @@
             let src2 = null;
             if (isDuo) src2 = await resolveImage(char2.name, char2.image);
 
+            // テーマカラーは左側のキャラ優先
             const theme = char1.color || char1.inpThemeColor || DEFAULT_THEME;
             rootStyles.setProperty('--accent-color', theme);
             if (!document.body.classList.contains('mode-white')) targetColor.set(theme);
 
-            // ▼▼▼ 会話ロジック修正ここから ▼▼▼
+            // 会話ロジック
             let text1 = "", text2 = "";
             if (isDuo) {
-                // 1. 特定ペアの会話があるか
                 const convSet = getDuoConversation(char1, char2);
                 if (convSet) {
                     text1 = convSet.text1;
                     text2 = convSet.text2;
                 } else {
-                    // 2. なければ汎用DUO反応
                     text1 = pickRandomLine(char1.dialogue_duo_generic);
-                    // 3. それもなければソロ台詞
                     if (!text1) text1 = getHomeDialogue(char1, {});
 
                     text2 = pickRandomLine(char2.dialogue_duo_generic);
                     if (!text2) text2 = getHomeDialogue(char2, {});
                 }
             } else {
-                // ソロモード
                 text1 = getHomeDialogue(char1, {});
             }
-            // ▲▲▲ 会話ロジック修正ここまで ▲▲▲
 
             if(text1) text1 = text1.replace(/<br>/g, "\n");
             if(text2) text2 = text2.replace(/<br>/g, "\n");
@@ -670,27 +713,44 @@
         const userDisplay = document.getElementById('user-display');
         const connectBtn = document.getElementById('main-connect-btn');
 
+         // --- Auth & Mode ---
         monitorAuth(
             async (user) => {
                 currentUser = user;
-                userDisplay.textContent = (user.displayName || "MEMBER").toUpperCase();
-                connectBtn.textContent = "NEXT";
+                document.getElementById('user-display').textContent = (user.displayName || "MEMBER").toUpperCase();
+                document.getElementById('main-connect-btn').textContent = "NEXT";
                 const data = await loadFromCloud();
                 if (data && Object.keys(data).length > 0) charDataList = Object.values(data);
                 else charDataList = [{ name: "No Data", remarks: "データがありません。", color: "#555" }];
                 
-                // データロード後に音楽リストは生成
                 renderMusicList();
 
-                currentIndex = Math.floor(Math.random() * charDataList.length);
-                updateDisplay(); // ★renderCharList() の呼び出しは updateDisplay() に任せる
+                // 初期化：ランダムに2人選ぶ
+                currentIndex1 = Math.floor(Math.random() * charDataList.length);
+                currentIndex2 = (currentIndex1 + 1) % charDataList.length;
+                updateDisplay();
             },
             () => {
-                currentUser = null; userDisplay.textContent = "GUEST"; connectBtn.textContent = "CONNECT";
-                charDataList = fallbackData; currentIndex = 0; updateDisplay();
-                renderMusicList(); // ゲストでも音楽は再生可能にする
+                currentUser = null; 
+                document.getElementById('user-display').textContent = "GUEST"; 
+                document.getElementById('main-connect-btn').textContent = "CONNECT";
+                charDataList = fallbackData; 
+                currentIndex1 = 0; 
+                currentIndex2 = 0;
+                updateDisplay();
+                renderMusicList();
             }
         );
+
+        // NEXTボタンクリック時の動作（自動送りに近い挙動）
+        function nextChar() {
+            if (charDataList.length <= 1) return;
+            // NEXTボタンを押したときは、1人目を進め、2人目はその隣にする（スライドショー的挙動）
+            // ※完全にランダムにしたい場合はここを変えてください
+            currentIndex1 = (currentIndex1 + 1) % charDataList.length;
+            currentIndex2 = (currentIndex1 + 1) % charDataList.length;
+            updateDisplay();
+        }
 
         window.handleConnect = () => {
            if (!currentUser) {
@@ -702,14 +762,9 @@
         };
         
         window.handleCharClick = () => { if (currentUser) nextChar(); };
-        function nextChar() {
-            if (charDataList.length <= 1) return;
-            currentIndex = (currentIndex + 1) % charDataList.length;
-            updateDisplay();
-        }
 
+        // --- Mode Setting ---
         window.setMode = (mode) => {
-            // モード切替のフェードアウト演出
             document.getElementById('bubble-1').classList.remove('show');
             document.getElementById('bubble-2').classList.remove('show');
 
@@ -720,12 +775,23 @@
                 const stage = document.getElementById('char-stage');
                 const body = document.body;
                 
+                // モーダルが開いていた場合、ボタン表示状態を更新
+                const slotSelector = document.querySelector('.slot-selector');
+                
                 if (isDuo) {
                     stage.classList.add('duo-mode'); body.classList.add('mode-duo'); body.classList.remove('mode-solo');
                     document.getElementById('char-img-2').style.display = 'block';
+                    // Duoになったら2人目が同じだと変なのでずらす
+                    if (currentIndex1 === currentIndex2 && charDataList.length > 1) {
+                        currentIndex2 = (currentIndex1 + 1) % charDataList.length;
+                    }
+                    if(slotSelector) slotSelector.style.display = "flex";
                 } else {
                     stage.classList.remove('duo-mode'); body.classList.add('mode-solo'); body.classList.remove('mode-duo');
                     document.getElementById('char-img-2').style.display = 'none';
+                    if(slotSelector) slotSelector.style.display = "none";
+                    // ソロに戻ったらスロット1を選択状態に戻しておく
+                    selectEditSlot(1);
                 }
                 
                 updateDisplay();
@@ -738,16 +804,15 @@
         const DIALOGUE_INTERVAL = 15000; 
         const CHARACTER_INTERVAL = 45000; 
 
+        // --- Auto Play Logic (ロジック修正) ---
         function refreshDialogueOnly() {
             if (!charDataList || charDataList.length === 0) return;
-            // 連打防止
             if (Date.now() - lastUpdateTime < 5000) return;
 
-            const char1 = charDataList[currentIndex];
-            const nextIdx = (currentIndex + 1) % charDataList.length;
-            const char2 = charDataList[nextIdx];
+            // ★変更: 変数名修正 currentIndex -> currentIndex1 / currentIndex2
+            const char1 = charDataList[currentIndex1];
+            const char2 = charDataList[currentIndex2];
 
-            // ▼▼▼ 自動更新のロジックも修正 ▼▼▼
             let text1 = "", text2 = "";
 
             if (isDuo) {
@@ -765,7 +830,6 @@
             } else {
                 text1 = getHomeDialogue(char1, {});
             }
-            // ▲▲▲ 修正ここまで ▲▲▲
 
             if(text1) text1 = text1.replace(/<br>/g, "\n");
             if(text2) text2 = text2.replace(/<br>/g, "\n");
@@ -787,15 +851,16 @@
             lastUpdateTime = Date.now();
         }
 
+        // 定期更新処理（setIntervalは変更なし）
         setInterval(() => {
             if (currentUser) refreshDialogueOnly();
-        }, DIALOGUE_INTERVAL);
+        }, 15000); // DIALOGUE_INTERVAL
 
         setInterval(() => {
             if (currentUser && charDataList.length > 1 && isAutoRotate) {
                 nextChar();
                 lastUpdateTime = Date.now();
             }
-        }, CHARACTER_INTERVAL);
+        }, 45000); // CHARACTER_INTERVAL
         
     </script>
