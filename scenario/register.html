@@ -356,7 +356,7 @@
     <!-- 修正: characterフォルダのファイルを参照するためのパス( ../character/... )に変更 -->
     <script type="module">
         import { loadFromCloud, monitorAuth, saveScenario, saveToCloud } from "../character/firestore.js";
-        import { createScenarioRecord, syncScenarioToCharacter } from "../character/data/scenario.js";
+        import { createScenarioRecord, syncScenarioToCharacter } from "./data/scenario.js";
 
         const showError = (msg) => {
             const el = document.getElementById('debugArea');
