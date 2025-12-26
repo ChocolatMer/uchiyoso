@@ -22,7 +22,7 @@
 
         /* --- 本の外観 --- */
         .book-wrapper { 
-            position: relative; width: 1280px; max-width: 95vw; height: 900px;
+            position: relative; width: 1280px; max-width: 95vw; height: 950px; /* 少し縦長に */
             perspective: 1500px; margin-top: 10px;
         }
         .book-cover {
@@ -43,7 +43,7 @@
 
         /* ページ共通 */
         .page { 
-            flex: 1; padding: 40px 50px; position: relative; overflow-y: auto;
+            flex: 1; padding: 30px 40px; position: relative; overflow-y: auto;
             background-color: #232323;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
         }
@@ -74,52 +74,68 @@
 
         /* --- 左ページ (REPORT FACE) --- */
         .report-header-img {
-            width: 100%; height: 250px; background: #111; border: 1px dashed #444; 
+            width: 100%; height: 220px; background: #111; border: 1px dashed #444; 
             display: flex; align-items: center; justify-content: center; overflow: hidden;
-            margin-bottom: 20px; border-radius: 2px; cursor: pointer; position: relative;
+            margin-bottom: 15px; border-radius: 2px; cursor: pointer; position: relative;
         }
         .report-header-img:hover { border-color: #d4b346; }
-        .report-header-img img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; transition: 0.3s; }
+        .report-header-img img { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; transition: 0.3s; }
         .report-header-img:hover img { opacity: 1; }
         .img-label { position: absolute; bottom: 0; right: 0; background: rgba(0,0,0,0.7); color: #d4b346; font-size: 0.7rem; padding: 4px 10px; }
 
         input.scenario-title {
             width: 100%; background: transparent; border: none; border-bottom: 2px solid #444;
-            font-family: 'Shippori Mincho', serif; font-size: 2.0rem; font-weight: bold; color: #fff;
-            text-align: center; padding: 10px 0; margin-bottom: 5px; transition: 0.3s;
+            font-family: 'Shippori Mincho', serif; font-size: 1.8rem; font-weight: bold; color: #fff;
+            text-align: center; padding: 5px 0; margin-bottom: 5px; transition: 0.3s;
         }
         input.scenario-title:focus { outline: none; border-color: #d4b346; }
 
         .session-count { 
-            text-align: center; font-family: 'Cinzel', serif; color: #d4b346; font-size: 1.0rem; 
-            margin-bottom: 30px; letter-spacing: 2px; border-bottom: 1px solid #333; padding-bottom: 15px;
+            text-align: center; font-family: 'Cinzel', serif; color: #d4b346; font-size: 0.9rem; 
+            margin-bottom: 20px; letter-spacing: 2px;
         }
         .session-count input {
             background: transparent; border: none; color: inherit; font-family: inherit; font-size: inherit; 
             text-align: center; width: 60px; border-bottom: 1px dashed #444;
         }
 
-        /* キャラクター & PL */
+        /* キャラクター & PL (中央) */
         .char-pair-area { 
-            display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; 
-            margin-bottom: 30px; background: rgba(0,0,0,0.2); padding: 20px; border-radius: 4px;
+            display: flex; justify-content: space-between; align-items: center; gap: 10px; 
+            margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 4px;
+            border: 1px solid #333;
         }
-        .char-unit { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .char-unit { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; }
         .char-icon-circle { 
-            width: 80px; height: 80px; border-radius: 50%; border: 2px solid #444; 
+            width: 70px; height: 70px; border-radius: 50%; border: 2px solid #444; 
             object-fit: cover; background: #000; transition: 0.3s;
         }
         select.char-select { 
             width: 100%; background: #1a1a1a; border: 1px solid #333; color: #eee; 
-            padding: 5px; text-align: center; font-size: 0.9rem; border-radius: 2px; 
+            padding: 4px; text-align: center; font-size: 0.85rem; border-radius: 2px; 
         }
         input.pl-name { 
             width: 100%; background: transparent; border: none; border-bottom: 1px solid #444; 
             color: #888; text-align: center; font-size: 0.8rem; padding: 2px; 
         }
 
+        /* 卓報告用 情報グリッド (復活！) */
+        .report-info-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px 25px; 
+            padding: 20px; background: rgba(255,255,255,0.03); 
+            border: 1px solid #333; border-radius: 4px; margin-bottom: 20px;
+        }
+        .info-cell { display: flex; flex-direction: column; gap: 4px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .info-label { font-size: 0.7rem; color: #d4b346; font-family: 'Cinzel', serif; letter-spacing: 1px; }
+        .info-val { 
+            background: transparent; border: none; color: #ccc; font-size: 1rem; 
+            font-family: 'Shippori Mincho', serif; width: 100%; 
+        }
+        .info-val:focus { outline: none; color: #fff; }
+        select.info-val { background: #1a1a1a; cursor: pointer; }
+
         /* 日付リスト */
-        .date-list { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 20px; }
+        .date-list { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 10px; }
         .date-chip { 
             background: #1a1a1a; border: 1px solid #333; padding: 4px 8px; border-radius: 4px; 
             display: flex; align-items: center; gap: 5px; 
@@ -128,45 +144,31 @@
         .btn-add-mini { background: #333; border: none; color: #aaa; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; }
         .btn-add-mini:hover { background: #d4b346; color: #000; }
 
-        /* 左下情報 */
-        .meta-grid { display: grid; grid-template-columns: 80px 1fr; gap: 10px; align-items: center; font-size: 0.9rem; }
-        .meta-label { color: #666; font-family: 'Cinzel', serif; }
-        .meta-val input { width: 100%; background: transparent; border: none; border-bottom: 1px solid #333; color: #ccc; padding: 4px; }
-
         /* --- 右ページ (DETAILS) --- */
         .section-header { 
             font-family: 'Cinzel', serif; font-size: 1.1rem; border-bottom: 1px solid #444; 
             padding-bottom: 5px; margin-bottom: 15px; color: #d4b346; letter-spacing: 1px;
         }
 
-        /* 概要エリア (タグ入力風) */
-        .overview-grid { 
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; 
-            background: rgba(0,0,0,0.2); padding: 15px; border-radius: 4px; margin-bottom: 20px;
-        }
-        .ov-item { display: flex; flex-direction: column; gap: 4px; }
-        .ov-label { font-size: 0.7rem; color: #888; border-left: 2px solid #d4b346; padding-left: 5px; }
-        .ov-val { 
-            background: #111; border: 1px solid #333; color: #ddd; padding: 6px; 
-            font-size: 0.85rem; border-radius: 2px; width: 100%; box-sizing: border-box;
-        }
-        
-        textarea.paper-area {
-            width: 100%; background: transparent; border: none; color: #ccc; resize: vertical;
-            font-family: 'Shippori Mincho', serif; line-height: 1.6; font-size: 0.9rem;
-            min-height: 60px; padding: 5px 0; border-bottom: 1px dashed #333;
-        }
-        textarea.paper-area:focus { outline: none; border-bottom-color: #666; }
-
         /* RECORD詳細 (分割) */
         .rec-split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
         .rec-box { border: 1px solid #333; padding: 10px; border-radius: 4px; background: rgba(0,0,0,0.1); }
         .rec-head { font-size: 0.8rem; color: #d4b346; margin-bottom: 8px; border-bottom: 1px dashed #444; padding-bottom: 4px; display:flex; justify-content:space-between; }
         
-        .grow-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
-        .grow-item { display: flex; gap: 5px; }
-        .grow-name { width: 60%; background: #1a1a1a; border: none; color: #ccc; font-size: 0.8rem; padding: 2px 5px; }
-        .grow-val { width: 30%; background: #1a1a1a; border: none; color: #4f4; font-size: 0.8rem; text-align: center; }
+        textarea.paper-area {
+            width: 100%; background: transparent; border: none; color: #ccc; resize: vertical;
+            font-family: 'Shippori Mincho', serif; line-height: 1.6; font-size: 0.9rem;
+            min-height: 50px; padding: 5px 0; border-bottom: 1px dashed #333; box-sizing: border-box;
+        }
+        textarea.paper-area:focus { outline: none; border-bottom-color: #666; }
+
+        .san-box { display: flex; align-items: center; gap: 5px; margin-bottom: 8px; font-size: 0.8rem; color: #aaa; }
+        .san-val { color: #88ff88; font-weight: bold; }
+
+        /* 3点入力 (遭遇・AF・後遺症) */
+        .triple-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px; }
+        .tri-item { }
+        .tri-label { font-size: 0.75rem; color: #d4b346; margin-bottom: 2px; font-family: 'Cinzel', serif; }
 
         /* Save Button */
         .save-btn {
@@ -179,6 +181,16 @@
         .save-btn:hover { background: #fff; transform: translateY(-2px); }
 
         #loadingIndicator { position:absolute; top:15px; right:15px; font-family:'Cinzel', serif; font-size:0.7rem; color:#555; }
+        
+        .overview-grid { 
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; 
+            background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; margin-bottom: 15px;
+        }
+        .ov-label { font-size: 0.7rem; color: #888; }
+        .ov-val { 
+            background: #111; border: 1px solid #333; color: #ddd; padding: 4px; 
+            font-size: 0.8rem; border-radius: 2px; width: 100%; box-sizing: border-box;
+        }
     </style>
 </head>
 <body>
@@ -203,7 +215,7 @@
                 <div class="page page-left">
                     <div id="loadingIndicator">System Check...</div>
                     
-                    <!-- 卓報告用画像エリア -->
+                    <!-- 画像 (最優先) -->
                     <div class="report-header-img" id="dropTrailer">
                         <img id="imgTrailer" src="" alt="NO IMAGE">
                         <div class="img-label">SESSION SNAPSHOT</div>
@@ -216,7 +228,37 @@
                         <input type="number" id="inpCount" value="1"> th SESSION
                     </div>
 
-                    <!-- キャラクター & PL (自動入力) -->
+                    <!-- 卓報告に必要な情報 (復活・整理) -->
+                    <div class="report-info-grid">
+                        <div class="info-cell">
+                            <span class="info-label">SYSTEM</span>
+                            <select id="inpSystem" class="info-val">
+                                <option value="CoC6">CoC 6th</option>
+                                <option value="CoC7">CoC 7th</option>
+                                <option value="Emoklore">Emoklore</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="info-cell">
+                            <span class="info-label">TYPE</span>
+                            <select id="inpType" class="info-val">
+                                <option value="タイマン">タイマン</option>
+                                <option value="2PL">2PL</option>
+                                <option value="ソロ">ソロ</option>
+                                <option value="4PL">4PL</option>
+                            </select>
+                        </div>
+                        <div class="info-cell">
+                            <span class="info-label">GM / KP</span>
+                            <input type="text" id="inpGM" class="info-val" placeholder="GM Name">
+                        </div>
+                        <div class="info-cell">
+                            <span class="info-label">END</span>
+                            <input type="text" id="inpEndName" class="info-val" placeholder="End Title" style="color:#ffd54f;">
+                        </div>
+                    </div>
+
+                    <!-- キャラクター & PL -->
                     <div class="char-pair-area">
                         <!-- PC -->
                         <div class="char-unit">
@@ -240,23 +282,12 @@
                     </div>
 
                     <!-- 日付 (複数可) -->
-                    <div class="meta-grid" style="margin-bottom:15px;">
-                        <div class="meta-label">DATE</div>
+                    <div style="margin-top:20px;">
+                        <span class="info-label">DATE</span>
                         <div class="date-list" id="dateArea">
                             <div class="date-chip"><input type="date" class="date-mini"></div>
                             <button class="btn-add-mini" onclick="addDateInput()">+</button>
                         </div>
-                    </div>
-
-                    <!-- URL -->
-                    <div class="meta-grid" style="margin-bottom:15px;">
-                        <div class="meta-label">SCENARIO</div>
-                        <div class="meta-val"><input type="text" id="inpUrlShop" placeholder="Scenario Distribution URL"></div>
-                    </div>
-                    <!-- ココフォリア -->
-                    <div class="meta-grid">
-                        <div class="meta-label">CCFOLIA</div>
-                        <div class="meta-val"><input type="text" id="inpUrlRoom" placeholder="Room URL (Archive)"></div>
                     </div>
 
                 </div>
@@ -271,45 +302,55 @@
                         <div class="rec-split">
                             <!-- PC SIDE -->
                             <div class="rec-box">
-                                <div class="rec-head"><span>PC</span> <span id="sanValPC" style="color:#aaa; font-size:0.7rem;">SAN: --</span></div>
-                                <div style="margin-bottom:5px; font-size:0.7rem; color:#888;">台詞</div>
-                                <textarea id="inpQuotePC" class="paper-area" style="min-height:40px; margin-bottom:10px;" placeholder="「......」"></textarea>
+                                <div class="rec-head"><span>PC</span></div>
                                 
-                                <div style="margin-bottom:5px; font-size:0.7rem; color:#888;">SAN推移</div>
+                                <div class="san-box">Start SAN: <span id="sanValPC" class="san-val">--</span></div>
+                                <div style="font-size:0.7rem; color:#888;">SAN変動</div>
                                 <input type="text" id="inpSanPC" class="ov-val" placeholder="50 → 45 (-5)" style="background:#1a1a1a; margin-bottom:10px;">
 
-                                <div style="margin-bottom:5px; font-size:0.7rem; color:#888;">成長 (技能名 / 値)</div>
-                                <textarea id="inpGrowPC" class="paper-area" style="min-height:40px; margin-bottom:10px;" placeholder="目星 +5, 図書館 +3"></textarea>
+                                <div style="font-size:0.7rem; color:#888;">台詞</div>
+                                <textarea id="inpQuotePC" class="paper-area" style="min-height:40px; margin-bottom:10px;" placeholder="「......」"></textarea>
+                                
+                                <div style="font-size:0.7rem; color:#888;">成長 (技能名 / 値)</div>
+                                <textarea id="inpGrowPC" class="paper-area" style="min-height:40px; margin-bottom:10px;" placeholder="目星 +5..."></textarea>
 
-                                <div style="margin-bottom:5px; font-size:0.7rem; color:#888;">感想・手記</div>
+                                <div style="font-size:0.7rem; color:#888;">感想・手記</div>
                                 <textarea id="inpMemoPC" class="paper-area" style="min-height:60px;" placeholder="PC視点の感想..."></textarea>
                             </div>
 
                             <!-- KPC SIDE -->
                             <div class="rec-box">
-                                <div class="rec-head"><span>KPC</span> <span id="sanValKPC" style="color:#aaa; font-size:0.7rem;">SAN: --</span></div>
-                                <div style="margin-bottom:5px; font-size:0.7rem; color:#888;">台詞</div>
-                                <textarea id="inpQuoteKPC" class="paper-area" style="min-height:40px; margin-bottom:10px;" placeholder="「......」"></textarea>
+                                <div class="rec-head"><span>KPC</span></div>
                                 
-                                <div style="margin-bottom:5px; font-size:0.7rem; color:#888;">SAN推移</div>
+                                <div class="san-box">Start SAN: <span id="sanValKPC" class="san-val">--</span></div>
+                                <div style="font-size:0.7rem; color:#888;">SAN変動</div>
                                 <input type="text" id="inpSanKPC" class="ov-val" placeholder="-" style="background:#1a1a1a; margin-bottom:10px;">
 
-                                <div style="margin-bottom:5px; font-size:0.7rem; color:#888;">成長 (技能名 / 値)</div>
+                                <div style="font-size:0.7rem; color:#888;">台詞</div>
+                                <textarea id="inpQuoteKPC" class="paper-area" style="min-height:40px; margin-bottom:10px;" placeholder="「......」"></textarea>
+                                
+                                <div style="font-size:0.7rem; color:#888;">成長 (技能名 / 値)</div>
                                 <textarea id="inpGrowKPC" class="paper-area" style="min-height:40px; margin-bottom:10px;" placeholder="なし"></textarea>
 
-                                <div style="margin-bottom:5px; font-size:0.7rem; color:#888;">感想・手記</div>
+                                <div style="font-size:0.7rem; color:#888;">感想・手記</div>
                                 <textarea id="inpMemoKPC" class="paper-area" style="min-height:60px;" placeholder="KPCへの想い..."></textarea>
                             </div>
                         </div>
 
-                        <div style="margin-bottom:15px;">
-                            <div style="font-size:0.8rem; color:#d4b346; margin-bottom:5px;">遭遇神話生物・AF・後遺症</div>
-                            <textarea id="inpEntities" class="paper-area" style="min-height:60px;" placeholder="特記事項があれば記述..."></textarea>
-                        </div>
-
-                        <div class="meta-grid">
-                            <div class="meta-label">END</div>
-                            <div class="meta-val"><input type="text" id="inpEndName" placeholder="End Title / Number" style="color:#ffd54f;"></div>
+                        <!-- 3点分割入力 -->
+                        <div class="triple-grid">
+                            <div class="tri-item">
+                                <div class="tri-label">MYTHOS ENTITIES (神話生物)</div>
+                                <textarea id="inpEntities" class="paper-area" placeholder="遭遇した存在..."></textarea>
+                            </div>
+                            <div class="tri-item">
+                                <div class="tri-label">ARTIFACTS (AF)</div>
+                                <textarea id="inpArtifacts" class="paper-area" placeholder="入手したアーティファクト..."></textarea>
+                            </div>
+                            <div class="tri-item">
+                                <div class="tri-label">SEQUELAE (後遺症)</div>
+                                <textarea id="inpSequelae" class="paper-area" placeholder="後遺症の有無・詳細..."></textarea>
+                            </div>
                         </div>
                     </div>
 
@@ -318,14 +359,6 @@
                         <h2 class="section-header">SCENARIO OVERVIEW</h2>
                         
                         <div class="overview-grid">
-                            <div class="ov-item">
-                                <div class="ov-label">SYSTEM</div>
-                                <input type="text" id="inpSystem" class="ov-val" value="CoC6">
-                            </div>
-                            <div class="ov-item">
-                                <div class="ov-label">TYPE</div>
-                                <input type="text" id="inpType" class="ov-val" value="タイマン (1PC+KPC)">
-                            </div>
                             <div class="ov-item">
                                 <div class="ov-label">TIME</div>
                                 <input type="text" id="inpDuration" class="ov-val" placeholder="5～6時間">
@@ -343,6 +376,7 @@
                                 <input type="text" id="inpRecSkills" class="ov-val" placeholder="目星, 聞き耳">
                             </div>
                         </div>
+                        <input type="text" id="inpScnTags" class="ov-val" style="margin-bottom:15px;" placeholder="シナリオ属性タグ (うちよそ, 記憶喪失...)">
 
                         <div style="margin-bottom:15px;">
                             <div style="font-size:0.8rem; color:#aaa; margin-bottom:5px;">あらすじ / 導入</div>
@@ -352,6 +386,14 @@
                         <div>
                             <div style="font-size:0.8rem; color:#ff6666; margin-bottom:5px;">注意事項 (WARNINGS)</div>
                             <textarea id="inpWarnings" class="paper-area" style="min-height:60px; background:rgba(50,0,0,0.2);"></textarea>
+                        </div>
+
+                        <div style="margin-top:20px;">
+                            <span class="info-label">URL</span>
+                            <div style="display:flex; flex-direction:column; gap:5px;">
+                                <input type="text" id="inpUrlShop" class="info-val" placeholder="Scenario URL" style="border-bottom:1px solid #444;">
+                                <input type="text" id="inpUrlRoom" class="info-val" placeholder="CCFOLIA Room URL" style="border-bottom:1px solid #444;">
+                            </div>
                         </div>
                     </div>
 
@@ -408,22 +450,32 @@
                 createdAt: new Date().toISOString(),
                 title: input.title,
                 count: input.count,
-                dates: input.dates, // Array
+                dates: input.dates, 
                 system: input.system,
                 type: input.type,
+                gm: input.gm,
                 endName: input.endName,
                 urls: { shop: input.urls.shop, room: input.urls.room },
                 
-                // 詳細タグ
-                meta: { stage: input.meta.stage, duration: input.meta.duration, lost: input.meta.lost, skills: input.meta.skills },
+                meta: {
+                    duration: input.meta.duration,
+                    stage: input.meta.stage,
+                    lost: input.meta.lost,
+                    skills: input.meta.skills,
+                    scnTags: input.meta.scnTags
+                },
 
                 members: input.members,
                 pcData: { id: input.pcId, pl: input.plNamePC, san: input.pcSan, grow: input.pcGrow, memo: input.pcMemo, quote: input.pcQuote },
                 kpcData: { id: input.kpcId, pl: input.plNameKPC, san: input.kpcSan, grow: input.kpcGrow, memo: input.kpcMemo, quote: input.kpcQuote },
                 
+                // 別々にした3項目
+                entities: input.entities,
+                artifacts: input.artifacts,
+                sequelae: input.sequelae,
+
                 overview: input.overview,
                 warnings: input.warnings,
-                entities: input.entities,
                 memos: { public: input.public, secret: input.secret },
                 images: input.images
             };
@@ -434,13 +486,11 @@
             const newChar = JSON.parse(JSON.stringify(charData));
             const myData = (role === 'PC') ? sData.pcData : sData.kpcData;
             
-            // Log: [Title] EndA (Date)
             const dStr = sData.dates[0] || '';
             const logLine = `[${sData.title}] ${sData.endName ? sData.endName : 'End'} (${dStr})`;
             if(!newChar.scenarios) newChar.scenarios = "";
             newChar.scenarios = logLine + "\n" + newChar.scenarios;
 
-            // Detail
             if(!newChar.scenarioList) newChar.scenarioList = [];
             newChar.scenarioList.push({
                 scenarioId: sId,
@@ -448,12 +498,22 @@
                 desc: `Role: ${role}\nSAN: ${myData.san}\nGrow: ${myData.grow}\nMemo: ${myData.memo}`
             });
 
-            // Growth Text
+            // Growth
             if(myData.grow) {
                 const growth = newChar.growth || "";
                 const entry = `[${sData.title}] ${myData.grow}`;
                 if(!growth.includes(entry)) newChar.growth = growth + (growth?"\n":"") + entry;
             }
+            // Sequelae / Artifacts
+            if(sData.sequelae) {
+                const current = newChar.txtRoleplay || ""; 
+                if(!current.includes(sData.sequelae)) newChar.txtRoleplay = current + "\n[後遺症] " + sData.sequelae;
+            }
+            if(sData.artifacts) {
+                const current = newChar.spells || "";
+                if(!current.includes(sData.artifacts)) newChar.spells = current + "\n[AF] " + sData.artifacts;
+            }
+
             return newChar;
         }
 
@@ -514,12 +574,15 @@
                 if(char) {
                     const src = char.icon || resolveIcon(char.name);
                     getEl(imgId).src = src;
-                    // PL名自動入力
+                    // PL名自動入力 (なければ空にしない)
                     if(char.plName) getEl(plId).value = char.plName;
                     // SAN値表示
-                    const san = (char.vitals && char.vitals.san) ? char.vitals.san : '??';
+                    let san = "??";
+                    if(char.vitals && char.vitals.san) san = char.vitals.san;
+                    else if(char.stats && char.stats.POW) san = char.stats.POW * 5; // 初期値推測
+                    
                     const view = getEl(sanViewId);
-                    if(view) view.textContent = `Current SAN: ${san}`;
+                    if(view) view.textContent = `${san}`;
                 }
             });
         };
@@ -540,7 +603,6 @@
             if(pcId) members.push(pcId);
             if(kpcId) members.push(kpcId);
 
-            // 日付収集
             const dateInputs = document.querySelectorAll('.date-mini');
             const dates = Array.from(dateInputs).map(i => i.value).filter(v => v);
 
@@ -550,6 +612,7 @@
                 dates: dates,
                 system: getEl('inpSystem').value,
                 type: getEl('inpType').value,
+                gm: getEl('inpGM').value,
                 endName: getEl('inpEndName').value,
                 urls: { shop: getEl('inpUrlShop').value, room: getEl('inpUrlRoom').value },
                 
@@ -557,7 +620,8 @@
                     duration: getEl('inpDuration').value,
                     stage: getEl('inpStage').value,
                     lost: getEl('inpLostRate').value,
-                    skills: getEl('inpRecSkills').value
+                    skills: getEl('inpRecSkills').value,
+                    scnTags: getEl('inpScnTags').value
                 },
 
                 members: members,
@@ -567,7 +631,11 @@
                 kpcId: kpcId, plNameKPC: getEl('inpPlNameKPC').value,
                 kpcQuote: getEl('inpQuoteKPC').value, kpcSan: getEl('inpSanKPC').value, kpcGrow: getEl('inpGrowKPC').value, kpcMemo: getEl('inpMemoKPC').value,
 
-                overview: getEl('inpOverview').value, warnings: getEl('inpWarnings').value, entities: getEl('inpEntities').value,
+                entities: getEl('inpEntities').value,
+                artifacts: getEl('inpArtifacts').value,
+                sequelae: getEl('inpSequelae').value,
+
+                overview: getEl('inpOverview').value, warnings: getEl('inpWarnings').value,
                 public: getEl('inpPublicMemo').value, secret: getEl('inpSecretMemo').value,
                 images: { trailer: getEl('inpImgTrailer').value }
             };
@@ -580,7 +648,6 @@
                 if(pcId) {
                     const char = Object.values(allChars).find(c => c.id === pcId || c.name === pcId);
                     if(char) {
-                        // PL名をキャラデータに逆保存(次回以降のため)
                         if(!char.plName && inputData.plNamePC) char.plName = inputData.plNamePC;
                         await saveToCloud(syncScenarioToCharacter(char, sData, sId, 'PC'));
                     }
