@@ -3,322 +3,248 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SCENARIO LOG EDITOR</title>
+    <title>Chronicle Log Book</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;600&display=swap" rel="stylesheet">
     
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
-    
-    <!-- CSSパスの調整: scenarioフォルダから見て、editフォルダ等は親階層にある想定 -->
-    <link href="../edit/header.css" rel="stylesheet">
-
     <style>
-        body { background-color: #181818; color: #ddd; font-family: 'Noto Sans JP', sans-serif; margin: 0; padding: 0; }
-        .container { max-width: 960px; margin: 0 auto; padding: 40px 20px 100px; }
-        
-        h1 { color: #00f3ff; border-bottom: 2px solid #00f3ff; padding-bottom: 10px; font-family: 'Roboto Mono', monospace; font-size: 1.5rem; }
-        h2 { 
-            border-left: 4px solid #d4b346; padding-left: 10px; margin-top: 40px; color: #eee; 
-            font-size: 1.0rem; background: #2a2a2a; padding: 8px 10px; border-radius: 0 4px 4px 0;
+        :root {
+            --bg-dark: #121212;
+            --book-cover: #2e241b;
+            --paper-bg: #eaddcf;
+            --ink-color: #2b2b2b;
+            --wax-red: #8a1c1c;
+            --font-main: 'Shippori Mincho', serif;
+            --font-eng: 'Cinzel', serif;
         }
-        
-        .toolbar { 
-            background: #252525; padding: 15px; border-radius: 4px; margin-bottom: 20px; 
-            display: flex; justify-content: space-between; align-items: center; border: 1px solid #444; 
-            position: sticky; top: 0; z-index: 100; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
-        }
-        .btn-save { 
-            background: #00f3ff; color: #000; border: none; padding: 10px 40px; 
-            font-weight: bold; cursor: pointer; border-radius: 4px; font-size: 1rem; 
-            transition: 0.3s;
-        }
-        .btn-save:hover { background: #fff; box-shadow: 0 0 15px #00f3ff; }
 
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-        .form-row { margin-bottom: 15px; }
-        label { display: block; color: #888; font-size: 0.75rem; margin-bottom: 5px; font-family: 'Roboto Mono', monospace; }
+        body {
+            margin: 0; padding: 20px;
+            background: var(--bg-dark) radial-gradient(circle, #2a2a2a 0%, #000 100%);
+            color: var(--ink-color);
+            font-family: var(--font-main);
+            min-height: 100vh;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        .grimoire {
+            display: flex; width: 100%; max-width: 1100px; height: 85vh;
+            background: var(--book-cover); padding: 10px; border-radius: 8px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6); position: relative;
+        }
+
+        .page {
+            flex: 1; background: var(--paper-bg); padding: 40px; overflow-y: auto;
+        }
+        .page.left { border-radius: 4px 0 0 4px; border-right: 1px solid rgba(0,0,0,0.1); }
+        .page.right { border-radius: 0 4px 4px 0; border-left: 1px solid rgba(0,0,0,0.05); }
+
+        input, select, textarea {
+            width: 100%; background: transparent; border: none;
+            border-bottom: 1px solid #8c7b66; padding: 8px;
+            font-family: var(--font-main); font-size: 1rem;
+        }
+        input:focus, textarea:focus { outline: none; border-bottom: 2px solid var(--wax-red); }
+
+        .title-input { font-size: 1.8rem; text-align: center; border-bottom: 2px solid #c5a059; margin-bottom: 20px; }
+
+        .char-select-area {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px;
+            background: rgba(0,0,0,0.05); padding: 15px; margin: 20px 0;
+        }
+
+        /* 封蝋ボタン */
+        .wax-seal {
+            position: absolute; bottom: 20px; right: 20px;
+            width: 80px; height: 80px; border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #a83232, var(--wax-red));
+            border: 4px double #5e1111;
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-eng); font-weight: bold; cursor: pointer;
+            box-shadow: 3px 3px 10px rgba(0,0,0,0.4); transition: 0.3s;
+        }
+        .wax-seal:hover { transform: scale(1.05); }
+
+        /* タブ */
+        .tabs { display: flex; gap: 5px; margin-bottom: 15px; }
+        .tab-btn {
+            flex: 1; padding: 8px; background: #cbbba8; border: none; cursor: pointer;
+            font-family: var(--font-eng);
+        }
+        .tab-btn.active { background: var(--wax-red); color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
         
-        input, select, textarea { 
-            width: 100%; padding: 10px; box-sizing: border-box; background: #2a2a2a; 
-            border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.9rem; 
-        }
-        textarea { line-height: 1.6; min-height: 80px; resize: vertical; font-family: inherit; }
-        input:focus, textarea:focus { border-color: #00f3ff; outline: none; background: #333; }
-
-        .char-select-container {
-            background: #252525; border: 1px solid #444; padding: 15px; 
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px;
-            max-height: 250px; overflow-y: auto; border-radius: 4px;
-        }
-        .char-card {
-            background: #151515; border: 1px solid #333; padding: 10px; 
-            border-radius: 4px; cursor: pointer; text-align: center; transition: 0.2s;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-        .char-card.selected { background: #003333; border-color: #00f3ff; }
-        .char-card img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-bottom: 5px; background: #000; }
-
-        .img-drop-area {
-            border: 2px dashed #444; background: #1a1a1a; height: 180px; 
-            display: flex; align-items: center; justify-content: center;
-            position: relative; overflow: hidden; border-radius: 4px;
-        }
-        .img-drop-area img { max-width: 100%; max-height: 100%; object-fit: contain; }
-
-        .sync-box {
-            background: #2b2b30; border-left: 3px solid #00f3ff; padding: 15px; margin-top: 20px;
-            display: flex; align-items: center; gap: 10px;
-        }
-        
-        details { background: #222; border: 1px solid #333; margin-bottom: 15px; border-radius: 4px; }
-        details summary { padding: 12px; cursor: pointer; color: #aaa; font-weight: bold; }
+        #status-bar { position: absolute; top: -25px; left: 0; color: #888; font-size: 0.8rem; }
     </style>
 </head>
 <body>
-    <!-- Headerの読み込み (JSのimport機能を使う場合) -->
-    <script type="module">import { initHeader } from "../edit/header.js"; initHeader();</script>
 
-    <div class="container">
-        <h1>SCENARIO & SESSION LOG</h1>
-        
-        <div class="toolbar">
-            <div style="font-size: 0.8rem; color:#aaa;">シナリオを保存し、キャラクターシートを更新します。</div>
-            <button id="btnSave" class="btn-save">SAVE & SYNC</button>
-        </div>
+<div class="grimoire">
+    <div id="status-bar">Authenticating...</div>
 
-        <!-- 1. 基本情報 -->
-        <div class="grid-2">
-            <div class="form-row"><label>SCENARIO TITLE</label><input type="text" id="inpTitle"></div>
-            <div class="form-row"><label>SYSTEM</label>
-                <select id="inpSystem">
-                    <option value="CoC6">Call of Cthulhu (6th)</option>
-                    <option value="CoC7">Call of Cthulhu (7th)</option>
-                    <option value="Emoklore">エモクロアTRPG</option>
-                    <option value="Other">その他</option>
-                </select>
-            </div>
-        </div>
-        <div class="grid-4">
-            <div class="form-row"><label>DATE</label><input type="date" id="inpDate"></div>
-            <div class="form-row"><label>TIME</label><input type="text" id="inpDuration" placeholder="12時間"></div>
-            <div class="form-row"><label>STAGE</label><input type="text" id="inpStage" placeholder="現代日本"></div>
-            <div class="form-row"><label>TYPE</label><input type="text" id="inpType" placeholder="秘匿HO"></div>
-        </div>
-        <div class="grid-4">
-            <div class="form-row"><label>GM / KP</label><input type="text" id="inpGM"></div>
-            <div class="form-row"><label>PL COUNT</label><input type="number" id="inpPlCount" value="1"></div>
-            <div class="form-row"><label>FORMAT</label>
-                <select id="inpFormat"><option value="Voice">ボイス</option><option value="Text">テキスト</option></select>
-            </div>
-            <div class="form-row"><label>PUBLIC</label>
-                <select id="inpPublic"><option value="OK">公開OK</option><option value="NG">非公開</option></select>
-            </div>
-        </div>
+    <!-- LEFT PAGE -->
+    <section class="page left">
+        <form id="mainForm">
+            <input type="text" name="title" class="title-input" placeholder="Scenario Title" required>
 
-        <!-- 2. キャラクター連携 -->
-        <h2>LINK CHARACTER</h2>
-        <div class="char-select-container" id="charSelectArea">
-            <div style="padding:20px; color:#666;">LOADING...</div>
-        </div>
-
-        <div class="sync-box">
-            <input type="checkbox" id="chkSync" checked>
-            <div>
-                <strong style="color:#fff;">キャラクターシートと連携する</strong><br>
-                <span style="font-size:0.8rem; color:#888;">選択したキャラの「通過シナリオ」「遭遇」「成長」「所持品」を自動更新します。</span>
-            </div>
-        </div>
-
-        <div class="grid-4" style="margin-top:15px; background:#222; padding:15px; border-radius:4px;">
-            <div class="form-row"><label>STATUS</label>
-                <select id="inpCharStatus"><option value="Continue">継続</option><option value="New">新規</option></select>
-            </div>
-            <div class="form-row"><label>RESULT</label>
-                <select id="inpResult"><option value="Cleared">生還</option><option value="Lost">ロスト</option></select>
-            </div>
-            <div class="form-row" style="grid-column:span 2;"><label>LOST REASON</label>
-                <input type="text" id="inpLostDetail" placeholder="ロスト理由...">
-            </div>
-        </div>
-
-        <!-- 3. 画像・URL -->
-        <h2>ASSETS</h2>
-        <div class="grid-2">
-            <div>
-                <label>TRAILER IMAGE</label>
-                <div class="img-drop-area" id="dropTrailer"><img id="previewTrailer"></div>
-                <input type="text" id="inpImgTrailer" placeholder="URL..." style="margin-top:5px;">
-            </div>
-            <div>
-                <label>ROOM SCREENSHOT</label>
-                <div class="img-drop-area" id="dropRoom"><img id="previewRoom"></div>
-                <input type="text" id="inpImgRoom" placeholder="URL..." style="margin-top:5px;">
-            </div>
-        </div>
-        <div class="grid-2" style="margin-top:15px;">
-            <div class="form-row"><label>SCENARIO URL</label><input type="url" id="inpUrlShop"></div>
-            <div class="form-row"><label>ROOM URL</label><input type="url" id="inpUrlRoom"></div>
-        </div>
-        <div class="form-row"><label>TRAILER TEXT</label>
-            <textarea id="inpTrailerText" style="height:60px;"></textarea>
-        </div>
-
-        <!-- 4. 詳細 (折りたたみ) -->
-        <details open>
-            <summary>詳細 (概要・あらすじ)</summary>
-            <div style="padding:15px;">
-                <div class="form-row"><label>概要</label><textarea id="inpOverview"></textarea></div>
-                <div class="form-row"><label>あらすじ</label><textarea id="inpStory"></textarea></div>
-                <div class="form-row"><label>注意事項</label><textarea id="inpWarnings"></textarea></div>
-                <div class="form-row"><label>その他</label><textarea id="inpOthers"></textarea></div>
-            </div>
-        </details>
-
-        <details open>
-            <summary>報酬・成長</summary>
-            <div style="padding:15px;">
-                <div class="form-row"><label>ENDING NAME</label><input type="text" id="inpEndName"></div>
-                <div class="grid-2">
-                    <div class="form-row"><label>SAN変動</label><input type="text" id="inpSanReward"></div>
-                    <div class="form-row"><label>報酬</label><input type="text" id="inpItemReward"></div>
+            <div class="char-select-area">
+                <div>
+                    <label>PC (Protagonist)</label>
+                    <select id="pc-select" name="pc_key"><option value="">Loading...</option></select>
                 </div>
-                <div class="grid-2">
-                    <div class="form-row"><label>遭遇神話生物</label><textarea id="inpEntities"></textarea></div>
-                    <div class="form-row"><label>魔術/AF</label><textarea id="inpSpells"></textarea></div>
+                <div>
+                    <label>KPC (Partner)</label>
+                    <select id="kpc-select" name="kpc_key"><option value="">Loading...</option></select>
                 </div>
-                <div class="form-row"><label>成長技能</label><textarea id="inpGrowth"></textarea></div>
             </div>
-        </details>
 
-        <details>
-            <summary>メモ (ネタバレ等)</summary>
-            <div style="padding:15px;">
-                <div class="form-row"><label>公開用メモ</label><textarea id="inpPublicMemo"></textarea></div>
-                <div class="form-row"><label>秘匿メモ</label><textarea id="inpSecretMemo" style="background:#221;"></textarea></div>
+            <p><label>System</label>
+            <select name="system">
+                <option value="CoC6">CoC 6th</option>
+                <option value="CoC7">CoC 7th</option>
+                <option value="Emoklore">Emoklore</option>
+            </select></p>
+
+            <p><label>Date</label><input type="date" name="date" required></p>
+            <p><label>GM / KP</label><input type="text" name="gm" placeholder="Game Master"></p>
+            <p><label>End Title</label><input type="text" name="endName" placeholder="End A / True End" required></p>
+            <p><label>Result</label>
+            <select name="result">
+                <option value="Alive">生還 (Alive)</option>
+                <option value="Lost">ロスト (Lost)</option>
+            </select></p>
+        </form>
+    </section>
+
+    <!-- RIGHT PAGE -->
+    <section class="page right">
+        <div class="tabs">
+            <button type="button" class="tab-btn active" onclick="showTab('rec')">RECORD</button>
+            <button type="button" class="tab-btn" onclick="showTab('data')">DATA</button>
+            <button type="button" class="tab-btn" onclick="showTab('memo')">MEMO</button>
+        </div>
+
+        <div id="rec" class="tab-content active">
+            <p><input type="text" name="impression_pc" form="mainForm" placeholder="PC Impression / Dialogue"></p>
+            <p><input type="text" name="impression_kpc" form="mainForm" placeholder="KPC Impression / Dialogue"></p>
+            <div style="display:flex; gap:10px;">
+                <input type="text" name="sanChange" form="mainForm" placeholder="SAN (-1d6)">
+                <input type="text" name="growth" form="mainForm" placeholder="Growth (目星+5)">
             </div>
-        </details>
-    </div>
+            <p><textarea name="rewards" form="mainForm" placeholder="Rewards / Items" style="height:60px;"></textarea></p>
+        </div>
 
-    <!-- SCRIPT -->
-    <script type="module">
-        // Import Paths: scenarioフォルダから見た characterフォルダへの相対パス
-        import { loadFromCloud, saveToCloud, monitorAuth, saveScenario } 
-            from "../character/firestore.js";
-        
-        import { resolveCharacterImage } 
-            from "../character/data/schema.js"; // schema.jsの場所による（character/data内を想定）
+        <div id="data" class="tab-content">
+            <p><textarea name="outline" form="mainForm" placeholder="Scenario Outline" style="height:120px;"></textarea></p>
+            <p><input type="text" name="mythos" form="mainForm" placeholder="Mythos Entities"></p>
+        </div>
+
+        <div id="memo" class="tab-content">
+            <p><textarea name="comment_public" form="mainForm" placeholder="Public Comment"></textarea></p>
+            <p><textarea name="comment_secret" form="mainForm" placeholder="Secret Note" style="background:rgba(0,0,0,0.1);"></textarea></p>
+            <hr>
+            <label style="color:var(--wax-red); cursor:pointer;">
+                <input type="checkbox" id="syncCheck" checked> Sync to Character Sheet
+            </label>
+        </div>
+
+        <div class="wax-seal" id="saveBtn">SAVE</div>
+    </section>
+</div>
+
+<script type="module">
+    // ★修正版のfirestore.jsから、必要な関数をすべてimportします
+    import { monitorAuth, loadFromCloud, saveToCloud, saveScenario } from "../character/firestore.js";
+    import { createScenarioRecord, syncScenarioToCharacter } from "./data/scenario.js";
+
+    let currentUser = null;
+    let charStore = {}; // 読み込んだ全キャラクターデータ
+
+    const statusEl = document.getElementById('status-bar');
+    const pcSelect = document.getElementById('pc-select');
+    const kpcSelect = document.getElementById('kpc-select');
+
+    // 1. 初期化・データロード
+    monitorAuth(async (user) => {
+        if (user) {
+            currentUser = user;
+            statusEl.innerText = `Connected: ${user.displayName}`;
+            await loadCharacters();
+        } else {
+            statusEl.innerText = "Please Login.";
+        }
+    });
+
+    async function loadCharacters() {
+        try {
+            charStore = await loadFromCloud(); // 最新のfirestore.jsは {Name: Data} を返します
             
-        import { createScenarioRecord, syncScenarioToCharacter } 
-            from "../character/data/scenario.js";
-
-        const getEl = (id) => document.getElementById(id);
-        let allChars = {};
-        let selectedCharId = null;
-        let currentUid = null;
-
-        // 画像D&D
-        const setupImg = (boxId, inpId, imgId) => {
-            const box = getEl(boxId);
-            box.addEventListener('dragover', e=>{e.preventDefault(); box.style.borderColor='#00f3ff';});
-            box.addEventListener('drop', e=>{
-                e.preventDefault(); box.style.borderColor='#444';
-                const file = e.dataTransfer.files[0];
-                if(file){
-                    const r = new FileReader();
-                    r.onload=v=>{ getEl(inpId).value=v.target.result; getEl(imgId).src=v.target.result; };
-                    r.readAsDataURL(file);
-                }
-            });
-            getEl(inpId).addEventListener('change', e => getEl(imgId).src = e.target.value);
-        };
-        setupImg('dropTrailer', 'inpImgTrailer', 'previewTrailer');
-        setupImg('dropRoom', 'inpImgRoom', 'previewRoom');
-
-        // 初期化
-        monitorAuth(async (user) => {
-            if(!user) return;
-            currentUid = user.uid;
-            const area = getEl('charSelectArea');
-            try {
-                const storeData = await loadFromCloud();
-                allChars = storeData || {};
-                area.innerHTML = '';
-                
-                // 全キャラの表示
-                Object.values(allChars).forEach(async c => {
-                    const div = document.createElement('div');
-                    div.className = 'char-card';
-                    const imgUrl = await resolveCharacterImage(c.name, c.icon, 'icon');
-                    div.innerHTML = `<img src="${imgUrl}"><span>${c.name}</span>`;
-                    div.onclick = () => {
-                        document.querySelectorAll('.char-card').forEach(el=>el.classList.remove('selected'));
-                        div.classList.add('selected');
-                        selectedCharId = c.id || c.name;
-                    };
-                    area.appendChild(div);
-                });
-            } catch(e) { console.error(e); }
-        });
-
-        // 保存実行
-        getEl('btnSave').addEventListener('click', async () => {
-            const title = getEl('inpTitle').value;
-            if(!title) { alert('タイトルを入力してください'); return; }
-            if(!selectedCharId && !confirm('キャラ未選択です。保存しますか？')) return;
-
-            // 1. 入力値の収集
-            const rawInput = {
-                title: title,
-                system: getEl('inpSystem').value,
-                date: getEl('inpDate').value,
-                duration: getEl('inpDuration').value,
-                stage: getEl('inpStage').value,
-                type: getEl('inpType').value,
-                gm: getEl('inpGM').value,
-                players: getEl('inpPlCount').value,
-                format: getEl('inpFormat').value,
-                public: getEl('inpPublic').value,
-                members: selectedCharId ? [selectedCharId] : [],
-                charStatus: getEl('inpCharStatus').value,
-                result: getEl('inpResult').value,
-                lostDetail: getEl('inpLostDetail').value,
-                images: { trailer: getEl('inpImgTrailer').value, room: getEl('inpImgRoom').value },
-                urls: { shop: getEl('inpUrlShop').value, room: getEl('inpUrlRoom').value },
-                trailerText: getEl('inpTrailerText').value,
-                details: {
-                    overview: getEl('inpOverview').value, story: getEl('inpStory').value,
-                    warnings: getEl('inpWarnings').value, others: getEl('inpOthers').value
-                },
-                endName: getEl('inpEndName').value,
-                rewards: { san: getEl('inpSanReward').value, items: getEl('inpItemReward').value },
-                entities: getEl('inpEntities').value, spells: getEl('inpSpells').value, growth: getEl('inpGrowth').value,
-                memos: { public: getEl('inpPublicMemo').value, secret: getEl('inpSecretMemo').value }
+            const createOpts = () => {
+                if(!charStore) return "";
+                return Object.keys(charStore).map(name => `<option value="${name}">${name}</option>`).join("");
             };
+            const defaultOpt = `<option value="">-- Select --</option>`;
+            
+            pcSelect.innerHTML = defaultOpt + createOpts();
+            kpcSelect.innerHTML = defaultOpt + createOpts();
+        } catch(e) {
+            console.error(e);
+            alert("Error loading characters.");
+        }
+    }
 
-            try {
-                // 2. data/scenario.js で保存用データ作成
-                const scenarioData = createScenarioRecord(rawInput, currentUid);
-                
-                // 3. firestore.js でシナリオ保存
-                const newId = await saveScenario(scenarioData);
+    // 2. 保存処理
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+        if (!currentUser) return alert("Login required.");
+        
+        const form = document.getElementById('mainForm');
+        if (!form.reportValidity()) return;
 
-                // 4. キャラ更新 (連携ONの場合)
-                if(selectedCharId && getEl('chkSync').checked) {
-                    const targetChar = Object.values(allChars).find(c => (c.id === selectedCharId) || (c.name === selectedCharId));
-                    if(targetChar) {
-                        // data/scenario.js でキャラデータを加工
-                        const updatedChar = syncScenarioToCharacter(targetChar, scenarioData, newId);
-                        
-                        // firestore.js でキャラ保存
-                        await saveToCloud(updatedChar);
-                        alert('シナリオ保存・キャラ更新完了！');
-                    }
-                } else {
-                    alert('シナリオ保存完了！');
+        const formData = new FormData(form);
+        const input = Object.fromEntries(formData.entries());
+
+        statusEl.innerText = "Saving...";
+
+        try {
+            // A. シナリオをDB(scenarios)に保存
+            const record = createScenarioRecord(input, currentUser.uid);
+            const newId = await saveScenario(record);
+            console.log("Scenario ID:", newId);
+
+            // B. キャラクターシートへ追記 (Sync ONの場合)
+            if (document.getElementById('syncCheck').checked) {
+                // PC更新
+                if (input.pc_key && charStore[input.pc_key]) {
+                    const updatedPC = syncScenarioToCharacter(charStore[input.pc_key], record, newId);
+                    // ★最新firestore.jsの仕様に合わせて saveToCloud (上書き) を呼ぶ
+                    await saveToCloud(updatedPC);
                 }
-            } catch(e) {
-                alert('エラー: ' + e.message);
+                // KPC更新
+                if (input.kpc_key && charStore[input.kpc_key]) {
+                    const updatedKPC = syncScenarioToCharacter(charStore[input.kpc_key], record, newId);
+                    await saveToCloud(updatedKPC);
+                }
             }
-        });
-    </script>
+
+            statusEl.innerText = "Complete.";
+            alert("保存しました！");
+            
+        } catch(e) {
+            console.error(e);
+            alert("保存に失敗しました: " + e.message);
+        }
+    });
+
+    // タブ切り替え (Global)
+    window.showTab = (id) => {
+        document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        event.target.classList.add('active');
+    };
+</script>
+
 </body>
 </html>

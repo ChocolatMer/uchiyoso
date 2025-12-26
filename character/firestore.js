@@ -1,9 +1,9 @@
-// --- firestore.js (サブコレクション対応・修正版) ---
+// --- firestore.js (サブコレクション・シナリオ対応完全版) ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } 
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-// ★必要な機能を追加しました (collection, getDocs, deleteDoc)
-import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc } 
+// ★重要: ここに必要な機能 (addDoc, serverTimestamp, query, where 等) をすべて追加しました
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, addDoc, serverTimestamp, query, where } 
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -57,7 +57,6 @@ export function monitorAuth(onLogin, onLogout) {
 
 const SHARED_COLLECTION = "rooms";
 const SHARED_DOC_ID = "couple_shared_data";
-// ★重要: ここでフォルダ名を指定します。もし読み込めない場合は "data" などを試してください
 const CHAR_SUB_COLLECTION = "characters"; 
 
 // 保存 (SAVE CLOUD)
@@ -72,14 +71,9 @@ export async function saveToCloud(charData) {
     }
 
     try {
-        // キャラクターごとの専用ファイルに保存する方式に戻しました
         const charRef = doc(db, SHARED_COLLECTION, SHARED_DOC_ID, CHAR_SUB_COLLECTION, charData.name);
-        
         await setDoc(charRef, charData, { merge: true });
-        
-        // 日本語で保存完了を表示
         alert("保存が完了しました: " + charData.name);
-        
     } catch (e) {
         console.error("Error adding document: ", e);
         alert("保存エラー: " + e.message);
@@ -94,7 +88,6 @@ export async function loadFromCloud() {
     }
 
     try {
-        // フォルダ内の全ファイルを一括取得する方式に戻しました
         const colRef = collection(db, SHARED_COLLECTION, SHARED_DOC_ID, CHAR_SUB_COLLECTION);
         const querySnapshot = await getDocs(colRef);
 
@@ -105,14 +98,7 @@ export async function loadFromCloud() {
                 loadedData[data.name] = data;
             }
         });
-
-        // データが空っぽだった場合の確認ログ
-        if (Object.keys(loadedData).length === 0) {
-            console.log("データが見つかりませんでした。(コレクション名が違う可能性があります)");
-        }
-
         return loadedData;
-
     } catch (e) {
         console.error("Error loading document: ", e);
         alert("読み込みエラー: " + e.message);
@@ -123,25 +109,18 @@ export async function loadFromCloud() {
 // 削除機能 (DELETE CLOUD)
 export async function deleteFromCloud(charName) {
     if (!currentUser) return;
-    if (!charName) return;
-
-    if (!confirm(charName + " を削除しますか？\nこの操作は取り消せません。")) {
-        return;
-    }
+    if (!confirm(charName + " を削除しますか？")) return;
 
     try {
         const charRef = doc(db, SHARED_COLLECTION, SHARED_DOC_ID, CHAR_SUB_COLLECTION, charName);
         await deleteDoc(charRef);
-        
         alert("削除しました: " + charName);
-        location.reload(); // 画面更新
-
+        location.reload();
     } catch (e) {
         console.error("Delete error:", e);
         alert("削除エラー: " + e.message);
     }
 }
-
 
 // --- シナリオデータ (Scenarios) ---
 
@@ -152,11 +131,11 @@ export async function saveScenario(scenarioData) {
     // サーバー時間を付与
     const dataToSave = {
         ...scenarioData,
-        updatedAt: serverTimestamp()
+        updatedAt: serverTimestamp() // ★Importが必要です
     };
 
     try {
-        const docRef = await addDoc(collection(db, "scenarios"), dataToSave);
+        const docRef = await addDoc(collection(db, "scenarios"), dataToSave); // ★Importが必要です
         console.log("Scenario saved ID:", docRef.id);
         return docRef.id;
     } catch (e) {
@@ -178,7 +157,6 @@ export async function getScenariosForCharacter(charId) {
         querySnapshot.forEach((doc) => {
             scenarios.push({ id: doc.id, ...doc.data() });
         });
-        // 日付順ソート (新しい順)
         return scenarios.sort((a, b) => new Date(b.date) - new Date(a.date));
     } catch (e) {
         console.error(e);
