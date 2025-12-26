@@ -279,8 +279,8 @@
     <script type="module">
         // ★修正1: deleteFromCloud をインポートに追加
         import { loadFromCloud, monitorAuth, saveToCloud, deleteFromCloud } from "./firestore.js";
-        import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING } from "./schema.js";
-        import { parseIaChara } from "./parser_ia.js";
+        import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING } from "./data/schema.js";
+        import { parseIaChara } from "./data/parser_ia.js";
 
         const getEl = (id) => document.getElementById(id);
         const setVal = (id, v) => { const el = getEl(id); if(el) el.value = (v == null ? '' : v); };
