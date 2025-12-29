@@ -132,14 +132,14 @@
                 <div class="form-row"><label>DEBT (借金)</label><input type="text" id="inpDebt"></div>
             </div>
             
-            <!-- ▼▼▼ PL名を移動しました (THEME COLORの隣) ▼▼▼ -->
+            <!-- ▼▼▼ PL名を移動・配置 ▼▼▼ -->
             <div class="grid-4" style="margin-top:15px;">
                 <div class="form-row"><label>BIRTHDAY</label><input type="text" id="inpBirthday"></div>
                 <div class="form-row"><label>BIRTHPLACE</label><input type="text" id="inpOrigin"></div>
                 <div class="form-row"><label>THEME COLOR</label><input type="color" id="inpThemeColor" value="#d9333f"></div>
                 <div class="form-row"><label>PL NAME</label><input type="text" id="inpPlName" placeholder="プレイヤー名"></div>
             </div>
-            <!-- ▲▲▲ PL名移動完了 ▲▲▲ -->
+            <!-- ▲▲▲ PL名配置完了 ▲▲▲ -->
 
             <div id="eduCheckArea" class="analysis-box" style="display:none;"><span>🎓 EDU分析:</span><span id="eduMsg"></span></div>
 
@@ -156,7 +156,7 @@
                 <div style="margin-bottom:5px;">📊 <b>BMI:</b> <span id="outBMI" class="calc-val">--</span></div>
             </div>
 
-            <!-- ▼▼▼ パートナー・グループ名設定エリア（PL名削除済み） ▼▼▼ -->
+            <!-- ▼▼▼ パートナー・グループ名設定エリア（PL名削除済） ▼▼▼ -->
             <div class="grid-3" style="margin-top:25px; background:#252525; padding:20px; border-radius:4px; border-left: 4px solid #00f3ff; border-top:1px solid #444; border-bottom:1px solid #444;">
                 <div class="form-row">
                     <label style="color:#00f3ff; font-weight:bold;">PARTNER (関係性の深い相手)</label>
@@ -303,7 +303,7 @@
     <!-- ここからスクリプト -->
     <script type="module">
         import { loadFromCloud, monitorAuth, saveToCloud, deleteFromCloud } from "./firestore.js";
-        // ★ GROUP_MAPPING をインポート
+        // GROUP_MAPPING 読み込み
         import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING, GROUP_MAPPING } from "./data/schema.js";
         import { parseIaChara } from "./data/parser_ia.js";
 
@@ -447,7 +447,7 @@
                 if (c.id === currentId) return; 
                 const opt = document.createElement('option');
                 opt.value = c.id;
-                // ★ PL名表記を削除しました
+                // ★ PL名表記を削除
                 opt.textContent = c.name; 
                 sel.appendChild(opt);
             });
@@ -494,10 +494,10 @@
             if (nameInputVal) finalData.name = nameInputVal;
             finalData.skills = skillsObj;
             
-            // ★ ID強制セット (IDエラー防止)
+            // ★ ID強制セット＆チェック (エラー防止の肝)
             finalData.id = currentId;
             if (!finalData.id) {
-                alert("保存エラー: IDが特定できませんでした。画面をリロードして再試行してください。");
+                alert("保存エラー: IDが特定できませんでした。画面をリロードしてやり直してください。");
                 return;
             }
 
@@ -514,14 +514,19 @@
                     
                     // ★ パートナー側のIDチェック
                     if (!partnerData.id) partnerData.id = partnerId;
-
-                    partnerData.partnerId = currentId;
-                    partnerData.groupName = groupName;
                     
-                    await saveToCloud(partnerData);
-                    alert(`保存完了！\nパートナー(${partnerData.name})の設定も更新しました。`);
-                } else {
+                    if (!partnerData.id) {
+                        // パートナーIDがない場合のエラー回避
+                        console.error("Critical: partnerData has no ID", partnerData);
+                        alert(`警告: パートナー(${partnerData.name})のデータにIDが見つからないため、リンク更新をスキップしました。`);
+                    } else {
+                        partnerData.partnerId = currentId;
+                        partnerData.groupName = groupName;
+                        await saveToCloud(partnerData);
+                    }
                     alert("保存完了しました。");
+                } else {
+                    // パートナーなしの場合
                 }
                 
                 location.reload();
@@ -557,7 +562,7 @@
                 const opt = document.createElement('option');
                 const val = c.id || c.name;
                 opt.value = val;
-                // ★ PL名表記を削除しました
+                // ★ PL名表記を削除
                 opt.textContent = c.name;
                 sel.appendChild(opt);
             });
