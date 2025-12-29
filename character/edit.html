@@ -132,11 +132,14 @@
                 <div class="form-row"><label>DEBT (借金)</label><input type="text" id="inpDebt"></div>
             </div>
             
+            <!-- ▼▼▼ PL名を移動しました (THEME COLORの隣) ▼▼▼ -->
             <div class="grid-4" style="margin-top:15px;">
                 <div class="form-row"><label>BIRTHDAY</label><input type="text" id="inpBirthday"></div>
                 <div class="form-row"><label>BIRTHPLACE</label><input type="text" id="inpOrigin"></div>
                 <div class="form-row"><label>THEME COLOR</label><input type="color" id="inpThemeColor" value="#d9333f"></div>
+                <div class="form-row"><label>PL NAME</label><input type="text" id="inpPlName" placeholder="プレイヤー名"></div>
             </div>
+            <!-- ▲▲▲ PL名移動完了 ▲▲▲ -->
 
             <div id="eduCheckArea" class="analysis-box" style="display:none;"><span>🎓 EDU分析:</span><span id="eduMsg"></span></div>
 
@@ -153,12 +156,8 @@
                 <div style="margin-bottom:5px;">📊 <b>BMI:</b> <span id="outBMI" class="calc-val">--</span></div>
             </div>
 
-            <!-- ▼▼▼ PL名 / パートナー / グループ名 設定エリア ▼▼▼ -->
+            <!-- ▼▼▼ パートナー・グループ名設定エリア（PL名削除済み） ▼▼▼ -->
             <div class="grid-3" style="margin-top:25px; background:#252525; padding:20px; border-radius:4px; border-left: 4px solid #00f3ff; border-top:1px solid #444; border-bottom:1px solid #444;">
-                <div class="form-row">
-                    <label style="color:#00f3ff; font-weight:bold;">PL NAME (プレイヤー名)</label>
-                    <input type="text" id="inpPlName" placeholder="プレイヤー名">
-                </div>
                 <div class="form-row">
                     <label style="color:#00f3ff; font-weight:bold;">PARTNER (関係性の深い相手)</label>
                     <select id="selPartner" style="width:100%; box-sizing:border-box; background:#1a1a1a; padding:10px;">
@@ -448,7 +447,8 @@
                 if (c.id === currentId) return; 
                 const opt = document.createElement('option');
                 opt.value = c.id;
-                opt.textContent = c.name + (c.plName ? ` (PL:${c.plName})` : '');
+                // ★ PL名表記を削除しました
+                opt.textContent = c.name; 
                 sel.appendChild(opt);
             });
             if (currentVal) sel.value = currentVal;
@@ -496,6 +496,10 @@
             
             // ★ ID強制セット (IDエラー防止)
             finalData.id = currentId;
+            if (!finalData.id) {
+                alert("保存エラー: IDが特定できませんでした。画面をリロードして再試行してください。");
+                return;
+            }
 
             const partnerId = getEl('selPartner').value;
             const groupName = getEl('inpGroupName').value;
@@ -508,7 +512,7 @@
                 if (partnerId && allData[partnerId]) {
                     const partnerData = { ...allData[partnerId] };
                     
-                    // ★ IDチェック (IDエラー防止)
+                    // ★ パートナー側のIDチェック
                     if (!partnerData.id) partnerData.id = partnerId;
 
                     partnerData.partnerId = currentId;
@@ -553,7 +557,8 @@
                 const opt = document.createElement('option');
                 const val = c.id || c.name;
                 opt.value = val;
-                opt.textContent = c.name + (c.plName ? ` (PL:${c.plName})` : '');
+                // ★ PL名表記を削除しました
+                opt.textContent = c.name;
                 sel.appendChild(opt);
             });
             if(currentId) sel.value = currentId;
