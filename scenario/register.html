@@ -7,7 +7,6 @@
     
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet">
-    <!-- 既存のヘッダーCSSがあれば読み込む -->
     <link href="../character/edit/header.css" rel="stylesheet">
 
     <style>
@@ -34,7 +33,7 @@
 
         /* --- SIDEBAR (HISTORY) --- */
         .sidebar {
-            padding: 40px 20px;
+            padding: 20px;
             border-right: 1px solid #222;
             background: rgba(0,0,0,0.4);
             display: flex; flex-direction: column; gap: 20px;
@@ -48,18 +47,22 @@
         }
         .history-list { display: flex; flex-direction: column; gap: 10px; }
         .history-item {
-            background: #111; padding: 12px; border: 1px solid #333; border-radius: 4px;
+            background: #111; padding: 10px; border: 1px solid #333; border-radius: 4px;
             cursor: pointer; transition: 0.3s; position: relative;
         }
         .history-item:hover { border-color: #777; background: #1a1a1a; transform: translateX(5px); }
         .history-item.active { border-color: #d4b346; background: #1f1a0e; }
-        .h-title { font-weight: bold; color: #eee; font-size: 0.9rem; margin-bottom: 4px; }
-        .h-meta { font-size: 0.75rem; color: #777; display: flex; justify-content: space-between; font-family: 'Cinzel', serif; }
+        .h-title { font-weight: bold; color: #eee; font-size: 0.85rem; margin-bottom: 4px; }
+        .h-meta { font-size: 0.7rem; color: #777; display: flex; justify-content: space-between; font-family: 'Cinzel', serif; }
 
-        /* --- CENTER: BOOK --- */
+        /* --- CENTER: BOOK (位置調整済み) --- */
         .book-area {
-            display: flex; justify-content: center; align-items: center;
-            padding: 40px 20px; perspective: 2000px;
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-start; /* 上寄せに変更 */
+            padding-top: 40px; /* 上部マージン */
+            padding-bottom: 40px;
+            perspective: 2000px;
         }
         .book-wrapper { 
             position: relative; width: 1300px; max-width: 95%; height: 850px;
@@ -81,7 +84,7 @@
             pointer-events: none; z-index: 10;
         }
         .page { 
-            flex: 1; padding: 40px 50px; position: relative; overflow-y: auto;
+            flex: 1; padding: 30px 50px; position: relative; overflow-y: auto;
             background-color: #232323;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
         }
@@ -90,7 +93,7 @@
 
         /* --- TABS --- */
         .tabs-container {
-            position: absolute; top: 50px; right: -40px; width: 40px; z-index: 5;
+            position: absolute; top: 40px; right: -40px; width: 40px; z-index: 5;
             display: flex; flex-direction: column; gap: 10px;
         }
         .tab-btn {
@@ -110,27 +113,27 @@
 
         /* --- PAGE 1: LEFT UI --- */
         .report-header-img {
-            width: 100%; height: 260px; background: #0a0a0a; border: 1px dashed #444; 
+            width: 100%; height: 240px; background: #0a0a0a; border: 1px dashed #444; 
             display: flex; align-items: center; justify-content: center; overflow: hidden;
-            margin-bottom: 20px; border-radius: 2px; cursor: pointer; position: relative;
+            margin-bottom: 15px; border-radius: 2px; cursor: pointer; position: relative;
         }
         .report-header-img img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; }
         input.scenario-title {
             width: 100%; background: transparent; border: none; border-bottom: 2px solid #444;
-            font-family: 'Shippori Mincho', serif; font-size: 2.0rem; font-weight: bold; color: #eee;
+            font-family: 'Shippori Mincho', serif; font-size: 1.8rem; font-weight: bold; color: #eee;
             text-align: center; padding: 5px 0; margin-bottom: 5px;
         }
-        .session-count { text-align: center; font-family: 'Cinzel', serif; color: #d4b346; font-size: 0.9rem; margin-bottom: 30px; letter-spacing: 2px; }
+        .session-count { text-align: center; font-family: 'Cinzel', serif; color: #d4b346; font-size: 0.9rem; margin-bottom: 20px; letter-spacing: 2px; }
         .session-count input { background: transparent; border: none; color: inherit; font-family: inherit; font-size: inherit; text-align: center; width: 50px; border-bottom: 1px dashed #444; }
 
-        .char-pair-area { display: flex; justify-content: center; align-items: start; gap: 20px; margin-bottom: 30px; }
+        .char-pair-area { display: flex; justify-content: center; align-items: start; gap: 20px; margin-bottom: 25px; }
         .char-unit { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 140px; }
         .char-icon-circle { width: 90px; height: 90px; border-radius: 50%; border: 2px solid #333; object-fit: cover; background: #000; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         select.char-select { width: 100%; background: #1a1a1a; border: 1px solid #333; color: #ccc; padding: 4px; text-align: center; font-size: 0.8rem; border-radius: 4px; }
         input.pl-name { width: 100%; background: transparent; border: none; color: #666; text-align: center; font-size: 0.8rem; padding: 2px; }
 
         .prop-list { display: flex; flex-direction: column; border-top: 1px solid #333; margin-top: 10px; }
-        .prop-row { display: grid; grid-template-columns: 120px 1fr; align-items: center; border-bottom: 1px solid #333; padding: 8px 0; }
+        .prop-row { display: grid; grid-template-columns: 120px 1fr; align-items: center; border-bottom: 1px solid #333; padding: 6px 0; }
         .tag-select { appearance: none; border: none; border-radius: 4px; padding: 4px 10px; font-size: 0.85rem; cursor: pointer; text-align: center; font-family: 'Shippori Mincho', serif; min-width: 80px; }
         .tag-input { background: transparent; border: none; font-size: 0.95rem; color: #ccc; width: 100%; font-family: 'Shippori Mincho', serif; }
         
@@ -142,7 +145,7 @@
 
         /* --- PAGE 2: RIGHT UI & CHAT --- */
         .san-compare-area {
-            display: flex; gap: 20px; margin-bottom: 30px; border-bottom: 1px solid #333; padding-bottom: 20px;
+            display: flex; gap: 20px; margin-bottom: 25px; border-bottom: 1px solid #333; padding-bottom: 15px;
         }
         .san-box {
             flex: 1; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; border: 1px solid #333;
@@ -154,29 +157,38 @@
         }
         
         /* Speech Bubbles */
-        .chat-area { display: flex; flex-direction: column; gap: 20px; margin-bottom: 30px; }
+        .chat-area { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
         .chat-row { display: flex; gap: 15px; align-items: flex-start; }
         .chat-row.kpc { flex-direction: row-reverse; }
         .chat-icon { 
-            width: 50px; height: 50px; border-radius: 50%; border: 2px solid #444; object-fit: cover; background: #000; flex-shrink: 0;
+            width: 45px; height: 45px; border-radius: 50%; border: 2px solid #444; object-fit: cover; background: #000; flex-shrink: 0;
         }
         .speech-bubble {
             position: relative; background: rgba(255,255,255,0.05); border: 1px solid #444; border-radius: 8px;
-            padding: 10px; flex: 1; min-height: 50px;
+            padding: 10px; flex: 1; min-height: 40px;
         }
-        .speech-bubble::after {
-            content: ''; position: absolute; top: 15px;
-            border: 8px solid transparent;
-        }
+        .speech-bubble::after { content: ''; position: absolute; top: 15px; border: 8px solid transparent; }
         .chat-row.pc .speech-bubble::after { left: -16px; border-right-color: #444; }
         .chat-row.kpc .speech-bubble::after { right: -16px; border-left-color: #444; }
 
+        /* --- 分離された成長・メモエリア --- */
+        .split-area {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;
+        }
+        .split-box {
+            display: flex; flex-direction: column; gap: 5px;
+        }
+        .split-label {
+            font-size: 0.75rem; color: #888; border-left: 3px solid #d4b346; padding-left: 5px; font-family: 'Cinzel', serif;
+        }
+        .split-label.memo { border-color: #4a6fa5; }
+
         /* Details */
-        .details-container { margin-top: 30px; }
-        .detail-block { margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 4px; }
+        .details-container { margin-top: 20px; }
+        .detail-block { margin-bottom: 15px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 4px; }
         .detail-header { 
             font-family: 'Cinzel', serif; color: #888; border-bottom: 1px dashed #444; 
-            margin-bottom: 10px; font-size: 0.8rem; letter-spacing: 1px;
+            margin-bottom: 8px; font-size: 0.8rem; letter-spacing: 1px;
         }
 
         textarea.paper-area {
@@ -184,7 +196,10 @@
             font-family: 'Shippori Mincho', serif; line-height: 1.6; font-size: 0.9rem;
         }
         textarea.paper-area:focus { outline: none; }
-        textarea.bubble-text { min-height: 50px; }
+        textarea.bubble-text { min-height: 40px; }
+        textarea.box-input {
+            background: rgba(0,0,0,0.2); border: 1px solid #333; padding: 5px; min-height: 60px;
+        }
 
         input.line-input {
             width: 100%; background: transparent; border: none; border-bottom: 1px solid #444;
@@ -225,7 +240,7 @@
         <!-- LEFT: HISTORY -->
         <div class="sidebar">
             <div class="sidebar-title">HISTORY LOG</div>
-            <div id="loadingIndicator">Checking System...</div>
+            <div id="loadingIndicator">Waiting for Login...</div>
             <div id="historyList" class="history-list"></div>
             <button onclick="window.resetForm()" style="margin-top:auto; background:transparent; border:1px solid #444; color:#666; padding:5px; cursor:pointer; font-family:'Cinzel',serif;">+ NEW ENTRY</button>
         </div>
@@ -259,13 +274,13 @@
                             <div class="char-pair-area">
                                 <div class="char-unit">
                                     <img id="iconPC" class="char-icon-circle" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
-                                    <select id="selPC" class="char-select"><option value="">PC Loading...</option></select>
+                                    <select id="selPC" class="char-select"><option value="">Loading...</option></select>
                                     <input type="text" id="inpPlNamePC" class="pl-name" placeholder="PL Name">
                                 </div>
                                 <div style="align-self:center; font-family:'Cinzel',serif; color:#555; font-size:1.5rem;">&</div>
                                 <div class="char-unit">
                                     <img id="iconKPC" class="char-icon-circle" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
-                                    <select id="selKPC" class="char-select"><option value="">KPC Loading...</option></select>
+                                    <select id="selKPC" class="char-select"><option value="">Loading...</option></select>
                                     <input type="text" id="inpPlNameKPC" class="pl-name" placeholder="KP/PL Name">
                                 </div>
                             </div>
@@ -309,7 +324,7 @@
                             <div id="tab-record" class="tab-panel active">
                                 <h2 class="section-header">SESSION RECORD</h2>
 
-                                <!-- SAN COMPARISON (Horizontal) -->
+                                <!-- SAN COMPARISON -->
                                 <div class="san-compare-area">
                                     <div class="san-box">
                                         <div class="san-header">
@@ -351,15 +366,17 @@
                                     </div>
                                 </div>
 
-                                <!-- MEMO & GROWTH -->
-                                <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
-                                    <div>
-                                        <span style="font-size:0.75rem; color:#888;">PC MEMO/GROWTH</span>
-                                        <textarea id="inpMemoPC" class="paper-area" style="min-height:60px; border:1px solid #333; padding:5px;" placeholder="感想・成長など"></textarea>
+                                <!-- MEMO & GROWTH (Split & Explicitly Named) -->
+                                <div class="split-area">
+                                    <div class="split-box">
+                                        <div class="split-label">GROWTH (技能成長)</div>
+                                        <textarea id="inpGrowPC" class="paper-area box-input" placeholder="PC: 目星+5 ..."></textarea>
+                                        <textarea id="inpGrowKPC" class="paper-area box-input" style="margin-top:5px;" placeholder="KPC: ..."></textarea>
                                     </div>
-                                    <div>
-                                        <span style="font-size:0.75rem; color:#888;">KPC MEMO/GROWTH</span>
-                                        <textarea id="inpMemoKPC" class="paper-area" style="min-height:60px; border:1px solid #333; padding:5px;" placeholder="感想・成長など"></textarea>
+                                    <div class="split-box">
+                                        <div class="split-label memo">MEMO (感想/手記)</div>
+                                        <textarea id="inpMemoPC" class="paper-area box-input" placeholder="PC視点 感想..."></textarea>
+                                        <textarea id="inpMemoKPC" class="paper-area box-input" style="margin-top:5px;" placeholder="KPCへの想い..."></textarea>
                                     </div>
                                 </div>
 
@@ -545,24 +562,43 @@
         setupImg('dropTrailer', 'inpImgTrailer', 'imgTrailer');
         setupImg('dropScnTrailer', 'inpImgScnTrailer', 'imgScnTrailer');
 
-        // --- Init ---
+        // --- Init & Character Loading (Fixed) ---
         monitorAuth(async (user) => {
-            if(!user) { loader.textContent = "Login Required"; return; }
+            if(!user) { 
+                loader.textContent = "Login Required"; 
+                return; 
+            }
             currentUid = user.uid;
+            loader.textContent = "Loading Characters...";
             
-            const data = await loadFromCloud();
-            allChars = data || {};
-            loader.textContent = "System Ready";
+            try {
+                const data = await loadFromCloud();
+                allChars = data || {};
+                
+                // オブジェクトが空かどうか確認
+                const charList = Object.values(allChars);
+                if (charList.length === 0) {
+                    loader.textContent = "No Characters Found";
+                    console.warn("Characters loaded but list is empty.");
+                } else {
+                    loader.textContent = "System Ready";
+                }
 
-            const createOpts = () => {
-                let html = '<option value="">(Select)</option>';
-                Object.values(allChars).sort((a,b)=> (a.name||"").localeCompare(b.name||"")).forEach(c => {
-                    html += `<option value="${c.id || c.name}">${c.name}</option>`;
-                });
-                return html;
-            };
-            getEl('selPC').innerHTML = createOpts();
-            getEl('selKPC').innerHTML = createOpts();
+                const createOpts = () => {
+                    let html = '<option value="">(Select)</option>';
+                    charList.sort((a,b)=> (a.name||"").localeCompare(b.name||"")).forEach(c => {
+                        html += `<option value="${c.id}">${c.name}</option>`;
+                    });
+                    return html;
+                };
+                getEl('selPC').innerHTML = createOpts();
+                getEl('selKPC').innerHTML = createOpts();
+
+            } catch (e) {
+                console.error("Failed to load characters:", e);
+                loader.textContent = "Load Error!";
+                alert("キャラクターの読み込みに失敗しました。\n" + e.message);
+            }
         });
 
         // --- History ---
@@ -617,8 +653,10 @@
                 getEl(`inpRes${suffix}`).value = d.res || "Alive"; updateResColor(getEl(`inpRes${suffix}`));
                 getEl(`inpSan${suffix}`).value = d.san || "";
                 getEl(`inpQuote${suffix}`).value = d.quote || "";
-                getEl(`inpMemo${suffix}`).value = d.memo || ""; // Growth is merged into memo in UI or data? UI has Memo, code below combines? 
-                // Ah, UI has separate memo textareas.
+                
+                // --- Separate Growth & Memo ---
+                getEl(`inpGrow${suffix}`).value = d.grow || ""; 
+                getEl(`inpMemo${suffix}`).value = d.memo || ""; 
                 
                 if(d.art) { getEl(`inpArtName${suffix}`).value = d.art.name||""; getEl(`inpArtDesc${suffix}`).value = d.art.desc||""; }
                 if(d.seq) { getEl(`inpSeqName${suffix}`).value = d.seq.name||""; getEl(`inpSeqDesc${suffix}`).value = d.seq.desc||""; }
@@ -699,16 +737,22 @@
                     urls: { shop: getEl('inpUrlShop').value, room: getEl('inpUrlRoom').value },
                     images: { trailer: getEl('inpImgTrailer').value, scenTrailer: getEl('inpImgScnTrailer').value },
                     
+                    // --- PC Data (Split Growth/Memo) ---
                     pcData: {
                         id: pcId, pl: getEl('inpPlNamePC').value, res: getEl('inpResPC').value, san: getEl('inpSanPC').value,
-                        quote: getEl('inpQuotePC').value, memo: getEl('inpMemoPC').value,
+                        quote: getEl('inpQuotePC').value, 
+                        grow: getEl('inpGrowPC').value, // Separate
+                        memo: getEl('inpMemoPC').value, // Separate
                         art: { name: getEl('inpArtNamePC').value, desc: getEl('inpArtDescPC').value },
                         seq: { name: getEl('inpSeqNamePC').value, desc: getEl('inpSeqDescPC').value },
                         ins: { type: getEl('selInsanityPC').value, desc: getEl('inpInsanityDescPC').value }
                     },
+                    // --- KPC Data (Split Growth/Memo) ---
                     kpcData: {
                         id: kpcId, pl: getEl('inpPlNameKPC').value, res: getEl('inpResKPC').value, san: getEl('inpSanKPC').value,
-                        quote: getEl('inpQuoteKPC').value, memo: getEl('inpMemoKPC').value,
+                        quote: getEl('inpQuoteKPC').value, 
+                        grow: getEl('inpGrowKPC').value, // Separate
+                        memo: getEl('inpMemoKPC').value, // Separate
                         art: { name: getEl('inpArtNameKPC').value, desc: getEl('inpArtDescKPC').value },
                         seq: { name: getEl('inpSeqNameKPC').value, desc: getEl('inpSeqDescKPC').value },
                         ins: { type: getEl('selInsanityKPC').value, desc: getEl('inpInsanityDescKPC').value }
