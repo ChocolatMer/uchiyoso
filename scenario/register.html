@@ -168,6 +168,16 @@
         }
         .swap-btn:hover { color: #d4b346; border-color: #d4b346; transform: rotate(180deg); }
 
+        /* コンビ名選択用 */
+        .pair-selector-wrap {
+            position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
+            width: 200px; z-index: 100; text-align: center;
+        }
+        .pair-selector {
+            width: 100%; background: #111; border: 1px solid #444; color: #aaa;
+            font-size: 0.75rem; padding: 2px; border-radius: 10px; text-align: center;
+        }
+
         .prop-list { display: flex; flex-direction: column; border-top: 1px solid #333; margin-top: 10px; }
         .prop-row { display: grid; grid-template-columns: 120px 1fr; align-items: center; border-bottom: 1px solid #333; padding: 6px 0; }
         .prop-label { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #777; font-family: 'Shippori Mincho', sans-serif; }
@@ -329,6 +339,13 @@
                             <div class="session-count"><input type="number" id="inpCount" value="1"> 話 / 回目</div>
 
                             <div class="char-pair-area">
+                                <!-- ★コンビ名選択リスト -->
+                                <div class="pair-selector-wrap">
+                                    <select id="selPair" class="pair-selector" onchange="window.applyPair(this.value)">
+                                        <option value="">-- UNIT / PAIR --</option>
+                                    </select>
+                                </div>
+
                                 <div class="char-unit">
                                     <img id="iconPC" class="char-icon-circle" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
                                     <select id="selPC" class="char-select"><option value="">(PC)</option></select>
@@ -716,6 +733,9 @@
         let allChars = {};
         let currentUid = null;
         let currentScenarioId = null; 
+        
+        // コンビ情報保持用
+        let allPairs = [];
 
         // Theme Color Helper
         const applyTheme = (role, charId) => {
@@ -741,16 +761,10 @@
                 if(f){ 
                     const r=new FileReader(); 
                     r.onload=v=>{
-                        // Update hidden input
                         getEl(inpId).value=v.target.result; 
-                        
-                        // Update specific target image
                         const img = getEl(imgId);
                         img.src=v.target.result;
                         getEl(boxId).classList.remove('empty');
-
-                        // Sync logic for Scenario Trailer
-                        // If updating trailer (inpImgScnTrailer), update both overlay and tab image
                         if(inpId === 'inpImgScnTrailer') {
                             const otherImgId = (imgId === 'imgScnTrailer') ? 'imgScnTrailerTab' : 'imgScnTrailer';
                             const otherBoxId = (boxId === 'dropScnTrailer') ? 'dropScnTrailerTab' : 'dropScnTrailer';
@@ -782,10 +796,49 @@
                 getEl('selPC').innerHTML = opts;
                 getEl('selKPC').innerHTML = opts;
 
+                // --- コンビ名抽出ロジック ---
+                const pairMap = new Map(); // "PC_KPC" -> "GroupName"
+                
+                list.forEach(c => {
+                    if(c.partners && Array.isArray(c.partners)) {
+                        c.partners.forEach(p => {
+                            // 重複排除キー作成 (ID順でソート)
+                            const ids = [c.id, p.id].sort().join('_');
+                            if(!pairMap.has(ids)) {
+                                pairMap.set(ids, {
+                                    ids: [c.id, p.id],
+                                    name: p.group || "Unnamed Pair",
+                                    chars: [c.name, (allChars[p.id]?.name || "Unknown")]
+                                });
+                            }
+                        });
+                    }
+                });
+
+                allPairs = Array.from(pairMap.values());
+                const pairOpts = '<option value="">-- UNIT / PAIR --</option>' + 
+                    allPairs.map((p, idx) => `<option value="${idx}">${p.name} (${p.chars.join('&')})</option>`).join('');
+                getEl('selPair').innerHTML = pairOpts;
+
                 window.toggleGMField(getEl('inpType'));
 
             } catch(e) { console.error(e); loader.textContent="ERROR"; }
         });
+
+        // コンビ選択時の処理
+        window.applyPair = (idx) => {
+            if(idx === "") return;
+            const pair = allPairs[idx];
+            if(pair && pair.ids.length >= 2) {
+                const pcSel = getEl('selPC');
+                const kpcSel = getEl('selKPC');
+                // 簡易的に割り当て (0番目をPC, 1番目をKPC)
+                pcSel.value = pair.ids[0];
+                kpcSel.value = pair.ids[1];
+                pcSel.dispatchEvent(new Event('change'));
+                kpcSel.dispatchEvent(new Event('change'));
+            }
+        };
 
         const loadHistory = async () => {
             const pcId = getEl('selPC').value;
@@ -854,7 +907,6 @@
             };
             loadImg('dropTrailer', 'imgTrailer', 'inpImgTrailer', s.images?.trailer);
             
-            // Sync Scenario Trailer (Overlay + Tab)
             const scnVal = s.images?.scenTrailer;
             loadImg('dropScnTrailer', 'imgScnTrailer', 'inpImgScnTrailer', scnVal);
             loadImg('dropScnTrailerTab', 'imgScnTrailerTab', 'inpImgScnTrailer', scnVal);
@@ -926,7 +978,10 @@
                 if(char) {
                     const src = char.icon || `${IMG_CONFIG.iconBase}${char.name}.png`;
                     getEl(imgId).src = src; if(chatIconId) getEl(chatIconId).src = src;
+                    
+                    // ★ PL名の自動補填 (空欄の場合のみ)
                     if(char.plName && !getEl(plId).value) getEl(plId).value = char.plName;
+                    
                     let san = "??";
                     if(char.vitals?.san) san = char.vitals.san; else if(char.stats?.POW) san = char.stats.POW*5; 
                     if(sanId) getEl(sanId).textContent = san;
