@@ -93,212 +93,8 @@
 </head>
 <body>
     <script type="module">
-        try {
-            const mod = await import("./header.js");
-            if(mod.initHeader) mod.initHeader();
-        } catch(e) { console.log("Header not found, skipping."); }
-    </script>
-
-    <div class="container">
-        <div class="toolbar">
-            <div>
-                <label>EDIT TARGET</label>
-                <select id="charSelect"><option value="">LOADING...</option></select>
-            </div>
-            <div>
-                <button id="btnCreateNew" class="btn-new">+ NEW</button>
-            </div>
-        </div>
-
-        <div id="editorArea" style="opacity:0.3; pointer-events:none;">
-            
-            <div id="dropZone" class="import-area">
-                <h3 style="margin-top:0; color:#00f3ff;">SMART IMPORT (Drop .txt File Here)</h3>
-                <p style="font-size:0.8rem; color:#888; margin-bottom:5px;">いあきゃらのテキストファイル(.txt)をここにドロップするか、テキストを貼り付けてください。</p>
-                <textarea id="txtImportSource" placeholder="テキストデータを貼り付け..."></textarea>
-                <button id="btnMerge" class="btn-merge">✨ FILL MISSING INFO (解析＆補完)</button>
-            </div>
-
-            <h2>BASIC PROFILE</h2>
-            <div class="form-grid">
-                <div class="form-row"><label>NAME</label><input type="text" id="inpName"></div>
-                <div class="form-row"><label>KANA</label><input type="text" id="inpKana"></div>
-            </div>
-
-            <div class="form-grid" style="margin-top:15px;">
-                <div class="form-row"><label>JOB</label><input type="text" id="inpJob"></div>
-                <div class="form-row"><label>TAGS</label><input type="text" id="inpTags"></div>
-            </div>
-
-            <div class="grid-4" style="margin-top:15px;">
-                <div class="form-row"><label>AGE</label><input type="text" id="inpAge" placeholder="年齢(不詳可)"></div>
-                <div class="form-row"><label>GENDER</label><input type="text" id="inpGender"></div>
-                <div class="form-row"><label>MONEY (所持金)</label><input type="text" id="inpMoney"></div>
-                <div class="form-row"><label>DEBT (借金)</label><input type="text" id="inpDebt"></div>
-            </div>
-            
-            <div class="grid-4" style="margin-top:15px;">
-                <div class="form-row"><label>BIRTHDAY</label><input type="text" id="inpBirthday"></div>
-                <div class="form-row"><label>BIRTHPLACE</label><input type="text" id="inpOrigin"></div>
-                <div class="form-row"><label>THEME COLOR</label><input type="color" id="inpThemeColor" value="#d9333f"></div>
-                <div class="form-row"><label>PL NAME</label><input type="text" id="inpPlName" placeholder="プレイヤー名"></div>
-            </div>
-
-            <div id="eduCheckArea" class="analysis-box" style="display:none;"><span>🎓 EDU分析:</span><span id="eduMsg"></span></div>
-
-            <div class="grid-3" style="margin-top:20px; background:#2b2b2b; padding:15px; border-radius:4px;">
-                <div class="form-row"><label>HEIGHT (cm)</label><input type="number" id="inpHeight"></div>
-                <div class="form-row"><label>WEIGHT (kg)</label><input type="number" id="inpWeight"></div>
-                <div class="form-row"><label>HAIR / EYE / SKIN</label>
-                    <input type="text" id="inpHair" placeholder="髪色" style="margin-bottom:5px;">
-                    <input type="text" id="inpEye" placeholder="瞳の色" style="margin-bottom:5px;">
-                    <input type="text" id="inpSkin" placeholder="肌の色">
-                </div>
-            </div>
-            <div id="bodyCheckArea" class="analysis-box">
-                <div style="margin-bottom:5px;">📊 <b>BMI:</b> <span id="outBMI" class="calc-val">--</span></div>
-            </div>
-
-            <!-- ▼▼▼ パートナー関係性リスト ▼▼▼ -->
-            <div class="form-row full" style="margin-top:25px; background:#252525; padding:20px; border-radius:4px; border-left: 4px solid #00f3ff; border-top:1px solid #444; border-bottom:1px solid #444;">
-                <label style="color:#00f3ff; font-weight:bold; margin-bottom:10px;">RELATIONSHIPS (パートナー & コンビ名)</label>
-                <div id="partnerListContainer"></div>
-                <button type="button" class="btn-add" style="width:auto; padding:5px 15px;" onclick="addPartnerRow()">+ Add Partner</button>
-            </div>
-
-            <h2>VISUALS (Drag & Drop Image)</h2>
-            <div class="visual-grid">
-                <div>
-                    <label>STANDING ART (立ち絵)</label>
-                    <div class="img-preview-box" id="dropBody">
-                        <span class="drop-msg">Drop Image Here</span>
-                        <img id="previewBody" class="img-preview">
-                    </div>
-                    <input type="text" id="inpImageBody" placeholder="URL or Base64..." style="margin-top:5px;">
-                </div>
-                <div>
-                    <label>FACE ICON (顔アイコン)</label>
-                    <div class="img-preview-box" id="dropIcon">
-                        <span class="drop-msg">Drop Image Here</span>
-                        <img id="previewIcon" class="img-preview">
-                    </div>
-                    <input type="text" id="inpImageIcon" placeholder="URL or Base64..." style="margin-top:5px;">
-                </div>
-            </div>
-
-            <h2>STATS & VITALS</h2>
-            <div class="stats-container">
-                <div class="stat-box"><label>STR</label><input type="number" id="s_str"></div>
-                <div class="stat-box"><label>CON</label><input type="number" id="s_con"></div>
-                <div class="stat-box"><label>POW</label><input type="number" id="s_pow"></div>
-                <div class="stat-box"><label>DEX</label><input type="number" id="s_dex"></div>
-                <div class="stat-box"><label>APP</label><input type="number" id="s_app"></div>
-                <div class="stat-box"><label>SIZ</label><input type="number" id="s_siz"></div>
-                <div class="stat-box"><label>INT</label><input type="number" id="s_int"></div>
-                <div class="stat-box"><label>EDU</label><input type="number" id="s_edu"></div>
-            </div>
-            <div class="grid-4" style="margin-top:20px;">
-                <div class="form-row"><label>HP</label><input type="number" id="v_hp"></div>
-                <div class="form-row"><label>MP</label><input type="number" id="v_mp"></div>
-                <div class="form-row"><label>SAN</label><input type="number" id="v_san"></div>
-                <div class="form-row"><label>DB</label><input type="text" id="v_db"></div>
-            </div>
-
-            <h2>DETAILS</h2>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                <div>
-                    <div class="text-section">
-                        <h3>経歴</h3><button class="btn-clear-text" onclick="document.getElementById('txtBackground').value=''">× CLEAR</button>
-                        <textarea id="txtBackground"></textarea>
-                    </div>
-                    <div class="text-section">
-                        <h3>性格</h3><button class="btn-clear-text" onclick="document.getElementById('txtPersonality').value=''">× CLEAR</button>
-                        <textarea id="txtPersonality"></textarea>
-                    </div>
-                    <div class="text-section">
-                        <h3>人間関係</h3><button class="btn-clear-text" onclick="document.getElementById('txtRelations').value=''">× CLEAR</button>
-                        <textarea id="txtRelations"></textarea>
-                    </div>
-                </div>
-                <div>
-                    <div class="text-section">
-                        <h3>外見的特徴</h3><button class="btn-clear-text" onclick="document.getElementById('txtAppearance').value=''">× CLEAR</button>
-                        <textarea id="txtAppearance"></textarea>
-                    </div>
-                    <div class="text-section">
-                        <h3>RP補足</h3><button class="btn-clear-text" onclick="document.getElementById('txtRoleplay').value=''">× CLEAR</button>
-                        <textarea id="txtRoleplay"></textarea>
-                    </div>
-                    <div class="text-section">
-                        <h3>メモ</h3><button class="btn-clear-text" onclick="document.getElementById('txtMemo').value=''">× CLEAR</button>
-                        <textarea id="txtMemo"></textarea>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-row full">
-                <div class="text-section">
-                    <h3>技能データ (SKILLS & DETAIL)</h3>
-                    <div id="skillArea" class="list-container" style="max-height: 600px; overflow-y: auto;">
-                        </div>
-                </div>
-            </div>
-
-            <div class="text-section" style="margin-top:20px; border-left-color: #d4b346;">
-                <h3 style="color: #d4b346;">技能成長履歴 (GROWTH LOG)</h3>
-                <button class="btn-clear-text" onclick="document.getElementById('txtGrowth').value=''">× CLEAR</button>
-                <textarea id="txtGrowth" style="height:120px;" placeholder="例：&#13;シナリオA: 回避+5, 目星+3"></textarea>
-            </div>
-
-            <h2>INVENTORY & HISTORY</h2>
-            <div class="grid-3">
-                <div class="form-row full" style="grid-column:span 2;">
-                    <label>所持品 (ITEMS)</label>
-                    <div class="list-container">
-                        <div id="itemList"></div>
-                        <button type="button" class="btn-add" onclick="addItemRow()">+ ADD ITEM</button>
-                        <textarea id="txtItems" style="display:none;"></textarea>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <label>魔術/AF (SPELLS/ARTIFACTS)</label>
-                    <textarea id="txtSpells" style="height:90px;"></textarea>
-                    
-                    <label style="margin-top:10px;">遭遇した存在 (ENTITIES)</label>
-                    <textarea id="txtEncountered" style="height:90px;"></textarea>
-                </div>
-            </div>
-
-            <div class="form-row full" style="margin-top:15px;">
-                <label>戦闘・武器・防具 (WEAPONS)</label>
-                <div class="list-container">
-                    <div class="weapon-header">
-                        <div>名前</div><div>成功率</div><div>ダメ</div><div>射程</div><div>回数</div><div>装弾</div><div>HP</div><div>故障</div><div></div>
-                    </div>
-                    <div id="weaponList"></div>
-                    <button type="button" class="btn-add" onclick="addWeaponRow()">+ ADD WEAPON</button>
-                </div>
-            </div>
-
-            <div class="form-row full" style="margin-top:20px;">
-                <label>通過シナリオ詳細 (SCENARIO LOGS)</label>
-                <textarea id="txtScenarioDetails" style="height:200px;" placeholder="[シナリオタイトル]&#13;内容..."></textarea>
-                <div class="form-row">
-                    <label>通過シナリオ(簡易一覧)</label>
-                    <textarea id="txtScenarios" style="height:60px;" placeholder="シナリオ名..."></textarea>
-                </div>
-            </div>
-
-            <div style="margin-top:50px; text-align:right;">
-                <button id="btnDelete" class="btn-delete">DELETE CHARACTER</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ここからスクリプト -->
-    <script type="module">
         import { loadFromCloud, monitorAuth, saveToCloud, deleteFromCloud } from "./firestore.js";
-        // GROUP_MAPPINGは廃止
+        // GROUP_MAPPINGは廃止されたのでインポートから削除
         import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING } from "./data/schema.js";
         import { parseIaChara } from "./data/parser_ia.js";
 
@@ -457,22 +253,141 @@
             }
         };
 
-        function updatePartnerSelect() {
-            const sel = document.getElementById('selPartner');
-            if(!sel) return;
-            const currentVal = sel.value;
-            sel.innerHTML = '<option value="">-- 指定なし --</option>';
-            Object.values(allData).forEach(c => {
-                if (c.id === currentId) return; 
-                const opt = document.createElement('option');
-                opt.value = c.id;
-                opt.textContent = c.name; 
-                sel.appendChild(opt);
-            });
-            if (currentVal) sel.value = currentVal;
-        }
+        // --- ★ 保存処理 (修正済み完全版) ---
+        window.prepareSaveData = async function() {
+            // 1. IDと選択状態の安全確認
+            const charSelect = document.getElementById('charSelect');
+            const activeId = charSelect ? charSelect.value : null;
 
-        prepareSaveData
+            if (!activeId) {
+                alert("保存エラー：キャラクターが選択されていません。画面をリロードしてください。");
+                return;
+            }
+
+            // 元データの取得（なければ最低限のオブジェクト作成）
+            let originalData = allData[activeId];
+            if (!originalData) originalData = { id: activeId, name: "回復データ" };
+            
+            // アイテムリストの整形
+            const itemRows = document.querySelectorAll('.item-entry');
+            const itemsArr = [];
+            itemRows.forEach(row => {
+                const n = row.querySelector('.i-name').value;
+                const d = row.querySelector('.i-desc').value;
+                if(n) itemsArr.push(d ? `${n} : ${d}` : n);
+            });
+            getEl('txtItems').value = itemsArr.join('\n');
+
+            // 技能データの収集
+            const skillsObj = { combat:[], explore:[], action:[], negotiate:[], knowledge:[], original:[] };
+            document.querySelectorAll('.skill-category').forEach(catDiv => {
+                const catId = catDiv.id.replace('skill-cat-', '');
+                if(skillsObj[catId] === undefined) skillsObj[catId] = [];
+                catDiv.querySelectorAll('.skill-entry').forEach(row => {
+                    const nameSpan = row.querySelector('.s-name-text');
+                    let name = "";
+                    if (nameSpan) { const nameInput = nameSpan.querySelector('input'); name = nameInput ? nameInput.value : nameSpan.textContent; }
+                    skillsObj[catId].push({
+                        name: name.trim(),
+                        total: parseInt(row.querySelector('.s-total').value)||0,
+                        init: parseInt(row.querySelector('.s-init').value)||0,
+                        job: parseInt(row.querySelector('.s-job').value)||0,
+                        interest: parseInt(row.querySelector('.s-interest').value)||0,
+                        growth: parseInt(row.querySelector('.s-growth').value)||0,
+                        desc: row.querySelector('.s-desc').value
+                    });
+                });
+            });
+            
+            // フォームデータの収集
+            const finalData = collectFormData(originalData, true);
+            const nameInputVal = document.getElementById('inpName').value;
+            if (nameInputVal) finalData.name = nameInputVal;
+            finalData.skills = skillsObj;
+            
+            // 【修正】IDを明示的にセット（IDエラー防止）
+            finalData.id = activeId;
+
+            // ★ パートナーリストの取得と整理
+            const partnerRows = document.querySelectorAll('.partner-entry');
+            const partnersList = [];      // 自分のデータに保存する用（配列）
+            const partnersMap = new Map(); // 相手のデータ更新用（IDごとのグループ名リスト）
+
+            partnerRows.forEach(row => {
+                const pid = row.querySelector('.partner-select').value;
+                const gname = row.querySelector('.partner-group-input').value;
+                
+                if (pid) {
+                    // 自分のリストに追加
+                    partnersList.push({ id: pid, group: gname });
+
+                    // 相手更新用にまとめる（同じ相手が2回出てきても良いように）
+                    if (!partnersMap.has(pid)) {
+                        partnersMap.set(pid, []);
+                    }
+                    partnersMap.get(pid).push(gname);
+                }
+            });
+            finalData.partners = partnersList;
+
+            // 最終安全確認
+            if (!finalData.id) {
+                alert("致命的エラー: 保存データのIDが特定できません。");
+                return;
+            }
+
+            try {
+                // 1. 自分のデータを保存
+                await saveToCloud(finalData);
+
+                // 2. パートナー側のデータをループして更新
+                let syncCount = 0;
+                
+                // Mapを使って「相手ひとりにつき1回」処理を行う
+                for (const [pId, groups] of partnersMap) {
+                    const partnerChar = allData[pId];
+                    // データが存在しない、または読み込めていない場合はスキップ
+                    if (!partnerChar) continue;
+
+                    // 【修正】相手データのID抜けを防止
+                    if (!partnerChar.id) partnerChar.id = pId;
+
+                    // パートナーの「パートナーリスト」を取得
+                    let pPartners = partnerChar.partners || [];
+
+                    // 【修正】ロジック変更
+                    // A. まず相手リストから「自分(activeId)」に関するエントリを一度すべて削除する
+                    //    (これで古い情報や重複を一掃し、上書きバグを防ぐ)
+                    pPartners = pPartners.filter(item => item.id !== activeId);
+
+                    // B. 現在のフォームにある情報をすべて追加しなおす
+                    groups.forEach(groupName => {
+                        pPartners.push({ id: activeId, group: groupName });
+                    });
+                    
+                    partnerChar.partners = pPartners;
+                    
+                    // 保存実行
+                    await saveToCloud(partnerChar);
+                    syncCount++;
+                }
+
+                if (syncCount > 0) {
+                    alert(`保存完了！\nパートナー ${syncCount} 人のデータも相互同期しました。`);
+                } else {
+                    alert("保存完了しました。");
+                }
+                
+                // 画面状態を維持（リロードしない）
+                await init(); 
+                if (charSelect) charSelect.value = activeId;
+                if (allData[activeId]) loadCharacterToForm(allData[activeId]);
+
+            } catch(e) {
+                console.error(e);
+                alert("保存中にエラーが発生しました: " + e.message);
+            }
+        };
 
         monitorAuth((user) => {
             if(user) {
@@ -531,15 +446,16 @@
             
             FIELD_MAPPING.forEach(field => { setVal(field.id, d[field.key]); });
 
-            // パートナーリストの読み込み
+            // ★ パートナーリストの読み込み
             const container = getEl('partnerListContainer');
             container.innerHTML = '';
             if (d.partners && Array.isArray(d.partners)) {
                 d.partners.forEach(p => addPartnerRow(p.id, p.group));
             } else if (d.partnerId) {
+                // 古いデータ形式(単一パートナー)の場合の互換処理
                 addPartnerRow(d.partnerId, d.groupName || "");
             } else {
-                // 空なら行を追加しない（追加ボタンで追加してもらう）
+                // なにもない場合、空行は作らない（ユーザーが追加ボタンで追加する）
             }
 
             setSrc('previewBody', d.image); setSrc('previewIcon', d.icon);
@@ -637,6 +553,10 @@
             const p = parseIaChara(text);
             const updateVal = (id, val) => { if(val !== undefined && val !== null && val !== "") { setVal(id, val); } };
             FIELD_MAPPING.forEach(f => { if(p[f.key]) updateVal(f.id, p[f.key]); });
+            
+            // パートナーリストのマージは複雑なためスキップまたは単純化
+            // (通常importではパートナー関係は含まれないことが多いため)
+
             STATS_MAPPING.forEach(f => updateVal(f.id, p.stats[f.key]));
             VITALS_MAPPING.forEach(f => updateVal(f.id, p.vitals[f.key]));
             if(p.colorHair) updateVal('inpHair', p.colorHair); if(p.colorEye) updateVal('inpEye', p.colorEye); if(p.colorSkin) updateVal('inpSkin', p.colorSkin);
