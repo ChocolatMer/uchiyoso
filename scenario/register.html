@@ -3,941 +3,1095 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DATA EDITOR</title>
+    <title>CHRONICLE LOG - Register</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
-    <link href="edit/header.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet">
+    <link href="../character/edit/header.css" rel="stylesheet">
 
     <style>
-        body { background-color: #202020; color: #ddd; font-family: 'Noto Sans JP', sans-serif; margin: 0; padding: 0; }
-        .container { max-width: 900px; margin: 0 auto; padding: 80px 20px 100px; }
-        .toolbar { background: #333; padding: 20px; border-radius: 4px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #444; }
-        select { padding: 10px; background: #111; color: #fff; border: 1px solid #555; width: 300px; border-radius: 4px; }
-        .btn-new { background: #44ff44; color: #000; border: none; padding: 10px 20px; font-weight: bold; cursor: pointer; border-radius: 4px; }
-        .btn-delete { background: #ff4444; color: #fff; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-size: 0.8rem; }
-        
-        .import-area { background: #2a2a2d; padding: 20px; border-radius: 4px; border: 2px dashed #666; margin-bottom: 30px; transition: 0.3s; }
-        .import-area.dragover { background: #3a3a40; border-color: #00f3ff; box-shadow: 0 0 10px rgba(0, 243, 255, 0.3); }
-        .import-area textarea { height: 100px; font-size: 0.8rem; color: #aaa; width: 100%; box-sizing: border-box; background: #222; border: 1px solid #444; padding: 10px; margin-top: 10px; }
-        .btn-merge { background: #00f3ff; color: #000; border: none; padding: 8px 20px; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 10px; }
-        
-        h2 { border-bottom: 2px solid #555; padding-bottom: 10px; margin-top: 40px; color: #aaa; font-size: 1.1rem; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .form-row { margin-bottom: 15px; position: relative; }
-        .form-row.full { grid-column: span 2; }
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
-        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; }
-        label { display: block; color: #888; font-size: 0.75rem; margin-bottom: 5px; font-family: 'Roboto Mono', monospace; }
-        input[type="text"], input[type="number"] { width: 100%; padding: 10px; box-sizing: border-box; background: #2a2a2a; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.95rem; }
-        textarea { width: 100%; padding: 10px; box-sizing: border-box; background: #2a2a2a; border: 1px solid #444; color: #fff; border-radius: 4px; font-size: 0.9rem; line-height: 1.6; min-height: 80px; resize: vertical; }
-        .analysis-box { background: #252525; padding: 15px; border-radius: 4px; border: 1px solid #444; margin-top: 5px; font-size: 0.85rem; color: #ccc; }
-        .calc-val { color: #44ff44; font-weight: bold; margin-left: 5px; }
-        .warn-text { color: #ffaa00; }
-        
-        .visual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; background: #252525; padding: 20px; border-radius: 4px; border: 1px solid #444; }
-        .img-preview-box { width: 100%; height: 200px; background: #000; border: 1px solid #444; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
-        .img-preview { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .drop-msg { position: absolute; color: #666; font-size: 0.8rem; pointer-events: none; }
-        
-        .stats-container { display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px; background: #252525; padding: 15px; border-radius: 4px; }
-        .stat-box { text-align: center; }
-        .stat-box input { text-align: center; font-weight: bold; color: #44ff44; font-size: 1.1rem; }
-        
-        .text-section { border-left: 3px solid #444; padding-left: 15px; margin-bottom: 20px; position: relative; }
-        .text-section h3 { font-size: 0.9rem; color: #44ff44; margin: 0 0 10px 0; opacity: 0.8; display: inline-block; }
-        .btn-clear-text {
-            position: absolute; top: 0; right: 0;
-            background: transparent; border: 1px solid #555; color: #888;
-            font-size: 0.7rem; cursor: pointer; padding: 2px 6px; border-radius: 4px;
-        }
-        .btn-clear-text:hover { background: #442222; color: #ff8888; border-color: #ff4444; }
-
-        .list-container { background: #252525; border: 1px solid #444; border-radius: 4px; padding: 10px; margin-top: 5px; }
-        .item-entry { 
-            display: grid; grid-template-columns: 1fr 2fr 30px; gap: 10px; 
-            margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #333; align-items: center; 
-        }
-        .btn-add { background: #444; color: #fff; border: none; width: 100%; padding: 5px; cursor: pointer; font-size: 0.8rem; margin-top: 5px; }
-        .btn-add:hover { background: #555; }
-        .btn-remove { background: #552222; color: #ffaaaa; border: 1px solid #774444; padding: 0; height: 30px; width: 30px; cursor: pointer; font-size: 0.8rem; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
-        .btn-remove:hover { background: #ff4444; color: #fff; }
-
-        .weapon-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 30px; gap: 5px; font-size: 0.7rem; color: #888; margin-bottom: 5px; padding: 0 5px; }
-        .weapon-entry { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 30px; gap: 5px; margin-bottom: 5px; align-items: center; }
-        .weapon-entry input { background: #1a1a1a; border: 1px solid #333; color: #fff; padding: 5px; font-size: 0.8rem; width: 100%; box-sizing: border-box; }
-
-        .skill-category { margin-bottom: 20px; }
-        .skill-category h4 { margin: 5px 0; color: #44ff44; font-size: 0.9rem; border-bottom: 1px solid #444; display: flex; justify-content: space-between; align-items: center; }
-        .skill-table { width: 100%; font-size: 0.8rem; border-collapse: collapse; }
-        .skill-table th { color: #888; text-align: center; font-weight: normal; font-size: 0.7rem; padding: 4px; }
-        .skill-table td { padding: 2px; }
-        .skill-table input[type="number"] { text-align: center; color: #44ff44; padding: 4px; width: 100%; box-sizing: border-box; background: #1a1a1a; border: 1px solid #333; }
-        .skill-desc-input { width: 100%; color: #ddd; font-size: 0.8rem; background: #1a1a1a; border: 1px solid #444; padding: 4px; box-sizing: border-box; }
-        .btn-add-skill { 
-            background: #333; border: 1px solid #555; color: #aaa; 
-            font-size: 0.7rem; padding: 2px 8px; cursor: pointer; border-radius: 4px; margin-left: 10px;
-        }
-        .btn-add-skill:hover { background: #444; color: #fff; border-color: #777; }
-        
-        .skill-cat-select {
-            background: #111; color: #888; border: 1px solid #333; font-size: 0.7rem; padding: 2px; width: 100%;
+        /* --- CORE SETTINGS --- */
+        body { 
+            background-color: #050505; 
+            background-image: radial-gradient(#1a1a1a 1px, transparent 1px);
+            background-size: 20px 20px;
+            color: #ccc; font-family: 'Shippori Mincho', serif; 
+            margin: 0; padding: 0; 
+            height: 100vh; 
+            overflow: hidden;
         }
 
-        input[type="color"] { width: 100%; height: 40px; padding: 2px; background: #2a2a2a; border: 1px solid #444; cursor: pointer; }
+        .layout-container {
+            display: grid;
+            grid-template-columns: 300px 1fr 100px;
+            height: 100vh; width: 100%; max-width: 1920px;
+            margin: 0 auto; position: relative;
+        }
 
-        /* ▼▼▼ パートナーリスト用 (新デザイン) ▼▼▼ */
-        .relationship-box {
-            margin-top: 30px;
-            background: linear-gradient(145deg, #2a2a2d 0%, #202022 100%);
-            padding: 25px;
-            border-radius: 8px;
-            border: 1px solid #444;
-            border-left: 5px solid #00f3ff;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        /* --- SIDEBAR --- */
+        .sidebar {
+            padding: 25px 15px; border-right: 1px solid #222; background: rgba(0,0,0,0.6);
+            display: flex; flex-direction: column; gap: 20px;
+            height: 100%; overflow-y: auto; 
+            backdrop-filter: blur(5px);
         }
-        .relationship-title {
-            color: #00f3ff; font-family: 'Roboto Mono', monospace; font-weight: bold; font-size: 0.9rem;
-            margin-bottom: 15px; display: flex; align-items: center; letter-spacing: 1px;
+        .sidebar-title {
+            font-family: 'Cinzel', serif; font-size: 1.2rem; color: #d4b346;
+            border-bottom: 1px double #444; padding-bottom: 10px; text-align: center; letter-spacing: 3px;
+            text-shadow: 0 0 5px rgba(212, 179, 70, 0.3);
         }
-        .relationship-title::before { content: '🔗'; margin-right: 8px; filter: grayscale(1) brightness(2); }
-        .partner-entry { 
-            display: grid; grid-template-columns: 1fr 1fr 40px; gap: 15px; 
-            margin-bottom: 12px; background: #151515; padding: 15px; border-radius: 6px; border: 1px solid #333;
-            transition: all 0.2s ease; align-items: center;
+        .history-list { display: flex; flex-direction: column; gap: 12px; }
+        
+        .history-item {
+            background: linear-gradient(135deg, #151515, #0f0f0f);
+            border: 1px solid #333; border-left: 3px solid #555;
+            border-radius: 2px; padding: 10px 12px;
+            cursor: pointer; transition: 0.3s; position: relative; overflow: hidden;
         }
-        .partner-entry:hover { border-color: #555; transform: translateX(3px); box-shadow: -3px 3px 10px rgba(0,0,0,0.5); }
-        .partner-select, .partner-group-input {
-            width: 100%; height: 42px; background: #222; border: 1px solid #444; color: #eee;
-            border-radius: 4px; padding: 0 12px; font-size: 0.9rem; font-family: 'Noto Sans JP', sans-serif; transition: 0.3s;
+        .history-item:hover {
+            transform: translateX(3px); background: #1a1a1a;
+            border-left-color: #d4b346; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         }
-        .partner-select:focus, .partner-group-input:focus {
-            border-color: #00f3ff; outline: none; box-shadow: 0 0 8px rgba(0, 243, 255, 0.2); background: #2a2a2a;
+        .history-item.active {
+            border: 1px solid #d4b346; border-left: 4px solid #d4b346;
+            background: linear-gradient(135deg, #252015, #1a1510);
         }
-        .btn-remove-partner {
-            width: 36px; height: 36px; background: #332222; color: #ff6666; border: 1px solid #553333; border-radius: 50%;
-            cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; transition: 0.2s;
-        }
-        .btn-remove-partner:hover { background: #ff4444; color: #fff; transform: scale(1.1); }
-        .btn-add-partner {
-            width: 100%; padding: 12px; background: rgba(0, 243, 255, 0.05); border: 1px dashed #444; color: #00f3ff;
-            font-weight: bold; border-radius: 6px; cursor: pointer; transition: 0.3s; margin-top: 10px; font-family: 'Roboto Mono', monospace;
-        }
-        .btn-add-partner:hover { background: rgba(0, 243, 255, 0.15); border-color: #00f3ff; }
+        .h-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+        .h-title { font-weight: bold; color: #eee; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 190px; }
+        .h-count { font-family: 'Cinzel', serif; font-size: 0.75rem; color: #d4b346; background: rgba(212,179,70,0.1); padding: 1px 6px; border-radius: 2px; border: 1px solid rgba(212,179,70,0.3); }
+        .h-row { display: flex; justify-content: space-between; font-size: 0.75rem; color: #888; margin-top: 2px; }
+        .h-chars { color: #aaa; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
+        .h-date { font-family: 'Cinzel', serif; color: #666; font-size: 0.7rem; }
 
-        /* ▼▼▼ ギャラリー用スタイル ▼▼▼ */
-        .gallery-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-bottom: 10px;
+        /* --- CENTER: BOOK --- */
+        .book-area {
+            display: flex; justify-content: center; align-items: center; 
+            height: 100vh; padding: 20px; box-sizing: border-box;
+            perspective: 2000px;
         }
-        .gallery-item {
-            position: relative; height: 100px; border: 1px solid #444; border-radius: 4px; overflow: hidden; background: #000;
+        .book-wrapper { 
+            position: relative; 
+            height: 85vh; /* 画面下部に隙間を作るため少し縮小 (90vh -> 85vh) */
+            aspect-ratio: 1.4 / 1; 
+            max-width: 95%;
+            transform-style: preserve-3d;
         }
-        .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
-        .gallery-item:hover img { opacity: 0.7; }
-        .gallery-item .btn-del-img {
-            position: absolute; top: 0; right: 0; background: rgba(0,0,0,0.7); color: #f44;
-            border: none; cursor: pointer; padding: 2px 6px; font-size: 0.8rem;
+        .book-cover {
+            width: 100%; height: 100%; background: #0e0e0e; border-radius: 6px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 0 5px #1a1a1a inset;
+            padding: 1.5%; box-sizing: border-box; display: flex;
         }
-        .gallery-drop-zone {
-            border: 2px dashed #444; border-radius: 4px; padding: 20px; text-align: center; color: #666;
-            cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; flex-direction: column;
-            background: #252525; min-height: 80px;
+        .book-pages {
+            width: 100%; height: 100%; background: #1e1e1e; display: flex; 
+            border-radius: 4px; overflow: hidden; position: relative;
+            box-shadow: inset 0 0 60px rgba(0,0,0,0.9);
         }
-        .gallery-drop-zone:hover {
-            border-color: #00f3ff; color: #00f3ff; background: rgba(0, 243, 255, 0.05);
+        .book-spine {
+            position: absolute; left: 50%; top: 0; bottom: 0; width: 60px; margin-left: -30px;
+            background: linear-gradient(90deg, rgba(0,0,0,0.8), rgba(0,0,0,0.0) 50%, rgba(0,0,0,0.8));
+            pointer-events: none; z-index: 10;
         }
+        .page { 
+            flex: 1; padding: 4% 6%; position: relative; overflow-y: auto; 
+            background-color: #232323;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+        }
+        .page::-webkit-scrollbar { width: 5px; }
+        .page::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+
+        /* --- TABS --- */
+        .tabs-container { position: absolute; top: 4%; right: -40px; width: 40px; z-index: 5; display: flex; flex-direction: column; gap: 10px; }
+        .tab-btn {
+            width: 40px; height: 100px; background: #222; border: 1px solid #333; border-left: none;
+            border-radius: 0 4px 4px 0; color: #666; cursor: pointer; writing-mode: vertical-rl; 
+            text-align: center; font-family: 'Shippori Mincho', serif; font-weight: bold; letter-spacing: 2px; font-size: 0.85rem;
+            transition: 0.3s; box-shadow: 3px 3px 10px rgba(0,0,0,0.6);
+        }
+        .tab-btn:hover { background: #333; color: #aaa; transform: translateX(3px); }
+        .tab-btn.active { 
+            background: #6d2020; color: #fff; width: 55px;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.5); transform: translateX(3px); border-top: 1px solid #844;
+        }
+        .tab-panel { display: none; animation: fadeIn 0.4s; padding-bottom: 40px; }
+        .tab-panel.active { display: block; }
+        @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+
+        /* --- UI: LEFT PAGE --- */
+        .header-wrapper {
+            position: relative; width: 100%; height: 28%; 
+            min-height: 180px; margin-bottom: 20px;
+        }
+        .report-header-img {
+            width: 100%; height: 100%; background: #0a0a0a; border: 1px dashed #444; 
+            display: flex; align-items: center; justify-content: center; overflow: hidden;
+            border-radius: 2px; cursor: pointer; position: relative; z-index: 1;
+        }
+        .report-header-img img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; display: block; transition:0.3s; }
+        .report-header-img.empty::after { content: 'SESSION SNAPSHOT'; position: absolute; color: #333; font-family: 'Cinzel', serif; letter-spacing: 2px; }
+        
+        /* Trailer Overlay (⧉ Style) */
+        .trailer-overlay {
+            position: absolute; bottom: -10px; right: -10px; 
+            width: 35%; height: 50%; 
+            background: #111; border: 2px solid #ddd; 
+            transform: rotate(-3deg); z-index: 10;
+            box-shadow: 5px 5px 20px rgba(0,0,0,0.8); cursor: pointer;
+            overflow: hidden; display: flex; align-items: center; justify-content: center;
+            transition: 0.3s;
+        }
+        .trailer-overlay:hover { transform: rotate(0deg) scale(1.05); z-index: 20; }
+        .trailer-overlay img { width: 100%; height: 100%; object-fit: cover; opacity: 1; }
+        .trailer-overlay.empty::after { content:'TRAILER'; color:#555; font-size:0.6rem; font-family:'Cinzel',serif; }
+
+        input.scenario-title {
+            width: 100%; background: transparent; border: none; border-bottom: 2px solid #444;
+            font-family: 'Shippori Mincho', serif; font-size: 1.8rem; font-weight: bold; color: #eee;
+            text-align: center; padding: 5px 0; margin-bottom: 5px;
+        }
+        .session-count { text-align: center; font-family: 'Cinzel', serif; color: #d4b346; font-size: 0.9rem; margin-bottom: 20px; letter-spacing: 2px; }
+        .session-count input { background: transparent; border: none; color: inherit; font-family: inherit; font-size: inherit; text-align: center; width: 50px; border-bottom: 1px dashed #444; }
+
+        /* Char Pair & Swap */
+        .char-pair-area { display: flex; justify-content: center; align-items: start; gap: 15px; margin-bottom: 25px; position: relative; }
+        .char-unit { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 140px; }
+        .char-icon-circle { 
+            width: 90px; height: 90px; border-radius: 50%; border: 3px solid #333; 
+            object-fit: cover; background: #111; box-shadow: 0 5px 15px rgba(0,0,0,0.5); transition: border-color 0.3s;
+        }
+        select.char-select { width: 100%; background: #1a1a1a; border: 1px solid #333; color: #ccc; padding: 4px; text-align: center; font-size: 0.8rem; border-radius: 4px; }
+        input.pl-name { width: 100%; background: transparent; border: none; color: #666; text-align: center; font-size: 0.8rem; padding: 2px; transition: color 0.3s; }
+        
+        .swap-btn {
+            align-self: center; background: transparent; border: 1px solid #333; color: #666;
+            width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: 0.3s;
+        }
+        .swap-btn:hover { color: #d4b346; border-color: #d4b346; transform: rotate(180deg); }
+
+        /* コンビ名選択用 */
+        .pair-selector-wrap {
+            position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
+            width: 200px; z-index: 100; text-align: center;
+        }
+        .pair-selector {
+            width: 100%; background: #111; border: 1px solid #444; color: #aaa;
+            font-size: 0.75rem; padding: 2px; border-radius: 10px; text-align: center;
+        }
+
+        .prop-list { display: flex; flex-direction: column; border-top: 1px solid #333; margin-top: 10px; }
+        .prop-row { display: grid; grid-template-columns: 120px 1fr; align-items: center; border-bottom: 1px solid #333; padding: 6px 0; }
+        .prop-label { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #777; font-family: 'Shippori Mincho', sans-serif; }
+        .tag-select { appearance: none; border: none; border-radius: 4px; padding: 4px 10px; font-size: 0.85rem; cursor: pointer; text-align: center; font-family: 'Shippori Mincho', serif; min-width: 80px; }
+        .tag-input { background: transparent; border: none; font-size: 0.95rem; color: #ccc; width: 100%; font-family: 'Shippori Mincho', serif; }
+
+        .bg-pink { background: #5a2e38; color: #ffbfbf; }
+        .bg-blue { background: #2b3d52; color: #bfd9ff; }
+        .bg-green { background: #2e4a36; color: #c2ffbf; }
+        .bg-orange { background: #523e2b; color: #ffdfbf; }
+        .bg-gray { background: #333; color: #aaa; }
+
+        /* --- UI: RIGHT PAGE --- */
+        .san-compare-area { display: flex; gap: 20px; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px; }
+        .san-box { flex: 1; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; border: 1px solid #333; display: flex; flex-direction: column; gap: 5px; }
+        .san-header { font-family: 'Cinzel', serif; font-size: 0.8rem; color: #d4b346; display: flex; justify-content: space-between; }
+        
+        .chat-area { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
+        .chat-row { display: flex; gap: 15px; align-items: flex-start; }
+        .chat-row.kpc { flex-direction: row-reverse; }
+        .chat-icon { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #444; object-fit: cover; background: #111; flex-shrink: 0; }
+        .speech-bubble { position: relative; background: rgba(255,255,255,0.05); border: 1px solid #444; border-radius: 8px; padding: 10px; flex: 1; min-height: 40px; transition: border-color 0.3s; }
+        .speech-bubble::after { content: ''; position: absolute; top: 15px; border: 8px solid transparent; }
+        .chat-row.pc .speech-bubble::after { left: -16px; border-right-color: #444; }
+        .chat-row.kpc .speech-bubble::after { right: -16px; border-left-color: #444; }
+
+        /* Growth */
+        .growth-area { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+        .growth-box { background: rgba(0,0,0,0.2); border-radius: 4px; padding: 10px; min-height: 120px; border: 1px solid #333; }
+        .growth-header { font-size: 0.75rem; color: #aaa; font-family: 'Cinzel', serif; margin-bottom: 8px; border-bottom: 1px dashed #444; padding-bottom: 2px; display:flex; justify-content:space-between; }
+        
+        .skill-list { display: flex; flex-direction: column; gap: 5px; }
+        .skill-row { display: grid; grid-template-columns: 1fr 60px 20px; gap: 5px; align-items: center; }
+        .skill-name { background: transparent; border: none; border-bottom: 1px solid #444; color: #ddd; font-size: 0.8rem; padding: 2px; }
+        .skill-val  { background: transparent; border: none; border-bottom: 1px solid #444; color: #d4b346; font-size: 0.8rem; padding: 2px; text-align: center; }
+        .skill-add-btn { background: #333; border: none; color: #aaa; width: 100%; font-size: 0.7rem; cursor: pointer; padding: 4px; margin-top: 5px; border-radius: 2px; }
+        .skill-del-btn { background: transparent; border: none; color: #666; cursor: pointer; font-size: 1rem; line-height: 1; }
+        .skill-del-btn:hover { color: #f66; }
+
+        /* Encountered */
+        .enc-box { margin-bottom: 30px; background: rgba(0,0,0,0.1); border: 1px dashed #444; padding: 10px; }
+        
+        /* Details */
+        .details-container { margin-bottom: 30px; }
+        .details-toolbar { display: flex; justify-content: center; gap: 20px; margin-bottom: 10px; }
+        .toggle-btn {
+            background: #1a1a1a; border: 1px solid #444; color: #888; padding: 8px 30px; 
+            font-size: 0.8rem; cursor: pointer; border-radius: 20px; transition: 0.3s;
+            font-family: 'Cinzel', serif; letter-spacing: 1px;
+        }
+        .toggle-btn:hover { background: #222; color: #ccc; }
+        .toggle-btn.active { background: #6d2020; color: #fff; border-color: #844; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+
+        .detail-section { display: none; margin-bottom: 15px; background: rgba(0,0,0,0.3); border: 1px solid #333; padding: 15px; border-radius: 4px; animation: slideDown 0.3s; }
+        .detail-section.show { display: block; }
+        @keyframes slideDown { from{opacity:0; transform:translateY(-10px);} to{opacity:1; transform:translateY(0);} }
+
+        .sub-toggles { display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .sub-btn { background: transparent; border: 1px solid #444; color: #666; padding: 2px 10px; font-size: 0.75rem; cursor: pointer; border-radius: 2px; transition: 0.2s; }
+        .sub-btn:hover { color: #aaa; border-color: #666; }
+        .sub-btn.active { background: #333; color: #d4b346; border-color: #d4b346; }
+
+        .detail-content { display: none; margin-bottom: 15px; }
+        .detail-content.show { display: block; animation: fadeIn 0.3s; }
+        .detail-item-header { font-size: 0.8rem; color: #d4b346; margin-bottom: 5px; border-left: 3px solid #d4b346; padding-left: 8px; font-family: 'Cinzel', serif; }
+        .detail-item-header.seq { color: #ffadad; border-color: #a54a4a; }
+
+        .ins-radio-group { display: flex; gap: 15px; font-size: 0.8rem; color: #aaa; margin: 8px 0; }
+        .ins-date-row { display: none; font-size: 0.8rem; align-items: center; gap: 8px; }
+        .ins-date-row.show { display: flex; }
+
+        /* Memo */
+        .memo-area { display: flex; flex-direction: column; gap: 20px; border-top: 1px solid #333; padding-top: 20px; }
+        .section-label { font-size: 0.8rem; color: #bbb; border-left: 3px solid #4a6fa5; padding-left: 8px; font-family: 'Shippori Mincho', serif; margin-bottom: 5px; }
+        
+        .scn-toggle-header { cursor: pointer; background: rgba(255,255,255,0.05); padding: 5px 10px; margin-bottom: 5px; font-size: 0.8rem; color: #ccc; border-left: 3px solid #666; display: flex; justify-content: space-between; align-items: center; }
+        .scn-toggle-header:hover { background: rgba(255,255,255,0.1); }
+        .scn-content { display: none; padding: 10px; }
+        .scn-content.show { display: block; }
+
+        /* Private Paper */
+        .private-paper {
+            background: #2a2520; border: 1px solid #443a30; padding: 15px; border-radius: 2px;
+            font-family: 'Shippori Mincho', serif; color: #ccc; line-height: 1.8;
+            background-image: repeating-linear-gradient(transparent, transparent 31px, #3a322a 32px);
+            min-height: 200px; width: 100%; box-sizing: border-box; resize: vertical; margin-bottom: 20px;
+        }
+        .private-paper:focus { outline: none; background-color: #2e2924; }
+
+        textarea.paper-area { width: 100%; background: transparent; border: none; color: #ccc; resize: vertical; font-family: 'Shippori Mincho', serif; line-height: 1.6; font-size: 0.9rem; }
+        textarea.paper-area:focus { outline: none; }
+        textarea.box-input { background: rgba(0,0,0,0.2); border: 1px solid #333; padding: 8px; min-height: 80px; }
+        textarea.bubble-text { min-height: 40px; }
+        input.line-input { width: 100%; background: transparent; border: none; border-bottom: 1px solid #444; color: #ddd; font-size: 0.9rem; padding: 4px; box-sizing: border-box; }
+        select.insanity-select { width: 100%; background: #151515; border: 1px solid #333; color: #ffadad; padding: 5px; font-size: 0.8rem; margin-bottom: 5px; }
+
+        /* SAVE BUTTON */
+        .sealing-stamp {
+            position: fixed; bottom: 30px; right: 30px;
+            width: 100px; height: 100px;
+            background: radial-gradient(circle at 30% 30%, #ff6b6b, #8b0000 60%, #3a0000);
+            border-radius: 50%;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.8), inset 0 2px 5px rgba(255,255,255,0.2);
+            border: 2px solid rgba(100,0,0,0.5);
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
+            cursor: pointer; transition: 0.3s; z-index: 9999;
+            color: #ecc; font-family: 'Shippori Mincho', serif; text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+        }
+        .sealing-stamp:hover { transform: scale(1.1) rotate(5deg); box-shadow: 0 8px 20px rgba(0,0,0,0.9); }
+        .sealing-stamp:active { transform: scale(0.95); }
+        
+        #loadingIndicator { font-family:'Cinzel', serif; font-size:0.7rem; color:#555; text-align: center; }
     </style>
 </head>
 <body>
+    
     <script type="module">
-        try {
-            const mod = await import("./header.js");
-            if(mod.initHeader) mod.initHeader();
-        } catch(e) { console.log("Header not found, skipping."); }
+        try { const mod = await import("../character/header.js"); if(mod.initHeader) mod.initHeader(); } catch(e){}
     </script>
 
-    <div class="container">
-        <div class="toolbar">
-            <div>
-                <label>EDIT TARGET</label>
-                <select id="charSelect"><option value="">LOADING...</option></select>
-            </div>
-            <div>
-                <button id="btnCreateNew" class="btn-new">+ NEW</button>
+    <div class="layout-container">
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="sidebar-title">HISTORY LOG</div>
+            <div id="loadingIndicator">Checking...</div>
+            <div id="historyList" class="history-list"></div>
+            <button onclick="window.resetForm()" style="margin-top:auto; background:transparent; border:1px solid #444; color:#888; padding:8px; cursor:pointer; font-family:'Cinzel',serif; border-radius:2px;">+ Create New</button>
+        </div>
+
+        <!-- BOOK -->
+        <div class="book-area">
+            <div class="book-wrapper">
+                <div class="tabs-container">
+                    <div class="tab-btn active" onclick="window.openTab('tab-record', this)">記録</div>
+                    <div class="tab-btn" onclick="window.openTab('tab-scenario', this)">概要</div>
+                    <div class="tab-btn" onclick="window.openTab('tab-memo', this)">手記</div>
+                </div>
+
+                <div class="book-cover">
+                    <div class="book-pages">
+                        <div class="book-spine"></div>
+
+                        <!-- LEFT PAGE -->
+                        <div class="page page-left">
+                            <div class="header-wrapper">
+                                <!-- Main Snapshot -->
+                                <div class="report-header-img empty" id="dropTrailer">
+                                    <img id="imgTrailer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="">
+                                </div>
+                                <!-- Overlapping Trailer (Picture-in-picture) -->
+                                <div class="trailer-overlay empty" id="dropScnTrailer">
+                                    <img id="imgScnTrailer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="">
+                                </div>
+                            </div>
+                            <input type="hidden" id="inpImgTrailer">
+                            <input type="hidden" id="inpImgScnTrailer">
+
+                            <input type="text" id="inpTitle" class="scenario-title" placeholder="シナリオタイトル">
+                            <div class="session-count"><input type="number" id="inpCount" value="1"> 話 / 回目</div>
+
+                            <div class="char-pair-area">
+                                <!-- ★コンビ名選択リスト -->
+                                <div class="pair-selector-wrap">
+                                    <select id="selPair" class="pair-selector" onchange="window.applyPair(this.value)">
+                                        <option value="">-- UNIT / PAIR --</option>
+                                    </select>
+                                </div>
+
+                                <div class="char-unit">
+                                    <img id="iconPC" class="char-icon-circle" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+                                    <select id="selPC" class="char-select"><option value="">(PC)</option></select>
+                                    <input type="text" id="inpPlNamePC" class="pl-name" placeholder="PL名">
+                                </div>
+                                <div class="swap-btn" onclick="window.swapCharacters()">
+                                    <span class="material-icons-round" style="font-size:1.2rem;">swap_horiz</span>
+                                </div>
+                                <div class="char-unit">
+                                    <img id="iconKPC" class="char-icon-circle" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+                                    <select id="selKPC" class="char-select"><option value="">(KPC)</option></select>
+                                    <input type="text" id="inpPlNameKPC" class="pl-name" placeholder="KP/PL名">
+                                </div>
+                            </div>
+
+                            <div class="prop-list">
+                                <div class="prop-row"><div class="prop-label"><span class="material-icons-round">event</span> 日付</div><input type="date" id="inpDate" class="tag-input" style="color:#aaa;"></div>
+                                <div class="prop-row">
+                                    <div class="prop-label"><span class="material-icons-round">casino</span> システム</div>
+                                    <select id="inpSystem" class="tag-select bg-gray" onchange="updateTagColor(this)">
+                                        <option value="CoC6">CoC 6th</option><option value="CoC7">CoC 7th</option><option value="Emoklore">エモクロア</option><option value="Other">その他</option>
+                                    </select>
+                                </div>
+                                <div class="prop-row">
+                                    <div class="prop-label"><span class="material-icons-round">category</span> 形式</div>
+                                    <select id="inpType" class="tag-select bg-pink" onchange="updateTagColor(this); window.toggleGMField(this);">
+                                        <option value="タイマン">タイマン</option><option value="2PL">2PL</option><option value="ソロ">ソロ</option><option value="4PL">4PL</option>
+                                    </select>
+                                </div>
+                                <div class="prop-row" id="rowGM" style="display:none;"><div class="prop-label"><span class="material-icons-round">person</span> GM/KP</div><input type="text" id="inpGM" class="tag-select bg-blue" placeholder="GM名"></div>
+                                <div class="prop-row"><div class="prop-label"><span class="material-icons-round">flag</span> 結末</div><input type="text" id="inpEndName" class="tag-select bg-orange" placeholder="エンド名"></div>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT PAGE -->
+                        <div class="page page-right">
+                            <div id="tab-record" class="tab-panel active">
+                                <h2 class="section-header">SESSION RECORD</h2>
+                                <div class="san-compare-area">
+                                    <div class="san-box">
+                                        <div class="san-header"><span class="lbl-pc">PC 結果</span><span id="sanValPC">--</span></div>
+                                        <select id="inpResPC" class="tag-select bg-gray" style="width:100%;" onchange="updateResColor(this)"><option value="Alive">生還</option><option value="Lost">ロスト</option></select>
+                                        <input type="text" id="inpSanPC" class="line-input" placeholder="SAN: 50 → 45" style="text-align:center;">
+                                    </div>
+                                    <div class="san-box">
+                                        <div class="san-header"><span class="lbl-kpc">KPC 結果</span><span id="sanValKPC">--</span></div>
+                                        <select id="inpResKPC" class="tag-select bg-gray" style="width:100%;" onchange="updateResColor(this)"><option value="Alive">生還</option><option value="Lost">ロスト</option></select>
+                                        <input type="text" id="inpSanKPC" class="line-input" placeholder="SAN: -" style="text-align:center;">
+                                    </div>
+                                </div>
+
+                                <div class="chat-area">
+                                    <div class="chat-row pc"><img id="chatIconPC" class="chat-icon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"><div id="bubblePC" class="speech-bubble"><textarea id="inpQuotePC" class="paper-area bubble-text" placeholder="PCの印象的な台詞..."></textarea></div></div>
+                                    <div class="chat-row kpc"><img id="chatIconKPC" class="chat-icon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"><div id="bubbleKPC" class="speech-bubble"><textarea id="inpQuoteKPC" class="paper-area bubble-text" placeholder="KPCの印象的な台詞..."></textarea></div></div>
+                                </div>
+
+                                <!-- Encountered -->
+                                <div class="enc-box">
+                                    <div class="growth-header" style="border:none;">遭遇神話生物 <span class="material-icons-round" style="font-size:1rem;">visibility</span></div>
+                                    <div id="encList" class="skill-list"></div>
+                                    <button class="skill-add-btn" onclick="window.addEncRow()">+ 追加</button>
+                                </div>
+
+                                <!-- Growth -->
+                                <div class="growth-area">
+                                    <div class="growth-box">
+                                        <div class="growth-header"><span class="lbl-pc">PC</span> 技能成長 <span class="material-icons-round" style="font-size:1rem;">trending_up</span></div>
+                                        <div id="skillListPC" class="skill-list"></div>
+                                        <button class="skill-add-btn" onclick="window.addSkillRow('skillListPC')">+ 技能追加</button>
+                                    </div>
+                                    <div class="growth-box">
+                                        <div class="growth-header"><span class="lbl-kpc">KPC</span> 技能成長 <span class="material-icons-round" style="font-size:1rem;">trending_up</span></div>
+                                        <div id="skillListKPC" class="skill-list"></div>
+                                        <button class="skill-add-btn" onclick="window.addSkillRow('skillListKPC')">+ 技能追加</button>
+                                    </div>
+                                </div>
+
+                                <!-- Details -->
+                                <div class="details-container">
+                                    <div class="details-toolbar">
+                                        <div id="btnDetailPC" class="toggle-btn" onclick="window.toggleDetail('detailPC', this)"><span class="lbl-pc">PC</span> 詳細</div>
+                                        <div id="btnDetailKPC" class="toggle-btn" onclick="window.toggleDetail('detailKPC', this)"><span class="lbl-kpc">KPC</span> 詳細</div>
+                                    </div>
+
+                                    <!-- PC Detail -->
+                                    <div id="detailPC" class="detail-section">
+                                        <div class="sub-toggles">
+                                            <button class="sub-btn" onclick="window.toggleSubContent('pcAF', this)">AF</button>
+                                            <button class="sub-btn" onclick="window.toggleSubContent('pcSeq', this)">後遺症</button>
+                                            <button class="sub-btn" onclick="window.toggleSubContent('pcIns', this)">狂気</button>
+                                        </div>
+                                        <div id="pcAF" class="detail-content">
+                                            <div class="detail-item-header">ARTIFACT</div>
+                                            <input type="text" id="inpArtNamePC" class="line-input" placeholder="名称" style="color:#d4b346; margin-bottom:5px;">
+                                            <textarea id="inpArtDescPC" class="paper-area box-input" placeholder="詳細..."></textarea>
+                                        </div>
+                                        <div id="pcSeq" class="detail-content">
+                                            <div class="detail-item-header seq">SEQUELAE</div>
+                                            <input type="text" id="inpSeqNamePC" class="line-input" placeholder="名称" style="color:#ffadad; margin-bottom:5px;">
+                                            <textarea id="inpSeqDescPC" class="paper-area box-input" placeholder="詳細..."></textarea>
+                                        </div>
+                                        <div id="pcIns" class="detail-content">
+                                            <div class="detail-item-header">INSANITY</div>
+                                            <select id="selInsanityPC" class="insanity-select" onchange="updateInsanityDesc(this.value, 'PC')">
+                                                <option value="">(なし)</option><option value="1">1: 健忘症 / 昏迷</option><option value="2">2: 激しい恐怖症</option><option value="3">3: 幻覚</option><option value="4">4: 奇妙な性的嗜好</option><option value="5">5: フェティッシュ</option><option value="6">6: チック・震え</option><option value="7">7: 心因性機能障害</option><option value="8">8: 短時間の心因反応</option><option value="9">9: 一時的偏執症</option><option value="10">10: 強迫観念行動</option><option value="Other">その他</option>
+                                            </select>
+                                            <textarea id="inpInsanityDescPC" class="paper-area box-input" style="min-height:50px; margin-top:5px;"></textarea>
+                                            <div class="ins-radio-group">
+                                                <label><input type="radio" name="durPC" value="Temp" checked onclick="toggleDate('datePC', false)"> 一時的</label>
+                                                <label><input type="radio" name="durPC" value="Indef" onclick="toggleDate('datePC', true)"> 不定</label>
+                                                <label><input type="radio" name="durPC" value="Perm" onclick="toggleDate('datePC', false)"> 永続</label>
+                                            </div>
+                                            <div id="datePC" class="ins-date-row">完治日: <input type="date" id="inpInsDatePC" class="tag-input" style="width:100px;"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- KPC Detail -->
+                                    <div id="detailKPC" class="detail-section">
+                                        <div class="sub-toggles">
+                                            <button class="sub-btn" onclick="window.toggleSubContent('kpcAF', this)">AF</button>
+                                            <button class="sub-btn" onclick="window.toggleSubContent('kpcSeq', this)">後遺症</button>
+                                            <button class="sub-btn" onclick="window.toggleSubContent('kpcIns', this)">狂気</button>
+                                        </div>
+                                        <div id="kpcAF" class="detail-content">
+                                            <div class="detail-item-header">ARTIFACT</div>
+                                            <input type="text" id="inpArtNameKPC" class="line-input" placeholder="名称" style="color:#d4b346; margin-bottom:5px;">
+                                            <textarea id="inpArtDescKPC" class="paper-area box-input" placeholder="詳細..."></textarea>
+                                        </div>
+                                        <div id="kpcSeq" class="detail-content">
+                                            <div class="detail-item-header seq">SEQUELAE</div>
+                                            <input type="text" id="inpSeqNameKPC" class="line-input" placeholder="名称" style="color:#ffadad; margin-bottom:5px;">
+                                            <textarea id="inpSeqDescKPC" class="paper-area box-input" placeholder="詳細..."></textarea>
+                                        </div>
+                                        <div id="kpcIns" class="detail-content">
+                                            <div class="detail-item-header">INSANITY</div>
+                                            <select id="selInsanityKPC" class="insanity-select" onchange="updateInsanityDesc(this.value, 'KPC')">
+                                                <option value="">(なし)</option><option value="1">1: 健忘症 / 昏迷</option><option value="2">2: 激しい恐怖症</option><option value="3">3: 幻覚</option><option value="4">4: 奇妙な性的嗜好</option><option value="5">5: フェティッシュ</option><option value="6">6: チック・震え</option><option value="7">7: 心因性機能障害</option><option value="8">8: 短時間の心因反応</option><option value="9">9: 一時的偏執症</option><option value="10">10: 強迫観念行動</option><option value="Other">その他</option>
+                                            </select>
+                                            <textarea id="inpInsanityDescKPC" class="paper-area box-input" style="min-height:50px; margin-top:5px;"></textarea>
+                                            <div class="ins-radio-group">
+                                                <label><input type="radio" name="durKPC" value="Temp" checked onclick="toggleDate('dateKPC', false)"> 一時的</label>
+                                                <label><input type="radio" name="durKPC" value="Indef" onclick="toggleDate('dateKPC', true)"> 不定</label>
+                                                <label><input type="radio" name="durKPC" value="Perm" onclick="toggleDate('dateKPC', false)"> 永続</label>
+                                            </div>
+                                            <div id="dateKPC" class="ins-date-row">完治日: <input type="date" id="inpInsDateKPC" class="tag-input" style="width:100px;"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Memo -->
+                                <div class="memo-area">
+                                    <div>
+                                        <div class="section-label"><span class="lbl-pc">PC</span> 感想・手記</div>
+                                        <textarea id="inpMemoPC" class="paper-area box-input"></textarea>
+                                    </div>
+                                    <div>
+                                        <div class="section-label memo"><span class="lbl-kpc">KPC</span> 感想・手記</div>
+                                        <textarea id="inpMemoKPC" class="paper-area box-input"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- TAB SCENARIO -->
+                            <div id="tab-scenario" class="tab-panel">
+                                <h2 class="section-header">SCENARIO OVERVIEW</h2>
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px;">
+                                    <input type="text" id="inpMetaSystem" class="line-input" placeholder="システム詳細"><input type="text" id="inpMetaType" class="line-input" placeholder="形式詳細">
+                                    <input type="text" id="inpDuration" class="line-input" placeholder="所要時間"><input type="text" id="inpStage" class="line-input" placeholder="舞台">
+                                    <input type="text" id="inpCharRel" class="line-input" placeholder="推奨関係"><input type="text" id="inpLostRate" class="line-input" placeholder="ロスト率">
+                                    <!-- Spacer row -->
+                                    <div style="grid-column: span 2; height: 15px;"></div>
+                                    <input type="text" id="inpRecSkills" class="line-input" placeholder="推奨技能" style="grid-column: span 2;"><input type="text" id="inpScnType" class="line-input" placeholder="ジャンル" style="grid-column: span 2;">
+                                </div>
+                                <div style="margin-bottom:20px;">
+                                    <input type="text" id="inpUrlShop" class="line-input" placeholder="配布URL"><input type="text" id="inpUrlRoom" class="line-input" placeholder="部屋URL">
+                                    
+                                    <!-- Trailer Image In Scenario Tab (Synced) -->
+                                    <div class="report-header-img empty" id="dropScnTrailerTab" style="height:150px; margin-top:20px;">
+                                        <img id="imgScnTrailerTab" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="">
+                                        <div style="position:absolute; bottom:0; right:0; background:rgba(0,0,0,0.7); color:#fff; font-size:0.6rem; padding:2px 5px;">TRAILER IMAGE</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="scn-toggle-header" onclick="window.toggleScnContent('scSyn')">あらすじ <span class="material-icons-round">expand_more</span></div>
+                                <div id="scSyn" class="scn-content show">
+                                    <textarea id="inpSynopsis" class="paper-area" style="min-height:100px;"></textarea>
+                                </div>
+
+                                <div class="scn-toggle-header" onclick="window.toggleScnContent('scInt')">導入 <span class="material-icons-round">expand_more</span></div>
+                                <div id="scInt" class="scn-content">
+                                    <textarea id="inpIntroduction" class="paper-area" style="min-height:80px;"></textarea>
+                                </div>
+
+                                <div class="scn-toggle-header" onclick="window.toggleScnContent('scWarn')">注意事項 <span class="material-icons-round">expand_more</span></div>
+                                <div id="scWarn" class="scn-content">
+                                    <textarea id="inpWarnings" class="paper-area" style="min-height:60px;"></textarea>
+                                </div>
+                            </div>
+                            
+                            <!-- TAB MEMO -->
+                            <div id="tab-memo" class="tab-panel">
+                                <h2 class="section-header">PRIVATE NOTES</h2>
+                                
+                                <div class="section-label">公開メモ (ふせったー等)</div>
+                                <textarea id="inpPublicMemo" class="private-paper"></textarea>
+                                
+                                <div class="section-label" style="color:#d4b346; margin-top:10px;">秘匿メモ (PC PL用)</div>
+                                <textarea id="inpSecretMemoPC" class="private-paper"></textarea>
+
+                                <div class="section-label" style="color:#d4b346; margin-top:10px;">秘匿メモ (KPC PL/GM用)</div>
+                                <textarea id="inpSecretMemoKPC" class="private-paper"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div id="editorArea" style="opacity:0.3; pointer-events:none;">
-            
-            <div id="dropZone" class="import-area">
-                <h3 style="margin-top:0; color:#00f3ff;">SMART IMPORT (Drop .txt File Here)</h3>
-                <p style="font-size:0.8rem; color:#888; margin-bottom:5px;">いあきゃらのテキストファイル(.txt)をここにドロップするか、テキストを貼り付けてください。</p>
-                <textarea id="txtImportSource" placeholder="テキストデータを貼り付け..."></textarea>
-                <button id="btnMerge" class="btn-merge">✨ FILL MISSING INFO (解析＆補完)</button>
-            </div>
-
-            <h2>BASIC PROFILE</h2>
-            <div class="form-grid">
-                <div class="form-row"><label>NAME</label><input type="text" id="inpName"></div>
-                <div class="form-row"><label>KANA</label><input type="text" id="inpKana"></div>
-            </div>
-
-            <div class="form-grid" style="margin-top:15px;">
-                <div class="form-row"><label>JOB</label><input type="text" id="inpJob"></div>
-                <div class="form-row"><label>TAGS</label><input type="text" id="inpTags"></div>
-            </div>
-
-            <div class="grid-4" style="margin-top:15px;">
-                <div class="form-row"><label>AGE</label><input type="text" id="inpAge" placeholder="年齢(不詳可)"></div>
-                <div class="form-row"><label>GENDER</label><input type="text" id="inpGender"></div>
-                <div class="form-row"><label>MONEY (所持金)</label><input type="text" id="inpMoney"></div>
-                <div class="form-row"><label>DEBT (借金)</label><input type="text" id="inpDebt"></div>
-            </div>
-            
-            <div class="grid-4" style="margin-top:15px;">
-                <div class="form-row"><label>BIRTHDAY</label><input type="text" id="inpBirthday"></div>
-                <div class="form-row"><label>BIRTHPLACE</label><input type="text" id="inpOrigin"></div>
-                <div class="form-row"><label>THEME COLOR</label><input type="color" id="inpThemeColor" value="#d9333f"></div>
-                <div class="form-row"><label>PL NAME</label><input type="text" id="inpPlName" placeholder="プレイヤー名"></div>
-            </div>
-
-            <div id="eduCheckArea" class="analysis-box" style="display:none;"><span>🎓 EDU分析:</span><span id="eduMsg"></span></div>
-
-            <div class="grid-3" style="margin-top:20px; background:#2b2b2b; padding:15px; border-radius:4px;">
-                <div class="form-row"><label>HEIGHT (cm)</label><input type="number" id="inpHeight"></div>
-                <div class="form-row"><label>WEIGHT (kg)</label><input type="number" id="inpWeight"></div>
-                <div class="form-row"><label>HAIR / EYE / SKIN</label>
-                    <input type="text" id="inpHair" placeholder="髪色" style="margin-bottom:5px;">
-                    <input type="text" id="inpEye" placeholder="瞳の色" style="margin-bottom:5px;">
-                    <input type="text" id="inpSkin" placeholder="肌の色">
-                </div>
-            </div>
-            <div id="bodyCheckArea" class="analysis-box">
-                <div style="margin-bottom:5px;">📊 <b>BMI:</b> <span id="outBMI" class="calc-val">--</span></div>
-            </div>
-
-            <!-- ▼▼▼ パートナー関係性リスト (新デザイン適用) ▼▼▼ -->
-            <div class="form-row full relationship-box">
-                <div class="relationship-title">RELATIONSHIPS (Partners & Units)</div>
-                <div id="partnerListContainer"></div>
-                <button type="button" class="btn-add-partner" onclick="addPartnerRow()">+ ADD NEW PARTNER</button>
-            </div>
-
-            <h2>VISUALS (Drag & Drop Image)</h2>
-            <div class="visual-grid">
-                <div>
-                    <label>STANDING ART (立ち絵)</label>
-                    <div class="img-preview-box" id="dropBody">
-                        <span class="drop-msg">Drop Image Here</span>
-                        <img id="previewBody" class="img-preview">
-                    </div>
-                    <input type="text" id="inpImageBody" placeholder="URL or Base64..." style="margin-top:5px;">
-                </div>
-                <div>
-                    <label>FACE ICON (顔アイコン)</label>
-                    <div class="img-preview-box" id="dropIcon">
-                        <span class="drop-msg">Drop Image Here</span>
-                        <img id="previewIcon" class="img-preview">
-                    </div>
-                    <input type="text" id="inpImageIcon" placeholder="URL or Base64..." style="margin-top:5px;">
-                </div>
-            </div>
-
-            <!-- ▼▼▼ ギャラリー機能追加 ▼▼▼ -->
-            <div class="form-row full" style="margin-top:25px;">
-                <label>GALLERY / MEMORIES (Trailers & Table Reports)</label>
-                <div style="background:#252525; padding:15px; border-radius:4px; border:1px solid #444;">
-                    <div id="galleryList" class="gallery-grid"></div>
-                    
-                    <div id="galleryDropZone" class="gallery-drop-zone">
-                        <span>+ ADD IMAGE (Click or Drop)</span>
-                        <input type="file" id="galleryFileInput" accept="image/*" multiple style="display:none">
-                    </div>
-                </div>
-            </div>
-
-            <h2>STATS & VITALS</h2>
-            <div class="stats-container">
-                <div class="stat-box"><label>STR</label><input type="number" id="s_str"></div>
-                <div class="stat-box"><label>CON</label><input type="number" id="s_con"></div>
-                <div class="stat-box"><label>POW</label><input type="number" id="s_pow"></div>
-                <div class="stat-box"><label>DEX</label><input type="number" id="s_dex"></div>
-                <div class="stat-box"><label>APP</label><input type="number" id="s_app"></div>
-                <div class="stat-box"><label>SIZ</label><input type="number" id="s_siz"></div>
-                <div class="stat-box"><label>INT</label><input type="number" id="s_int"></div>
-                <div class="stat-box"><label>EDU</label><input type="number" id="s_edu"></div>
-            </div>
-            <div class="grid-4" style="margin-top:20px;">
-                <div class="form-row"><label>HP</label><input type="number" id="v_hp"></div>
-                <div class="form-row"><label>MP</label><input type="number" id="v_mp"></div>
-                <div class="form-row"><label>SAN</label><input type="number" id="v_san"></div>
-                <div class="form-row"><label>DB</label><input type="text" id="v_db"></div>
-            </div>
-
-            <h2>DETAILS</h2>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                <div>
-                    <div class="text-section">
-                        <h3>経歴</h3><button class="btn-clear-text" onclick="document.getElementById('txtBackground').value=''">× CLEAR</button>
-                        <textarea id="txtBackground"></textarea>
-                    </div>
-                    <div class="text-section">
-                        <h3>性格</h3><button class="btn-clear-text" onclick="document.getElementById('txtPersonality').value=''">× CLEAR</button>
-                        <textarea id="txtPersonality"></textarea>
-                    </div>
-                    <div class="text-section">
-                        <h3>人間関係</h3><button class="btn-clear-text" onclick="document.getElementById('txtRelations').value=''">× CLEAR</button>
-                        <textarea id="txtRelations"></textarea>
-                    </div>
-                </div>
-                <div>
-                    <div class="text-section">
-                        <h3>外見的特徴</h3><button class="btn-clear-text" onclick="document.getElementById('txtAppearance').value=''">× CLEAR</button>
-                        <textarea id="txtAppearance"></textarea>
-                    </div>
-                    <div class="text-section">
-                        <h3>RP補足</h3><button class="btn-clear-text" onclick="document.getElementById('txtRoleplay').value=''">× CLEAR</button>
-                        <textarea id="txtRoleplay"></textarea>
-                    </div>
-                    <div class="text-section">
-                        <h3>メモ</h3><button class="btn-clear-text" onclick="document.getElementById('txtMemo').value=''">× CLEAR</button>
-                        <textarea id="txtMemo"></textarea>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="form-row full">
-                <div class="text-section">
-                    <h3>技能データ (SKILLS & DETAIL)</h3>
-                    <div id="skillArea" class="list-container" style="max-height: 600px; overflow-y: auto;">
-                        </div>
-                </div>
-            </div>
-
-            <div class="text-section" style="margin-top:20px; border-left-color: #d4b346;">
-                <h3 style="color: #d4b346;">技能成長履歴 (GROWTH LOG)</h3>
-                <button class="btn-clear-text" onclick="document.getElementById('txtGrowth').value=''">× CLEAR</button>
-                <textarea id="txtGrowth" style="height:120px;" placeholder="例：&#13;シナリオA: 回避+5, 目星+3"></textarea>
-            </div>
-
-            <h2>INVENTORY & HISTORY</h2>
-            <div class="grid-3">
-                <div class="form-row full" style="grid-column:span 2;">
-                    <label>所持品 (ITEMS)</label>
-                    <div class="list-container">
-                        <div id="itemList"></div>
-                        <button type="button" class="btn-add" onclick="addItemRow()">+ ADD ITEM</button>
-                        <textarea id="txtItems" style="display:none;"></textarea>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <label>魔術/AF (SPELLS/ARTIFACTS)</label>
-                    <textarea id="txtSpells" style="height:90px;"></textarea>
-                    
-                    <label style="margin-top:10px;">遭遇した存在 (ENTITIES)</label>
-                    <textarea id="txtEncountered" style="height:90px;"></textarea>
-                </div>
-            </div>
-
-            <div class="form-row full" style="margin-top:15px;">
-                <label>戦闘・武器・防具 (WEAPONS)</label>
-                <div class="list-container">
-                    <div class="weapon-header">
-                        <div>名前</div><div>成功率</div><div>ダメ</div><div>射程</div><div>回数</div><div>装弾</div><div>HP</div><div>故障</div><div></div>
-                    </div>
-                    <div id="weaponList"></div>
-                    <button type="button" class="btn-add" onclick="addWeaponRow()">+ ADD WEAPON</button>
-                </div>
-            </div>
-
-            <div class="form-row full" style="margin-top:20px;">
-                <label>通過シナリオ詳細 (SCENARIO LOGS)</label>
-                <textarea id="txtScenarioDetails" style="height:200px;" placeholder="[シナリオタイトル]&#13;内容..."></textarea>
-                <div class="form-row">
-                    <label>通過シナリオ(簡易一覧)</label>
-                    <textarea id="txtScenarios" style="height:60px;" placeholder="シナリオ名..."></textarea>
-                </div>
-            </div>
-
-            <div style="margin-top:50px; text-align:right;">
-                <button id="btnDelete" class="btn-delete">DELETE CHARACTER</button>
-            </div>
+        <!-- SAVE BTN -->
+        <div id="btnSave" class="sealing-stamp">
+            <span class="material-icons-round" style="font-size:2rem; margin-bottom:-5px; opacity:0.8;">history_edu</span>
+            <span id="btnText" style="font-size:0.85rem; font-weight:bold; letter-spacing:1px;">保存</span>
         </div>
     </div>
 
-    <!-- 修正済みスクリプト -->
-    <script type="module">
-        import { loadFromCloud, monitorAuth, saveToCloud, deleteFromCloud } from "./firestore.js";
-        import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING } from "./data/schema.js";
-        import { parseIaChara } from "./data/parser_ia.js";
-
-        const getEl = (id) => document.getElementById(id);
-        const setVal = (id, v) => { const el = getEl(id); if(el) el.value = (v == null ? '' : v); };
-        const setSrc = (id, s) => { const el = getEl(id); if(el) el.src = s || ''; };
-
-        const MEMO_ID_MAP = {
-            background: 'txtBackground', personality: 'txtPersonality', relations: 'txtRelations',
-            appearance: 'txtAppearance', roleplay: 'txtRoleplay', memo: 'txtMemo'
+    <!-- UI Logic -->
+    <script>
+        window.openTab = function(tabId, btnElement) {
+            document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            if(btnElement) btnElement.classList.add('active');
+        };
+        window.updateTagColor = (el) => { el.className = 'tag-select'; if(el.value.includes('CoC')) el.classList.add('bg-green'); else if(el.value==='タイマン') el.classList.add('bg-pink'); else if(el.value.includes('PL')) el.classList.add('bg-blue'); else el.classList.add('bg-gray'); };
+        window.updateResColor = (el) => { el.className = 'tag-select'; if(el.value==='Alive') el.classList.add('bg-blue'); else if(el.value==='Lost') el.classList.add('bg-pink'); else el.classList.add('bg-gray'); };
+        
+        window.toggleGMField = (el) => {
+            const row = document.getElementById('rowGM');
+            if (el.value === 'タイマン' || el.value === 'ソロ') { row.style.display = 'none'; } else { row.style.display = 'grid'; }
+            window.updateRoleLabels();
         };
 
-        let allData = {};
-        let currentId = null;
-        let isInitDone = false; 
-
-        function addSaveButton() {
-            const newBtn = document.getElementById('btnCreateNew');
-            if(newBtn && !document.getElementById('btnManualSave')) {
-                const saveBtn = document.createElement('button');
-                saveBtn.id = 'btnManualSave';
-                saveBtn.textContent = '💾 SAVE';
-                saveBtn.style.cssText = "background:#00f3ff; color:#000; border:none; padding:10px 20px; font-weight:bold; cursor:pointer; border-radius:4px; margin-left:10px;";
-                newBtn.parentElement.appendChild(saveBtn);
-                saveBtn.addEventListener('click', window.prepareSaveData);
-            }
-        }
-
-        // --- パートナー行の追加 (新デザイン) ---
-        window.addPartnerRow = (partnerId = "", groupName = "") => {
-            const container = getEl('partnerListContainer');
-            const div = document.createElement('div');
-            div.className = 'partner-entry';
+        window.updateRoleLabels = () => {
+            const type = document.getElementById('inpType').value;
+            const isPair = (type === 'タイマン' || type === 'ソロ');
             
-            // セレクトボックスの作成
-            let selectHtml = `<select class="partner-select">`;
-            selectHtml += `<option value="">-- Select Partner --</option>`;
-            Object.values(allData).forEach(c => {
-                if (c.id === currentId) return; // 自分は除く
-                const selected = (c.id === partnerId) ? 'selected' : '';
-                selectHtml += `<option value="${c.id}" ${selected}>${c.name}</option>`;
-            });
-            selectHtml += `</select>`;
+            const pcName = document.getElementById('selPC').options[document.getElementById('selPC').selectedIndex]?.text || "";
+            const kpcName = document.getElementById('selKPC').options[document.getElementById('selKPC').selectedIndex]?.text || "";
+            const isDefault = (pcName === "(PC)" || pcName === "(選択)" || pcName === "");
 
-            div.innerHTML = `
-                ${selectHtml}
-                <input type="text" class="partner-group-input" value="${groupName}" placeholder="ユニット名・コンビ名">
-                <button class="btn-remove-partner" onclick="this.parentElement.remove()" title="削除">×</button>
-            `;
-            container.appendChild(div);
-        };
+            let txtPC = "PC";
+            let txtKPC = "KPC";
 
-        window.addItemRow = (val={name:'', desc:''}) => {
-            const div = document.createElement('div');
-            div.className = 'item-entry';
-            div.innerHTML = `
-                <input type="text" class="i-name" placeholder="名称" value="${val.name}">
-                <input type="text" class="i-desc" placeholder="効果・備考" value="${val.desc}">
-                <button class="btn-remove" onclick="this.parentElement.remove()">✕</button>
-            `;
-            getEl('itemList').appendChild(div);
-        };
-
-        window.addWeaponRow = (val={name:'', rate:'', damage:'', range:'', attacks:'', capacity:'', hp:'', malfunction:''}) => {
-            const div = document.createElement('div');
-            div.className = 'weapon-entry';
-            div.innerHTML = `
-                <input type="text" class="w-name" value="${val.name}">
-                <input type="text" class="w-rate" value="${val.rate}">
-                <input type="text" class="w-dmg" value="${val.damage}">
-                <input type="text" class="w-range" value="${val.range}">
-                <input type="text" class="w-atk" value="${val.attacks}">
-                <input type="text" class="w-cap" value="${val.capacity}">
-                <input type="text" class="w-hp" value="${val.hp}">
-                <input type="text" class="w-mal" value="${val.malfunction}">
-                <button class="btn-remove" onclick="this.parentElement.remove()">✕</button>
-            `;
-            getEl('weaponList').appendChild(div);
-        };
-
-        // --- ギャラリー機能用メソッド ---
-        window.addGalleryItem = (src) => {
-            const container = getEl('galleryList');
-            const div = document.createElement('div');
-            div.className = 'gallery-item';
-            div.innerHTML = `
-                <img src="${src}">
-                <button class="btn-del-img" onclick="this.parentElement.remove()">×</button>
-            `;
-            container.appendChild(div);
-        };
-
-        const setupGalleryEvents = () => {
-            const zone = getEl('galleryDropZone');
-            const input = getEl('galleryFileInput');
-            
-            // クリックでファイル選択
-            zone.addEventListener('click', (e) => {
-                if(e.target !== input) input.click();
-            });
-            
-            input.addEventListener('change', () => {
-                Array.from(input.files).forEach(file => processImage(file));
-                input.value = ''; // リセット
-            });
-
-            // ドラッグ＆ドロップ
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
-                zone.addEventListener(e, (ev) => { ev.preventDefault(); ev.stopPropagation(); });
-            });
-            zone.addEventListener('dragover', () => zone.style.borderColor = '#00f3ff');
-            zone.addEventListener('dragleave', () => zone.style.borderColor = '#444');
-            zone.addEventListener('drop', (e) => {
-                zone.style.borderColor = '#444';
-                const files = e.dataTransfer.files;
-                Array.from(files).forEach(file => {
-                    if (file.type.match('image.*')) processImage(file);
-                });
-            });
-        };
-
-        const processImage = (file) => {
-            // 800pxにリサイズして追加
-            resizeImage(file, 800, 800, (dataUrl) => {
-                addGalleryItem(dataUrl);
-            });
-        };
-        // -----------------------------
-
-        function attachSkillCalc(row) {
-            row.querySelectorAll('input[type="number"]').forEach(inp => {
-                inp.addEventListener('input', () => {
-                    const init = parseInt(row.querySelector('.s-init').value)||0;
-                    const job = parseInt(row.querySelector('.s-job').value)||0;
-                    const int = parseInt(row.querySelector('.s-interest').value)||0;
-                    const gro = parseInt(row.querySelector('.s-growth').value)||0;
-                    row.querySelector('.s-total').value = init + job + int + gro;
-                });
-            });
-        }
-
-        window.addSkillRow = (catId) => {
-            const table = document.querySelector(`#skill-cat-${catId} tbody`);
-            if(!table) return;
-            const tr = document.createElement('tr');
-            tr.className = 'skill-entry';
-            tr.innerHTML = `
-                <td class="s-name" style="font-weight:bold;">
-                    <span class="s-name-text"><input type="text" class="s-name-edit" style="width:100%; color:#fff; background:#222; border:1px solid #444;" placeholder="技能名"></span>
-                </td>
-                <td><input type="number" class="s-total" readonly tabindex="-1"></td>
-                <td><input type="number" class="s-init" value="0" style="color:#888;"></td>
-                <td><input type="number" class="s-job" value="0"></td>
-                <td><input type="number" class="s-interest" value="0"></td>
-                <td><input type="number" class="s-growth" value="0"></td>
-                <td style="padding-left:10px;"><input type="text" class="s-desc skill-desc-input" placeholder="設定や理由など...">
-                <button onclick="this.closest('tr').remove()" style="float:right; background:transparent; border:none; color:#522; cursor:pointer;">×</button></td>
-            `;
-            table.appendChild(tr);
-            attachSkillCalc(tr);
-        };
-
-        window.moveCategory = (selectEl) => {
-            const targetCat = selectEl.value; if(!targetCat) return;
-            const row = selectEl.closest('tr');
-            let name = "";
-            const nameSpan = row.querySelector('.s-name-text');
-            if (nameSpan) { const nameInput = nameSpan.querySelector('input'); name = nameInput ? nameInput.value : nameSpan.textContent; }
-            const total = row.querySelector('.s-total').value;
-            const init = row.querySelector('.s-init').value;
-            const job = row.querySelector('.s-job').value;
-            const interest = row.querySelector('.s-interest').value;
-            const growth = row.querySelector('.s-growth').value;
-            const desc = row.querySelector('.s-desc').value;
-
-            const targetTable = document.querySelector(`#skill-cat-${targetCat} tbody`);
-            if(targetTable) {
-                row.remove();
-                const tr = document.createElement('tr');
-                tr.className = 'skill-entry';
-                tr.innerHTML = `
-                    <td class="s-name" style="font-weight:bold;">
-                        <span class="s-name-text">${name}</span>
-                        <div style="margin-top:2px;">
-                            <select class="skill-cat-select" onchange="moveCategory(this)">
-                                <option value="">カテゴリ移動...</option>
-                                <option value="combat">戦闘</option>
-                                <option value="explore">探索</option>
-                                <option value="action">行動</option>
-                                <option value="negotiate">交渉</option>
-                                <option value="knowledge">知識</option>
-                                <option value="original">その他</option>
-                            </select>
-                        </div>
-                    </td>
-                    <td><input type="number" class="s-total" value="${total}" readonly tabindex="-1"></td>
-                    <td><input type="number" class="s-init" value="${init}" readonly tabindex="-1" style="color:#888;"></td>
-                    <td><input type="number" class="s-job" value="${job}"></td>
-                    <td><input type="number" class="s-interest" value="${interest}"></td>
-                    <td><input type="number" class="s-growth" value="${growth}"></td>
-                    <td style="padding-left:10px;"><input type="text" class="s-desc skill-desc-input" value="${desc}" placeholder="設定や理由など..."></td>
-                `;
-                targetTable.appendChild(tr);
-                attachSkillCalc(tr);
-            }
-        };
-
-        // --- ★ 保存処理 (完全修正版・ID強制付与・ギャラリー対応) ---
-        window.prepareSaveData = async function() {
-            // 1. IDと選択状態の安全確認
-            const charSelect = document.getElementById('charSelect');
-            const activeId = charSelect ? charSelect.value : null;
-
-            if (!activeId) {
-                alert("保存エラー：キャラクターが選択されていません。画面をリロードしてください。");
-                return;
+            if (!isPair) {
+                // 2PL/4PL mode
+                txtPC = isDefault ? "PC1" : `PC1 (${pcName})`;
+                txtKPC = isDefault ? "PC2" : `PC2 (${kpcName})`;
             }
 
-            // 元データの取得
-            let originalData = allData[activeId];
-            if (!originalData) originalData = { id: activeId, name: "回復データ" };
+            document.querySelectorAll('.lbl-pc').forEach(el => el.textContent = txtPC);
+            document.querySelectorAll('.lbl-kpc').forEach(el => el.textContent = txtKPC);
+        };
+
+        window.swapCharacters = () => {
+            const pcSel = document.getElementById('selPC');
+            const kpcSel = document.getElementById('selKPC');
+            const pcName = document.getElementById('inpPlNamePC');
+            const kpcName = document.getElementById('inpPlNameKPC');
             
-            // パートナー同期用：元データのパートナーIDを確保
-            const oldPartnerIds = new Set();
-            if (originalData.partners && Array.isArray(originalData.partners)) {
-                originalData.partners.forEach(p => oldPartnerIds.add(p.id));
-            }
-            if (originalData.partnerId) oldPartnerIds.add(originalData.partnerId);
-
-            // アイテムリスト
-            const itemRows = document.querySelectorAll('.item-entry');
-            const itemsArr = [];
-            itemRows.forEach(row => {
-                const n = row.querySelector('.i-name').value;
-                const d = row.querySelector('.i-desc').value;
-                if(n) itemsArr.push(d ? `${n} : ${d}` : n);
-            });
-            getEl('txtItems').value = itemsArr.join('\n');
-
-            // 技能データ
-            const skillsObj = { combat:[], explore:[], action:[], negotiate:[], knowledge:[], original:[] };
-            document.querySelectorAll('.skill-category').forEach(catDiv => {
-                const catId = catDiv.id.replace('skill-cat-', '');
-                if(skillsObj[catId] === undefined) skillsObj[catId] = [];
-                catDiv.querySelectorAll('.skill-entry').forEach(row => {
-                    const nameSpan = row.querySelector('.s-name-text');
-                    let name = "";
-                    if (nameSpan) { const nameInput = nameSpan.querySelector('input'); name = nameInput ? nameInput.value : nameSpan.textContent; }
-                    skillsObj[catId].push({
-                        name: name.trim(),
-                        total: parseInt(row.querySelector('.s-total').value)||0,
-                        init: parseInt(row.querySelector('.s-init').value)||0,
-                        job: parseInt(row.querySelector('.s-job').value)||0,
-                        interest: parseInt(row.querySelector('.s-interest').value)||0,
-                        growth: parseInt(row.querySelector('.s-growth').value)||0,
-                        desc: row.querySelector('.s-desc').value
-                    });
-                });
-            });
+            const tmpVal = pcSel.value; pcSel.value = kpcSel.value; kpcSel.value = tmpVal;
+            const tmpName = pcName.value; pcName.value = kpcName.value; kpcName.value = tmpName;
             
-            // メインデータの収集
-            const finalData = collectFormData(originalData, true);
-            const nameInputVal = document.getElementById('inpName').value;
-            if (nameInputVal) finalData.name = nameInputVal;
-            finalData.skills = skillsObj;
-            finalData.id = activeId; // ID強制付与
+            pcSel.dispatchEvent(new Event('change'));
+            kpcSel.dispatchEvent(new Event('change'));
+        };
 
-            // ★ ギャラリーデータの収集
-            const galleryImgs = document.querySelectorAll('#galleryList img');
-            const galleryData = [];
-            galleryImgs.forEach(img => galleryData.push(img.src));
-            finalData.gallery = galleryData;
+        // --- Encountered & Skills ---
+        window.addSkillRow = (containerId, name="", val="") => {
+            const c = document.getElementById(containerId);
+            const row = document.createElement('div');
+            row.className = 'skill-row';
+            row.innerHTML = `
+                <input type="text" class="skill-name" placeholder="技能名" value="${name}">
+                <input type="text" class="skill-val" placeholder="+10" value="${val}">
+                <button class="skill-del-btn" onclick="this.parentElement.remove()">×</button>
+            `;
+            c.appendChild(row);
+        };
+        window.addEncRow = (name="") => {
+            const c = document.getElementById('encList');
+            const row = document.createElement('div');
+            row.className = 'skill-row';
+            row.style.gridTemplateColumns = "1fr 20px";
+            row.innerHTML = `
+                <input type="text" class="skill-name" placeholder="神話生物名" value="${name}">
+                <button class="skill-del-btn" onclick="this.parentElement.remove()">×</button>
+            `;
+            c.appendChild(row);
+        };
 
-
-            // ★ パートナーリストの取得と整理
-            const partnerRows = document.querySelectorAll('.partner-entry');
-            const newPartnersList = [];      // 自分のデータに保存する用
-            const currentPartnersMap = new Map(); // 相手のデータ更新用
-
-            partnerRows.forEach(row => {
-                const pid = row.querySelector('.partner-select').value;
-                const gname = row.querySelector('.partner-group-input').value;
-                
-                if (pid) {
-                    newPartnersList.push({ id: pid, group: gname });
-                    if (!currentPartnersMap.has(pid)) {
-                        currentPartnersMap.set(pid, []);
-                    }
-                    currentPartnersMap.get(pid).push(gname);
+        window.getSkillText = (containerId) => {
+            const rows = document.querySelectorAll(`#${containerId} .skill-row`);
+            let txt = "";
+            rows.forEach(r => {
+                const n = r.querySelector('.skill-name').value;
+                const v = r.querySelector('.skill-val')?.value;
+                if(n) txt += v ? `${n} ${v}\n` : `${n}\n`;
+            });
+            return txt.trim();
+        };
+        window.setSkillRows = (containerId, text, isEnc=false) => {
+            const c = document.getElementById(containerId);
+            c.innerHTML = "";
+            if(!text) return;
+            const lines = text.split('\n');
+            lines.forEach(l => {
+                if(isEnc) { window.addEncRow(l.trim()); return; }
+                const parts = l.trim().split(' ');
+                if(parts.length > 1) {
+                    const v = parts.pop();
+                    const n = parts.join(' ');
+                    window.addSkillRow(containerId, n, v);
+                } else {
+                    window.addSkillRow(containerId, l, "");
                 }
             });
-            finalData.partners = newPartnersList;
+        };
 
-            // 最終安全確認
-            if (!finalData.id) {
-                alert("致命的エラー: 保存データのIDが特定できません。");
-                return;
+        // --- Details Toggle System ---
+        window.toggleDetail = (secId, btn) => {
+            const allSecs = document.querySelectorAll('.detail-section');
+            const allBtns = document.querySelectorAll('.toggle-btn');
+            const target = document.getElementById(secId);
+            const isActive = target.classList.contains('show');
+            allSecs.forEach(s => s.classList.remove('show'));
+            allBtns.forEach(b => b.classList.remove('active'));
+            if (!isActive) { target.classList.add('show'); btn.classList.add('active'); }
+        };
+
+        window.toggleSubContent = (contentId, btn) => {
+            const parent = btn.parentElement.parentElement;
+            parent.querySelectorAll('.detail-content').forEach(c => c.classList.remove('show'));
+            parent.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(contentId).classList.add('show');
+            btn.classList.add('active');
+        };
+
+        window.toggleScnContent = (id) => {
+            document.getElementById(id).classList.toggle('show');
+        };
+
+        window.toggleDate = (rowId, show) => {
+            const row = document.getElementById(rowId);
+            if(show) row.classList.add('show'); else row.classList.remove('show');
+        };
+
+        const insanityData = {
+            "1": "健忘症（親しい者のことを最初に忘れる：言語や肉体的な技能は働くが、知的な技能は働かない）あるいは昏迷/緊張症",
+            "2": "激しい恐怖症（逃げ出すことはできるが、恐怖の対象はどこへ行っても見える）",
+            "3": "幻覚",
+            "4": "奇妙な性的嗜好（露出症、過剰性欲、奇形愛好症など）",
+            "5": "フェティッシュ（探索者はある物、ある種類の物、人物に対し異常なまでに執着する）",
+            "6": "制御不能のチック、震え、あるいは会話や文章で人と交渉することができなくなる",
+            "7": "心因性視覚障害、心因性難聴、単数あるいは複数の四肢の機能障害",
+            "8": "短時間の心因反応（支離滅裂、妄想、常軌を逸した振る舞い、幻覚など）",
+            "9": "一時的偏執症",
+            "10": "強迫観念に取りつかれた行動（手を洗い続ける、祈る、特定のリズムで歩く、割れ目をまたがない、銃を絶え間なくチェックし続けるなど）",
+            "Other": ""
+        };
+        window.updateInsanityDesc = (val, role) => { 
+            const el = document.getElementById(role==='PC'?'inpInsanityDescPC':'inpInsanityDescKPC'); 
+            if(el && !el.value) el.value = insanityData[val]||""; 
+        };
+    </script>
+
+    <!-- App Logic -->
+    <script type="module">
+        import { loadFromCloud, monitorAuth, saveScenario, saveToCloud, getScenariosForCharacter } from "../character/firestore.js";
+        import { createScenarioRecord, syncScenarioToCharacter } from "./data/scenario.js";
+
+        const IMG_CONFIG = { iconBase: "../images/icon/" };
+        const getEl = (id) => document.getElementById(id);
+        const loader = getEl('loadingIndicator');
+
+        let allChars = {};
+        let currentUid = null;
+        let currentScenarioId = null; 
+        
+        // コンビ情報保持用
+        let allPairs = [];
+
+        // Theme Color Helper
+        const applyTheme = (role, charId) => {
+            const char = allChars[charId];
+            if(!char || !char.color) return;
+            const color = char.color;
+            
+            getEl(`icon${role}`).style.borderColor = color;
+            getEl(`inpPlName${role}`).style.color = color;
+            const btn = getEl(`btnDetail${role}`);
+            btn.style.borderColor = color; 
+            getEl(`bubble${role}`).style.borderLeft = `3px solid ${color}`;
+        };
+
+        // Image Handling
+        const setupImg = (boxId, inpId, imgId) => {
+            const box = getEl(boxId);
+            box.addEventListener('dragover', e=>{e.preventDefault(); box.style.borderColor='#d4b346';});
+            box.addEventListener('dragleave', e=>{e.preventDefault(); box.style.borderColor='#444';});
+            box.addEventListener('drop', e=>{
+                e.preventDefault(); box.style.borderColor='#444';
+                const f = e.dataTransfer.files[0];
+                if(f){ 
+                    const r=new FileReader(); 
+                    r.onload=v=>{
+                        getEl(inpId).value=v.target.result; 
+                        const img = getEl(imgId);
+                        img.src=v.target.result;
+                        getEl(boxId).classList.remove('empty');
+                        if(inpId === 'inpImgScnTrailer') {
+                            const otherImgId = (imgId === 'imgScnTrailer') ? 'imgScnTrailerTab' : 'imgScnTrailer';
+                            const otherBoxId = (boxId === 'dropScnTrailer') ? 'dropScnTrailerTab' : 'dropScnTrailer';
+                            getEl(otherImgId).src = v.target.result;
+                            getEl(otherBoxId).classList.remove('empty');
+                        }
+                    }; 
+                    r.readAsDataURL(f); 
+                }
+            });
+        };
+        setupImg('dropTrailer', 'inpImgTrailer', 'imgTrailer');
+        setupImg('dropScnTrailer', 'inpImgScnTrailer', 'imgScnTrailer'); 
+        setupImg('dropScnTrailerTab', 'inpImgScnTrailer', 'imgScnTrailerTab'); 
+
+        monitorAuth(async (user) => {
+            if(!user) { loader.textContent = "LOGIN REQUIRED"; return; }
+            currentUid = user.uid;
+            loader.textContent = "LOADING...";
+            try {
+                const data = await loadFromCloud();
+                allChars = data || {};
+                const list = Object.values(allChars).sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+                
+                if(list.length === 0) loader.textContent = "NO CHARS";
+                else loader.textContent = "READY";
+
+                const opts = '<option value="">(選択)</option>' + list.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+                getEl('selPC').innerHTML = opts;
+                getEl('selKPC').innerHTML = opts;
+
+                // --- コンビ名抽出ロジック ---
+                const pairMap = new Map(); // "PC_KPC" -> "GroupName"
+                
+                list.forEach(c => {
+                    if(c.partners && Array.isArray(c.partners)) {
+                        c.partners.forEach(p => {
+                            // 重複排除キー作成 (ID順でソート)
+                            const ids = [c.id, p.id].sort().join('_');
+                            if(!pairMap.has(ids)) {
+                                pairMap.set(ids, {
+                                    ids: [c.id, p.id],
+                                    name: p.group || "Unnamed Pair",
+                                    chars: [c.name, (allChars[p.id]?.name || "Unknown")]
+                                });
+                            }
+                        });
+                    }
+                });
+
+                allPairs = Array.from(pairMap.values());
+                const pairOpts = '<option value="">-- UNIT / PAIR --</option>' + 
+                    allPairs.map((p, idx) => `<option value="${idx}">${p.name} (${p.chars.join('&')})</option>`).join('');
+                getEl('selPair').innerHTML = pairOpts;
+
+                window.toggleGMField(getEl('inpType'));
+
+            } catch(e) { console.error(e); loader.textContent="ERROR"; }
+        });
+
+        // コンビ選択時の処理
+        window.applyPair = (idx) => {
+            if(idx === "") return;
+            const pair = allPairs[idx];
+            if(pair && pair.ids.length >= 2) {
+                const pcSel = getEl('selPC');
+                const kpcSel = getEl('selKPC');
+                // 簡易的に割り当て (0番目をPC, 1番目をKPC)
+                pcSel.value = pair.ids[0];
+                kpcSel.value = pair.ids[1];
+                pcSel.dispatchEvent(new Event('change'));
+                kpcSel.dispatchEvent(new Event('change'));
             }
+        };
+
+        const loadHistory = async () => {
+            const pcId = getEl('selPC').value;
+            const kpcId = getEl('selKPC').value;
+            if(!pcId && !kpcId) return;
+
+            const listEl = getEl('historyList');
+            listEl.innerHTML = '<div style="text-align:center;font-size:0.7rem;">LOADING...</div>';
+            const targetId = pcId || kpcId;
+            const scenarios = await getScenariosForCharacter(targetId);
+            const filtered = scenarios.filter(s => {
+                if(pcId && kpcId) return s.members.includes(pcId) && s.members.includes(kpcId);
+                return true;
+            });
+
+            listEl.innerHTML = "";
+            if(filtered.length === 0) { listEl.innerHTML = '<div style="text-align:center;font-size:0.7rem;">NO LOGS</div>'; return; }
+            filtered.forEach(s => {
+                let names = [];
+                if(s.characters?.pc?.id && allChars[s.characters.pc.id]) names.push(allChars[s.characters.pc.id].name);
+                if(s.characters?.kpc?.id && allChars[s.characters.kpc.id]) names.push(allChars[s.characters.kpc.id].name);
+                const charStr = names.join(' & ');
+
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                    <div class="h-header">
+                        <div class="h-title" title="${s.title}">${s.title}</div>
+                        <div class="h-count">#${s.count||'1'}</div>
+                    </div>
+                    <div class="h-row">
+                        <span class="h-chars">${charStr}</span>
+                        <span class="h-date">${s.date||''}</span>
+                    </div>`;
+                item.onclick = () => loadScenarioIntoForm(s, item);
+                listEl.appendChild(item);
+            });
+        };
+
+        const loadScenarioIntoForm = (s, itemEl) => {
+            document.querySelectorAll('.history-item').forEach(el=>el.classList.remove('active'));
+            itemEl.classList.add('active');
+            currentScenarioId = s.id;
+            
+            getEl('inpTitle').value = s.title;
+            getEl('inpCount').value = s.count || 1;
+            getEl('inpSystem').value = s.system || 'CoC6'; updateTagColor(getEl('inpSystem'));
+            
+            const typeEl = getEl('inpType');
+            typeEl.value = s.type || 'タイマン'; 
+            updateTagColor(typeEl);
+            window.toggleGMField(typeEl);
+
+            getEl('inpGM').value = s.gm || "";
+            getEl('inpEndName').value = s.endName || "";
+            getEl('inpDate').value = s.date || "";
+            
+            const loadImg = (boxId, imgId, inpId, val) => {
+                if(val) {
+                    getEl(inpId).value = val; getEl(imgId).src = val; getEl(boxId).classList.remove('empty');
+                } else {
+                    getEl(inpId).value = ""; 
+                    getEl(imgId).src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+                    getEl(boxId).classList.add('empty');
+                }
+            };
+            loadImg('dropTrailer', 'imgTrailer', 'inpImgTrailer', s.images?.trailer);
+            
+            const scnVal = s.images?.scenTrailer;
+            loadImg('dropScnTrailer', 'imgScnTrailer', 'inpImgScnTrailer', scnVal);
+            loadImg('dropScnTrailerTab', 'imgScnTrailerTab', 'inpImgScnTrailer', scnVal);
+
+            const setCharSelect = (selId, charData) => {
+                const sel = getEl(selId);
+                if (charData && charData.id) { sel.value = charData.id; sel.dispatchEvent(new Event('change')); }
+                else { sel.value = ""; sel.dispatchEvent(new Event('change')); }
+            };
+            const pcData = s.characters?.pc || {};
+            const kpcData = s.characters?.kpc || {};
+            setCharSelect('selPC', pcData);
+            setCharSelect('selKPC', kpcData);
+
+            const fillRole = (d, suffix, listId) => {
+                getEl(`inpPlName${suffix}`).value = d.pl||""; getEl(`inpRes${suffix}`).value = d.res||"Alive"; updateResColor(getEl(`inpRes${suffix}`));
+                getEl(`inpSan${suffix}`).value = d.san||""; getEl(`inpQuote${suffix}`).value = d.quote||"";
+                getEl(`inpMemo${suffix}`).value = d.memo||"";
+                window.setSkillRows(listId, d.grow||"");
+
+                if(d.art) { getEl(`inpArtName${suffix}`).value = d.art.name||""; getEl(`inpArtDesc${suffix}`).value = d.art.desc||""; }
+                if(d.seq) { getEl(`inpSeqName${suffix}`).value = d.seq.name||""; getEl(`inpSeqDesc${suffix}`).value = d.seq.desc||""; }
+                if(d.ins) { getEl(`selInsanity${suffix}`).value = d.ins.type||""; getEl(`inpInsanityDesc${suffix}`).value = d.ins.desc||""; }
+            };
+            setTimeout(() => { fillRole(pcData, 'PC', 'skillListPC'); fillRole(kpcData, 'KPC', 'skillListKPC'); }, 50);
+            
+            window.setSkillRows('encList', s.entities||"", true);
+
+            if(s.meta) {
+                getEl('inpMetaSystem').value = s.meta.system||""; getEl('inpMetaType').value = s.meta.type||"";
+                getEl('inpDuration').value = s.meta.duration||""; getEl('inpStage').value = s.meta.stage||"";
+                getEl('inpCharRel').value = s.meta.charRel||""; getEl('inpLostRate').value = s.meta.lostRate||"";
+                getEl('inpRecSkills').value = s.meta.skills||""; getEl('inpScnType').value = s.meta.scenType||"";
+            }
+            if(s.urls) { getEl('inpUrlShop').value = s.urls.shop||""; getEl('inpUrlRoom').value = s.urls.room||""; }
+            getEl('inpSynopsis').value = s.overview||""; getEl('inpIntroduction').value = s.introduction||""; getEl('inpWarnings').value = s.warnings||"";
+            
+            if(s.memos) { 
+                getEl('inpPublicMemo').value = s.memos.public||""; 
+                getEl('inpSecretMemoPC').value = s.memos.secretPC||"";
+                getEl('inpSecretMemoKPC').value = s.memos.secretKPC||""; 
+            }
+        };
+
+        window.resetForm = () => {
+            currentScenarioId = null;
+            getEl('inpTitle').value = ""; getEl('inpCount').value = "1";
+            document.querySelectorAll('.paper-area, .line-input').forEach(e => { if(!e.id.includes('PlName')) e.value = ""; });
+            
+            const resetImg = (boxId, imgId) => {
+                getEl(imgId).src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+                getEl(boxId).classList.add('empty');
+            };
+            resetImg('dropTrailer', 'imgTrailer');
+            resetImg('dropScnTrailer', 'imgScnTrailer');
+            resetImg('dropScnTrailerTab', 'imgScnTrailerTab');
+
+            getEl('skillListPC').innerHTML = ""; getEl('skillListKPC').innerHTML = "";
+            getEl('encList').innerHTML = "";
+            
+            document.querySelectorAll('.history-item').forEach(e=>e.classList.remove('active'));
+            alert("新規作成モード");
+        };
+
+        const onCharSelect = (selId, imgId, plId, sanId, chatIconId, role) => {
+            getEl(selId).addEventListener('change', () => {
+                const id = getEl(selId).value;
+                const char = Object.values(allChars).find(c => c.id === id);
+                if(char) {
+                    const src = char.icon || `${IMG_CONFIG.iconBase}${char.name}.png`;
+                    getEl(imgId).src = src; if(chatIconId) getEl(chatIconId).src = src;
+                    
+                    // ★ PL名の自動補填 (空欄の場合のみ)
+                    if(char.plName && !getEl(plId).value) getEl(plId).value = char.plName;
+                    
+                    let san = "??";
+                    if(char.vitals?.san) san = char.vitals.san; else if(char.stats?.POW) san = char.stats.POW*5; 
+                    if(sanId) getEl(sanId).textContent = san;
+                    
+                    applyTheme(role, id);
+                    window.updateRoleLabels(); 
+                }
+                loadHistory();
+            });
+        };
+        onCharSelect('selPC', 'iconPC', 'inpPlNamePC', 'sanValPC', 'chatIconPC', 'PC');
+        onCharSelect('selKPC', 'iconKPC', 'inpPlNameKPC', 'sanValKPC', 'chatIconKPC', 'KPC');
+
+        getEl('btnSave').addEventListener('click', async () => {
+            const btn = getEl('btnSave');
+            const btnText = getEl('btnText');
+            
+            const title = getEl('inpTitle').value.trim();
+            const pcId = getEl('selPC').value;
+            const kpcId = getEl('selKPC').value;
+
+            if(!title) { alert("【エラー】タイトルは必須です"); return; }
+            if(!pcId && !kpcId) { alert("【エラー】キャラを選択してください"); return; }
+
+            btn.style.pointerEvents = "none";
+            btn.style.opacity = "0.7";
+            btnText.textContent = "処理中...";
 
             try {
-                // 1. 自分のデータを保存
-                await saveToCloud(finalData);
+                const members = [];
+                if(pcId) members.push(pcId);
+                if(kpcId) members.push(kpcId);
 
-                // 2. パートナー側のデータをループして更新
-                const allInvolvedIds = new Set([...oldPartnerIds, ...currentPartnersMap.keys()]);
-                let syncCount = 0;
-                
-                for (const pId of allInvolvedIds) {
-                    if (pId === activeId) continue;
+                const getInsExtras = (suffix) => {
+                    const dur = document.querySelector(`input[name="dur${suffix}"]:checked`)?.value || "Temp";
+                    const date = getEl(`inpInsDate${suffix}`).value;
+                    let txt = "";
+                    if(dur === 'Indef') txt += " [不定]"; else if(dur === 'Perm') txt += " [永続]";
+                    if(date) txt += ` (完治:${date})`;
+                    return txt;
+                };
 
-                    const originalPartner = allData[pId];
-                    if (!originalPartner) continue; 
+                const growPC = window.getSkillText('skillListPC');
+                const growKPC = window.getSkillText('skillListKPC');
+                const entities = window.getSkillText('encList');
 
-                    const partnerDataToSave = { ...originalPartner };
-                    partnerDataToSave.id = pId; // ID強制
+                const inputData = {
+                    title: title, count: getEl('inpCount').value,
+                    system: getEl('inpSystem').value, type: getEl('inpType').value, gm: getEl('inpGM').value,
+                    endName: getEl('inpEndName').value, date: getEl('inpDate').value,
+                    members: members,
+                    meta: {
+                        system: getEl('inpMetaSystem').value, type: getEl('inpMetaType').value, duration: getEl('inpDuration').value,
+                        stage: getEl('inpStage').value, charRel: getEl('inpCharRel').value, lostRate: getEl('inpLostRate').value,
+                        skills: getEl('inpRecSkills').value, scenType: getEl('inpScnType').value
+                    },
+                    urls: { shop: getEl('inpUrlShop').value, room: getEl('inpUrlRoom').value },
+                    images: { trailer: getEl('inpImgTrailer').value, scenTrailer: getEl('inpImgScnTrailer').value },
+                    pcData: {
+                        id: pcId, pl: getEl('inpPlNamePC').value, res: getEl('inpResPC').value, san: getEl('inpSanPC').value,
+                        quote: getEl('inpQuotePC').value, grow: growPC, memo: getEl('inpMemoPC').value,
+                        art: { name: getEl('inpArtNamePC').value, desc: getEl('inpArtDescPC').value },
+                        seq: { name: getEl('inpSeqNamePC').value, desc: getEl('inpSeqDescPC').value },
+                        ins: { type: getEl('selInsanityPC').value, desc: getEl('inpInsanityDescPC').value + getInsExtras('PC') }
+                    },
+                    kpcData: {
+                        id: kpcId, pl: getEl('inpPlNameKPC').value, res: getEl('inpResKPC').value, san: getEl('inpSanKPC').value,
+                        quote: getEl('inpQuoteKPC').value, grow: growKPC, memo: getEl('inpMemoKPC').value,
+                        art: { name: getEl('inpArtNameKPC').value, desc: getEl('inpArtDescKPC').value },
+                        seq: { name: getEl('inpSeqNameKPC').value, desc: getEl('inpSeqDescKPC').value },
+                        ins: { type: getEl('selInsanityKPC').value, desc: getEl('inpInsanityDescKPC').value + getInsExtras('KPC') }
+                    },
+                    overview: getEl('inpSynopsis').value, introduction: getEl('inpIntroduction').value, warnings: getEl('inpWarnings').value,
+                    memos: { 
+                        public: getEl('inpPublicMemo').value, 
+                        secretPC: getEl('inpSecretMemoPC').value,
+                        secretKPC: getEl('inpSecretMemoKPC').value 
+                    },
+                    entities: entities 
+                };
 
-                    let pPartners = partnerDataToSave.partners || [];
-                    if (!Array.isArray(pPartners)) pPartners = [];
+                if(entities) inputData.overview += `\n\n[遭遇した神話生物]\n${entities}`;
 
-                    // A. 自分(activeId)のエントリを一度すべて削除
-                    const initialLen = pPartners.length;
-                    pPartners = pPartners.filter(item => item.id !== activeId);
+                const sData = createScenarioRecord(inputData, currentUid);
+                sData.entities = entities; 
 
-                    // B. 現在パートナーなら追加
-                    let isChanged = (pPartners.length !== initialLen);
-                    
-                    if (currentPartnersMap.has(pId)) {
-                        const newGroups = currentPartnersMap.get(pId);
-                        newGroups.forEach(groupName => {
-                            pPartners.push({ id: activeId, group: groupName });
-                        });
-                        isChanged = true;
-                    }
-                    
-                    // 変更時のみ保存
-                    if (isChanged) {
-                        partnerDataToSave.partners = pPartners;
-                        await saveToCloud(partnerDataToSave);
-                        syncCount++;
-                    }
+                const sId = await saveScenario(sData, currentScenarioId);
+
+                if(pcId) {
+                    const char = Object.values(allChars).find(c => c.id === pcId);
+                    if(char) await saveToCloud(syncScenarioToCharacter(char, sData, sId, 'pc'));
+                }
+                if(kpcId) {
+                    const char = Object.values(allChars).find(c => c.id === kpcId);
+                    if(char) await saveToCloud(syncScenarioToCharacter(char, sData, sId, 'kpc'));
                 }
 
-                if (syncCount > 0) {
-                    alert(`保存完了！\nパートナー ${syncCount} 人のデータも相互同期しました。`);
-                } else {
-                    alert("保存完了しました。");
-                }
-                
-                await init(); 
-                if (charSelect) charSelect.value = activeId;
-                if (allData[activeId]) loadCharacterToForm(allData[activeId]);
+                alert("保存完了");
+                currentScenarioId = sId;
+                loadHistory();
 
             } catch(e) {
                 console.error(e);
-                alert("保存中にエラーが発生しました: " + e.message);
-            }
-        };
-
-        monitorAuth((user) => {
-            if(user) {
-                if(!isInitDone) { init(); isInitDone = true; }
-                setupGalleryEvents(); // ギャラリーイベント初期化
-                addSaveButton();
-            } else {
-                const sel = getEl('charSelect');
-                if(sel) sel.innerHTML = '<option>LOGIN REQUIRED</option>';
+                alert("Error: " + e.message);
+            } finally {
+                btn.style.pointerEvents = "auto";
+                btn.style.opacity = "1";
+                btnText.textContent = "保存";
             }
         });
-
-        async function init() {
-            try {
-                const data = await loadFromCloud();
-                allData = data || {};
-                renderSelect();
-            } catch(e) { console.error(e); }
-        }
-
-        function renderSelect() {
-            const sel = getEl('charSelect');
-            if(!sel) return; 
-            const currentVal = sel.value; 
-            
-            sel.innerHTML = '<option value="">-- SELECT CHARACTER --</option>';
-            Object.values(allData).forEach(c => {
-                const opt = document.createElement('option');
-                const val = c.id || c.name;
-                opt.value = val;
-                opt.textContent = c.name;
-                sel.appendChild(opt);
-            });
-            
-            if (currentId && allData[currentId]) {
-                sel.value = currentId;
-            }
-        }
-
-        const sel = getEl('charSelect');
-        if(sel) {
-            sel.addEventListener('change', (e) => {
-                currentId = e.target.value;
-                if(!currentId) {
-                    getEl('editorArea').style.opacity='0.3';
-                    getEl('editorArea').style.pointerEvents='none';
-                    return;
-                }
-                const target = allData[currentId];
-                if(target) loadCharacterToForm(target);
-            });
-        }
-
-        function loadCharacterToForm(d) {
-            getEl('editorArea').style.opacity='1';
-            getEl('editorArea').style.pointerEvents='auto';
-            
-            FIELD_MAPPING.forEach(field => { setVal(field.id, d[field.key]); });
-
-            // パートナーリスト
-            const container = getEl('partnerListContainer');
-            container.innerHTML = '';
-            if (d.partners && Array.isArray(d.partners)) {
-                d.partners.forEach(p => addPartnerRow(p.id, p.group));
-            } else if (d.partnerId) {
-                addPartnerRow(d.partnerId, d.groupName || "");
-            }
-
-            // ギャラリーリスト
-            const gallContainer = getEl('galleryList');
-            gallContainer.innerHTML = '';
-            if (d.gallery && Array.isArray(d.gallery)) {
-                d.gallery.forEach(src => addGalleryItem(src));
-            }
-
-            setSrc('previewBody', d.image); setSrc('previewIcon', d.icon);
-            setVal('inpThemeColor', d.color || '#d9333f');
-            const s = d.stats || {}; STATS_MAPPING.forEach(f => setVal(f.id, s[f.key]));
-            const v = d.vitals || {}; VITALS_MAPPING.forEach(f => setVal(f.id, v[f.key]));
-            const fullMemo = d.memo || '';
-            const extract = (tag) => {
-                const regex = new RegExp(`\\[${tag}\\]\\n([\\s\\S]*?)(\\n\\[|$)`);
-                const m = fullMemo.match(regex);
-                return m ? m[1].trim() : '';
-            };
-            setVal('txtBackground', extract('経歴')); setVal('txtPersonality', extract('性格')); setVal('txtRelations', extract('人間関係'));
-            setVal('txtAppearance', extract('外見')||extract('外見的特徴')); setVal('txtRoleplay', extract('RP補足')||extract('RP用補足'));
-            if(!fullMemo.includes('[')) setVal('txtMemo', fullMemo); else setVal('txtMemo', extract('メモ'));
-            getEl('itemList').innerHTML = '';
-            if(Array.isArray(d.items)) d.items.forEach(i => addItemRow(i)); else addItemRow();
-            getEl('weaponList').innerHTML = '';
-            if(Array.isArray(d.weapons)) d.weapons.forEach(w => addWeaponRow(w)); else addWeaponRow();
-            renderSkills(d.skills);
-            if(Array.isArray(d.scenarioList)) {
-                const text = d.scenarioList.map(scn => `[${scn.title}]\n${scn.desc}`).join('\n\n');
-                setVal('txtScenarioDetails', text);
-            } else {
-                const simpleList = d.scenarios || "";
-                if (simpleList && !d.scenarioList) {
-                    const converted = simpleList.split('\n').filter(l => l.trim()).map(l => `[${l.replace(/[\[\]]/g, '')}]\n(詳細未記入)`).join('\n\n');
-                    setVal('txtScenarioDetails', converted);
-                } else { setVal('txtScenarioDetails', ''); }
-            }
-            runCalculations();
-        }
-
-        function renderSkills(skillsObj) {
-            const area = getEl('skillArea'); area.innerHTML = '';
-            const cats = [
-                {id:'combat', label:'戦闘技能'}, {id:'explore', label:'探索技能'}, 
-                {id:'action', label:'行動技能'}, {id:'negotiate', label:'交渉技能'}, 
-                {id:'knowledge', label:'知識技能'}, {id:'original', label:'その他 (オリジナル)'}
-            ];
-            cats.forEach(c => {
-                const list = skillsObj ? (skillsObj[c.id] || []) : [];
-                const box = document.createElement('div');
-                box.className = 'skill-category';
-                box.id = `skill-cat-${c.id}`;
-                let html = `<h4>${c.label} <button type="button" class="btn-add-skill" onclick="addSkillRow('${c.id}')">+ 追加</button></h4>
-                <table class="skill-table"><thead><tr><th style="width:120px; text-align:left;">技能名</th><th style="width:40px;">合計</th><th style="width:40px;">初期</th><th style="width:40px;">職業</th><th style="width:40px;">興味</th><th style="width:40px;">成長</th><th style="text-align:left; padding-left:10px;">技能詳細 (Flavor Text)</th></tr></thead><tbody>`;
-                list.forEach(s => {
-                    html += `<tr class="skill-entry"><td class="s-name" style="font-weight:bold;"><span class="s-name-text">${s.name}</span><div style="margin-top:2px;"><select class="skill-cat-select" onchange="moveCategory(this)"><option value="">カテゴリ移動...</option><option value="combat">戦闘</option><option value="explore">探索</option><option value="action">行動</option><option value="negotiate">交渉</option><option value="knowledge">知識</option><option value="original">その他</option></select></div></td><td><input type="number" class="s-total" value="${s.total}" readonly tabindex="-1"></td><td><input type="number" class="s-init" value="${s.init}" readonly tabindex="-1" style="color:#888;"></td><td><input type="number" class="s-job" value="${s.job}"></td><td><input type="number" class="s-interest" value="${s.interest}"></td><td><input type="number" class="s-growth" value="${s.growth}"></td><td style="padding-left:10px;"><input type="text" class="s-desc skill-desc-input" value="${s.desc || ''}" placeholder="設定や理由など..."></td></tr>`;
-                });
-                html += `</tbody></table>`;
-                box.innerHTML = html; area.appendChild(box);
-                box.querySelectorAll('.skill-entry').forEach(row => attachSkillCalc(row));
-            });
-        }
-
-        const dropZone = getEl('dropZone');
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
-            dropZone.addEventListener(e, (ev) => { ev.preventDefault(); ev.stopPropagation(); });
-        });
-        dropZone.addEventListener('dragover', () => dropZone.classList.add('dragover'));
-        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-        dropZone.addEventListener('drop', (e) => {
-            dropZone.classList.remove('dragover');
-            const file = e.dataTransfer.files[0];
-            if(file && file.type.match('text.*')) {
-                const reader = new FileReader();
-                reader.onload = (ev) => getEl('txtImportSource').value = ev.target.result;
-                reader.readAsText(file);
-            }
-        });
-
-        const resizeImage = (file, maxWidth, maxHeight, callback) => {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    let w = img.width; let h = img.height;
-                    if (w > maxWidth || h > maxHeight) { const ratio = Math.min(maxWidth / w, maxHeight / h); w *= ratio; h *= ratio; }
-                    const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
-                    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h); callback(canvas.toDataURL('image/png'));
-                }; img.src = e.target.result;
-            }; reader.readAsDataURL(file);
-        };
-        const setupImgDrop = (zoneId, inputId, imgId) => {
-            const zone = getEl(zoneId);
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => { zone.addEventListener(e, (ev) => { ev.preventDefault(); ev.stopPropagation(); }); });
-            zone.addEventListener('drop', (e) => { const file = e.dataTransfer.files[0]; if(file && file.type.match('image.*')) { resizeImage(file, 600, 600, (resizedDataUrl) => { getEl(inputId).value = resizedDataUrl; getEl(imgId).src = resizedDataUrl; }); } });
-        };
-        setupImgDrop('dropBody', 'inpImageBody', 'previewBody');
-        setupImgDrop('dropIcon', 'inpImageIcon', 'previewIcon');
-
-        getEl('btnMerge').addEventListener('click', () => {
-            const text = getEl('txtImportSource').value; if(!text) return;
-            const p = parseIaChara(text);
-            const updateVal = (id, val) => { if(val !== undefined && val !== null && val !== "") { setVal(id, val); } };
-            FIELD_MAPPING.forEach(f => { if(p[f.key]) updateVal(f.id, p[f.key]); });
-            
-            // パートナーリストのマージは複雑なためスキップまたは単純化
-            // (通常importではパートナー関係は含まれないことが多いため)
-
-            STATS_MAPPING.forEach(f => updateVal(f.id, p.stats[f.key]));
-            VITALS_MAPPING.forEach(f => updateVal(f.id, p.vitals[f.key]));
-            if(p.colorHair) updateVal('inpHair', p.colorHair); if(p.colorEye) updateVal('inpEye', p.colorEye); if(p.colorSkin) updateVal('inpSkin', p.colorSkin);
-            Object.keys(MEMO_ID_MAP).forEach(key => { if(p.memo[key]) updateVal(MEMO_ID_MAP[key], p.memo[key]); });
-            if(p.items && p.items.length > 0) { const existingNames = Array.from(document.querySelectorAll('.i-name')).map(el => el.value.trim()); p.items.forEach(i => { if (i.name && !existingNames.includes(i.name.trim())) { addItemRow(i); } }); }
-            if(p.weapons && p.weapons.length > 0) { const existingWeapons = Array.from(document.querySelectorAll('.w-name')).map(el => el.value.trim()); p.weapons.forEach(w => { if (w.name && !existingWeapons.includes(w.name.trim())) { addWeaponRow(w); } }); }
-            if(p.skills && Object.values(p.skills).flat().length > 0) { renderSkills(p.skills); }
-            if(p.image) { setVal('inpImageBody', p.image); setSrc('previewBody', p.image); }
-            if(p.icon) { setVal('inpImageIcon', p.icon); setSrc('previewIcon', p.icon); }
-            alert("解析・補完しました！");
-            runCalculations();
-        });
-
-        function runCalculations() {
-            const age = parseInt(getEl('inpAge')?.value)||0; const edu = parseInt(getEl('s_edu')?.value)||0;
-            const eduArea = getEl('eduCheckArea'); const eduMsg = getEl('eduMsg');
-            if(eduArea) { if(edu>0 && age>0) { const minAge=edu+6; eduArea.style.display='block'; if(age<minAge){ eduMsg.className='warn-text'; eduMsg.textContent=`⚠️ 年齢不足 (EDU${edu}なら最低${minAge}歳)`; } else { eduMsg.className='calc-val'; eduMsg.textContent=`✅ OK (最低${minAge}歳)`; } } else eduArea.style.display='none'; }
-            const h = parseFloat(getEl('inpHeight')?.value), w = parseFloat(getEl('inpWeight')?.value);
-            if(h>0 && w>0) { const bmi = w/((h/100)**2); getEl('outBMI').textContent = `${bmi.toFixed(1)}`; }
-        }
-        ['inpAge','inpHeight','inpWeight','s_edu'].forEach(id=>getEl(id)?.addEventListener('input', runCalculations));
-
-        const btnCreate = getEl('btnCreateNew');
-        if(btnCreate) {
-            btnCreate.addEventListener('click', ()=>{
-                const id=crypto.randomUUID();
-                allData[id]={id: id, name:"新規キャラ", stats:{}, vitals:{}, items:[], weapons:[], scenarioList:[], skills:{}};
-                currentId=id; renderSelect(); loadCharacterToForm(allData[id]);
-            });
-        }
-        
-        const btnDel = getEl('btnDelete');
-        if(btnDel) {
-            btnDel.addEventListener('click', async ()=>{
-                if(!currentId) return;
-                if(confirm('本当に削除しますか？\n（この操作は取り消せません）')) { 
-                    await deleteFromCloud(currentId);
-                }
-            });
-        }
     </script>
 </body>
 </html>
