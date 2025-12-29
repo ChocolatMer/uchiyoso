@@ -1,11 +1,13 @@
+// --- uchiyoso/character/firestore.js ---
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } 
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { 
-    getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, addDoc, query, where, serverTimestamp 
+    getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, addDoc, updateDoc, query, where, serverTimestamp, orderBy 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// 設定 (変更なし)
+// 設定
 const firebaseConfig = {
   apiKey: "AIzaSyBZVh6NhFA_BSuyUW-sZV2QPSvSzdYJZWU",
   authDomain: "chocolatmer-uchiyoso.firebaseapp.com",
@@ -25,12 +27,12 @@ let currentUser = null;
 // --- 認証 ---
 export function login() {
     signInWithPopup(auth, provider)
-        .then((result) => alert("ログインしました: " + result.user.displayName))
-        .catch((error) => alert("ログイン失敗: " + error.message));
+        .then((result) => alert("Login: " + result.user.displayName))
+        .catch((error) => alert("Error: " + error.message));
 }
 
 export function logout() {
-    signOut(auth).then(() => alert("ログアウトしました"));
+    signOut(auth).then(() => alert("Logout"));
 }
 
 export function monitorAuth(onLogin, onLogout) {
@@ -41,74 +43,46 @@ export function monitorAuth(onLogin, onLogout) {
     });
 }
 
-// --- データベース設定 ---
+// --- キャラクター操作 ---
 const SHARED_COLLECTION = "rooms";
 const SHARED_DOC_ID = "couple_shared_data";
 const CHAR_SUB_COLLECTION = "characters"; 
 
-// --- キャラクター操作 (ID管理版) ---
-
-// 保存: IDをファイル名として保存
 export async function saveToCloud(charData) {
     if (!currentUser) return alert("保存にはログインが必要です。");
     if (!charData || !charData.id) return alert("データエラー: IDがありません。");
 
     try {
-        // IDをキーにして保存（名前が変わってもファイルは同じまま）
         const charRef = doc(db, SHARED_COLLECTION, SHARED_DOC_ID, CHAR_SUB_COLLECTION, charData.id);
         await setDoc(charRef, charData, { merge: true });
-        alert("保存完了: " + charData.name);
+        console.log("Char Saved:", charData.name);
     } catch (e) {
         console.error("Save Error:", e);
         alert("保存エラー: " + e.message);
     }
 }
 
-// 読み込み: 全データを取得し、IDで整理
 export async function loadFromCloud() {
     if (!currentUser) return alert("読み込みにはログインが必要です。");
-
     try {
         const colRef = collection(db, SHARED_COLLECTION, SHARED_DOC_ID, CHAR_SUB_COLLECTION);
         const querySnapshot = await getDocs(colRef);
-
         const loadedData = {};
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
-            
-            // 重要: 古いデータ(IDがない)場合、ファイル名をIDとして扱う救済処置
-            if (!data.id) {
-                data.id = docSnap.id;
-            }
-            
+            if (!data.id) data.id = docSnap.id;
             loadedData[data.id] = data;
         });
-        
         return loadedData;
-
     } catch (e) {
         console.error("Load Error:", e);
-        alert("読み込みエラー: " + e.message);
         return null;
     }
 }
 
-// 削除: IDを指定してファイルを消す
-export async function deleteFromCloud(charId) {
-    if (!currentUser || !charId) return;
-    try {
-        const charRef = doc(db, SHARED_COLLECTION, SHARED_DOC_ID, CHAR_SUB_COLLECTION, charId);
-        await deleteDoc(charRef);
-        alert("削除しました。");
-        location.reload(); 
-    } catch (e) {
-        console.error("Delete Error:", e);
-        alert("削除エラー: " + e.message);
-    }
-}
+// --- シナリオ機能 (拡張) ---
 
-// --- シナリオ機能 ---
-
+// 新規作成
 export async function saveScenario(scenarioData) {
     if (!currentUser) throw new Error("User not logged in");
     const dataToSave = {
@@ -116,6 +90,8 @@ export async function saveScenario(scenarioData) {
         updatedAt: serverTimestamp()
     };
     try {
+        // ID指定がない場合はaddDoc、ある場合はsetDoc(上書き)だが、
+        // ここでは新規作成として扱う
         const docRef = await addDoc(collection(db, "scenarios"), dataToSave);
         return docRef.id;
     } catch (e) {
@@ -124,30 +100,10 @@ export async function saveScenario(scenarioData) {
     }
 }
 
-export async function getScenariosForCharacter(charId) {
-    if (!currentUser) return [];
-    try {
-        const q = query(
-            collection(db, "scenarios"),
-            where("members", "array-contains", charId)
-        );
-        const querySnapshot = await getDocs(q);
-        const scenarios = [];
-        querySnapshot.forEach((doc) => {
-            scenarios.push({ id: doc.id, ...doc.data() });
-        });
-        return scenarios.sort((a, b) => new Date(b.date) - new Date(a.date));
-    } catch (e) {
-        console.error(e);
-        return [];
-    }
-}
-// --- firestore.js の末尾に追加 ---
-
-// シナリオ更新 (ID指定で上書き)
+// 更新 (NEW)
 export async function updateScenario(scenarioId, scenarioData) {
     if (!currentUser) throw new Error("User not logged in");
-    if (!scenarioId) throw new Error("Scenario ID is missing");
+    if (!scenarioId) throw new Error("No Scenario ID provided");
     
     const dataToSave = {
         ...scenarioData,
@@ -164,19 +120,51 @@ export async function updateScenario(scenarioId, scenarioData) {
     }
 }
 
-// 特定のシナリオを取得
-export async function getScenarioById(scenarioId) {
-    if (!currentUser) return null;
+// 削除 (NEW)
+export async function deleteScenario(scenarioId) {
+    if (!currentUser) throw new Error("User not logged in");
     try {
-        const docRef = doc(db, "scenarios", scenarioId);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-            return { id: docSnap.id, ...docSnap.data() };
-        } else {
-            return null;
-        }
+        await deleteDoc(doc(db, "scenarios", scenarioId));
     } catch (e) {
-        console.error("Error getting scenario:", e);
-        return null;
+        console.error("Error deleting scenario: ", e);
+        throw e;
+    }
+}
+
+// 取得 (クエリ強化)
+export async function getScenariosForCharacter(charId) {
+    if (!currentUser) return [];
+    if (!charId) return [];
+
+    try {
+        // members配列にcharIdが含まれるものを検索
+        const q = query(
+            collection(db, "scenarios"),
+            where("members", "array-contains", charId),
+            orderBy("date", "desc") // 日付順
+        );
+        const querySnapshot = await getDocs(q);
+        const scenarios = [];
+        querySnapshot.forEach((doc) => {
+            scenarios.push({ id: doc.id, ...doc.data() });
+        });
+        return scenarios;
+    } catch (e) {
+        // インデックス未作成エラーが出る場合があるため、クライアントサイドソートにフォールバック
+        console.warn("Index warning or fetch error:", e);
+        try {
+            const q2 = query(
+                collection(db, "scenarios"),
+                where("members", "array-contains", charId)
+            );
+            const snap = await getDocs(q2);
+            const list = [];
+            snap.forEach(d => list.push({id: d.id, ...d.data()}));
+            // 日付降順ソート
+            return list.sort((a,b) => (b.date || "").localeCompare(a.date || ""));
+        } catch(ex) {
+            console.error(ex);
+            return [];
+        }
     }
 }

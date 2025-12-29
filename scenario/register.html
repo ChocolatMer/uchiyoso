@@ -3,467 +3,446 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CHRONICLE LOG BOOK</title>
+    <title>CHRONICLE LOG</title>
     
-    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&family=Noto+Serif+JP:wght@300;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&family=Noto+Sans+JP:wght@300;400&display=swap" rel="stylesheet">
     <link href="../character/edit/header.css" rel="stylesheet">
 
     <style>
-        /* --- Layout & Reset --- */
+        /* --- 全体設定 --- */
         :root {
-            --paper-bg: #232323;
-            --paper-texture: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+            --bg-color: #0a0a0a;
+            --book-bg: #1e1e1e;
+            --page-bg: #232323;
             --accent-gold: #d4b346;
             --accent-red: #8b2828;
             --text-main: #ccc;
-            --text-dim: #888;
+            --bg-pattern: radial-gradient(#151515 1px, transparent 1px);
         }
 
         body { 
-            background-color: #0a0a0a; 
-            background-image: radial-gradient(#1a1a1a 1px, transparent 1px);
+            background-color: var(--bg-color); 
+            background-image: var(--bg-pattern);
             background-size: 20px 20px;
-            color: var(--text-main); font-family: 'Shippori Mincho', serif; 
-            margin: 0; min-height: 100vh; overflow-x: hidden;
-            display: flex; flex-direction: column;
+            color: var(--text-main); 
+            font-family: 'Shippori Mincho', serif; 
+            margin: 0; padding: 0; min-height: 100vh; 
+            overflow-x: hidden;
         }
 
-        /* --- Main Layout: Book + Side Panel --- */
-        .workspace {
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
+        /* --- レイアウト (Grid) --- */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr minmax(auto, 1450px) 300px; /* 左余白、本(中央)、履歴(右) */
             gap: 20px;
-            padding: 40px 20px;
-            width: 100%; box-sizing: border-box;
-            flex-grow: 1;
+            width: 100%;
+            min-height: 100vh;
+            padding-top: 40px;
+            box-sizing: border-box;
+            align-items: start;
         }
 
-        /* --- BOOK STYLING --- */
+        /* 画面幅が狭い時 */
+        @media (max-width: 1600px) {
+            .main-layout {
+                grid-template-columns: 1fr auto 1fr; /* 本を中央に */
+            }
+            .history-panel {
+                display: none; /* 一旦隠す（あるいはモーダルにする等の対応も可） */
+            }
+        }
+
+        /* --- 本の外観 --- */
         .book-wrapper { 
             position: relative; 
-            width: 1300px; max-width: 85vw;
-            height: 900px;
-            perspective: 1500px;
-            flex-shrink: 0;
-            z-index: 10;
+            width: 100%; max-width: 1450px;
+            height: 950px;
+            perspective: 1500px; 
+            margin: 0 auto;
         }
         .book-cover {
             width: 100%; height: 100%; background: #111; border-radius: 6px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.9), 0 0 0 8px #181818 inset;
-            padding: 15px 18px; box-sizing: border-box; display: flex;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.9), 0 0 0 10px #1a1a1a inset;
+            padding: 15px 20px; box-sizing: border-box; display: flex;
         }
         .book-pages {
-            width: 100%; height: 100%; background: #1e1e1e; display: flex; 
-            border-radius: 2px; overflow: hidden; position: relative;
-            box-shadow: inset 0 0 80px rgba(0,0,0,0.8);
+            width: 100%; height: 100%; background: var(--book-bg); display: flex; 
+            border-radius: 4px; overflow: hidden; position: relative;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.9);
         }
         .book-spine {
-            position: absolute; left: 50%; top: 0; bottom: 0; width: 60px; margin-left: -30px;
-            background: linear-gradient(90deg, rgba(0,0,0,0.6), rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.1) 60%, rgba(0,0,0,0.6));
-            pointer-events: none; z-index: 20; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            position: absolute; left: 50%; top: 0; bottom: 0; width: 80px; margin-left: -40px;
+            background: linear-gradient(90deg, rgba(0,0,0,0.6), rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.6));
+            pointer-events: none; z-index: 10;
         }
 
+        /* ページ共通 */
         .page { 
-            flex: 1; padding: 40px 50px; overflow-y: auto;
-            background-color: var(--paper-bg);
-            background-image: var(--paper-texture);
+            flex: 1; padding: 40px 60px; position: relative; overflow-y: auto;
+            background-color: var(--page-bg);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
         }
-        .page::-webkit-scrollbar { width: 5px; }
+        .page::-webkit-scrollbar { width: 6px; }
         .page::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
-        .page-left { border-right: 1px solid #1a1a1a; box-shadow: inset -15px 0 30px -10px rgba(0,0,0,0.7); }
-        .page-right { box-shadow: inset 15px 0 30px -10px rgba(0,0,0,0.7); }
+        .page-left { border-right: 1px solid #111; box-shadow: inset -20px 0 40px -10px rgba(0,0,0,0.8); }
+        .page-right { box-shadow: inset 20px 0 40px -10px rgba(0,0,0,0.8); }
 
-        /* --- SIDE PANEL (HISTORY) --- */
-        .side-panel {
-            width: 280px;
+        /* --- 右カラム: 履歴パネル (机の上のメモ) --- */
+        .history-panel {
+            background: rgba(20, 20, 20, 0.8);
+            border-left: 1px solid #333;
             height: 900px;
-            background: rgba(15, 15, 15, 0.8);
-            border: 1px solid #333;
+            margin-right: 20px;
             border-radius: 4px;
-            padding: 20px; box-sizing: border-box;
-            display: flex; flex-direction: column;
+            padding: 20px;
+            overflow-y: auto;
+            font-family: 'Noto Sans JP', sans-serif;
+            position: sticky;
+            top: 20px;
             backdrop-filter: blur(5px);
-            flex-shrink: 0;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.5);
         }
-        .side-header {
-            font-family: 'Cinzel', serif; color: var(--accent-gold); 
+        .history-header {
+            color: var(--accent-gold); font-family: 'Cinzel', serif; 
             border-bottom: 1px solid #444; padding-bottom: 10px; margin-bottom: 15px;
-            font-size: 1.1rem; text-align: center;
+            display: flex; justify-content: space-between; align-items: center;
         }
-        .history-list {
-            flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
-        }
+        .history-list { display: flex; flex-direction: column; gap: 10px; }
         .history-item {
-            padding: 10px; background: #1a1a1a; border: 1px solid #333; 
-            border-left: 3px solid #555; cursor: pointer; transition: 0.2s;
+            background: #1a1a1a; padding: 10px; border-radius: 3px; border: 1px solid #333;
+            cursor: pointer; transition: 0.2s; position: relative;
         }
-        .history-item:hover { background: #252525; border-left-color: var(--accent-gold); }
-        .history-item.active { background: #2a2222; border-left-color: var(--accent-red); border: 1px solid var(--accent-red); }
-        
-        .h-title { font-size: 0.9rem; font-weight: bold; margin-bottom: 4px; display: block; }
-        .h-meta { font-size: 0.75rem; color: #777; font-family: 'Cinzel', serif; display: flex; justify-content: space-between; }
-        
-        .reset-btn {
-            margin-top: 15px; background: transparent; border: 1px dashed #555; color: #777;
-            padding: 8px; cursor: pointer; font-family: 'Cinzel', serif; transition: 0.3s;
-        }
-        .reset-btn:hover { border-color: #999; color: #ccc; }
+        .history-item:hover { border-color: var(--accent-gold); background: #252525; }
+        .history-item.active { border-color: var(--accent-gold); background: #2a2a2a; border-left: 3px solid var(--accent-gold); }
+        .h-title { font-size: 0.9rem; font-weight: bold; color: #eee; margin-bottom: 4px; }
+        .h-meta { font-size: 0.75rem; color: #888; display: flex; justify-content: space-between; }
+        .h-res { font-size: 0.7rem; padding: 2px 6px; border-radius: 2px; }
+        .h-res.alive { background: #2b3d52; color: #bfd9ff; }
+        .h-res.lost { background: #5a2e38; color: #ffbfbf; }
 
-        /* --- TABS --- */
+        /* --- 封蝋ボタン (Wax Seal Button) --- */
+        .seal-container {
+            position: absolute; bottom: 30px; right: 40px; z-index: 100;
+            display: flex; flex-direction: column; align-items: center; gap: 10px;
+        }
+        .wax-seal-btn {
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #a63e3e, #7a1f1f);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.4), 0 0 0 4px rgba(100,0,0,0.3);
+            border: 2px dashed rgba(255,255,255,0.1);
+            color: rgba(255,215,0,0.8);
+            font-family: 'Cinzel', serif; font-weight: bold; font-size: 0.9rem;
+            cursor: pointer; transition: transform 0.2s, box-shadow 0.2s;
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+        }
+        .wax-seal-btn:hover { transform: scale(1.05); box-shadow: 0 6px 15px rgba(0,0,0,0.7), inset 0 0 20px rgba(0,0,0,0.3), 0 0 0 4px rgba(120,0,0,0.4); }
+        .wax-seal-btn:active { transform: scale(0.95); }
+        .wax-seal-btn span { font-size: 1.5rem; margin-bottom: 2px; }
+        
+        .new-btn-fab {
+            width: 40px; height: 40px; border-radius: 50%; background: #333; color: #aaa;
+            border: 1px solid #555; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: 0.3s;
+        }
+        .new-btn-fab:hover { background: #444; color: #fff; }
+
+        /* --- タブ --- */
         .tabs-container {
-            position: absolute; top: 50px; right: -40px; width: 40px; z-index: 5;
-            display: flex; flex-direction: column; gap: 10px;
+            position: absolute; top: 60px; right: -45px; width: 45px; z-index: 5;
+            display: flex; flex-direction: column; gap: 12px;
         }
         .tab-btn {
-            width: 40px; height: 120px; background: #1a1a1a; 
-            border: 1px solid #333; border-left: none; border-radius: 0 6px 6px 0;
-            color: #555; cursor: pointer; writing-mode: vertical-rl; 
-            text-align: center; font-family: 'Cinzel', serif; font-size: 0.85rem; letter-spacing: 2px;
-            transition: 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-            box-shadow: 5px 5px 15px rgba(0,0,0,0.5);
+            width: 45px; height: 110px; background: #2a2a2a; border: 1px solid #333; border-left: none;
+            border-radius: 0 4px 4px 0; color: #666; cursor: pointer; writing-mode: vertical-rl; 
+            text-align: center; font-family: 'Cinzel', serif; letter-spacing: 2px; font-size: 0.8rem;
+            transition: 0.3s; box-shadow: 3px 3px 8px rgba(0,0,0,0.5); position: relative; left: 0;
         }
-        .tab-btn:hover { background: #252525; color: #999; transform: translateX(5px); }
+        .tab-btn:hover { background: #333; color: #aaa; left: 5px; }
         .tab-btn.active { 
-            background: var(--accent-red); color: #fff; width: 55px; 
-            font-weight: bold; transform: translateX(5px);
-            border-top: 1px solid #ff7777; box-shadow: 8px 5px 20px rgba(0,0,0,0.7);
+            background: var(--accent-red); color: #fff; width: 60px; left: 5px; font-weight: bold;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.7); border-top: 1px solid #a44;
         }
-        .tab-panel { display: none; animation: fadeIn 0.4s ease; padding-bottom: 60px; }
+        .tab-panel { display: none; animation: fadeIn 0.5s; padding-bottom: 60px; }
         .tab-panel.active { display: block; }
-        @keyframes fadeIn { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+        @keyframes fadeIn { from{opacity:0; transform:translateY(5px);} to{opacity:1; transform:translateY(0);} }
 
-        /* --- FORM ELEMENTS (Antique Style) --- */
-        input[type="text"], input[type="number"], input[type="date"], textarea {
-            background: transparent; border: none; border-bottom: 1px solid #444;
-            color: #ddd; font-family: 'Shippori Mincho', serif; padding: 5px;
-            transition: 0.3s; outline: none;
+        /* --- フォーム部品 (既存スタイル継承・微調整) --- */
+        .report-header-img {
+            width: 100%; height: 280px; background: #111; border: 1px dashed #444; 
+            display: flex; align-items: center; justify-content: center; overflow: hidden;
+            margin-bottom: 25px; border-radius: 2px; cursor: pointer; position: relative;
         }
-        input:focus, textarea:focus { border-bottom-color: var(--accent-gold); background: rgba(255,255,255,0.02); }
-        select {
-            background: #151515; border: none; color: #ccc; padding: 5px; outline: none; cursor: pointer;
-        }
+        .report-header-img img { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; transition: 0.3s; }
+        .img-label { position: absolute; bottom: 0; right: 0; background: rgba(0,0,0,0.7); color: var(--accent-gold); font-size: 0.7rem; padding: 4px 10px; font-family: 'Cinzel', serif; }
 
-        /* Page 1 Specifics */
-        .scenario-title {
-            width: 100%; font-size: 2.2rem; text-align: center; margin: 10px 0 5px;
-            font-weight: 700; border-bottom: 2px solid #444 !important;
+        input.scenario-title {
+            width: 100%; background: transparent; border: none; border-bottom: 2px solid #444;
+            font-family: 'Shippori Mincho', serif; font-size: 2.4rem; font-weight: bold; color: #fff;
+            text-align: center; padding: 5px 0; margin-bottom: 5px; transition: 0.3s;
         }
-        .image-uploader {
-            width: 100%; height: 260px; background: #0f0f0f; border: 1px dashed #444;
-            display: flex; align-items: center; justify-content: center; margin-bottom: 20px;
-            position: relative; overflow: hidden; cursor: pointer; transition: 0.3s;
-        }
-        .image-uploader:hover { border-color: var(--accent-gold); }
-        .image-uploader img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; transition: 0.3s; }
-        .image-uploader:hover img { opacity: 1; transform: scale(1.02); }
-        .img-label {
-            position: absolute; bottom: 0; right: 0; background: rgba(0,0,0,0.8);
-            color: var(--accent-gold); font-size: 0.7rem; padding: 4px 10px; font-family: 'Cinzel';
-        }
-
-        .pair-container {
-            display: flex; justify-content: center; gap: 30px; margin: 30px 0; align-items: flex-start;
-        }
-        .char-slot { display: flex; flex-direction: column; align-items: center; width: 140px; }
-        .char-icon {
-            width: 100px; height: 100px; border-radius: 50%; border: 3px solid #333;
-            background: #000; object-fit: cover; margin-bottom: 10px;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5); transition: 0.3s;
-        }
-        .char-select { width: 100%; text-align-last: center; margin-bottom: 5px; }
-        .pl-name { font-size: 0.8rem; color: #777; text-align: center; width: 100%; }
-
-        /* Meta List (Notion like) */
-        .meta-list { border-top: 1px solid #333; margin-top: 20px; }
-        .meta-row { 
-            display: grid; grid-template-columns: 120px 1fr; align-items: center;
-            border-bottom: 1px solid #333; padding: 12px 0; font-size: 0.9rem;
-        }
-        .meta-label { font-family: 'Cinzel', serif; color: var(--text-dim); display: flex; align-items: center; gap: 8px; }
+        input.scenario-title:focus { outline: none; border-color: var(--accent-gold); }
         
-        .tag-badge {
-            display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 0.85rem;
-            min-width: 80px; text-align: center; font-family: 'Shippori Mincho';
-        }
+        .session-count { text-align: center; font-family: 'Cinzel', serif; color: var(--accent-gold); font-size: 1.0rem; margin-bottom: 35px; }
+        .session-count input { background: transparent; border: none; color: inherit; font-family: inherit; font-size: inherit; text-align: center; width: 60px; border-bottom: 1px dashed #444; }
+
+        .char-pair-area { display: flex; justify-content: space-around; align-items: flex-start; gap: 30px; margin-bottom: 40px; padding: 0 40px; }
+        .char-unit { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .char-icon-circle { width: 100px; height: 100px; border-radius: 50%; border: 3px solid #333; object-fit: cover; background: #000; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+        select.char-select { width: 100%; background: #1a1a1a; border: none; color: #eee; padding: 5px; text-align: center; font-size: 0.95rem; border-radius: 2px; }
+        input.pl-name { width: 100%; background: transparent; border: none; color: #888; text-align: center; font-size: 0.85rem; padding: 2px; }
+
+        /* Notion風リスト */
+        .prop-list { display: flex; flex-direction: column; border-top: 1px solid #333; }
+        .prop-row { display: grid; grid-template-columns: 140px 1fr; align-items: center; border-bottom: 1px solid #333; padding: 10px 0; min-height: 40px; }
+        .prop-label { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: #888; font-family: 'Cinzel', sans-serif; }
+        
+        .tag-select { appearance: none; border: none; border-radius: 4px; padding: 5px 12px; font-size: 0.9rem; font-family: 'Shippori Mincho', serif; min-width: 90px; text-align: center; color: #ddd; cursor: pointer; }
         .bg-pink { background: #5a2e38; color: #ffbfbf; }
         .bg-blue { background: #2b3d52; color: #bfd9ff; }
         .bg-green { background: #2e4a36; color: #c2ffbf; }
-        .bg-def { background: #333; color: #aaa; }
+        .bg-orange { background: #523e2b; color: #ffdfbf; }
+        .bg-gray { background: #333; color: #aaa; }
 
-        /* Page 2 Specifics */
-        .section-head {
-            font-family: 'Cinzel', serif; font-size: 1.2rem; color: var(--accent-gold);
-            border-bottom: 1px solid #444; padding-bottom: 5px; margin: 25px 0 15px;
-            display: flex; align-items: center; gap: 10px;
-        }
-        .section-head::before { content: ''; display: inline-block; width: 8px; height: 8px; background: var(--accent-gold); transform: rotate(45deg); }
+        /* 入力エリア共通 */
+        textarea.paper-area { width: 100%; background: rgba(255,255,255,0.02); border: 1px solid #333; color: #ccc; resize: vertical; font-family: 'Shippori Mincho', serif; line-height: 1.7; font-size: 0.9rem; padding: 8px; box-sizing: border-box; }
+        input.line-input { width: 100%; background: transparent; border: none; border-bottom: 1px solid #444; color: #ddd; font-size: 0.9rem; padding: 4px; box-sizing: border-box; }
 
-        .record-box {
-            background: rgba(0,0,0,0.2); border: 1px solid #2a2a2a; padding: 15px; margin-bottom: 15px; border-radius: 2px;
-        }
-        .box-label { font-size: 0.8rem; color: var(--accent-gold); font-family: 'Cinzel'; margin-bottom: 10px; letter-spacing: 1px; }
-
-        .dual-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .role-label { text-align: center; font-size: 0.7rem; color: #555; border-bottom: 1px dashed #333; margin-bottom: 5px; }
-
-        .detail-row { display: grid; grid-template-columns: 100px 1fr; gap: 10px; margin-bottom: 8px; align-items: start; }
-        .detail-lbl { font-size: 0.75rem; color: #777; padding-top: 6px; font-family: 'Cinzel'; }
-
-        /* --- SEALING STAMP (Save Button) --- */
-        .seal-btn-container {
-            position: absolute; bottom: 30px; right: 50px; z-index: 100;
-        }
-        .seal-btn {
-            width: 100px; height: 100px;
-            background: radial-gradient(circle at 30% 30%, #a43030, #721818);
-            border-radius: 50%;
-            border: 4px double #d4b346;
-            box-shadow: 
-                0 5px 15px rgba(0,0,0,0.6),
-                inset 0 0 20px rgba(0,0,0,0.5),
-                inset 2px 2px 5px rgba(255,255,255,0.2);
-            color: #d4b346; font-family: 'Cinzel', serif; font-weight: 700; font-size: 1.1rem;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            cursor: pointer; transition: 0.3s;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-            transform: rotate(-15deg);
-        }
-        .seal-btn:hover { transform: rotate(-15deg) scale(1.05); box-shadow: 0 10px 25px rgba(0,0,0,0.7); }
-        .seal-btn:active { transform: rotate(-15deg) scale(0.95); }
-        .seal-text { font-size: 0.8rem; opacity: 0.8; }
+        .record-section { margin-bottom: 30px; background: rgba(0,0,0,0.1); padding: 15px; border-radius: 4px; border: 1px solid #2a2a2a; }
+        .record-label { font-size: 0.85rem; color: var(--accent-gold); margin-bottom: 10px; font-family: 'Cinzel', serif; letter-spacing: 1px; }
+        .pair-input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .pair-col { display: flex; flex-direction: column; gap: 5px; }
+        .pair-role { font-size: 0.7rem; color: #666; text-align: center; border-bottom: 1px dashed #333; margin-bottom: 5px; }
         
-        /* Status msg */
-        #msg-toast {
-            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.8); color: #fff; padding: 10px 20px; border-radius: 4px;
-            font-family: 'Cinzel'; pointer-events: none; opacity: 0; transition: 0.5s; z-index: 9999;
-        }
-
+        /* ローディング */
+        #loadingIndicator { position:absolute; top:20px; right:20px; font-family:'Cinzel', serif; font-size:0.7rem; color:#555; z-index: 200; }
     </style>
 </head>
 <body>
-
+    
     <script type="module">
-        // Header loader (optional)
         try { const mod = await import("../character/header.js"); if(mod.initHeader) mod.initHeader(); } catch(e){}
     </script>
 
-    <div id="msg-toast">Ready</div>
+    <div class="main-layout">
+        <!-- LEFT SPACER (Grid Balance) -->
+        <div></div>
 
-    <div class="workspace">
-        <!-- BOOK -->
+        <!-- CENTER: BOOK -->
         <div class="book-wrapper">
             <div class="tabs-container">
-                <div class="tab-btn active" onclick="window.openTab('tab-record', this)">Record</div>
-                <div class="tab-btn" onclick="window.openTab('tab-scenario', this)">Detail</div>
-                <div class="tab-btn" onclick="window.openTab('tab-memo', this)">Memo</div>
+                <div class="tab-btn active" onclick="window.openTab('tab-record', this)">RECORD</div>
+                <div class="tab-btn" onclick="window.openTab('tab-scenario', this)">SCENARIO</div>
+                <div class="tab-btn" onclick="window.openTab('tab-memo', this)">MEMO</div>
             </div>
 
             <div class="book-cover">
                 <div class="book-pages">
                     <div class="book-spine"></div>
 
-                    <!-- LEFT PAGE: BASIC INFO -->
+                    <!-- PAGE 1: REPORT FACE -->
                     <div class="page page-left">
-                        <div class="image-uploader" id="dropTrailer">
+                        <div id="loadingIndicator">System Check...</div>
+                        
+                        <div class="report-header-img" id="dropTrailer">
                             <img id="imgTrailer" src="" alt="NO IMAGE">
                             <div class="img-label">SESSION SNAPSHOT</div>
                         </div>
                         <input type="hidden" id="inpImgTrailer">
 
-                        <input type="text" id="inpTitle" class="scenario-title" placeholder="Scenario Title">
-                        <div style="text-align:center; font-family:'Cinzel', serif; color:var(--accent-gold); margin-bottom:20px;">
-                            <input type="number" id="inpCount" value="1" style="width:50px; text-align:center;"> th Session
+                        <input type="text" id="inpTitle" class="scenario-title" placeholder="SCENARIO TITLE">
+                        <div class="session-count">
+                            <input type="number" id="inpCount" value="1"> th SESSION
                         </div>
 
-                        <!-- CHARACTERS -->
-                        <div class="pair-container">
-                            <div class="char-slot">
-                                <img id="iconPC" class="char-icon" src="">
-                                <div class="role-label">PC</div>
-                                <select id="selPC" class="char-select"><option>Loading...</option></select>
-                                <input type="text" id="inpPlNamePC" class="pl-name" placeholder="PL Name">
+                        <div class="char-pair-area">
+                            <div class="char-unit">
+                                <img id="iconPC" class="char-icon-circle" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+                                <div style="width:100%;">
+                                    <select id="selPC" class="char-select"><option>Loading...</option></select>
+                                    <input type="text" id="inpPlNamePC" class="pl-name" placeholder="PL Name">
+                                </div>
                             </div>
-                            <div style="font-family:'Cinzel'; font-size:2rem; color:#444; margin-top:30px;">&</div>
-                            <div class="char-slot">
-                                <img id="iconKPC" class="char-icon" src="">
-                                <div class="role-label">KPC</div>
-                                <select id="selKPC" class="char-select"><option>Loading...</option></select>
-                                <input type="text" id="inpPlNameKPC" class="pl-name" placeholder="KP/PL Name">
+                            <div style="align-self:center; font-family:'Cinzel',serif; color:#555; font-size:1.5rem;">&</div>
+                            <div class="char-unit">
+                                <img id="iconKPC" class="char-icon-circle" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+                                <div style="width:100%;">
+                                    <select id="selKPC" class="char-select"><option>Loading...</option></select>
+                                    <input type="text" id="inpPlNameKPC" class="pl-name" placeholder="KP/PL Name">
+                                </div>
                             </div>
                         </div>
 
-                        <!-- METADATA -->
-                        <div class="meta-list">
-                            <div class="meta-row">
-                                <div class="meta-label"><span class="material-icons-round" style="font-size:1rem;">casino</span> SYSTEM</div>
-                                <select id="inpSystem" class="tag-badge bg-def" onchange="updateTagColor(this)">
-                                    <option value="CoC6">CoC 6th</option>
-                                    <option value="CoC7">CoC 7th</option>
-                                    <option value="Emoklore">Emoklore</option>
-                                    <option value="Other">Other</option>
-                                </select>
+                        <!-- LIST -->
+                        <div class="prop-list">
+                            <div class="prop-row">
+                                <div class="prop-label"><span class="material-icons-round">casino</span> SYSTEM</div>
+                                <div>
+                                    <select id="inpSystem" class="tag-select bg-gray" onchange="updateTagColor(this)">
+                                        <option value="CoC6">CoC 6th</option>
+                                        <option value="CoC7">CoC 7th</option>
+                                        <option value="Emoklore">Emoklore</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="meta-row">
-                                <div class="meta-label"><span class="material-icons-round" style="font-size:1rem;">group</span> TYPE</div>
-                                <select id="inpType" class="tag-badge bg-pink" onchange="updateTagColor(this)">
-                                    <option value="タイマン">タイマン</option>
-                                    <option value="2PL">2PL</option>
-                                    <option value="ソロ">ソロ</option>
-                                    <option value="4PL">4PL</option>
-                                </select>
+                            <div class="prop-row">
+                                <div class="prop-label"><span class="material-icons-round">category</span> TYPE</div>
+                                <div>
+                                    <select id="inpType" class="tag-select bg-pink" onchange="updateTagColor(this)">
+                                        <option value="タイマン">タイマン</option>
+                                        <option value="2PL">2PL</option>
+                                        <option value="ソロ">ソロ</option>
+                                        <option value="4PL">4PL</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="meta-row">
-                                <div class="meta-label"><span class="material-icons-round" style="font-size:1rem;">person</span> GM/KP</div>
-                                <input type="text" id="inpGM" placeholder="Name" style="width:100%;">
+                            <div class="prop-row">
+                                <div class="prop-label"><span class="material-icons-round">person</span> GM/KP</div>
+                                <div><input type="text" id="inpGM" class="tag-select bg-blue" placeholder="GM Name" style="width:120px; text-align:left;"></div>
                             </div>
-                            <div class="meta-row">
-                                <div class="meta-label"><span class="material-icons-round" style="font-size:1rem;">flag</span> ENDING</div>
-                                <input type="text" id="inpEndName" class="tag-badge bg-def" placeholder="End Title" style="width:100%; text-align:left;">
+                            <div class="prop-row">
+                                <div class="prop-label"><span class="material-icons-round">flag</span> END</div>
+                                <div><input type="text" id="inpEndName" class="tag-select bg-orange" placeholder="End Title" style="width:140px; text-align:left;"></div>
                             </div>
-                            <div class="meta-row">
-                                <div class="meta-label"><span class="material-icons-round" style="font-size:1rem;">today</span> DATE</div>
-                                <input type="date" id="inpDate" style="width:100%;">
+                            <div class="prop-row">
+                                <div class="prop-label"><span class="material-icons-round">event</span> DATE</div>
+                                <div><input type="date" id="inpDate" class="tag-select bg-gray" style="width:140px;"></div>
+                            </div>
+                            <div class="prop-row">
+                                <div class="prop-label"><span class="material-icons-round">sell</span> TAGS</div>
+                                <div><input type="text" id="inpTags" class="line-input" placeholder="#うちよそ..."></div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- RIGHT PAGE: DETAILS -->
+                    <!-- PAGE 2: RIGHT CONTENT -->
                     <div class="page page-right">
                         
                         <!-- TAB 1: RECORD -->
                         <div id="tab-record" class="tab-panel active">
-                            <h2 class="section-head">Session Record</h2>
+                            <h2 class="record-label">SESSION RECORD</h2>
                             
-                            <!-- RESULT -->
-                            <div class="record-box">
-                                <div class="box-label">RESULT & SANITY</div>
-                                <div class="dual-col">
-                                    <div>
-                                        <div class="role-label">PC</div>
-                                        <select id="inpResPC" class="tag-badge bg-def" style="width:100%; margin-bottom:5px;" onchange="updateResColor(this)">
+                            <!-- RESULT & SAN -->
+                            <div class="record-section">
+                                <div class="record-label">RESULT & SANITY</div>
+                                <div class="pair-input-row">
+                                    <div class="pair-col">
+                                        <div class="pair-role">PC (<span id="sanValPC" style="color:#8f8;">--</span>)</div>
+                                        <select id="inpResPC" class="tag-select bg-gray" style="width:100%; margin-bottom:5px;" onchange="updateResColor(this)">
                                             <option value="Alive">生還</option><option value="Lost">ロスト</option>
                                         </select>
-                                        <input type="text" id="inpSanPC" placeholder="SAN: 50→45 (-5)" style="width:100%; text-align:center;">
+                                        <input type="text" id="inpSanPC" class="line-input" placeholder="50→45 (-5)" style="text-align:center;">
                                     </div>
-                                    <div>
-                                        <div class="role-label">KPC</div>
-                                        <select id="inpResKPC" class="tag-badge bg-def" style="width:100%; margin-bottom:5px;" onchange="updateResColor(this)">
+                                    <div class="pair-col">
+                                        <div class="pair-role">KPC (<span id="sanValKPC" style="color:#8f8;">--</span>)</div>
+                                        <select id="inpResKPC" class="tag-select bg-gray" style="width:100%; margin-bottom:5px;" onchange="updateResColor(this)">
                                             <option value="Alive">生還</option><option value="Lost">ロスト</option>
                                         </select>
-                                        <input type="text" id="inpSanKPC" placeholder="SAN: --" style="width:100%; text-align:center;">
+                                        <input type="text" id="inpSanKPC" class="line-input" placeholder="-" style="text-align:center;">
                                     </div>
                                 </div>
                             </div>
 
                             <!-- QUOTE -->
-                            <div class="record-box">
-                                <div class="box-label">IMPRESSIVE QUOTE (台詞)</div>
-                                <div class="dual-col">
-                                    <textarea id="inpQuotePC" rows="3" placeholder="PC Quote..."></textarea>
-                                    <textarea id="inpQuoteKPC" rows="3" placeholder="KPC Quote..."></textarea>
+                            <div class="record-section">
+                                <div class="record-label">IMPRESSIVE QUOTE</div>
+                                <div class="pair-input-row">
+                                    <div class="pair-col"><textarea id="inpQuotePC" class="paper-area" placeholder="PC台詞..."></textarea></div>
+                                    <div class="pair-col"><textarea id="inpQuoteKPC" class="paper-area" placeholder="KPC台詞..."></textarea></div>
                                 </div>
                             </div>
 
-                            <!-- MEMO & GROWTH -->
-                            <div class="record-box">
-                                <div class="box-label">GROWTH & MEMO</div>
-                                <div class="dual-col">
-                                    <div>
-                                        <div class="role-label">PC</div>
-                                        <textarea id="inpGrowPC" rows="2" placeholder="成長技能..."></textarea>
-                                        <textarea id="inpMemoPC" rows="3" placeholder="一言感想..."></textarea>
-                                    </div>
-                                    <div>
-                                        <div class="role-label">KPC</div>
-                                        <textarea id="inpGrowKPC" rows="2" placeholder="成長..."></textarea>
-                                        <textarea id="inpMemoKPC" rows="3" placeholder="感想..."></textarea>
-                                    </div>
-                                </div>
+                            <!-- DETAILS PC -->
+                            <div class="record-section">
+                                <div class="record-label">DETAILS (PC)</div>
+                                <input type="text" id="inpArtNamePC" class="line-input" placeholder="AF名称" style="color:var(--accent-gold);">
+                                <textarea id="inpArtDescPC" class="paper-area" placeholder="AF効果..." style="margin-bottom:5px; min-height:40px;"></textarea>
+                                
+                                <input type="text" id="inpSeqNamePC" class="line-input" placeholder="後遺症名称" style="color:#ffadad;">
+                                <textarea id="inpSeqDescPC" class="paper-area" placeholder="後遺症内容..." style="margin-bottom:5px; min-height:40px;"></textarea>
+                                
+                                <select id="selInsanityPC" class="tag-select bg-gray" style="width:100%; text-align:left;" onchange="updateInsanityDesc(this.value, 'PC')">
+                                    <option value="">(狂気選択)</option>
+                                    <option value="1">1: 健忘症 / 昏迷</option><option value="2">2: 激しい恐怖症</option>
+                                    <option value="3">3: 幻覚</option><option value="4">4: 奇妙な性的嗜好</option>
+                                    <option value="5">5: フェティッシュ</option><option value="6">6: チック・震え</option>
+                                    <option value="7">7: 心因性機能障害</option><option value="8">8: 短時間の心因反応</option>
+                                    <option value="9">9: 一時的偏執症</option><option value="10">10: 強迫観念行動</option>
+                                </select>
+                                <textarea id="inpInsanityDescPC" class="paper-area" placeholder="狂気詳細..." style="min-height:40px;"></textarea>
                             </div>
 
-                            <!-- DETAILS (AF/Insanity) -->
-                            <div class="record-box">
-                                <div class="box-label">DETAILS (PC/KPC MIX)</div>
-                                <div class="detail-row">
-                                    <span class="detail-lbl">PC AF/Spells</span>
-                                    <input type="text" id="inpArtNamePC" placeholder="名称"><input type="text" id="inpArtDescPC" placeholder="効果">
-                                </div>
-                                <div class="detail-row">
-                                    <span class="detail-lbl">PC Insanity</span>
-                                    <select id="selInsanityPC" style="width:100%;" onchange="updateInsanity(this, 'PC')">
-                                        <option value="">なし</option>
-                                        <option value="1">1:健忘/昏迷</option><option value="2">2:恐怖症</option><option value="3">3:幻覚</option>
-                                        <option value="Other">その他</option>
-                                    </select>
-                                    <textarea id="inpInsanityDescPC" rows="2" placeholder="内容..."></textarea>
-                                </div>
-                                <!-- KPC fields hidden for brevity but logic handles them -->
-                                <div style="display:none;">
-                                    <input id="inpArtNameKPC"><input id="inpArtDescKPC">
-                                    <input id="inpSeqNamePC"><input id="inpSeqDescPC">
-                                    <input id="inpSeqNameKPC"><input id="inpSeqDescKPC">
-                                    <select id="selInsanityKPC"></select><textarea id="inpInsanityDescKPC"></textarea>
+                            <!-- DETAILS KPC -->
+                            <div class="record-section">
+                                <div class="record-label">DETAILS (KPC)</div>
+                                <input type="text" id="inpArtNameKPC" class="line-input" placeholder="AF名称" style="color:var(--accent-gold);">
+                                <textarea id="inpArtDescKPC" class="paper-area" placeholder="AF効果..." style="margin-bottom:5px; min-height:40px;"></textarea>
+                                <input type="text" id="inpSeqNameKPC" class="line-input" placeholder="後遺症名称" style="color:#ffadad;">
+                                <textarea id="inpSeqDescKPC" class="paper-area" placeholder="後遺症内容..." style="margin-bottom:5px; min-height:40px;"></textarea>
+                                <select id="selInsanityKPC" class="tag-select bg-gray" style="width:100%; text-align:left;" onchange="updateInsanityDesc(this.value, 'KPC')">
+                                    <option value="">(狂気選択)</option>
+                                    <option value="1">1: 健忘症 / 昏迷</option><option value="2">2: 激しい恐怖症</option>
+                                    <option value="3">3: 幻覚</option><option value="Other">その他...</option>
+                                </select>
+                                <textarea id="inpInsanityDescKPC" class="paper-area" placeholder="狂気詳細..." style="min-height:40px;"></textarea>
+                            </div>
+                            
+                            <div class="record-section">
+                                <div class="record-label">GROWTH & MEMO</div>
+                                <div class="pair-input-row">
+                                    <div class="pair-col">
+                                        <textarea id="inpGrowPC" class="paper-area" placeholder="PC成長..."></textarea>
+                                        <textarea id="inpMemoPC" class="paper-area" placeholder="PC感想..." style="min-height:60px;"></textarea>
+                                    </div>
+                                    <div class="pair-col">
+                                        <textarea id="inpGrowKPC" class="paper-area" placeholder="KPC成長..."></textarea>
+                                        <textarea id="inpMemoKPC" class="paper-area" placeholder="KPC感想..." style="min-height:60px;"></textarea>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- TAB 2: SCENARIO INFO -->
+                        <!-- TAB 2: SCENARIO -->
                         <div id="tab-scenario" class="tab-panel">
-                            <h2 class="section-head">Scenario Overview</h2>
-                            <div class="dual-col" style="margin-bottom:20px;">
-                                <div>
-                                    <span class="detail-lbl">PLAY TIME</span>
-                                    <input type="text" id="inpDuration" placeholder="5-6 hours" style="width:100%;">
-                                </div>
-                                <div>
-                                    <span class="detail-lbl">STAGE</span>
-                                    <input type="text" id="inpStage" placeholder="Modern City" style="width:100%;">
-                                </div>
-                                <div>
-                                    <span class="detail-lbl">RELATION</span>
-                                    <input type="text" id="inpCharRel" placeholder="Buddy/Lovers" style="width:100%;">
-                                </div>
-                                <div>
-                                    <span class="detail-lbl">LOST RATE</span>
-                                    <input type="text" id="inpLostRate" placeholder="Low/High" style="width:100%;">
-                                </div>
+                            <h2 class="record-label">SCENARIO OVERVIEW</h2>
+                            <div class="prop-list">
+                                <div class="prop-row"><span class="prop-label">TIME</span><input id="inpDuration" class="line-input" placeholder="5-6 hours"></div>
+                                <div class="prop-row"><span class="prop-label">STAGE</span><input id="inpStage" class="line-input" placeholder="City / Japan"></div>
+                                <div class="prop-row"><span class="prop-label">LOST</span><input id="inpLostRate" class="line-input" placeholder="Low - Mid"></div>
                             </div>
-                            
-                            <!-- Hidden inputs for mapping -->
-                            <input type="hidden" id="inpMetaSystem"><input type="hidden" id="inpMetaType">
-                            <input type="hidden" id="inpRecSkills"><input type="hidden" id="inpScnType">
-                            <input type="hidden" id="inpTags"><input type="hidden" id="inpUrlShop"><input type="hidden" id="inpUrlRoom">
-                            <input type="hidden" id="inpImgScnTrailer">
-
-                            <span class="detail-lbl" style="color:var(--accent-gold);">SYNOPSIS (あらすじ)</span>
-                            <textarea id="inpSynopsis" rows="6" style="width:100%; margin-bottom:15px;"></textarea>
-
-                            <span class="detail-lbl">INTRODUCTION</span>
-                            <textarea id="inpIntroduction" rows="4" style="width:100%; margin-bottom:15px;"></textarea>
-
-                            <span class="detail-lbl" style="color:#ff6666;">WARNINGS</span>
-                            <textarea id="inpWarnings" rows="3" style="width:100%; background:rgba(50,0,0,0.2);"></textarea>
+                            <div class="record-section">
+                                <div class="record-label">TRAILER & SYNOPSIS</div>
+                                <div class="report-header-img" id="dropScnTrailer" style="height:120px; margin-bottom:10px;">
+                                    <img id="imgScnTrailer" src="" alt="NO IMAGE">
+                                </div>
+                                <input type="hidden" id="inpImgScnTrailer">
+                                <textarea id="inpSynopsis" class="paper-area" style="min-height:100px;" placeholder="あらすじ..."></textarea>
+                                <textarea id="inpIntroduction" class="paper-area" style="min-height:80px; margin-top:10px;" placeholder="導入..."></textarea>
+                            </div>
+                            <div class="record-section">
+                                <div class="record-label">URLS</div>
+                                <input type="text" id="inpUrlShop" class="line-input" placeholder="Scenario URL">
+                                <input type="text" id="inpUrlRoom" class="line-input" placeholder="Room URL">
+                            </div>
                         </div>
 
                         <!-- TAB 3: MEMO -->
                         <div id="tab-memo" class="tab-panel">
-                            <h2 class="section-head">Private Notes</h2>
-                            <span class="detail-lbl">PUBLIC MEMO</span>
-                            <textarea id="inpPublicMemo" rows="8" style="width:100%; margin-bottom:20px;" placeholder="ふせったー用など"></textarea>
-                            
-                            <span class="detail-lbl" style="color:var(--accent-gold);">SECRET MEMO (KP Only)</span>
-                            <textarea id="inpSecretMemo" rows="8" style="width:100%; background:rgba(0,0,0,0.3);" placeholder="ネタバレ、真相..."></textarea>
+                            <h2 class="record-label">PRIVATE NOTES</h2>
+                            <textarea id="inpPublicMemo" class="paper-area" style="min-height:150px;" placeholder="Public Memo (ふせったー等)"></textarea>
+                            <div style="height:20px;"></div>
+                            <textarea id="inpSecretMemo" class="paper-area" style="min-height:200px; background:rgba(0,0,0,0.3);" placeholder="Secret / GM Notes"></textarea>
                         </div>
-
-                        <!-- SAVE BUTTON -->
-                        <div class="seal-btn-container">
-                            <button id="btnSave" class="seal-btn">
-                                <span class="material-icons-round">history_edu</span>
-                                <span class="seal-text">SAVE</span>
+                        
+                        <!-- SEAL BUTTON -->
+                        <div class="seal-container">
+                            <div class="new-btn-fab" id="btnNew" title="Reset / New Log"><span class="material-icons-round">edit_note</span></div>
+                            <button id="btnSave" class="wax-seal-btn">
+                                <span class="material-icons-round">verified</span>
+                                <div style="font-size:0.7rem;">SAVE</div>
                             </button>
                         </div>
 
@@ -472,160 +451,142 @@
             </div>
         </div>
 
-        <!-- SIDE PANEL -->
-        <div class="side-panel">
-            <div class="side-header">CHRONICLES</div>
-            <div id="historyList" class="history-list">
-                <div style="text-align:center; padding:20px; color:#555; font-size:0.8rem;">
-                    Select PC & KPC<br>to view history.
-                </div>
+        <!-- RIGHT: HISTORY DRAWER -->
+        <div class="history-panel">
+            <div class="history-header">
+                <span>HISTORY STACK</span>
+                <span class="material-icons-round" style="font-size:1rem;">history_edu</span>
             </div>
-            <button class="reset-btn" onclick="window.location.reload()">+ NEW LOG ENTRY</button>
+            <div id="historyList" class="history-list">
+                <div style="text-align:center; color:#555; font-size:0.8rem; margin-top:20px;">Select Character to load history.</div>
+            </div>
         </div>
     </div>
 
-    <!-- LOGIC -->
+    <!-- UTILS -->
     <script>
-        // Tab Logic
-        window.openTab = function(tabId, btn) {
+        window.openTab = function(tabId, btnElement) {
             document.querySelectorAll('.tab-panel').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            if(btn) btn.classList.add('active');
+            document.getElementById(tabId)?.classList.add('active');
+            if(btnElement) btnElement.classList.add('active');
         };
-
-        // UI Helpers
         window.updateTagColor = (el) => {
-            el.className = 'tag-badge';
-            if(el.value.includes('CoC')) el.classList.add('bg-green');
-            else if(el.value === 'タイマン') el.classList.add('bg-pink');
-            else if(el.value.includes('PL')) el.classList.add('bg-blue');
-            else el.classList.add('bg-def');
+            el.className = 'tag-select ' + (
+                el.value.includes('CoC') ? 'bg-green' : 
+                el.value === 'タイマン' ? 'bg-pink' : 
+                el.value.includes('PL') ? 'bg-blue' : 'bg-gray'
+            );
         };
         window.updateResColor = (el) => {
-            el.className = 'tag-badge';
-            if(el.value === 'Alive') el.classList.add('bg-blue');
-            else if(el.value === 'Lost') el.classList.add('bg-pink');
-            else el.classList.add('bg-def');
+            el.className = 'tag-select ' + (el.value === 'Alive' ? 'bg-blue' : (el.value === 'Lost' ? 'bg-pink' : 'bg-gray'));
         };
-        window.updateInsanity = (el, role) => {
-            const desc = document.getElementById(role === 'PC' ? 'inpInsanityDescPC' : 'inpInsanityDescKPC');
-            if(el.value === '1') desc.value = "健忘症 / 昏迷";
-            else if(el.value === '2') desc.value = "激しい恐怖症";
-            else if(el.value === '3') desc.value = "幻覚";
-            else if(el.value === '') desc.value = "";
+        const insanityData = {
+            "1": "健忘症（親しい者のことを最初に忘れる）", "2": "激しい恐怖症", "3": "幻覚",
+            "4": "奇妙な性的嗜好", "5": "フェティッシュ", "6": "制御不能のチック、震え",
+            "7": "心因性機能障害", "8": "短時間の心因反応", "9": "一時的偏執症", "10": "強迫観念行動"
         };
-
-        const showToast = (msg) => {
-            const t = document.getElementById('msg-toast');
-            t.textContent = msg; t.style.opacity = 1;
-            setTimeout(()=>t.style.opacity=0, 3000);
+        window.updateInsanityDesc = (val, role) => {
+            const target = document.getElementById(role==='PC'?'inpInsanityDescPC':'inpInsanityDescKPC');
+            if(insanityData[val]) target.value = insanityData[val];
         };
     </script>
 
+    <!-- MODULE -->
     <script type="module">
-        import { loadFromCloud, monitorAuth, saveScenario, getScenariosForCharacter, saveToCloud, updateScenario } 
-            from "../character/firestore.js";
+        import { loadFromCloud, monitorAuth, saveScenario, updateScenario, saveToCloud, getScenariosForCharacter } from "../character/firestore.js";
         import { createScenarioRecord, syncScenarioToCharacter } from "./data/scenario.js";
 
-        // Global State
+        const IMG_CONFIG = { iconBase: "../images/icon/" };
+        const getEl = (id) => document.getElementById(id);
+        const loader = getEl('loadingIndicator');
+
         let allChars = {};
         let currentUid = null;
-        let editingId = null; // IDがある場合は編集モード
+        let currentScenarioId = null; // null = New, string = Edit Mode
 
-        const getEl = (id) => document.getElementById(id);
-        const iconBase = "../images/icon/";
-
-        // 1. Auth & Load Characters
+        // --- Init ---
         monitorAuth(async (user) => {
-            if(!user) { showToast("Login Required"); return; }
+            if(!user) { loader.textContent = "Login Required"; return; }
             currentUid = user.uid;
-            showToast("Loading Data...");
-            
             allChars = await loadFromCloud() || {};
-            populateSelects();
-            showToast("Ready to Log");
+            loader.textContent = "Ready";
+
+            const createOpts = () => {
+                let html = '<option value="">(Select)</option>';
+                Object.values(allChars).sort((a,b)=>a.name.localeCompare(b.name)).forEach(c => {
+                    const val = c.id || c.name;
+                    html += `<option value="${val}">${c.name}</option>`;
+                });
+                return html;
+            };
+            getEl('selPC').innerHTML = createOpts();
+            getEl('selKPC').innerHTML = createOpts();
         });
 
-        function populateSelects() {
-            const opts = '<option value="">(Select)</option>' + 
-                Object.values(allChars).map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-            getEl('selPC').innerHTML = opts;
-            getEl('selKPC').innerHTML = opts;
-        }
-
-        // 2. Character Selection Logic
-        const onCharSelect = (selId, imgId, plId, role) => {
-            const sel = getEl(selId);
-            sel.addEventListener('change', () => {
-                const id = sel.value;
-                const char = allChars[id];
+        // --- Character Select Logic ---
+        const onCharSelect = (selId, imgId, plId) => {
+            getEl(selId).addEventListener('change', () => {
+                const id = getEl(selId).value;
+                const char = Object.values(allChars).find(c => c.id === id || c.name === id);
                 if(char) {
-                    getEl(imgId).src = char.icon || (iconBase + char.name + ".png");
-                    if(!getEl(plId).value && char.plName) getEl(plId).value = char.plName;
-                } else {
-                    getEl(imgId).src = "";
+                    getEl(imgId).src = char.icon || `${IMG_CONFIG.iconBase}${char.name}.png`;
+                    if(char.plName) getEl(plId).value = char.plName;
                 }
-                loadHistory(); // Reload history list when pair changes
+                fetchAndRenderHistory();
             });
         };
-        onCharSelect('selPC', 'iconPC', 'inpPlNamePC', 'PC');
-        onCharSelect('selKPC', 'iconKPC', 'inpPlNameKPC', 'KPC');
+        onCharSelect('selPC', 'iconPC', 'inpPlNamePC');
+        onCharSelect('selKPC', 'iconKPC', 'inpPlNameKPC');
 
-        // 3. Load History (Sidebar)
-        async function loadHistory() {
+        // --- History Panel ---
+        async function fetchAndRenderHistory() {
             const pcId = getEl('selPC').value;
             const kpcId = getEl('selKPC').value;
-            const listEl = getEl('historyList');
-
             if(!pcId && !kpcId) return;
-            
-            listEl.innerHTML = '<div style="padding:20px; text-align:center; color:#666;">Loading History...</div>';
 
-            // PCかKPCどちらかが含まれているシナリオを取得
-            // (本来は複合クエリが理想ですが、既存関数 getScenariosForCharacter を利用)
-            let scenarios = [];
-            const idsToCheck = [pcId, kpcId].filter(id => id);
+            // どちらか片方でも選択されていれば、そのキャラに関連するシナリオを取得
+            // 両方選択時はPCを主軸にする（本来はAND検索だがFirestoreの制約上、クライアントでフィルタが楽）
+            const targetId = pcId || kpcId;
+            const list = await getScenariosForCharacter(targetId);
             
-            // 重複排除用マップ
-            const map = new Map();
-            for(const id of idsToCheck) {
-                const list = await getScenariosForCharacter(id);
-                list.forEach(s => map.set(s.id, s));
-            }
-            scenarios = Array.from(map.values()).sort((a,b) => new Date(b.date) - new Date(a.date));
+            const container = getEl('historyList');
+            container.innerHTML = "";
 
-            // Render
-            if(scenarios.length === 0) {
-                listEl.innerHTML = '<div style="padding:20px; text-align:center; color:#666;">No Records Found.</div>';
+            if(list.length === 0) {
+                container.innerHTML = `<div style="text-align:center; color:#555; padding:20px;">No records found.</div>`;
                 return;
             }
 
-            listEl.innerHTML = '';
-            scenarios.forEach(s => {
-                const div = document.createElement('div');
-                div.className = 'history-item';
-                div.innerHTML = `
-                    <span class="h-title">${s.title}</span>
+            list.forEach(scn => {
+                // 両方選択時は、ペアでないものは除外等のフィルタも可能だが、ここでは全て出す
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                
+                // Determine Result color
+                const resPC = scn.pcData?.res || '-';
+                const cls = resPC === 'Alive' ? 'alive' : (resPC === 'Lost' ? 'lost' : '');
+                
+                item.innerHTML = `
+                    <div class="h-title">${scn.title}</div>
                     <div class="h-meta">
-                        <span>${s.date || 'No Date'}</span>
-                        <span>${s.endName || 'End'}</span>
+                        <span>${scn.date || 'No Date'}</span>
+                        <span class="h-res ${cls}">${resPC}</span>
                     </div>
                 `;
-                div.onclick = () => loadScenarioIntoForm(s, div);
-                listEl.appendChild(div);
+                item.onclick = () => loadScenarioIntoForm(scn);
+                container.appendChild(item);
             });
         }
 
-        // 4. Load Scenario into Form (Edit Mode)
-        function loadScenarioIntoForm(data, uiItem) {
-            // UI Update
-            document.querySelectorAll('.history-item').forEach(el => el.classList.remove('active'));
-            uiItem.classList.add('active');
-            editingId = data.id;
-            showToast("Edit Mode: " + data.title);
+        // --- Load Data (Edit Mode) ---
+        function loadScenarioIntoForm(data) {
+            if(!confirm("Load this record into the form? (Unsaved changes will be lost)")) return;
             
-            // Populate Fields
+            currentScenarioId = data.id;
+            getEl('btnSave').innerHTML = `<span class="material-icons-round">edit</span><div style="font-size:0.6rem;">UPDATE</div>`;
+            
+            // Basic
             getEl('inpTitle').value = data.title || "";
             getEl('inpCount').value = data.count || 1;
             getEl('inpSystem').value = data.system || "CoC6";
@@ -633,141 +594,182 @@
             getEl('inpGM').value = data.gm || "";
             getEl('inpEndName').value = data.endName || "";
             getEl('inpDate').value = data.date || "";
-            
-            if(data.pcData) {
-                // PC Data
-                getEl('inpPlNamePC').value = data.pcData.pl || "";
-                getEl('inpResPC').value = data.pcData.res || "Alive";
-                getEl('inpSanPC').value = data.pcData.san || "";
-                getEl('inpQuotePC').value = data.pcData.quote || "";
-                getEl('inpGrowPC').value = data.pcData.grow || "";
-                getEl('inpMemoPC').value = data.pcData.memo || "";
-                getEl('inpArtNamePC').value = data.pcData.art?.name || "";
-                getEl('inpArtDescPC').value = data.pcData.art?.desc || "";
-                getEl('selInsanityPC').value = data.pcData.ins?.type || "";
-                getEl('inpInsanityDescPC').value = data.pcData.ins?.desc || "";
-            }
+            getEl('inpTags').value = data.tags || "";
 
-            if(data.kpcData) {
-                // KPC Data
-                getEl('inpPlNameKPC').value = data.kpcData.pl || "";
-                getEl('inpResKPC').value = data.kpcData.res || "Alive";
-                getEl('inpSanKPC').value = data.kpcData.san || "";
-                getEl('inpQuoteKPC').value = data.kpcData.quote || "";
-                getEl('inpGrowKPC').value = data.kpcData.grow || "";
-                getEl('inpMemoKPC').value = data.kpcData.memo || "";
-            }
+            // Members
+            if(data.pcData?.id) { getEl('selPC').value = data.pcData.id; getEl('selPC').dispatchEvent(new Event('change')); }
+            if(data.kpcData?.id) { getEl('selKPC').value = data.kpcData.id; getEl('selKPC').dispatchEvent(new Event('change')); }
 
-            // Overview & Meta
+            // Details
+            getEl('inpPlNamePC').value = data.pcData?.pl || "";
+            getEl('inpResPC').value = data.pcData?.res || "Alive";
+            getEl('inpSanPC').value = data.pcData?.san || "";
+            getEl('inpQuotePC').value = data.pcData?.quote || "";
+            getEl('inpArtNamePC').value = data.pcData?.art?.name || "";
+            getEl('inpArtDescPC').value = data.pcData?.art?.desc || "";
+            getEl('inpSeqNamePC').value = data.pcData?.seq?.name || "";
+            getEl('inpSeqDescPC').value = data.pcData?.seq?.desc || "";
+            getEl('selInsanityPC').value = data.pcData?.ins?.type || "";
+            getEl('inpInsanityDescPC').value = data.pcData?.ins?.desc || "";
+            getEl('inpGrowPC').value = data.pcData?.grow || "";
+            getEl('inpMemoPC').value = data.pcData?.memo || "";
+
+            getEl('inpPlNameKPC').value = data.kpcData?.pl || "";
+            getEl('inpResKPC').value = data.kpcData?.res || "Alive";
+            getEl('inpSanKPC').value = data.kpcData?.san || "";
+            getEl('inpQuoteKPC').value = data.kpcData?.quote || "";
+            getEl('inpArtNameKPC').value = data.kpcData?.art?.name || "";
+            getEl('inpArtDescKPC').value = data.kpcData?.art?.desc || "";
+            getEl('inpSeqNameKPC').value = data.kpcData?.seq?.name || "";
+            getEl('inpSeqDescKPC').value = data.kpcData?.seq?.desc || "";
+            getEl('selInsanityKPC').value = data.kpcData?.ins?.type || "";
+            getEl('inpInsanityDescKPC').value = data.kpcData?.ins?.desc || "";
+            getEl('inpGrowKPC').value = data.kpcData?.grow || "";
+            getEl('inpMemoKPC').value = data.kpcData?.memo || "";
+
+            // Tab 2 & 3
             if(data.meta) {
                 getEl('inpDuration').value = data.meta.duration || "";
                 getEl('inpStage').value = data.meta.stage || "";
-                getEl('inpCharRel').value = data.meta.charRel || "";
                 getEl('inpLostRate').value = data.meta.lostRate || "";
             }
             getEl('inpSynopsis').value = data.overview || "";
             getEl('inpIntroduction').value = data.introduction || "";
-            getEl('inpWarnings').value = data.warnings || "";
+            getEl('inpUrlShop').value = data.urls?.shop || "";
+            getEl('inpUrlRoom').value = data.urls?.room || "";
             getEl('inpPublicMemo').value = data.memos?.public || "";
             getEl('inpSecretMemo').value = data.memos?.secret || "";
 
-            // Image
-            if(data.images?.trailer) {
-                getEl('imgTrailer').src = data.images.trailer;
-                getEl('inpImgTrailer').value = data.images.trailer;
-            }
+            // Images
+            if(data.images?.trailer) { getEl('imgTrailer').src = data.images.trailer; getEl('inpImgTrailer').value = data.images.trailer; }
+            if(data.images?.scenTrailer) { getEl('imgScnTrailer').src = data.images.scenTrailer; getEl('inpImgScnTrailer').value = data.images.scenTrailer; }
+
+            // Color updates
+            updateResColor(getEl('inpResPC'));
+            updateResColor(getEl('inpResKPC'));
+            updateTagColor(getEl('inpSystem'));
+            updateTagColor(getEl('inpType'));
         }
 
-        // 5. Save Logic
+        // --- Save / Reset Logic ---
+        getEl('btnNew').addEventListener('click', () => {
+            if(!confirm("Clear form and start new log?")) return;
+            resetForm();
+        });
+
+        function resetForm() {
+            currentScenarioId = null;
+            getEl('btnSave').innerHTML = `<span class="material-icons-round">verified</span><div style="font-size:0.7rem;">SAVE</div>`;
+            // input reset
+            const inputs = document.querySelectorAll('input:not([type="hidden"]), textarea');
+            inputs.forEach(i => i.value = "");
+            // selects reset
+            getEl('inpSystem').value = "CoC6"; getEl('inpType').value = "タイマン";
+            getEl('inpResPC').value = "Alive"; getEl('inpResKPC').value = "Alive";
+            // img reset
+            getEl('imgTrailer').src = ""; getEl('imgScnTrailer').src = "";
+        }
+
         getEl('btnSave').addEventListener('click', async () => {
-            if(!getEl('inpTitle').value) return alert("Title is required!");
+            const title = getEl('inpTitle').value;
+            if(!title) return alert("Title is required.");
             
             const btn = getEl('btnSave');
-            btn.style.opacity = 0.5; btn.disabled = true;
-            showToast("Saving...");
+            btn.disabled = true;
 
             const pcId = getEl('selPC').value;
             const kpcId = getEl('selKPC').value;
-            const members = [pcId, kpcId].filter(x => x);
+            const members = [];
+            if(pcId) members.push(pcId);
+            if(kpcId) members.push(kpcId);
 
-            // Construct Input Object (Matching data/scenario.js structure)
-            const input = {
-                title: getEl('inpTitle').value,
+            const inputData = {
+                title: title,
                 count: getEl('inpCount').value,
                 system: getEl('inpSystem').value,
                 type: getEl('inpType').value,
                 gm: getEl('inpGM').value,
                 endName: getEl('inpEndName').value,
                 date: getEl('inpDate').value,
-                members: members,
+                tags: getEl('inpTags').value,
                 
-                pcId: pcId, plNamePC: getEl('inpPlNamePC').value,
-                pcRes: getEl('inpResPC').value, pcSan: getEl('inpSanPC').value,
-                pcQuote: getEl('inpQuotePC').value, pcGrow: getEl('inpGrowPC').value,
-                pcMemo: getEl('inpMemoPC').value,
-                pcArtName: getEl('inpArtNamePC').value, pcArtDesc: getEl('inpArtDescPC').value,
-                pcInsType: getEl('selInsanityPC').value, pcInsDesc: getEl('inpInsanityDescPC').value,
-                // Hidden PC fields if implemented...
-                pcSeqName: "", pcSeqDesc: "",
-
-                kpcId: kpcId, plNameKPC: getEl('inpPlNameKPC').value,
-                kpcRes: getEl('inpResKPC').value, kpcSan: getEl('inpSanKPC').value,
-                kpcQuote: getEl('inpQuoteKPC').value, kpcGrow: getEl('inpGrowKPC').value,
-                kpcMemo: getEl('inpMemoKPC').value,
-                kpcArtName: "", kpcArtDesc: "", kpcInsType: "", kpcInsDesc: "",
-
                 meta: {
                     duration: getEl('inpDuration').value,
                     stage: getEl('inpStage').value,
-                    charRel: getEl('inpCharRel').value,
-                    lostRate: getEl('inpLostRate').value
+                    lostRate: getEl('inpLostRate').value,
                 },
-                overview: getEl('inpSynopsis').value,
+                
+                members: members,
+                urls: { shop: getEl('inpUrlShop').value, room: getEl('inpUrlRoom').value },
+                
+                // PC
+                pcId: pcId, plNamePC: getEl('inpPlNamePC').value,
+                pcQuote: getEl('inpQuotePC').value, pcSan: getEl('inpSanPC').value, 
+                pcGrow: getEl('inpGrowPC').value, pcMemo: getEl('inpMemoPC').value,
+                pcRes: getEl('inpResPC').value,
+                pcArtName: getEl('inpArtNamePC').value, pcArtDesc: getEl('inpArtDescPC').value,
+                pcSeqName: getEl('inpSeqNamePC').value, pcSeqDesc: getEl('inpSeqDescPC').value,
+                pcInsType: getEl('selInsanityPC').value, pcInsDesc: getEl('inpInsanityDescPC').value,
+
+                // KPC
+                kpcId: kpcId, plNameKPC: getEl('inpPlNameKPC').value,
+                kpcQuote: getEl('inpQuoteKPC').value, kpcSan: getEl('inpSanKPC').value, 
+                kpcGrow: getEl('inpGrowKPC').value, kpcMemo: getEl('inpMemoKPC').value,
+                kpcRes: getEl('inpResKPC').value,
+                kpcArtName: getEl('inpArtNameKPC').value, kpcArtDesc: getEl('inpArtDescKPC').value,
+                kpcSeqName: getEl('inpSeqNameKPC').value, kpcSeqDesc: getEl('inpSeqDescKPC').value,
+                kpcInsType: getEl('selInsanityKPC').value, kpcInsDesc: getEl('inpInsanityDescKPC').value,
+
+                overview: getEl('inpSynopsis').value, 
                 introduction: getEl('inpIntroduction').value,
-                warnings: getEl('inpWarnings').value,
-                public: getEl('inpPublicMemo').value,
-                secret: getEl('inpSecretMemo').value,
-                images: { trailer: getEl('inpImgTrailer').value }
+                public: getEl('inpPublicMemo').value, secret: getEl('inpSecretMemo').value,
+                images: { 
+                    trailer: getEl('inpImgTrailer').value,
+                    scenTrailer: getEl('inpImgScnTrailer').value 
+                }
             };
 
             try {
-                // Create Data Object
-                const sData = createScenarioRecord(input, currentUid);
-                let savedId = editingId;
+                // Generate Data
+                const sData = createScenarioRecord(inputData, currentUid, currentScenarioId);
+                let savedId = currentScenarioId;
 
-                // Save to Firestore (Update or Create)
-                if(editingId) {
-                    await updateScenario(editingId, sData);
+                if (currentScenarioId) {
+                    // Update
+                    await updateScenario(currentScenarioId, sData);
+                    alert("Scenario Updated!");
                 } else {
+                    // Create
                     savedId = await saveScenario(sData);
+                    alert("Scenario Saved!");
                 }
 
-                // Sync to Characters
-                if(pcId && allChars[pcId]) {
-                    const updated = syncScenarioToCharacter(allChars[pcId], sData, savedId, 'PC');
-                    await saveToCloud(updated);
+                // Sync to Character (Only if user agrees or by default on Create)
+                // 編集時にもキャラクター同期を行うかは運用次第だが、ここでは「新規作成時」または
+                // 「明示的な同期」が望ましい。今回は単純化のため、毎回同期処理を走らせる（ロジック側で重複チェック）
+                // ただし、編集時に何度も追記されるのを防ぐため、シナリオIDをキーに上書き制御を scenario.js で行っている
+                if(pcId) {
+                    const char = Object.values(allChars).find(c => c.id === pcId || c.name === pcId);
+                    if(char) await saveToCloud(syncScenarioToCharacter(char, sData, savedId, 'PC'));
                 }
-                if(kpcId && allChars[kpcId]) {
-                    const updated = syncScenarioToCharacter(allChars[kpcId], sData, savedId, 'KPC');
-                    await saveToCloud(updated);
+                if(kpcId) {
+                    const char = Object.values(allChars).find(c => c.id === kpcId || c.name === kpcId);
+                    if(char) await saveToCloud(syncScenarioToCharacter(char, sData, savedId, 'KPC'));
                 }
-
-                showToast("Data Secured!");
-                btn.style.opacity = 1; btn.disabled = false;
                 
-                if(!editingId) {
-                    loadHistory(); // Refresh list on new add
-                    editingId = savedId; // Switch to edit mode
-                }
+                // Refresh History
+                fetchAndRenderHistory();
+                if(!currentScenarioId) resetForm(); // Clear if it was new
+                btn.disabled = false;
+
             } catch(e) {
-                console.error(e);
-                alert("Error: " + e.message);
-                btn.style.opacity = 1; btn.disabled = false;
+                console.error(e); alert("Error: " + e.message);
+                btn.disabled = false;
             }
         });
 
-        // Image D&D Logic
-        const setupDrop = (boxId, inpId, imgId) => {
+        // D&D Image Logic
+        const setupImg = (boxId, inpId, imgId) => {
             const box = getEl(boxId);
             box.addEventListener('dragover', e=>{e.preventDefault(); box.style.borderColor='#d4b346';});
             box.addEventListener('dragleave', e=>{e.preventDefault(); box.style.borderColor='#444';});
@@ -781,8 +783,8 @@
                 }
             });
         };
-        setupDrop('dropTrailer', 'inpImgTrailer', 'imgTrailer');
-
+        setupImg('dropTrailer', 'inpImgTrailer', 'imgTrailer');
+        setupImg('dropScnTrailer', 'inpImgScnTrailer', 'imgScnTrailer');
     </script>
 </body>
 </html>
