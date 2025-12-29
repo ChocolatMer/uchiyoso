@@ -87,9 +87,7 @@
     </style>
 </head>
 <body>
-    <!-- ヘッダー読み込み（元々あった場合） -->
     <script type="module">
-        // ヘッダーが無い環境でのエラーを防ぐためtry-catch
         try {
             const mod = await import("./header.js");
             if(mod.initHeader) mod.initHeader();
@@ -100,11 +98,9 @@
         <div class="toolbar">
             <div>
                 <label>EDIT TARGET</label>
-                <!-- ここが消えていたためエラーになっていました -->
                 <select id="charSelect"><option value="">LOADING...</option></select>
             </div>
             <div>
-                <!-- ここにSAVEボタンが追加されます -->
                 <button id="btnCreateNew" class="btn-new">+ NEW</button>
             </div>
         </div>
@@ -123,7 +119,27 @@
                 <div class="form-row"><label>NAME</label><input type="text" id="inpName"></div>
                 <div class="form-row"><label>KANA</label><input type="text" id="inpKana"></div>
             </div>
-            <div class="form-grid">
+
+            <!-- ▼▼▼ PL名 / パートナー / グループ名 設定エリア ▼▼▼ -->
+            <div class="grid-3" style="margin-top:15px; background:#2b2b2b; padding:15px; border-radius:4px; border-left: 3px solid #00f3ff;">
+                <div class="form-row">
+                    <label style="color:#00f3ff;">PL NAME (プレイヤー名)</label>
+                    <input type="text" id="inpPlName" placeholder="プレイヤー名">
+                </div>
+                <div class="form-row">
+                    <label style="color:#00f3ff;">PARTNER (関係性の深い相手)</label>
+                    <select id="selPartner" style="width:100%; box-sizing:border-box; background:#1a1a1a; padding:10px;">
+                        <option value="">-- 指定なし --</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label style="color:#00f3ff;">GROUP / UNIT NAME</label>
+                    <input type="text" id="inpGroupName" placeholder="コンビ名・ユニット名">
+                </div>
+            </div>
+            <!-- ▲▲▲ 追加エリア終了 ▲▲▲ -->
+
+            <div class="form-grid" style="margin-top:15px;">
                 <div class="form-row"><label>JOB</label><input type="text" id="inpJob"></div>
                 <div class="form-row"><label>TAGS</label><input type="text" id="inpTags"></div>
             </div>
@@ -280,7 +296,6 @@
             </div>
 
             <div style="margin-top:50px; text-align:right;">
-                <!-- ここが消えていたためエラーになっていました -->
                 <button id="btnDelete" class="btn-delete">DELETE CHARACTER</button>
             </div>
         </div>
@@ -303,12 +318,11 @@
 
         let allData = {};
         let currentId = null;
-        let isInitDone = false; // 軽量化フラグ
+        let isInitDone = false; 
 
-        // --- 保存ボタン追加 (位置修正版) ---
+        // --- 保存ボタン追加 ---
         function addSaveButton() {
             const newBtn = document.getElementById('btnCreateNew');
-            // ボタンが存在しないとエラーになるためチェック
             if(newBtn && !document.getElementById('btnManualSave')) {
                 const saveBtn = document.createElement('button');
                 saveBtn.id = 'btnManualSave';
@@ -426,8 +440,24 @@
             }
         };
 
-        // --- 保存処理 ---
-        window.prepareSaveData = function() {
+        // --- パートナー選択肢の更新 ---
+        function updatePartnerSelect() {
+            const sel = document.getElementById('selPartner');
+            if(!sel) return;
+            const currentVal = sel.value;
+            sel.innerHTML = '<option value="">-- 指定なし --</option>';
+            Object.values(allData).forEach(c => {
+                if (c.id === currentId) return; // 自分は除外
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name + (c.plName ? ` (PL:${c.plName})` : '');
+                sel.appendChild(opt);
+            });
+            if (currentVal) sel.value = currentVal;
+        }
+
+        // --- 保存処理 (同期ロジック込み) ---
+        window.prepareSaveData = async function() {
             if(!currentId) return null;
             let originalData = Object.values(allData).find(c=>c.id==currentId);
             if (!originalData) originalData = allData[currentId];
@@ -468,9 +498,33 @@
             finalData.skills = skillsObj;
             finalData.id = currentId;
 
-            saveToCloud(finalData).then(() => {
+            // パートナー連携
+            const partnerId = getEl('selPartner').value;
+            const groupName = getEl('inpGroupName').value;
+
+            try {
+                // 1. 自分のデータを保存
+                await saveToCloud(finalData);
+
+                // 2. パートナーがいる場合、相手のデータも更新して保存
+                if (partnerId && allData[partnerId]) {
+                    const partnerData = { ...allData[partnerId] };
+                    // 相手のパートナーを「自分」に設定
+                    partnerData.partnerId = currentId;
+                    // 相手のグループ名を「同じ名前」に設定
+                    partnerData.groupName = groupName;
+                    
+                    await saveToCloud(partnerData);
+                    alert(`保存完了！\nパートナー(${partnerData.name})の設定も更新しました。`);
+                } else {
+                    alert("保存完了しました。");
+                }
+                
                 location.reload();
-            });
+            } catch(e) {
+                console.error(e);
+                alert("保存エラー: " + e.message);
+            }
         };
 
         monitorAuth((user) => {
@@ -493,13 +547,13 @@
 
         function renderSelect() {
             const sel = getEl('charSelect');
-            if(!sel) return; // エラー防止
+            if(!sel) return; 
             sel.innerHTML = '<option value="">-- SELECT CHARACTER --</option>';
             Object.values(allData).forEach(c => {
                 const opt = document.createElement('option');
                 const val = c.id || c.name;
                 opt.value = val;
-                opt.textContent = c.name;
+                opt.textContent = c.name + (c.plName ? ` (PL:${c.plName})` : '');
                 sel.appendChild(opt);
             });
             if(currentId) sel.value = currentId;
@@ -523,6 +577,9 @@
             getEl('editorArea').style.opacity='1';
             getEl('editorArea').style.pointerEvents='auto';
             
+            // パートナー選択肢を更新
+            updatePartnerSelect();
+
             FIELD_MAPPING.forEach(field => { setVal(field.id, d[field.key]); });
             setSrc('previewBody', d.image); setSrc('previewIcon', d.icon);
             setVal('inpThemeColor', d.color || '#d9333f');

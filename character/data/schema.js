@@ -31,6 +31,13 @@ export const FIELD_MAPPING = [
 ];
 
 export const STATS_MAPPING = [
+    { key: 'plName',    id: 'inpPlName' },    // PL名
+    { key: 'partnerId', id: 'selPartner' },   // パートナーのID (プルダウン)
+    { key: 'groupName', id: 'inpGroupName' }, // グループ名/ユニット名
+];
+
+
+export const STATS_MAPPING = [
     { key: 'STR', id: 's_str' }, { key: 'CON', id: 's_con' },
     { key: 'POW', id: 's_pow' }, { key: 'DEX', id: 's_dex' },
     { key: 'APP', id: 's_app' }, { key: 'SIZ', id: 's_siz' },
