@@ -2,7 +2,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } 
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { 
-    getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, addDoc, query, where, serverTimestamp 
+    getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, addDoc, query, where, serverTimestamp,
+    enableIndexedDbPersistence 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // 設定 (変更なし)
@@ -20,7 +21,10 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// ★削除: ここにあった enableIndexedDbPersistence の設定を消しました
+// ★追加: オフライン時の読み込みエラーを防ぐための永続化設定
+enableIndexedDbPersistence(db).catch((err) => {
+    console.warn("Persistence error:", err.code);
+});
 
 let currentUser = null;
 
@@ -50,14 +54,8 @@ const CHAR_SUB_COLLECTION = "characters";
 
 // --- キャラクター操作 ---
 export async function saveToCloud(charData) {
-    if (!currentUser) {
-        alert("保存にはログインが必要です。");
-        throw new Error("Login required"); 
-    }
-    if (!charData || !charData.id) {
-        alert("データエラー: IDがありません。");
-        throw new Error("ID is missing"); 
-    }
+    if (!currentUser) return alert("保存にはログインが必要です。");
+    if (!charData || !charData.id) return alert("データエラー: IDがありません。");
 
     try {
         const charRef = doc(db, SHARED_COLLECTION, SHARED_DOC_ID, CHAR_SUB_COLLECTION, charData.id);
@@ -65,7 +63,7 @@ export async function saveToCloud(charData) {
         console.log("保存完了: " + charData.name);
     } catch (e) {
         console.error("Save Error:", e);
-        throw e; 
+        throw e; // エラーを呼び出し元に伝える
     }
 }
 
@@ -105,6 +103,7 @@ export async function deleteFromCloud(charId) {
 
 // --- シナリオ機能 ---
 
+// ★修正: 編集機能（上書き）のために scenarioId 引数を追加 (互換性は維持)
 export async function saveScenario(scenarioData, scenarioId = null) {
     if (!currentUser) throw new Error("User not logged in");
     const dataToSave = {
@@ -113,10 +112,12 @@ export async function saveScenario(scenarioData, scenarioId = null) {
     };
     try {
         if (scenarioId) {
+            // ID指定がある場合は上書き (Update)
             const docRef = doc(db, "scenarios", scenarioId);
             await setDoc(docRef, dataToSave, { merge: true });
             return scenarioId;
         } else {
+            // 新規作成
             const docRef = await addDoc(collection(db, "scenarios"), dataToSave);
             return docRef.id;
         }
@@ -138,6 +139,7 @@ export async function getScenariosForCharacter(charId) {
         querySnapshot.forEach((doc) => {
             scenarios.push({ id: doc.id, ...doc.data() });
         });
+        // 日付順にソートして返す
         return scenarios.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
     } catch (e) {
         console.error(e);
