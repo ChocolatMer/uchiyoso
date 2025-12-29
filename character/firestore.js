@@ -1,12 +1,13 @@
+// --- START OF FILE character/firestore.js ---
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } 
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { 
-    getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, addDoc, updateDoc, query, where, orderBy, serverTimestamp 
+    getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, addDoc, query, where, serverTimestamp, orderBy 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// --- (既存の設定・認証・キャラクター操作部分は変更なし) ---
-
+// 設定 (変更なし)
 const firebaseConfig = {
   apiKey: "AIzaSyBZVh6NhFA_BSuyUW-sZV2QPSvSzdYJZWU",
   authDomain: "chocolatmer-uchiyoso.firebaseapp.com",
@@ -23,6 +24,7 @@ const provider = new GoogleAuthProvider();
 
 let currentUser = null;
 
+// --- 認証 ---
 export function login() {
     signInWithPopup(auth, provider)
         .then((result) => alert("ログインしました: " + result.user.displayName))
@@ -41,47 +43,68 @@ export function monitorAuth(onLogin, onLogout) {
     });
 }
 
-// --- キャラクター操作 (既存維持) ---
+// --- データベース設定 ---
 const SHARED_COLLECTION = "rooms";
 const SHARED_DOC_ID = "couple_shared_data";
 const CHAR_SUB_COLLECTION = "characters"; 
 
+// --- キャラクター操作 (ID管理版) ---
+
+// 保存: IDをファイル名として保存
 export async function saveToCloud(charData) {
     if (!currentUser) return alert("保存にはログインが必要です。");
     if (!charData || !charData.id) return alert("データエラー: IDがありません。");
+
     try {
         const charRef = doc(db, SHARED_COLLECTION, SHARED_DOC_ID, CHAR_SUB_COLLECTION, charData.id);
         await setDoc(charRef, charData, { merge: true });
-        console.log("Character Updated: " + charData.name);
+        alert("保存完了: " + charData.name);
     } catch (e) {
         console.error("Save Error:", e);
         alert("保存エラー: " + e.message);
     }
 }
 
+// 読み込み: 全データを取得し、IDで整理
 export async function loadFromCloud() {
     if (!currentUser) return alert("読み込みにはログインが必要です。");
+
     try {
         const colRef = collection(db, SHARED_COLLECTION, SHARED_DOC_ID, CHAR_SUB_COLLECTION);
         const querySnapshot = await getDocs(colRef);
+
         const loadedData = {};
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
-            if (!data.id) data.id = docSnap.id;
+            if (!data.id) {
+                data.id = docSnap.id;
+            }
             loadedData[data.id] = data;
         });
         return loadedData;
+
     } catch (e) {
         console.error("Load Error:", e);
+        alert("読み込みエラー: " + e.message);
         return null;
     }
 }
 
+// 削除: IDを指定してファイルを消す
 export async function deleteFromCloud(charId) {
-    // (既存実装維持)
+    if (!currentUser || !charId) return;
+    try {
+        const charRef = doc(db, SHARED_COLLECTION, SHARED_DOC_ID, CHAR_SUB_COLLECTION, charId);
+        await deleteDoc(charRef);
+        alert("削除しました。");
+        location.reload(); 
+    } catch (e) {
+        console.error("Delete Error:", e);
+        alert("削除エラー: " + e.message);
+    }
 }
 
-// --- シナリオ機能 (追加・更新) ---
+// --- シナリオ機能 (既存 + 追加分) ---
 
 // 新規作成
 export async function saveScenario(scenarioData) {
@@ -99,10 +122,10 @@ export async function saveScenario(scenarioData) {
     }
 }
 
-// 更新 (New Function)
+// [追加] 既存シナリオの更新 (ID指定)
 export async function updateScenario(scenarioId, scenarioData) {
     if (!currentUser) throw new Error("User not logged in");
-    if (!scenarioId) throw new Error("Scenario ID is missing");
+    if (!scenarioId) throw new Error("No Scenario ID provided");
     
     const dataToSave = {
         ...scenarioData,
@@ -110,7 +133,7 @@ export async function updateScenario(scenarioId, scenarioData) {
     };
     try {
         const docRef = doc(db, "scenarios", scenarioId);
-        await updateDoc(docRef, dataToSave);
+        await setDoc(docRef, dataToSave, { merge: true });
         return scenarioId;
     } catch (e) {
         console.error("Error updating scenario: ", e);
@@ -118,39 +141,45 @@ export async function updateScenario(scenarioId, scenarioData) {
     }
 }
 
-// 特定のペア（またはPC単体）の履歴を取得 (New Function)
-export async function getScenariosForPair(pcId, kpcId = null) {
-    if (!currentUser || !pcId) return [];
+// [追加] 指定されたペア(または単独)のシナリオ履歴を取得
+export async function getScenariosByPair(charId1, charId2 = null) {
+    if (!currentUser) return [];
     try {
-        // Firestoreの制約上、複合条件はインデックスが必要になるため、
-        // ここでは「PCが含まれているもの」を取得し、JS側でKPC（またはソロ）をフィルタリングします。
+        // Firestoreの制約上、array-containsは1つの値しか使えないため、
+        // 少なくとも1人が含まれているものを取得し、JS側でフィルタリングする方式をとる
+        // (データ量が膨大でない前提)
+        
+        const scenariosRef = collection(db, "scenarios");
         const q = query(
-            collection(db, "scenarios"),
-            where("members", "array-contains", pcId),
+            scenariosRef, 
+            where("members", "array-contains", charId1),
             orderBy("date", "desc") // 日付順
         );
+
         const querySnapshot = await getDocs(q);
         const scenarios = [];
         
         querySnapshot.forEach((doc) => {
             const data = doc.data();
-            // KPC指定がある場合は、メンバーに含まれているか確認
-            if (kpcId) {
-                if (data.members && data.members.includes(kpcId)) {
+            // 2人目が指定されている場合、そのIDもmembersに含まれているか確認
+            if (charId2) {
+                if (data.members && data.members.includes(charId2)) {
                     scenarios.push({ id: doc.id, ...data });
                 }
             } else {
-                // KPC指定がない（PCのみ選択中）場合は全て
                 scenarios.push({ id: doc.id, ...data });
             }
         });
         
-        // 日付降順ソートを確実にする
-        return scenarios.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+        return scenarios;
     } catch (e) {
-        // インデックス未作成エラーが出た場合などは日付ソートを外して再試行などのケアが必要ですが
-        // 一旦コンソールに出す
-        console.error("Fetch Error:", e);
+        console.error("History Load Error:", e);
+        // インデックス未作成エラーなどの場合に空配列を返す
         return [];
     }
+}
+
+export async function getScenariosForCharacter(charId) {
+    // 既存関数へのラッパーとして機能させる
+    return await getScenariosByPair(charId);
 }
