@@ -20,15 +20,14 @@
             overflow-x: hidden;
         }
 
-        /* --- LAYOUT GRID --- */
         .layout-container {
             display: grid;
-            grid-template-columns: 300px 1fr 100px; /* Sidebar幅を少し拡張 */
+            grid-template-columns: 300px 1fr 100px;
             min-height: 100vh; width: 100%; max-width: 1920px;
             margin: 0 auto; position: relative;
         }
 
-        /* --- SIDEBAR (History Stylish) --- */
+        /* --- SIDEBAR --- */
         .sidebar {
             padding: 25px 15px; border-right: 1px solid #222; background: rgba(0,0,0,0.6);
             display: flex; flex-direction: column; gap: 20px;
@@ -42,7 +41,6 @@
         }
         .history-list { display: flex; flex-direction: column; gap: 12px; }
         
-        /* New History Item Style */
         .history-item {
             background: linear-gradient(135deg, #151515, #0f0f0f);
             border: 1px solid #333; border-left: 3px solid #555;
@@ -51,22 +49,15 @@
         }
         .history-item:hover {
             transform: translateX(3px); background: #1a1a1a;
-            border-left-color: #d4b346;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            border-left-color: #d4b346; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         }
         .history-item.active {
             border: 1px solid #d4b346; border-left: 4px solid #d4b346;
             background: linear-gradient(135deg, #252015, #1a1510);
         }
         .h-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-        .h-title { 
-            font-weight: bold; color: #eee; font-size: 0.95rem; 
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 190px;
-        }
-        .h-count { 
-            font-family: 'Cinzel', serif; font-size: 0.75rem; color: #d4b346; 
-            background: rgba(212,179,70,0.1); padding: 1px 6px; border-radius: 2px; border: 1px solid rgba(212,179,70,0.3);
-        }
+        .h-title { font-weight: bold; color: #eee; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 190px; }
+        .h-count { font-family: 'Cinzel', serif; font-size: 0.75rem; color: #d4b346; background: rgba(212,179,70,0.1); padding: 1px 6px; border-radius: 2px; border: 1px solid rgba(212,179,70,0.3); }
         .h-row { display: flex; justify-content: space-between; font-size: 0.75rem; color: #888; margin-top: 2px; }
         .h-chars { color: #aaa; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
         .h-date { font-family: 'Cinzel', serif; color: #666; font-size: 0.7rem; }
@@ -104,10 +95,7 @@
         .page::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
 
         /* --- TABS --- */
-        .tabs-container {
-            position: absolute; top: 40px; right: -40px; width: 40px; z-index: 5;
-            display: flex; flex-direction: column; gap: 10px;
-        }
+        .tabs-container { position: absolute; top: 40px; right: -40px; width: 40px; z-index: 5; display: flex; flex-direction: column; gap: 10px; }
         .tab-btn {
             width: 40px; height: 100px; background: #222; border: 1px solid #333; border-left: none;
             border-radius: 0 4px 4px 0; color: #666; cursor: pointer; writing-mode: vertical-rl; 
@@ -140,11 +128,19 @@
         .session-count { text-align: center; font-family: 'Cinzel', serif; color: #d4b346; font-size: 0.9rem; margin-bottom: 20px; letter-spacing: 2px; }
         .session-count input { background: transparent; border: none; color: inherit; font-family: inherit; font-size: inherit; text-align: center; width: 50px; border-bottom: 1px dashed #444; }
 
-        .char-pair-area { display: flex; justify-content: center; align-items: start; gap: 20px; margin-bottom: 25px; }
+        /* Char Pair & Swap */
+        .char-pair-area { display: flex; justify-content: center; align-items: start; gap: 15px; margin-bottom: 25px; position: relative; }
         .char-unit { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 140px; }
         .char-icon-circle { width: 90px; height: 90px; border-radius: 50%; border: 2px solid #333; object-fit: cover; background: #111; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
         select.char-select { width: 100%; background: #1a1a1a; border: 1px solid #333; color: #ccc; padding: 4px; text-align: center; font-size: 0.8rem; border-radius: 4px; }
         input.pl-name { width: 100%; background: transparent; border: none; color: #666; text-align: center; font-size: 0.8rem; padding: 2px; }
+        
+        .swap-btn {
+            align-self: center; background: transparent; border: 1px solid #333; color: #666;
+            width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: 0.3s;
+        }
+        .swap-btn:hover { color: #d4b346; border-color: #d4b346; transform: rotate(180deg); }
 
         .prop-list { display: flex; flex-direction: column; border-top: 1px solid #333; margin-top: 10px; }
         .prop-row { display: grid; grid-template-columns: 120px 1fr; align-items: center; border-bottom: 1px solid #333; padding: 6px 0; }
@@ -172,7 +168,7 @@
         .chat-row.pc .speech-bubble::after { left: -16px; border-right-color: #444; }
         .chat-row.kpc .speech-bubble::after { right: -16px; border-left-color: #444; }
 
-        /* --- New Growth UI (Separated Skills) --- */
+        /* Growth */
         .growth-area { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
         .growth-box { background: rgba(0,0,0,0.2); border-radius: 4px; padding: 10px; min-height: 120px; border: 1px solid #333; }
         .growth-header { font-size: 0.75rem; color: #aaa; font-family: 'Cinzel', serif; margin-bottom: 8px; border-bottom: 1px dashed #444; padding-bottom: 2px; display:flex; justify-content:space-between; }
@@ -185,35 +181,35 @@
         .skill-del-btn { background: transparent; border: none; color: #666; cursor: pointer; font-size: 1rem; line-height: 1; }
         .skill-del-btn:hover { color: #f66; }
 
-        /* --- Details: Toggle Toolbar --- */
+        /* --- Details: Character Based Toggle --- */
         .details-container { margin-bottom: 30px; }
-        .details-toolbar { display: flex; justify-content: center; gap: 10px; margin-bottom: 10px; }
+        .details-toolbar { display: flex; justify-content: center; gap: 20px; margin-bottom: 10px; }
         .toggle-btn {
-            background: #1a1a1a; border: 1px solid #444; color: #888; padding: 5px 15px; 
-            font-size: 0.75rem; cursor: pointer; border-radius: 15px; transition: 0.3s;
+            background: #1a1a1a; border: 1px solid #444; color: #888; padding: 8px 30px; 
+            font-size: 0.8rem; cursor: pointer; border-radius: 20px; transition: 0.3s;
+            font-family: 'Cinzel', serif; letter-spacing: 1px;
         }
         .toggle-btn:hover { background: #222; color: #ccc; }
-        .toggle-btn.active { background: #d4b346; color: #000; border-color: #d4b346; font-weight: bold; }
+        .toggle-btn.active { background: #6d2020; color: #fff; border-color: #844; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
 
-        .detail-section { display: none; margin-bottom: 15px; background: rgba(0,0,0,0.3); border: 1px solid #333; padding: 15px; border-radius: 4px; animation: slideDown 0.3s; }
+        .detail-section { display: none; margin-bottom: 15px; background: rgba(0,0,0,0.3); border: 1px solid #333; padding: 20px; border-radius: 4px; animation: slideDown 0.3s; }
         .detail-section.show { display: block; }
         @keyframes slideDown { from{opacity:0; transform:translateY(-10px);} to{opacity:1; transform:translateY(0);} }
 
-        .section-title { font-family:'Cinzel',serif; font-size:0.85rem; color:#d4b346; margin-bottom:10px; border-bottom:1px solid #444; padding-bottom:5px; }
-        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; } /* PC | KPC */
+        /* 縦積みレイアウト */
+        .detail-stack { display: flex; flex-direction: column; gap: 20px; }
+        .detail-item-header { font-size: 0.8rem; color: #d4b346; margin-bottom: 5px; border-left: 3px solid #d4b346; padding-left: 8px; font-family: 'Cinzel', serif; }
+        .detail-item-header.seq { color: #ffadad; border-color: #a54a4a; }
         
-        .detail-unit { display: flex; flex-direction: column; gap: 8px; }
-        .detail-unit-label { font-size: 0.7rem; color: #aaa; text-align: center; }
-
         /* Insanity Specifics */
-        .insanity-row { display: flex; flex-direction: column; gap: 5px; }
-        .ins-radio-group { display: flex; gap: 10px; font-size: 0.7rem; color: #888; justify-content: center; margin: 5px 0; }
-        .ins-date-row { display: none; font-size: 0.7rem; align-items: center; gap: 5px; justify-content: center; }
+        .ins-radio-group { display: flex; gap: 15px; font-size: 0.8rem; color: #aaa; margin: 8px 0; }
+        .ins-date-row { display: none; font-size: 0.8rem; align-items: center; gap: 8px; }
         .ins-date-row.show { display: flex; }
 
         /* --- Memo (Bottom) --- */
         .memo-area { display: flex; flex-direction: column; gap: 20px; border-top: 1px solid #333; padding-top: 20px; }
         .section-label { font-size: 0.8rem; color: #bbb; border-left: 3px solid #4a6fa5; padding-left: 8px; font-family: 'Shippori Mincho', serif; margin-bottom: 5px; }
+        .section-label.kpc { border-color: #a54a4a; }
 
         textarea.paper-area { width: 100%; background: transparent; border: none; color: #ccc; resize: vertical; font-family: 'Shippori Mincho', serif; line-height: 1.6; font-size: 0.9rem; }
         textarea.paper-area:focus { outline: none; }
@@ -285,7 +281,9 @@
                                     <select id="selPC" class="char-select"><option value="">(PC)</option></select>
                                     <input type="text" id="inpPlNamePC" class="pl-name" placeholder="PL名">
                                 </div>
-                                <div style="align-self:center; font-family:'Cinzel',serif; color:#555; font-size:1.5rem;">&</div>
+                                <div class="swap-btn" onclick="window.swapCharacters()">
+                                    <span class="material-icons-round" style="font-size:1.2rem;">swap_horiz</span>
+                                </div>
                                 <div class="char-unit">
                                     <img id="iconKPC" class="char-icon-circle" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
                                     <select id="selKPC" class="char-select"><option value="">(KPC)</option></select>
@@ -294,6 +292,7 @@
                             </div>
 
                             <div class="prop-list">
+                                <div class="prop-row"><div class="prop-label"><span class="material-icons-round">event</span> 日付</div><input type="date" id="inpDate" class="tag-input" style="color:#aaa;"></div>
                                 <div class="prop-row">
                                     <div class="prop-label"><span class="material-icons-round">casino</span> システム</div>
                                     <select id="inpSystem" class="tag-select bg-gray" onchange="updateTagColor(this)">
@@ -308,8 +307,7 @@
                                 </div>
                                 <div class="prop-row" id="rowGM" style="display:none;"><div class="prop-label"><span class="material-icons-round">person</span> GM/KP</div><input type="text" id="inpGM" class="tag-select bg-blue" placeholder="GM名"></div>
                                 <div class="prop-row"><div class="prop-label"><span class="material-icons-round">flag</span> 結末</div><input type="text" id="inpEndName" class="tag-select bg-orange" placeholder="エンド名"></div>
-                                <div class="prop-row"><div class="prop-label"><span class="material-icons-round">event</span> 日付</div><input type="date" id="inpDate" class="tag-input" style="color:#aaa;"></div>
-                                <div class="prop-row"><div class="prop-label"><span class="material-icons-round">sell</span> タグ</div><input type="text" id="inpTags" class="tag-input" placeholder="#タグ"></div>
+                                <div class="prop-row"><div class="prop-label"><span class="material-icons-round">notes</span> HO/備考</div><input type="text" id="inpTags" class="tag-input" placeholder="HO1, テキセ 等"></div>
                             </div>
                         </div>
 
@@ -335,7 +333,7 @@
                                     <div class="chat-row kpc"><img id="chatIconKPC" class="chat-icon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"><div class="speech-bubble"><textarea id="inpQuoteKPC" class="paper-area bubble-text" placeholder="KPCの印象的な台詞..."></textarea></div></div>
                                 </div>
 
-                                <!-- Growth: Dynamic Skills -->
+                                <!-- Growth -->
                                 <div class="growth-area">
                                     <div class="growth-box">
                                         <div class="growth-header">PC 技能成長 <span class="material-icons-round" style="font-size:1rem;">trending_up</span></div>
@@ -349,104 +347,73 @@
                                     </div>
                                 </div>
 
-                                <!-- Details: Toolbar & Sections -->
+                                <!-- Details: Character Toggle -->
                                 <div class="details-container">
                                     <div class="details-toolbar">
-                                        <div class="toggle-btn" onclick="window.toggleDetail('secAF', this)">AF</div>
-                                        <div class="toggle-btn" onclick="window.toggleDetail('secSeq', this)">後遺症</div>
-                                        <div class="toggle-btn" onclick="window.toggleDetail('secIns', this)">狂気</div>
+                                        <div class="toggle-btn" onclick="window.toggleDetail('detailPC', this)">PC 詳細</div>
+                                        <div class="toggle-btn" onclick="window.toggleDetail('detailKPC', this)">KPC 詳細</div>
                                     </div>
 
-                                    <!-- AF Section -->
-                                    <div id="secAF" class="detail-section">
-                                        <div class="section-title">ARTIFACTS (AF)</div>
-                                        <div class="detail-grid">
-                                            <div class="detail-unit">
-                                                <div class="detail-unit-label">PC</div>
-                                                <input type="text" id="inpArtNamePC" class="line-input" placeholder="名称" style="color:#d4b346;">
-                                                <textarea id="inpArtDescPC" class="paper-area" placeholder="詳細..."></textarea>
+                                    <!-- PC Detail Section -->
+                                    <div id="detailPC" class="detail-section">
+                                        <div class="detail-stack">
+                                            <div>
+                                                <div class="detail-item-header">ARTIFACT (AF)</div>
+                                                <input type="text" id="inpArtNamePC" class="line-input" placeholder="名称" style="color:#d4b346; margin-bottom:5px;">
+                                                <textarea id="inpArtDescPC" class="paper-area box-input" style="min-height:50px;" placeholder="詳細..."></textarea>
                                             </div>
-                                            <div class="detail-unit">
-                                                <div class="detail-unit-label">KPC</div>
-                                                <input type="text" id="inpArtNameKPC" class="line-input" placeholder="名称" style="color:#d4b346;">
-                                                <textarea id="inpArtDescKPC" class="paper-area" placeholder="詳細..."></textarea>
+                                            <div>
+                                                <div class="detail-item-header seq">SEQUELAE (後遺症)</div>
+                                                <input type="text" id="inpSeqNamePC" class="line-input" placeholder="名称" style="color:#ffadad; margin-bottom:5px;">
+                                                <textarea id="inpSeqDescPC" class="paper-area box-input" style="min-height:50px;" placeholder="詳細..."></textarea>
                                             </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Sequelae Section -->
-                                    <div id="secSeq" class="detail-section">
-                                        <div class="section-title">SEQUELAE (後遺症)</div>
-                                        <div class="detail-grid">
-                                            <div class="detail-unit">
-                                                <div class="detail-unit-label">PC</div>
-                                                <input type="text" id="inpSeqNamePC" class="line-input" placeholder="名称" style="color:#ffadad;">
-                                                <textarea id="inpSeqDescPC" class="paper-area" placeholder="詳細..."></textarea>
-                                            </div>
-                                            <div class="detail-unit">
-                                                <div class="detail-unit-label">KPC</div>
-                                                <input type="text" id="inpSeqNameKPC" class="line-input" placeholder="名称" style="color:#ffadad;">
-                                                <textarea id="inpSeqDescKPC" class="paper-area" placeholder="詳細..."></textarea>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Insanity Section (Updated) -->
-                                    <div id="secIns" class="detail-section">
-                                        <div class="section-title">INSANITY (狂気)</div>
-                                        <div class="detail-grid">
-                                            <!-- PC Insanity -->
-                                            <div class="detail-unit">
-                                                <div class="detail-unit-label">PC</div>
+                                            <div>
+                                                <div class="detail-item-header">INSANITY (狂気)</div>
                                                 <select id="selInsanityPC" class="insanity-select" onchange="updateInsanityDesc(this.value, 'PC')">
-                                                    <option value="">(なし)</option>
-                                                    <option value="1">1: 健忘症 / 昏迷</option><option value="2">2: 激しい恐怖症</option>
-                                                    <option value="3">3: 幻覚</option><option value="4">4: 奇妙な性的嗜好</option>
-                                                    <option value="5">5: フェティッシュ</option><option value="6">6: チック・震え</option>
-                                                    <option value="7">7: 心因性機能障害</option><option value="8">8: 短時間の心因反応</option>
-                                                    <option value="9">9: 一時的偏執症</option><option value="10">10: 強迫観念行動</option>
-                                                    <option value="Other">その他</option>
+                                                    <option value="">(なし)</option><option value="1">1: 健忘症 / 昏迷</option><option value="2">2: 激しい恐怖症</option><option value="3">3: 幻覚</option><option value="4">4: 奇妙な性的嗜好</option><option value="5">5: フェティッシュ</option><option value="6">6: チック・震え</option><option value="7">7: 心因性機能障害</option><option value="8">8: 短時間の心因反応</option><option value="9">9: 一時的偏執症</option><option value="10">10: 強迫観念行動</option><option value="Other">その他</option>
                                                 </select>
-                                                <textarea id="inpInsanityDescPC" class="paper-area" placeholder="症状..." style="min-height:40px;"></textarea>
-                                                
+                                                <textarea id="inpInsanityDescPC" class="paper-area box-input" style="min-height:50px; margin-top:5px;"></textarea>
                                                 <div class="ins-radio-group">
                                                     <label><input type="radio" name="durPC" value="Temp" checked onclick="toggleDate('datePC', false)"> 一時的</label>
                                                     <label><input type="radio" name="durPC" value="Indef" onclick="toggleDate('datePC', true)"> 不定</label>
                                                     <label><input type="radio" name="durPC" value="Perm" onclick="toggleDate('datePC', false)"> 永続</label>
                                                 </div>
-                                                <div id="datePC" class="ins-date-row">
-                                                    完治日: <input type="date" id="inpInsDatePC" class="tag-input" style="width:100px;">
-                                                </div>
+                                                <div id="datePC" class="ins-date-row">完治日: <input type="date" id="inpInsDatePC" class="tag-input" style="width:100px;"></div>
                                             </div>
+                                        </div>
+                                    </div>
 
-                                            <!-- KPC Insanity -->
-                                            <div class="detail-unit">
-                                                <div class="detail-unit-label">KPC</div>
+                                    <!-- KPC Detail Section -->
+                                    <div id="detailKPC" class="detail-section">
+                                        <div class="detail-stack">
+                                            <div>
+                                                <div class="detail-item-header">ARTIFACT (AF)</div>
+                                                <input type="text" id="inpArtNameKPC" class="line-input" placeholder="名称" style="color:#d4b346; margin-bottom:5px;">
+                                                <textarea id="inpArtDescKPC" class="paper-area box-input" style="min-height:50px;" placeholder="詳細..."></textarea>
+                                            </div>
+                                            <div>
+                                                <div class="detail-item-header seq">SEQUELAE (後遺症)</div>
+                                                <input type="text" id="inpSeqNameKPC" class="line-input" placeholder="名称" style="color:#ffadad; margin-bottom:5px;">
+                                                <textarea id="inpSeqDescKPC" class="paper-area box-input" style="min-height:50px;" placeholder="詳細..."></textarea>
+                                            </div>
+                                            <div>
+                                                <div class="detail-item-header">INSANITY (狂気)</div>
                                                 <select id="selInsanityKPC" class="insanity-select" onchange="updateInsanityDesc(this.value, 'KPC')">
-                                                    <option value="">(なし)</option>
-                                                    <option value="1">1: 健忘症 / 昏迷</option><option value="2">2: 激しい恐怖症</option>
-                                                    <option value="3">3: 幻覚</option><option value="4">4: 奇妙な性的嗜好</option>
-                                                    <option value="5">5: フェティッシュ</option><option value="6">6: チック・震え</option>
-                                                    <option value="7">7: 心因性機能障害</option><option value="8">8: 短時間の心因反応</option>
-                                                    <option value="9">9: 一時的偏執症</option><option value="10">10: 強迫観念行動</option>
-                                                    <option value="Other">その他</option>
+                                                    <option value="">(なし)</option><option value="1">1: 健忘症 / 昏迷</option><option value="2">2: 激しい恐怖症</option><option value="3">3: 幻覚</option><option value="4">4: 奇妙な性的嗜好</option><option value="5">5: フェティッシュ</option><option value="6">6: チック・震え</option><option value="7">7: 心因性機能障害</option><option value="8">8: 短時間の心因反応</option><option value="9">9: 一時的偏執症</option><option value="10">10: 強迫観念行動</option><option value="Other">その他</option>
                                                 </select>
-                                                <textarea id="inpInsanityDescKPC" class="paper-area" placeholder="症状..." style="min-height:40px;"></textarea>
-                                                
+                                                <textarea id="inpInsanityDescKPC" class="paper-area box-input" style="min-height:50px; margin-top:5px;"></textarea>
                                                 <div class="ins-radio-group">
                                                     <label><input type="radio" name="durKPC" value="Temp" checked onclick="toggleDate('dateKPC', false)"> 一時的</label>
                                                     <label><input type="radio" name="durKPC" value="Indef" onclick="toggleDate('dateKPC', true)"> 不定</label>
                                                     <label><input type="radio" name="durKPC" value="Perm" onclick="toggleDate('dateKPC', false)"> 永続</label>
                                                 </div>
-                                                <div id="dateKPC" class="ins-date-row">
-                                                    完治日: <input type="date" id="inpInsDateKPC" class="tag-input" style="width:100px;">
-                                                </div>
+                                                <div id="dateKPC" class="ins-date-row">完治日: <input type="date" id="inpInsDateKPC" class="tag-input" style="width:100px;"></div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <!-- Memo: Full Width -->
+                                <!-- Memo -->
                                 <div class="memo-area">
                                     <div>
                                         <div class="section-label">PC 感想・手記</div>
@@ -462,10 +429,13 @@
                             <!-- TAB SCENARIO -->
                             <div id="tab-scenario" class="tab-panel">
                                 <h2 class="section-header">SCENARIO OVERVIEW</h2>
+                                <!-- 空白行を追加して推奨技能との間を空ける -->
                                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px;">
                                     <input type="text" id="inpMetaSystem" class="line-input" placeholder="システム詳細"><input type="text" id="inpMetaType" class="line-input" placeholder="形式詳細">
                                     <input type="text" id="inpDuration" class="line-input" placeholder="所要時間"><input type="text" id="inpStage" class="line-input" placeholder="舞台">
                                     <input type="text" id="inpCharRel" class="line-input" placeholder="推奨関係"><input type="text" id="inpLostRate" class="line-input" placeholder="ロスト率">
+                                    <!-- Spacer row -->
+                                    <div style="grid-column: span 2; height: 15px;"></div>
                                     <input type="text" id="inpRecSkills" class="line-input" placeholder="推奨技能" style="grid-column: span 2;"><input type="text" id="inpScnType" class="line-input" placeholder="ジャンル" style="grid-column: span 2;">
                                 </div>
                                 <div style="margin-bottom:20px;">
@@ -515,7 +485,23 @@
             if (el.value === 'タイマン' || el.value === 'ソロ') { row.style.display = 'none'; } else { row.style.display = 'grid'; }
         };
 
-        // --- New Logic: Skills ---
+        // --- Swap Function ---
+        window.swapCharacters = () => {
+            const pcSel = document.getElementById('selPC');
+            const kpcSel = document.getElementById('selKPC');
+            const pcName = document.getElementById('inpPlNamePC');
+            const kpcName = document.getElementById('inpPlNameKPC');
+            
+            // Swap values
+            const tmpVal = pcSel.value; pcSel.value = kpcSel.value; kpcSel.value = tmpVal;
+            const tmpName = pcName.value; pcName.value = kpcName.value; kpcName.value = tmpName;
+            
+            // Trigger change to update icons
+            pcSel.dispatchEvent(new Event('change'));
+            kpcSel.dispatchEvent(new Event('change'));
+        };
+
+        // --- Skills ---
         window.addSkillRow = (containerId, name="", val="") => {
             const c = document.getElementById(containerId);
             const row = document.createElement('div');
@@ -554,14 +540,24 @@
             });
         };
 
-        // --- New Logic: Details Toggle ---
+        // --- Details Toggle (Exclusive) ---
         window.toggleDetail = (secId, btn) => {
-            const sec = document.getElementById(secId);
-            sec.classList.toggle('show');
-            btn.classList.toggle('active');
+            const allSecs = document.querySelectorAll('.detail-section');
+            const allBtns = document.querySelectorAll('.toggle-btn');
+            
+            const target = document.getElementById(secId);
+            const isActive = target.classList.contains('show');
+
+            // Close all
+            allSecs.forEach(s => s.classList.remove('show'));
+            allBtns.forEach(b => b.classList.remove('active'));
+
+            if (!isActive) {
+                target.classList.add('show');
+                btn.classList.add('active');
+            }
         };
 
-        // --- New Logic: Insanity Duration ---
         window.toggleDate = (rowId, show) => {
             const row = document.getElementById(rowId);
             if(show) row.classList.add('show'); else row.classList.remove('show');
@@ -699,7 +695,6 @@
             getEl('inpDate').value = s.date || "";
             getEl('inpTags').value = s.tags || "";
             
-            // Image Load
             const loadImg = (boxId, imgId, inpId, val) => {
                 if(val) {
                     getEl(inpId).value = val; getEl(imgId).src = val; getEl(boxId).classList.remove('empty');
@@ -726,7 +721,6 @@
                 getEl(`inpPlName${suffix}`).value = d.pl||""; getEl(`inpRes${suffix}`).value = d.res||"Alive"; updateResColor(getEl(`inpRes${suffix}`));
                 getEl(`inpSan${suffix}`).value = d.san||""; getEl(`inpQuote${suffix}`).value = d.quote||"";
                 getEl(`inpMemo${suffix}`).value = d.memo||"";
-                // Growth (Parse text back to rows)
                 window.setSkillRows(listId, d.grow||"");
 
                 if(d.art) { getEl(`inpArtName${suffix}`).value = d.art.name||""; getEl(`inpArtDesc${suffix}`).value = d.art.desc||""; }
@@ -751,11 +745,8 @@
             getEl('inpTitle').value = ""; getEl('inpCount').value = "1";
             document.querySelectorAll('.paper-area, .line-input').forEach(e => { if(!e.id.includes('PlName')) e.value = ""; });
             
-            // Image reset
             getEl('imgTrailer').src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
             getEl('dropTrailer').classList.add('empty');
-            
-            // Skill reset
             getEl('skillListPC').innerHTML = ""; getEl('skillListKPC').innerHTML = "";
             
             document.querySelectorAll('.history-item').forEach(e=>e.classList.remove('active'));
@@ -800,7 +791,6 @@
                 if(pcId) members.push(pcId);
                 if(kpcId) members.push(kpcId);
 
-                // Collect Insanity Extras
                 const getInsExtras = (suffix) => {
                     const dur = document.querySelector(`input[name="dur${suffix}"]:checked`)?.value || "Temp";
                     const date = getEl(`inpInsDate${suffix}`).value;
@@ -810,7 +800,6 @@
                     return txt;
                 };
 
-                // Collect Skills
                 const growPC = window.getSkillText('skillListPC');
                 const growKPC = window.getSkillText('skillListKPC');
 
