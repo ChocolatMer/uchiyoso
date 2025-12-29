@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } 
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { 
-    getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, addDoc, updateDoc, query, where, orderBy, serverTimestamp 
+    getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, addDoc, query, where, serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // 設定 (変更なし)
@@ -45,28 +45,28 @@ export function monitorAuth(onLogin, onLogout) {
 const SHARED_COLLECTION = "rooms";
 const SHARED_DOC_ID = "couple_shared_data";
 const CHAR_SUB_COLLECTION = "characters"; 
-const SCENARIO_COLLECTION = "scenarios";
 
 // --- キャラクター操作 (ID管理版) ---
 
-// 保存
+// 保存: IDをファイル名として保存
 export async function saveToCloud(charData) {
     if (!currentUser) return alert("保存にはログインが必要です。");
     if (!charData || !charData.id) return alert("データエラー: IDがありません。");
 
     try {
+        // IDをキーにして保存（名前が変わってもファイルは同じまま）
         const charRef = doc(db, SHARED_COLLECTION, SHARED_DOC_ID, CHAR_SUB_COLLECTION, charData.id);
         await setDoc(charRef, charData, { merge: true });
-        console.log("Char Saved: " + charData.name);
+        alert("保存完了: " + charData.name);
     } catch (e) {
         console.error("Save Error:", e);
-        throw e;
+        alert("保存エラー: " + e.message);
     }
 }
 
-// 読み込み
+// 読み込み: 全データを取得し、IDで整理
 export async function loadFromCloud() {
-    if (!currentUser) return null; // Alert removed for silent loading
+    if (!currentUser) return alert("読み込みにはログインが必要です。");
 
     try {
         const colRef = collection(db, SHARED_COLLECTION, SHARED_DOC_ID, CHAR_SUB_COLLECTION);
@@ -75,18 +75,25 @@ export async function loadFromCloud() {
         const loadedData = {};
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
-            if (!data.id) data.id = docSnap.id;
+            
+            // 重要: 古いデータ(IDがない)場合、ファイル名をIDとして扱う救済処置
+            if (!data.id) {
+                data.id = docSnap.id;
+            }
+            
             loadedData[data.id] = data;
         });
+        
         return loadedData;
 
     } catch (e) {
         console.error("Load Error:", e);
+        alert("読み込みエラー: " + e.message);
         return null;
     }
 }
 
-// 削除
+// 削除: IDを指定してファイルを消す
 export async function deleteFromCloud(charId) {
     if (!currentUser || !charId) return;
     try {
@@ -102,7 +109,6 @@ export async function deleteFromCloud(charId) {
 
 // --- シナリオ機能 ---
 
-// 新規保存
 export async function saveScenario(scenarioData) {
     if (!currentUser) throw new Error("User not logged in");
     const dataToSave = {
@@ -110,7 +116,7 @@ export async function saveScenario(scenarioData) {
         updatedAt: serverTimestamp()
     };
     try {
-        const docRef = await addDoc(collection(db, SCENARIO_COLLECTION), dataToSave);
+        const docRef = await addDoc(collection(db, "scenarios"), dataToSave);
         return docRef.id;
     } catch (e) {
         console.error("Error adding scenario: ", e);
@@ -118,16 +124,39 @@ export async function saveScenario(scenarioData) {
     }
 }
 
-// 更新 (NEW FUNCTION)
+export async function getScenariosForCharacter(charId) {
+    if (!currentUser) return [];
+    try {
+        const q = query(
+            collection(db, "scenarios"),
+            where("members", "array-contains", charId)
+        );
+        const querySnapshot = await getDocs(q);
+        const scenarios = [];
+        querySnapshot.forEach((doc) => {
+            scenarios.push({ id: doc.id, ...doc.data() });
+        });
+        return scenarios.sort((a, b) => new Date(b.date) - new Date(a.date));
+    } catch (e) {
+        console.error(e);
+        return [];
+    }
+}
+// --- firestore.js の末尾に追加 ---
+
+// シナリオ更新 (ID指定で上書き)
 export async function updateScenario(scenarioId, scenarioData) {
     if (!currentUser) throw new Error("User not logged in");
+    if (!scenarioId) throw new Error("Scenario ID is missing");
+    
     const dataToSave = {
         ...scenarioData,
         updatedAt: serverTimestamp()
     };
+    
     try {
-        const docRef = doc(db, SCENARIO_COLLECTION, scenarioId);
-        await updateDoc(docRef, dataToSave);
+        const docRef = doc(db, "scenarios", scenarioId);
+        await setDoc(docRef, dataToSave, { merge: true });
         return scenarioId;
     } catch (e) {
         console.error("Error updating scenario: ", e);
@@ -135,43 +164,19 @@ export async function updateScenario(scenarioId, scenarioData) {
     }
 }
 
-// ペア指定での検索 (NEW FUNCTION)
-// メンバー配列に、指定したIDが含まれているものを取得
-export async function getScenariosForPair(memberIds) {
-    if (!currentUser) return [];
-    if (!memberIds || memberIds.length === 0) return [];
-
+// 特定のシナリオを取得
+export async function getScenarioById(scenarioId) {
+    if (!currentUser) return null;
     try {
-        // Firestore limitation: array-contains-any works, but for strict pair matching (AND), it's harder.
-        // Logic: Fetch scenarios where at least one member matches, then filter in JS for strict pair if needed.
-        // For now, we use array-contains for the first member to limit results.
-        
-        const q = query(
-            collection(db, SCENARIO_COLLECTION),
-            where("members", "array-contains", memberIds[0]),
-            orderBy("date", "desc")
-        );
-        
-        const querySnapshot = await getDocs(q);
-        const scenarios = [];
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            // Client-side filtering for 2nd member if provided
-            if(memberIds.length > 1) {
-                if(data.members && data.members.includes(memberIds[1])) {
-                    scenarios.push({ id: doc.id, ...data });
-                }
-            } else {
-                scenarios.push({ id: doc.id, ...data });
-            }
-        });
-        return scenarios;
+        const docRef = doc(db, "scenarios", scenarioId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            return { id: docSnap.id, ...docSnap.data() };
+        } else {
+            return null;
+        }
     } catch (e) {
-        console.error("Fetch Scenarios Error:", e);
-        return [];
+        console.error("Error getting scenario:", e);
+        return null;
     }
-}
-
-export async function getScenariosForCharacter(charId) {
-    return getScenariosForPair([charId]);
 }
