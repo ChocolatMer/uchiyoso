@@ -304,7 +304,7 @@
     <!-- ここからスクリプト -->
     <script type="module">
         import { loadFromCloud, monitorAuth, saveToCloud, deleteFromCloud } from "./firestore.js";
-        // ★ GROUP_MAPPING をインポートに追加
+        // ★ GROUP_MAPPING をインポート
         import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING, GROUP_MAPPING } from "./data/schema.js";
         import { parseIaChara } from "./data/parser_ia.js";
 
@@ -321,7 +321,6 @@
         let currentId = null;
         let isInitDone = false; 
 
-        // --- 保存ボタン追加 ---
         function addSaveButton() {
             const newBtn = document.getElementById('btnCreateNew');
             if(newBtn && !document.getElementById('btnManualSave')) {
@@ -334,7 +333,6 @@
             }
         }
 
-        // --- グローバル関数定義 ---
         window.addItemRow = (val={name:'', desc:''}) => {
             const div = document.createElement('div');
             div.className = 'item-entry';
@@ -441,14 +439,13 @@
             }
         };
 
-        // --- パートナー選択肢の更新 ---
         function updatePartnerSelect() {
             const sel = document.getElementById('selPartner');
             if(!sel) return;
             const currentVal = sel.value;
             sel.innerHTML = '<option value="">-- 指定なし --</option>';
             Object.values(allData).forEach(c => {
-                if (c.id === currentId) return; // 自分は除外
+                if (c.id === currentId) return; 
                 const opt = document.createElement('option');
                 opt.value = c.id;
                 opt.textContent = c.name + (c.plName ? ` (PL:${c.plName})` : '');
@@ -457,7 +454,6 @@
             if (currentVal) sel.value = currentVal;
         }
 
-        // --- 保存処理 (同期ロジック込み) ---
         window.prepareSaveData = async function() {
             if(!currentId) return null;
             let originalData = Object.values(allData).find(c=>c.id==currentId);
@@ -497,9 +493,10 @@
             const nameInputVal = document.getElementById('inpName').value;
             if (nameInputVal) finalData.name = nameInputVal;
             finalData.skills = skillsObj;
+            
+            // ★ ID強制セット (IDエラー防止)
             finalData.id = currentId;
 
-            // パートナー連携
             const partnerId = getEl('selPartner').value;
             const groupName = getEl('inpGroupName').value;
 
@@ -510,9 +507,11 @@
                 // 2. パートナーがいる場合、相手のデータも更新して保存
                 if (partnerId && allData[partnerId]) {
                     const partnerData = { ...allData[partnerId] };
-                    // 相手のパートナーを「自分」に設定
+                    
+                    // ★ IDチェック (IDエラー防止)
+                    if (!partnerData.id) partnerData.id = partnerId;
+
                     partnerData.partnerId = currentId;
-                    // 相手のグループ名を「同じ名前」に設定
                     partnerData.groupName = groupName;
                     
                     await saveToCloud(partnerData);
@@ -578,11 +577,11 @@
             getEl('editorArea').style.opacity='1';
             getEl('editorArea').style.pointerEvents='auto';
             
-            // パートナー選択肢を更新
             updatePartnerSelect();
 
+            // 基本データ読み込み
             FIELD_MAPPING.forEach(field => { setVal(field.id, d[field.key]); });
-            // ★ GROUP_MAPPING の読み込みを追加
+            // パートナー関連読み込み
             GROUP_MAPPING.forEach(field => { setVal(field.id, d[field.key]); });
 
             setSrc('previewBody', d.image); setSrc('previewIcon', d.icon);
@@ -680,7 +679,6 @@
             const p = parseIaChara(text);
             const updateVal = (id, val) => { if(val !== undefined && val !== null && val !== "") { setVal(id, val); } };
             FIELD_MAPPING.forEach(f => { if(p[f.key]) updateVal(f.id, p[f.key]); });
-            // ★ GROUP_MAPPING もマージ処理に追加 (将来的に対応した場合のため)
             GROUP_MAPPING.forEach(f => { if(p[f.key]) updateVal(f.id, p[f.key]); });
 
             STATS_MAPPING.forEach(f => updateVal(f.id, p.stats[f.key]));

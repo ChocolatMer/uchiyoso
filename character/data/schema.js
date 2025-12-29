@@ -4,6 +4,8 @@
 export const FIELD_MAPPING = [
     { key: 'name',      id: 'inpName' },
     { key: 'kana',      id: 'inpKana' },
+    { key: 'plName',    id: 'inpPlName' }, 
+    
     { key: 'job',       id: 'inpJob' },
     { key: 'tags',      id: 'inpTags' },
     { key: 'age',       id: 'inpAge' },
@@ -30,12 +32,11 @@ export const FIELD_MAPPING = [
     { key: 'scenarioDetailsText', id: 'txtScenarioDetails' } 
 ];
 
+// ■ パートナー・グループ関連 (分離管理)
 export const GROUP_MAPPING = [
-    { key: 'plName',    id: 'inpPlName' },    // PL名
-    { key: 'partnerId', id: 'selPartner' },   // パートナーのID (プルダウン)
-    { key: 'groupName', id: 'inpGroupName' }, // グループ名/ユニット名
+    { key: 'partnerId', id: 'selPartner' },   // パートナーID
+    { key: 'groupName', id: 'inpGroupName' }  // グループ名
 ];
-
 
 export const STATS_MAPPING = [
     { key: 'STR', id: 's_str' }, { key: 'CON', id: 's_con' },
