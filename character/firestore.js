@@ -4,6 +4,7 @@ import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChang
 import { 
     getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, addDoc, query, where, serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { collection, query, where, orderBy, getDocs, doc, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
 // 設定 (変更なし)
 const firebaseConfig = {
@@ -140,5 +141,62 @@ export async function getScenariosForCharacter(charId) {
     } catch (e) {
         console.error(e);
         return [];
+    }
+}
+
+
+/**
+ * 【追加機能】特定のキャラクターペアのシナリオ履歴を取得する
+ * @param {string} charId1 必須
+ * @param {string} charId2 任意
+ */
+export async function fetchScenarioHistory(charId1, charId2 = null) {
+    // authやdbは既存のスコープにあるものを利用想定
+    if (!auth.currentUser) return [];
+    
+    // 複合クエリ: userId と members配列 で検索
+    // ※Firestoreで「members array-contains charId1」と「orderBy createdAt」を併用する場合、複合インデックスが必要になることがあります。
+    // エラーが出る場合はコンソールのリンクからインデックスを作成してください。
+    let q = query(
+        collection(db, "scenarios"), 
+        where("userId", "==", auth.currentUser.uid),
+        where("members", "array-contains", charId1),
+        orderBy("createdAt", "desc") 
+    );
+    
+    const snapshot = await getDocs(q);
+    let list = [];
+    snapshot.forEach(doc => {
+        const data = doc.data();
+        list.push({ ...data, id: doc.id });
+    });
+
+    // ペア相手によるフィルタリング (クライアント側で実施)
+    if (charId2) {
+        list = list.filter(s => s.members && s.members.includes(charId2));
+    }
+    return list;
+}
+
+/**
+ * 【追加機能】シナリオログを保存または更新する
+ * @param {Object} scenarioData 保存するデータ
+ * @param {string|null} docId 指定がある場合は「更新」、nullの場合は「新規作成」
+ */
+export async function registerScenarioLog(scenarioData, docId = null) {
+    if (!auth.currentUser) throw new Error("Login required");
+
+    if (docId) {
+        // 更新モード
+        const docRef = doc(db, "scenarios", docId);
+        // updated_atなどを更新する場合はここでマージも可能ですが、基本はデータ全体を更新
+        await updateDoc(docRef, scenarioData);
+        console.log(`Scenario updated: ${docId}`);
+        return docId;
+    } else {
+        // 新規作成モード
+        const docRef = await addDoc(collection(db, "scenarios"), scenarioData);
+        console.log(`Scenario created: ${docRef.id}`);
+        return docRef.id;
     }
 }
