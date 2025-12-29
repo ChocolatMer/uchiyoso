@@ -30,7 +30,7 @@ export const FIELD_MAPPING = [
     { key: 'scenarioDetailsText', id: 'txtScenarioDetails' } 
 ];
 
-export const STATS_MAPPING = [
+export const GROUP_MAPPING = [
     { key: 'plName',    id: 'inpPlName' },    // PL名
     { key: 'partnerId', id: 'selPartner' },   // パートナーのID (プルダウン)
     { key: 'groupName', id: 'inpGroupName' }, // グループ名/ユニット名

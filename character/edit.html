@@ -120,25 +120,6 @@
                 <div class="form-row"><label>KANA</label><input type="text" id="inpKana"></div>
             </div>
 
-            <!-- ▼▼▼ PL名 / パートナー / グループ名 設定エリア ▼▼▼ -->
-            <div class="grid-3" style="margin-top:15px; background:#2b2b2b; padding:15px; border-radius:4px; border-left: 3px solid #00f3ff;">
-                <div class="form-row">
-                    <label style="color:#00f3ff;">PL NAME (プレイヤー名)</label>
-                    <input type="text" id="inpPlName" placeholder="プレイヤー名">
-                </div>
-                <div class="form-row">
-                    <label style="color:#00f3ff;">PARTNER (関係性の深い相手)</label>
-                    <select id="selPartner" style="width:100%; box-sizing:border-box; background:#1a1a1a; padding:10px;">
-                        <option value="">-- 指定なし --</option>
-                    </select>
-                </div>
-                <div class="form-row">
-                    <label style="color:#00f3ff;">GROUP / UNIT NAME</label>
-                    <input type="text" id="inpGroupName" placeholder="コンビ名・ユニット名">
-                </div>
-            </div>
-            <!-- ▲▲▲ 追加エリア終了 ▲▲▲ -->
-
             <div class="form-grid" style="margin-top:15px;">
                 <div class="form-row"><label>JOB</label><input type="text" id="inpJob"></div>
                 <div class="form-row"><label>TAGS</label><input type="text" id="inpTags"></div>
@@ -171,6 +152,25 @@
             <div id="bodyCheckArea" class="analysis-box">
                 <div style="margin-bottom:5px;">📊 <b>BMI:</b> <span id="outBMI" class="calc-val">--</span></div>
             </div>
+
+            <!-- ▼▼▼ PL名 / パートナー / グループ名 設定エリア ▼▼▼ -->
+            <div class="grid-3" style="margin-top:25px; background:#252525; padding:20px; border-radius:4px; border-left: 4px solid #00f3ff; border-top:1px solid #444; border-bottom:1px solid #444;">
+                <div class="form-row">
+                    <label style="color:#00f3ff; font-weight:bold;">PL NAME (プレイヤー名)</label>
+                    <input type="text" id="inpPlName" placeholder="プレイヤー名">
+                </div>
+                <div class="form-row">
+                    <label style="color:#00f3ff; font-weight:bold;">PARTNER (関係性の深い相手)</label>
+                    <select id="selPartner" style="width:100%; box-sizing:border-box; background:#1a1a1a; padding:10px;">
+                        <option value="">-- 指定なし --</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label style="color:#00f3ff; font-weight:bold;">GROUP / UNIT NAME</label>
+                    <input type="text" id="inpGroupName" placeholder="コンビ名・ユニット名">
+                </div>
+            </div>
+            <!-- ▲▲▲ 追加エリア終了 ▲▲▲ -->
 
             <h2>VISUALS (Drag & Drop Image)</h2>
             <div class="visual-grid">
@@ -304,7 +304,8 @@
     <!-- ここからスクリプト -->
     <script type="module">
         import { loadFromCloud, monitorAuth, saveToCloud, deleteFromCloud } from "./firestore.js";
-        import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING } from "./data/schema.js";
+        // ★ GROUP_MAPPING をインポートに追加
+        import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING, GROUP_MAPPING } from "./data/schema.js";
         import { parseIaChara } from "./data/parser_ia.js";
 
         const getEl = (id) => document.getElementById(id);
@@ -581,6 +582,9 @@
             updatePartnerSelect();
 
             FIELD_MAPPING.forEach(field => { setVal(field.id, d[field.key]); });
+            // ★ GROUP_MAPPING の読み込みを追加
+            GROUP_MAPPING.forEach(field => { setVal(field.id, d[field.key]); });
+
             setSrc('previewBody', d.image); setSrc('previewIcon', d.icon);
             setVal('inpThemeColor', d.color || '#d9333f');
             const s = d.stats || {}; STATS_MAPPING.forEach(f => setVal(f.id, s[f.key]));
@@ -676,6 +680,9 @@
             const p = parseIaChara(text);
             const updateVal = (id, val) => { if(val !== undefined && val !== null && val !== "") { setVal(id, val); } };
             FIELD_MAPPING.forEach(f => { if(p[f.key]) updateVal(f.id, p[f.key]); });
+            // ★ GROUP_MAPPING もマージ処理に追加 (将来的に対応した場合のため)
+            GROUP_MAPPING.forEach(f => { if(p[f.key]) updateVal(f.id, p[f.key]); });
+
             STATS_MAPPING.forEach(f => updateVal(f.id, p.stats[f.key]));
             VITALS_MAPPING.forEach(f => updateVal(f.id, p.vitals[f.key]));
             if(p.colorHair) updateVal('inpHair', p.colorHair); if(p.colorEye) updateVal('inpEye', p.colorEye); if(p.colorSkin) updateVal('inpSkin', p.colorSkin);
