@@ -48,6 +48,9 @@
             z-index: 10;
             transition: 0.3s;
         }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #444; }
+        
         .sidebar h3 {
             font-family: 'Cinzel', serif; color: #d4b346; 
             border-bottom: 1px solid #444; padding-bottom: 10px; margin-top: 0;
@@ -59,9 +62,9 @@
             transition: 0.2s; font-size: 0.9rem;
         }
         .history-item:hover { background: rgba(212, 179, 70, 0.1); color: #fff; }
-        .history-title { display: block; font-weight: bold; margin-bottom: 4px; }
+        .history-title { display: block; font-weight: bold; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .history-date { display: block; font-size: 0.75rem; color: #777; font-family: 'Cinzel', serif; }
-        .history-active { border-left: 3px solid #d4b346; background: rgba(212, 179, 70, 0.05); }
+        .history-active { border-left: 3px solid #d4b346; background: rgba(212, 179, 70, 0.05); padding-left: 7px; }
 
         /* 新規作成ボタン (サイドバー内) */
         .btn-new-log {
@@ -177,7 +180,7 @@
         }
         .char-block-header {
             font-family: 'Cinzel', serif; font-weight: bold; color: #444;
-            margin-bottom: 10px; display: flex; justify-content: space-between;
+            margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;
         }
         .char-block.pc-style { border-left-color: #2b3d52; background: rgba(43, 61, 82, 0.05); }
         .char-block.kpc-style { border-left-color: #8b2828; background: rgba(139, 40, 40, 0.05); }
@@ -197,7 +200,7 @@
             cursor: pointer; transition: 0.3s; border: 4px solid #600000;
             color: rgba(60,0,0,0.6); font-family: 'Cinzel', serif; font-weight: bold;
             font-size: 0.9rem; text-shadow: 0 1px 0 rgba(255,255,255,0.2);
-            text-align: center;
+            text-align: center; user-select: none;
         }
         .wax-seal:hover { transform: scale(1.05); box-shadow: 4px 8px 20px rgba(0,0,0,0.7); }
         .wax-seal:active { transform: scale(0.95); }
@@ -214,7 +217,7 @@
         .w-half { width: 48%; }
         
         .tag-select {
-            padding: 4px 8px; border-radius: 4px; font-size: 0.85rem;
+            padding: 4px 8px; border-radius: 4px; font-size: 0.85rem; border: 1px solid rgba(0,0,0,0.1);
         }
         .bg-alive { background: #e0f0ff; color: #004488; }
         .bg-lost { background: #ffe0e0; color: #880000; }
@@ -244,6 +247,7 @@
 
         <!-- 本 (メイン) -->
         <div class="book-wrapper">
+            <div class="book-cover"></div>
             
             <!-- 左ページ: 基本情報 -->
             <div class="book-page page-left">
@@ -355,7 +359,7 @@
                             <div style="margin-top:10px; padding-left:10px; border-left:2px solid #ccc;">
                                 <div class="form-row">
                                     <span class="input-label">AF名称 / 効果</span>
-                                    <input type="text" id="inpArtNamePC" placeholder="AF名">
+                                    <input type="text" id="inpArtNamePC" placeholder="AF名" class="w-full" style="margin-bottom:3px;">
                                     <textarea id="inpArtDescPC" rows="2" class="w-full" placeholder="効果詳細..."></textarea>
                                 </div>
                                 <div class="form-row">
@@ -398,7 +402,7 @@
                             <div style="margin-top:10px; padding-left:10px; border-left:2px solid #ccc;">
                                 <div class="form-row">
                                     <span class="input-label">AF名称 / 効果</span>
-                                    <input type="text" id="inpArtNameKPC" placeholder="AF名">
+                                    <input type="text" id="inpArtNameKPC" placeholder="AF名" class="w-full" style="margin-bottom:3px;">
                                     <textarea id="inpArtDescKPC" rows="2" class="w-full" placeholder="効果詳細..."></textarea>
                                 </div>
                                 <div class="form-row">
@@ -540,11 +544,14 @@
             });
             getEl('inpCount').value = 1;
             getEl('inpSystem').value = 'CoC6';
+            getEl('inpResPC').value = 'Alive'; updateResStyle(getEl('inpResPC'));
+            getEl('inpResKPC').value = 'Alive'; updateResStyle(getEl('inpResKPC'));
+            
             getEl('imgTrailer').src = ''; getEl('imgTrailer').style.display = 'none';
             getEl('hintTrailer').style.display = 'block';
             getEl('btnSave').innerHTML = "<span>SAVE</span>";
             
-            // 選択状態は維持したいが、初期化も可。ここではPC/KPC選択は残す
+            document.querySelectorAll('.history-item').forEach(i => i.classList.remove('history-active'));
             loader.textContent = "New Log Mode";
         };
 
@@ -561,7 +568,11 @@
                 getEl('imgTrailer').src = data.images.trailer;
                 getEl('imgTrailer').style.display = 'block';
                 getEl('hintTrailer').style.display = 'none';
+            } else {
+                getEl('imgTrailer').style.display = 'none';
+                getEl('hintTrailer').style.display = 'block';
             }
+            
             getEl('inpSystem').value = data.system || "CoC6";
             getEl('inpType').value = data.type || "タイマン";
             getEl('inpDate').value = data.date || "";
@@ -570,7 +581,7 @@
 
             // PC Data
             const pc = data.pcData || {};
-            getEl('selPC').value = pc.id || "";
+            // selPCはあえて上書きしない（履歴リストが消えるのを防ぐため）が、IDチェックはすべき
             getEl('inpPlNamePC').value = pc.pl || "";
             getEl('inpResPC').value = pc.res || "Alive"; updateResStyle(getEl('inpResPC'));
             getEl('inpSanPC').value = pc.san || "";
@@ -583,7 +594,6 @@
 
             // KPC Data
             const kpc = data.kpcData || {};
-            getEl('selKPC').value = kpc.id || "";
             getEl('inpPlNameKPC').value = kpc.pl || "";
             getEl('inpResKPC').value = kpc.res || "Alive"; updateResStyle(getEl('inpResKPC'));
             getEl('inpSanKPC').value = kpc.san || "";
@@ -606,10 +616,6 @@
             
             getEl('inpPublicMemo').value = data.memos?.public || "";
             getEl('inpSecretMemo').value = data.memos?.secret || "";
-
-            // アイコン更新トリガー
-            getEl('selPC').dispatchEvent(new Event('change'));
-            getEl('selKPC').dispatchEvent(new Event('change'));
         };
 
         // 履歴リストの更新
@@ -708,10 +714,10 @@
                 let sId = editingId;
                 if (editingId) {
                     await updateScenario(editingId, record);
-                    alert("更新しました");
+                    alert("ログを更新しました");
                 } else {
                     sId = await saveScenario(record);
-                    alert("保存しました");
+                    alert("ログを保存しました");
                     editingId = sId; // 続けて編集できるようにする
                     getEl('btnSave').innerHTML = "<span>UPDATE</span>";
                 }
