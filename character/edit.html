@@ -456,7 +456,7 @@
             }
         };
 
-        // --- ★ 保存処理 (修正済み) ---
+        // --- ★ 保存処理 (完全修正版) ---
         window.prepareSaveData = async function() {
             // 1. IDと選択状態の安全確認
             const charSelect = document.getElementById('charSelect');
@@ -471,6 +471,14 @@
             let originalData = allData[activeId];
             if (!originalData) originalData = { id: activeId, name: "回復データ" };
             
+            // 元データのパートナー情報を確保（同期用）
+            const oldPartnerIds = new Set();
+            if (originalData.partners && Array.isArray(originalData.partners)) {
+                originalData.partners.forEach(p => oldPartnerIds.add(p.id));
+            }
+            // 旧互換
+            if (originalData.partnerId) oldPartnerIds.add(originalData.partnerId);
+
             // アイテムリストの整形
             const itemRows = document.querySelectorAll('.item-entry');
             const itemsArr = [];
@@ -507,14 +515,12 @@
             const nameInputVal = document.getElementById('inpName').value;
             if (nameInputVal) finalData.name = nameInputVal;
             finalData.skills = skillsObj;
-            
-            // 【修正】IDを明示的にセット（IDエラー防止）
             finalData.id = activeId;
 
             // ★ パートナーリストの取得と整理
             const partnerRows = document.querySelectorAll('.partner-entry');
-            const partnersList = [];      // 自分のデータに保存する用（配列）
-            const partnersMap = new Map(); // 相手のデータ更新用（IDごとのグループ名リスト）
+            const newPartnersList = [];      // 自分のデータに保存する用（配列）
+            const currentPartnersMap = new Map(); // 相手のデータ更新用（IDごとのグループ名リスト）
 
             partnerRows.forEach(row => {
                 const pid = row.querySelector('.partner-select').value;
@@ -522,16 +528,16 @@
                 
                 if (pid) {
                     // 自分のリストに追加
-                    partnersList.push({ id: pid, group: gname });
+                    newPartnersList.push({ id: pid, group: gname });
 
-                    // 相手更新用にまとめる（同じ相手が2回出てきても良いように）
-                    if (!partnersMap.has(pid)) {
-                        partnersMap.set(pid, []);
+                    // 相手更新用にまとめる
+                    if (!currentPartnersMap.has(pid)) {
+                        currentPartnersMap.set(pid, []);
                     }
-                    partnersMap.get(pid).push(gname);
+                    currentPartnersMap.get(pid).push(gname);
                 }
             });
-            finalData.partners = partnersList;
+            finalData.partners = newPartnersList;
 
             // 最終安全確認
             if (!finalData.id) {
@@ -543,34 +549,33 @@
                 // 1. 自分のデータを保存
                 await saveToCloud(finalData);
 
-                // 2. パートナー側のデータをループして更新
+                // 2. パートナー側のデータをループして更新（追加・更新・削除すべて対応）
+                // 「元々パートナーだった人」と「今パートナーの人」の和集合をとる
+                const allInvolvedIds = new Set([...oldPartnerIds, ...currentPartnersMap.keys()]);
                 let syncCount = 0;
                 
-                // Mapを使って「相手ひとりにつき1回」処理を行う
-                for (const [pId, groups] of partnersMap) {
+                for (const pId of allInvolvedIds) {
                     const partnerChar = allData[pId];
-                    // データが存在しない、または読み込めていない場合はスキップ
-                    if (!partnerChar) continue;
+                    if (!partnerChar) continue; // データがない場合はスキップ
 
-                    // 【修正】相手データのID抜けを防止
                     if (!partnerChar.id) partnerChar.id = pId;
 
-                    // パートナーの「パートナーリスト」を取得
                     let pPartners = partnerChar.partners || [];
 
-                    // 【修正】ロジック変更
-                    // A. まず相手リストから「自分(activeId)」に関するエントリを一度すべて削除する
-                    //    (これで古い情報や重複を一掃し、上書きバグを防ぐ)
+                    // A. まず「自分(activeId)」に関するエントリを無条件で削除
+                    //    （これで「削除」操作も、「更新前のクリーンアップ」も兼ねる）
                     pPartners = pPartners.filter(item => item.id !== activeId);
 
-                    // B. 現在のフォームにある情報をすべて追加しなおす
-                    groups.forEach(groupName => {
-                        pPartners.push({ id: activeId, group: groupName });
-                    });
+                    // B. 「現在パートナーである」なら、新しい情報を追加する
+                    //    （削除済みの相手ならここに入らないので、Aで消されたままになる＝正しく削除同期される）
+                    if (currentPartnersMap.has(pId)) {
+                        const newGroups = currentPartnersMap.get(pId);
+                        newGroups.forEach(groupName => {
+                            pPartners.push({ id: activeId, group: groupName });
+                        });
+                    }
                     
                     partnerChar.partners = pPartners;
-                    
-                    // 保存実行
                     await saveToCloud(partnerChar);
                     syncCount++;
                 }
