@@ -132,7 +132,7 @@
                 <div class="form-row"><label>DEBT (借金)</label><input type="text" id="inpDebt"></div>
             </div>
             
-            <!-- ▼▼▼ PL名（場所：テーマカラーの隣） ▼▼▼ -->
+            <!-- ▼▼▼ PL名 ▼▼▼ -->
             <div class="grid-4" style="margin-top:15px;">
                 <div class="form-row"><label>BIRTHDAY</label><input type="text" id="inpBirthday"></div>
                 <div class="form-row"><label>BIRTHPLACE</label><input type="text" id="inpOrigin"></div>
@@ -155,7 +155,7 @@
                 <div style="margin-bottom:5px;">📊 <b>BMI:</b> <span id="outBMI" class="calc-val">--</span></div>
             </div>
 
-            <!-- ▼▼▼ パートナー・グループ設定（PL表記削除済み） ▼▼▼ -->
+            <!-- ▼▼▼ パートナー・グループ設定 ▼▼▼ -->
             <div class="grid-3" style="margin-top:25px; background:#252525; padding:20px; border-radius:4px; border-left: 4px solid #00f3ff; border-top:1px solid #444; border-bottom:1px solid #444;">
                 <div class="form-row">
                     <label style="color:#00f3ff; font-weight:bold;">PARTNER (関係性の深い相手)</label>
@@ -301,7 +301,6 @@
     <!-- ここからスクリプト -->
     <script type="module">
         import { loadFromCloud, monitorAuth, saveToCloud, deleteFromCloud } from "./firestore.js";
-        // GROUP_MAPPING をインポート
         import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING, GROUP_MAPPING } from "./data/schema.js";
         import { parseIaChara } from "./data/parser_ia.js";
 
@@ -445,7 +444,6 @@
                 if (c.id === currentId) return; 
                 const opt = document.createElement('option');
                 opt.value = c.id;
-                // ★ PL名表記を削除
                 opt.textContent = c.name; 
                 sel.appendChild(opt);
             });
@@ -453,19 +451,22 @@
         }
 
         window.prepareSaveData = async function() {
-            // ★ IDを画面上のセレクトボックスから直接再取得（変数のズレ防止）
+            // ★ ID安全確保：変数ではなく画面選択値から再取得
             const charSelect = document.getElementById('charSelect');
             const activeId = charSelect ? charSelect.value : null;
 
             if (!activeId) {
-                alert("キャラクターが選択されていません。再読み込みしてください。");
+                alert("保存エラー：キャラクターが選択されていません。画面をリロードしてください。");
                 return;
             }
 
-            // データ取得
+            // 元データ確保
             let originalData = Object.values(allData).find(c=>c.id==activeId);
             if (!originalData) originalData = allData[activeId];
-            if (!originalData) return; // データロード前などのガード
+            if (!originalData) {
+                // 万が一データがない場合、IDだけで新規作成する救済措置
+                originalData = { id: activeId, name: "回復データ" };
+            }
             
             const itemRows = document.querySelectorAll('.item-entry');
             const itemsArr = [];
@@ -501,8 +502,14 @@
             if (nameInputVal) finalData.name = nameInputVal;
             finalData.skills = skillsObj;
             
-            // ★ IDを強制セット（ここで確実にセット）
+            // ★ ID強制書き込み (エラーの根本原因対策)
             finalData.id = activeId;
+
+            // IDがない場合は保存させない
+            if (!finalData.id) {
+                alert("致命的エラー: 保存データのIDが消失しました。");
+                return;
+            }
 
             const partnerId = getEl('selPartner').value;
             const groupName = getEl('inpGroupName').value;
@@ -515,14 +522,18 @@
                 if (partnerId && allData[partnerId]) {
                     const partnerData = { ...allData[partnerId] };
                     
-                    // パートナー側のIDチェック
+                    // パートナーIDチェック
                     if (!partnerData.id) partnerData.id = partnerId;
 
                     if (partnerData.id) {
-                        partnerData.partnerId = activeId; // ここも確実にactiveIdを使う
+                        partnerData.partnerId = activeId; 
                         partnerData.groupName = groupName;
                         await saveToCloud(partnerData);
                         alert(`保存完了！\nパートナー(${partnerData.name})の設定も更新しました。`);
+                    } else {
+                        // パートナーID不明時はスキップ
+                        console.warn("Skipped partner update due to missing ID");
+                        alert("保存完了しました。（パートナーデータの更新はスキップされました）");
                     }
                 } else {
                     alert("保存完了しました。");
@@ -531,7 +542,7 @@
                 location.reload();
             } catch(e) {
                 console.error(e);
-                alert("保存エラー: " + e.message);
+                alert("保存処理中に例外エラーが発生しました: " + e.message);
             }
         };
 
@@ -561,7 +572,6 @@
                 const opt = document.createElement('option');
                 const val = c.id || c.name;
                 opt.value = val;
-                // ★ PL名表記を削除
                 opt.textContent = c.name;
                 sel.appendChild(opt);
             });
@@ -588,9 +598,7 @@
             
             updatePartnerSelect();
 
-            // 基本データ読み込み
             FIELD_MAPPING.forEach(field => { setVal(field.id, d[field.key]); });
-            // パートナー関連読み込み
             GROUP_MAPPING.forEach(field => { setVal(field.id, d[field.key]); });
 
             setSrc('previewBody', d.image); setSrc('previewIcon', d.icon);
