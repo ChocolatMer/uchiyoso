@@ -16,11 +16,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-// const db = getFirestore(app); // ←これを消して、以下に書き換え
-const db = initializeFirestore(app, {
-  experimentalAutoDetectLongPolling: true, 
-  useFetchStreams: false
-});
+const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
 let currentUser = null;
