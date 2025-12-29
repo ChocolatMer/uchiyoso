@@ -5,7 +5,6 @@ export function initHeader() {
     if (!document.querySelector('link[href*="header.css"]')) {
         const link = document.createElement('link');
         link.rel = 'stylesheet';
-        // パス判定：detailフォルダ等の中にいる場合は親階層を見に行く
         const path = window.location.pathname;
         link.href = (path.includes('/detail/') || path.includes('/list/')) ? '../header.css' : 'header.css'; 
         document.head.appendChild(link);
@@ -13,12 +12,7 @@ export function initHeader() {
 
     // 2. タイトルの決定
     const path = window.location.pathname;
-    
-    // (A) メインタイトル：HTMLの<title>タグから文字を取得
-    // " - SYSTEM_V6" などの共通部分があれば消す処理もここで可能
     const mainTitle = document.title; 
-
-    // (B) サブタイトル（右側の小さい文字）：ファイル名で判定
     let subTitle = "CHARACTER";
     if (path.includes("list.html")) {
         subTitle = "SQUAD SELECTION";
@@ -51,7 +45,7 @@ export function initHeader() {
         document.body.insertAdjacentHTML('afterbegin', headerHTML);
     }
 
-    // --- 以下、機能設定（変更なし） ---
+    // --- 機能設定 ---
     const btnLogin = document.getElementById('headerLoginBtn');
     const btnLogout = document.getElementById('headerLogoutBtn');
     const btnSave = document.getElementById('globalSaveBtn');
@@ -60,11 +54,19 @@ export function initHeader() {
     if(btnLogin) btnLogin.addEventListener('click', login);
     if(btnLogout) btnLogout.addEventListener('click', logout);
 
+    // ★修正箇所: データを受け取って保存するのではなく、保存関数を呼ぶだけにする
     if(btnSave) {
-        btnSave.addEventListener('click', () => {
+        btnSave.addEventListener('click', async () => {
             if (typeof window.prepareSaveData === 'function') {
-                const dataToSave = window.prepareSaveData(); 
-                if(dataToSave) saveToCloud(dataToSave);
+                const result = window.prepareSaveData();
+                // もしPromise(非同期処理)が返ってきたら、完了を待つだけでよい
+                if (result instanceof Promise) {
+                    await result;
+                }
+                // もし古い仕様でデータオブジェクトが返ってきた場合のみ、ここで保存する
+                else if (result && typeof result === 'object') {
+                    saveToCloud(result);
+                }
             } else {
                 alert("この画面では保存できません。");
             }
