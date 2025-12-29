@@ -18,7 +18,7 @@
             color: #ccc; font-family: 'Shippori Mincho', serif; 
             margin: 0; padding: 0; 
             height: 100vh; 
-            overflow: hidden; /* 全体スクロール禁止 */
+            overflow: hidden;
         }
 
         .layout-container {
@@ -71,7 +71,7 @@
         }
         .book-wrapper { 
             position: relative; 
-            height: 85vh; /* 画面下部に隙間を確保 */
+            height: 85vh; /* 画面下部に隙間を作るため少し縮小 (90vh -> 85vh) */
             aspect-ratio: 1.4 / 1; 
             max-width: 95%;
             transform-style: preserve-3d;
@@ -583,15 +583,13 @@
             let txtKPC = "KPC";
 
             if (!isPair) {
+                // 2PL/4PL mode
                 txtPC = isDefault ? "PC1" : `PC1 (${pcName})`;
                 txtKPC = isDefault ? "PC2" : `PC2 (${kpcName})`;
             }
 
             document.querySelectorAll('.lbl-pc').forEach(el => el.textContent = txtPC);
             document.querySelectorAll('.lbl-kpc').forEach(el => el.textContent = txtKPC);
-
-            document.getElementById('inpQuotePC').placeholder = `${txtPC}の印象的な台詞...`;
-            document.getElementById('inpQuoteKPC').placeholder = `${txtKPC}の印象的な台詞...`;
         };
 
         window.swapCharacters = () => {
@@ -743,11 +741,16 @@
                 if(f){ 
                     const r=new FileReader(); 
                     r.onload=v=>{
+                        // Update hidden input
                         getEl(inpId).value=v.target.result; 
+                        
+                        // Update specific target image
                         const img = getEl(imgId);
                         img.src=v.target.result;
                         getEl(boxId).classList.remove('empty');
 
+                        // Sync logic for Scenario Trailer
+                        // If updating trailer (inpImgScnTrailer), update both overlay and tab image
                         if(inpId === 'inpImgScnTrailer') {
                             const otherImgId = (imgId === 'imgScnTrailer') ? 'imgScnTrailerTab' : 'imgScnTrailer';
                             const otherBoxId = (boxId === 'dropScnTrailer') ? 'dropScnTrailerTab' : 'dropScnTrailer';
@@ -759,9 +762,9 @@
                 }
             });
         };
-        setupImg('dropTrailer', 'imgTrailer', 'inpImgTrailer', 'imgTrailer');
-        setupImg('dropScnTrailer', 'imgScnTrailer', 'inpImgScnTrailer', 'imgScnTrailer'); 
-        setupImg('dropScnTrailerTab', 'imgScnTrailerTab', 'inpImgScnTrailer', 'imgScnTrailerTab'); 
+        setupImg('dropTrailer', 'inpImgTrailer', 'imgTrailer');
+        setupImg('dropScnTrailer', 'inpImgScnTrailer', 'imgScnTrailer'); 
+        setupImg('dropScnTrailerTab', 'inpImgScnTrailer', 'imgScnTrailerTab'); 
 
         monitorAuth(async (user) => {
             if(!user) { loader.textContent = "LOGIN REQUIRED"; return; }
@@ -780,36 +783,27 @@
                 getEl('selKPC').innerHTML = opts;
 
                 window.toggleGMField(getEl('inpType'));
-                // Load All History Initial
-                loadHistory(true); 
 
             } catch(e) { console.error(e); loader.textContent="ERROR"; }
         });
 
-        // initialLoad flag to fetch ALL scenarios first
-        const loadHistory = async (initialLoad = false) => {
+        const loadHistory = async () => {
             const pcId = getEl('selPC').value;
             const kpcId = getEl('selKPC').value;
-            
+            if(!pcId && !kpcId) return;
+
             const listEl = getEl('historyList');
             listEl.innerHTML = '<div style="text-align:center;font-size:0.7rem;">LOADING...</div>';
-            
-            let scenarios = [];
-            
-            if (initialLoad || (!pcId && !kpcId)) {
-                scenarios = await getScenariosForCharacter(null);
-            } else {
-                const targetId = pcId || kpcId;
-                scenarios = await getScenariosForCharacter(targetId);
-                if(pcId && kpcId) {
-                    scenarios = scenarios.filter(s => s.members.includes(pcId) && s.members.includes(kpcId));
-                }
-            }
+            const targetId = pcId || kpcId;
+            const scenarios = await getScenariosForCharacter(targetId);
+            const filtered = scenarios.filter(s => {
+                if(pcId && kpcId) return s.members.includes(pcId) && s.members.includes(kpcId);
+                return true;
+            });
 
             listEl.innerHTML = "";
-            if(scenarios.length === 0) { listEl.innerHTML = '<div style="text-align:center;font-size:0.7rem;">NO LOGS</div>'; return; }
-            
-            scenarios.forEach(s => {
+            if(filtered.length === 0) { listEl.innerHTML = '<div style="text-align:center;font-size:0.7rem;">NO LOGS</div>'; return; }
+            filtered.forEach(s => {
                 let names = [];
                 if(s.characters?.pc?.id && allChars[s.characters.pc.id]) names.push(allChars[s.characters.pc.id].name);
                 if(s.characters?.kpc?.id && allChars[s.characters.kpc.id]) names.push(allChars[s.characters.kpc.id].name);
@@ -860,6 +854,7 @@
             };
             loadImg('dropTrailer', 'imgTrailer', 'inpImgTrailer', s.images?.trailer);
             
+            // Sync Scenario Trailer (Overlay + Tab)
             const scnVal = s.images?.scenTrailer;
             loadImg('dropScnTrailer', 'imgScnTrailer', 'inpImgScnTrailer', scnVal);
             loadImg('dropScnTrailerTab', 'imgScnTrailerTab', 'inpImgScnTrailer', scnVal);
