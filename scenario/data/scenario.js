@@ -1,129 +1,113 @@
-// --- START OF FILE scenario/data/scenario.js ---
+// --- uchiyoso/character/data/scenario.js ---
 
 /**
- * フォームの入力値から、保存用のシナリオデータオブジェクトを作成する
+ * フォームの入力値から、保存用のシナリオデータを作成する
+ * @param {Object} input - HTMLフォームからの入力値オブジェクト
+ * @param {string} userId - ログイン中のユーザーID
  */
 export function createScenarioRecord(input, userId) {
     return {
+        // 管理情報
         userId: userId,
-        // 日付情報はFirestore側でServerTimestampも使うが、表示用に保持
-        title: input.title,
-        count: input.count, // 何回目のセッションか
+        createdAt: new Date().toISOString(),
 
-        // Page 1 Metadata
+        // 基本情報
+        title: input.title,
         system: input.system,
+        date: input.date,
+        duration: input.duration,
+        stage: input.stage,
         type: input.type,
         gm: input.gm,
-        endName: input.endName,
-        date: input.date,
-        tags: input.tags,
-        
-        // 検索用メンバーIDリスト
+        players: input.players,
+        format: input.format,
+        public: input.public,
+
+        // 検索用: 参加キャラクターIDリスト
         members: input.members || [],
 
-        // Page 2: Meta Details
-        meta: {
-            system: input.meta.system,
-            type: input.meta.type,
-            duration: input.meta.duration,
-            stage: input.meta.stage,
-            charRel: input.meta.charRel,
-            lostRate: input.meta.lostRate,
-            skills: input.meta.skills,
-            scenType: input.meta.scenType
-        },
+        // 結果・状態
+        charStatus: input.charStatus,
+        result: input.result,
+        lostDetail: input.lostDetail,
 
-        // 参加キャラクターごとの詳細データ (PC/KPC)
-        // IDをキーにするのではなく、役割(PC/KPC)固定で保存するスタイル
-        pcData: {
-            id: input.pcId,
-            pl: input.plNamePC,
-            res: input.pcRes,
-            san: input.pcSan,
-            grow: input.pcGrow,
-            memo: input.pcMemo,
-            quote: input.pcQuote,
-            art: { name: input.pcArtName, desc: input.pcArtDesc },
-            seq: { name: input.pcSeqName, desc: input.pcSeqDesc },
-            ins: { type: input.pcInsType, desc: input.pcInsDesc }
-        },
-        kpcData: {
-            id: input.kpcId,
-            pl: input.plNameKPC,
-            res: input.kpcRes,
-            san: input.kpcSan,
-            grow: input.kpcGrow,
-            memo: input.kpcMemo,
-            quote: input.kpcQuote,
-            art: { name: input.kpcArtName, desc: input.kpcArtDesc },
-            seq: { name: input.kpcSeqName, desc: input.kpcSeqDesc },
-            ins: { type: input.kpcInsType, desc: input.kpcInsDesc }
-        },
+        // 詳細データ
+        images: input.images || {}, 
+        urls: input.urls || {},     
+        trailerText: input.trailerText || "",
+        
+        details: input.details || {}, 
+        
+        // 報酬・成長
+        endName: input.endName,
+        rewards: input.rewards || {}, 
+        entities: input.entities,
+        spells: input.spells,
+        growth: input.growth,
 
-        // その他
-        urls: { shop: input.urls.shop, room: input.urls.room },
-        overview: input.overview,
-        introduction: input.introduction,
-        warnings: input.warnings,
-        memos: { public: input.public, secret: input.secret },
-        images: {
-            trailer: input.images.trailer,
-            scenTrailer: input.images.scenTrailer
-        }
+        // メモ
+        memos: input.memos || {}
     };
 }
 
 /**
- * キャラクターデータにシナリオ履歴を追記する
- * ※編集(上書き)の場合は二重登録を防ぐ簡易チェックを入れる
+ * シナリオデータを元に、キャラクターデータを更新して新しいデータを返す
+ * ※ここは計算のみで、保存は行いません
+ * 
+ * @param {Object} charData - 元のキャラクターデータ
+ * @param {Object} scenarioData - 保存するシナリオデータ
+ * @param {string} scenarioId - 発行されたシナリオID
  */
-export function syncScenarioToCharacter(charData, sData, sId, role) {
+export function syncScenarioToCharacter(charData, scenarioData, scenarioId) {
+    // 元のデータを壊さないようにコピー
     const newChar = JSON.parse(JSON.stringify(charData));
-    const myData = (role === 'PC') ? sData.pcData : sData.kpcData;
+
+    // 1. 通過シナリオ簡易一覧 (scenarios) の作成
+    // 書式: [タイトル] 生還 - End名 (日付)
+    const resultStr = scenarioData.result === 'Cleared' ? '生還' : scenarioData.result;
+    const endStr = scenarioData.endName ? ` - ${scenarioData.endName}` : '';
+    const dateStr = scenarioData.date ? `(${scenarioData.date})` : '';
     
-    // ログ一行テキスト
-    const logLine = `[${sData.title}] ${myData.res} - ${sData.endName || 'End'} (${sData.date})`;
+    const newHistoryLine = `[${scenarioData.title}] ${resultStr}${endStr} ${dateStr}`;
     
-    // 1. 簡易リスト (scenarios string)
-    // 重複チェック: 完全一致する行があれば追加しない
+    // 既存データになければ追記 (先頭に追加)
     if (!newChar.scenarios) newChar.scenarios = "";
-    if (!newChar.scenarios.includes(logLine)) {
-        newChar.scenarios = logLine + "\n" + newChar.scenarios;
+    if (!newChar.scenarios.includes(newHistoryLine)) {
+        newChar.scenarios = newHistoryLine + "\n" + newChar.scenarios;
     }
 
-    // 2. 詳細リスト (scenarioList array)
+    // 2. 詳細シナリオログ (配列) への追加
     if (!newChar.scenarioList) newChar.scenarioList = [];
-    // IDで検索して、既存なら更新、なければ追加
-    const existingIndex = newChar.scenarioList.findIndex(item => item.scenarioId === sId);
-    
-    const listItem = {
-        scenarioId: sId,
-        title: sData.title,
-        date: sData.date,
-        desc: `Role: ${role} / Result: ${myData.res}\nSAN: ${myData.san}\nGrow: ${myData.grow}\nMemo: ${myData.memo}`
-    };
+    newChar.scenarioList.push({
+        scenarioId: scenarioId,
+        title: scenarioData.title,
+        desc: `GM: ${scenarioData.gm}\n結果: ${resultStr}${endStr}\nSAN推移: ${scenarioData.rewards.san || '-'}\n成長: ${scenarioData.growth || 'なし'}`
+    });
 
-    if (existingIndex >= 0) {
-        newChar.scenarioList[existingIndex] = listItem;
-    } else {
-        newChar.scenarioList.push(listItem);
-    }
-
-    // 3. 呪文/AF/後遺症/成長 (これらは追記型なので、編集時は注意が必要だが、今回は単純追記とする)
-    // ※高度な制御が必要ならUUID等を各項目に振る必要がある
-    const appendIfNew = (field, prefix, content) => {
-        if(!content) return;
-        const entry = `[${prefix}:${sData.title}] ${content}`;
-        const current = newChar[field] || "";
-        // 単純な文字列チェックでの重複排除
+    // テキストエリアへの追記用ヘルパー関数
+    const appendToField = (fieldKey, header, content) => {
+        if (!content) return;
+        const current = newChar[fieldKey] || "";
+        const entry = `[${header}] ${content}`;
+        // 既存になければ改行して追記
         if(!current.includes(entry)) {
-            newChar[field] = current + (current ? "\n" : "") + entry;
+            newChar[fieldKey] = current + (current ? "\n\n" : "") + entry;
         }
     };
 
-    if(myData.grow) appendIfNew('growth', '成長', myData.grow);
-    if(myData.art.name) appendIfNew('spells', 'AF', `${myData.art.name}: ${myData.art.desc}`);
-    if(myData.seq.name) appendIfNew('txtRoleplay', '後遺症', `${myData.seq.name}: ${myData.seq.desc}`);
+    // 3. 各種テキストフィールドへの追記
+    appendToField('encountered', scenarioData.title, scenarioData.entities); // 遭遇
+    appendToField('spells', scenarioData.title, scenarioData.spells);        // 魔術・AF
+    appendToField('growth', scenarioData.title, scenarioData.growth);        // 成長
+
+    // 4. 報酬(所持品)
+    if (scenarioData.rewards.items) {
+        if (!newChar.items) newChar.items = [];
+        newChar.items.push({
+            name: "獲得報酬", 
+            desc: `[${scenarioData.title}] ${scenarioData.rewards.items}`
+        });
+    }
 
     return newChar;
 }

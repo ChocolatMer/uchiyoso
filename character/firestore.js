@@ -1,10 +1,8 @@
-// --- START OF FILE character/firestore.js ---
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } 
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { 
-    getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, addDoc, query, where, serverTimestamp, orderBy 
+    getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, addDoc, query, where, serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // 設定 (変更なし)
@@ -56,6 +54,7 @@ export async function saveToCloud(charData) {
     if (!charData || !charData.id) return alert("データエラー: IDがありません。");
 
     try {
+        // IDをキーにして保存（名前が変わってもファイルは同じまま）
         const charRef = doc(db, SHARED_COLLECTION, SHARED_DOC_ID, CHAR_SUB_COLLECTION, charData.id);
         await setDoc(charRef, charData, { merge: true });
         alert("保存完了: " + charData.name);
@@ -76,11 +75,15 @@ export async function loadFromCloud() {
         const loadedData = {};
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
+            
+            // 重要: 古いデータ(IDがない)場合、ファイル名をIDとして扱う救済処置
             if (!data.id) {
                 data.id = docSnap.id;
             }
+            
             loadedData[data.id] = data;
         });
+        
         return loadedData;
 
     } catch (e) {
@@ -104,9 +107,8 @@ export async function deleteFromCloud(charId) {
     }
 }
 
-// --- シナリオ機能 (既存 + 追加分) ---
+// --- シナリオ機能 ---
 
-// 新規作成
 export async function saveScenario(scenarioData) {
     if (!currentUser) throw new Error("User not logged in");
     const dataToSave = {
@@ -122,64 +124,21 @@ export async function saveScenario(scenarioData) {
     }
 }
 
-// [追加] 既存シナリオの更新 (ID指定)
-export async function updateScenario(scenarioId, scenarioData) {
-    if (!currentUser) throw new Error("User not logged in");
-    if (!scenarioId) throw new Error("No Scenario ID provided");
-    
-    const dataToSave = {
-        ...scenarioData,
-        updatedAt: serverTimestamp()
-    };
-    try {
-        const docRef = doc(db, "scenarios", scenarioId);
-        await setDoc(docRef, dataToSave, { merge: true });
-        return scenarioId;
-    } catch (e) {
-        console.error("Error updating scenario: ", e);
-        throw e;
-    }
-}
-
-// [追加] 指定されたペア(または単独)のシナリオ履歴を取得
-export async function getScenariosByPair(charId1, charId2 = null) {
+export async function getScenariosForCharacter(charId) {
     if (!currentUser) return [];
     try {
-        // Firestoreの制約上、array-containsは1つの値しか使えないため、
-        // 少なくとも1人が含まれているものを取得し、JS側でフィルタリングする方式をとる
-        // (データ量が膨大でない前提)
-        
-        const scenariosRef = collection(db, "scenarios");
         const q = query(
-            scenariosRef, 
-            where("members", "array-contains", charId1),
-            orderBy("date", "desc") // 日付順
+            collection(db, "scenarios"),
+            where("members", "array-contains", charId)
         );
-
         const querySnapshot = await getDocs(q);
         const scenarios = [];
-        
         querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            // 2人目が指定されている場合、そのIDもmembersに含まれているか確認
-            if (charId2) {
-                if (data.members && data.members.includes(charId2)) {
-                    scenarios.push({ id: doc.id, ...data });
-                }
-            } else {
-                scenarios.push({ id: doc.id, ...data });
-            }
+            scenarios.push({ id: doc.id, ...doc.data() });
         });
-        
-        return scenarios;
+        return scenarios.sort((a, b) => new Date(b.date) - new Date(a.date));
     } catch (e) {
-        console.error("History Load Error:", e);
-        // インデックス未作成エラーなどの場合に空配列を返す
+        console.error(e);
         return [];
     }
-}
-
-export async function getScenariosForCharacter(charId) {
-    // 既存関数へのラッパーとして機能させる
-    return await getScenariosByPair(charId);
 }
