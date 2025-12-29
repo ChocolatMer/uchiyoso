@@ -85,8 +85,8 @@
 
         /* パートナーリスト用 */
         .partner-entry { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; background: #1a1a1a; padding: 5px; border-radius: 4px; border:1px solid #444; }
-        .partner-entry select { width: 40%; font-size:0.8rem; }
-        .partner-entry input { width: 50%; font-size:0.8rem; }
+        .partner-select { width: 40%; font-size:0.8rem; background: #222; color: #fff; border: 1px solid #555; padding: 5px; }
+        .partner-group-input { width: 50%; font-size:0.8rem; background: #2a2a2a; color: #fff; border: 1px solid #444; padding: 5px; }
 
         input[type="color"] { width: 100%; height: 40px; padding: 2px; background: #2a2a2a; border: 1px solid #444; cursor: pointer; }
     </style>
@@ -159,13 +159,12 @@
                 <div style="margin-bottom:5px;">📊 <b>BMI:</b> <span id="outBMI" class="calc-val">--</span></div>
             </div>
 
-            <!-- ▼▼▼ パートナー関係性リスト (修正完了) ▼▼▼ -->
+            <!-- ▼▼▼ パートナー関係性リスト ▼▼▼ -->
             <div class="form-row full" style="margin-top:25px; background:#252525; padding:20px; border-radius:4px; border-left: 4px solid #00f3ff; border-top:1px solid #444; border-bottom:1px solid #444;">
                 <label style="color:#00f3ff; font-weight:bold; margin-bottom:10px;">RELATIONSHIPS (パートナー & コンビ名)</label>
                 <div id="partnerListContainer"></div>
                 <button type="button" class="btn-add" style="width:auto; padding:5px 15px;" onclick="addPartnerRow()">+ Add Partner</button>
             </div>
-            <!-- ▲▲▲ 修正完了 ▲▲▲ -->
 
             <h2>VISUALS (Drag & Drop Image)</h2>
             <div class="visual-grid">
@@ -299,7 +298,7 @@
     <!-- ここからスクリプト -->
     <script type="module">
         import { loadFromCloud, monitorAuth, saveToCloud, deleteFromCloud } from "./firestore.js";
-        // GROUP_MAPPINGは廃止されたのでインポートから削除
+        // GROUP_MAPPINGは廃止されたので削除
         import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING } from "./data/schema.js";
         import { parseIaChara } from "./data/parser_ia.js";
 
@@ -458,7 +457,7 @@
             }
         };
 
-        // --- 保存処理 (複数パートナー同期) ---
+        // --- 保存処理 (複数パートナー同期対応) ---
         window.prepareSaveData = async function() {
             // ID安全確保
             const charSelect = document.getElementById('charSelect');
@@ -519,11 +518,6 @@
             });
             finalData.partners = partnersList; // 配列として保存
 
-            if (!finalData.id) {
-                alert("致命的エラー: 保存データのIDが消失しました。");
-                return;
-            }
-
             try {
                 // 1. 自分のデータを保存
                 await saveToCloud(finalData);
@@ -534,7 +528,7 @@
                     const partnerChar = allData[p.id];
                     if (!partnerChar) continue;
 
-                    // パートナーのデータにIDがなければ補填
+                    // パートナーのデータにIDがなければ補填 (これがエラーの原因でした)
                     if (!partnerChar.id) partnerChar.id = p.id;
 
                     // パートナーの「パートナーリスト」を取得し、自分(activeId)のエントリを探す
@@ -739,10 +733,7 @@
             const p = parseIaChara(text);
             const updateVal = (id, val) => { if(val !== undefined && val !== null && val !== "") { setVal(id, val); } };
             FIELD_MAPPING.forEach(f => { if(p[f.key]) updateVal(f.id, p[f.key]); });
-            
-            // パートナーリストのマージは複雑なためスキップまたは単純化
-            // (通常importではパートナー関係は含まれないことが多いため)
-
+            // GROUP_MAPPINGは廃止
             STATS_MAPPING.forEach(f => updateVal(f.id, p.stats[f.key]));
             VITALS_MAPPING.forEach(f => updateVal(f.id, p.vitals[f.key]));
             if(p.colorHair) updateVal('inpHair', p.colorHair); if(p.colorEye) updateVal('inpEye', p.colorEye); if(p.colorSkin) updateVal('inpSkin', p.colorSkin);
