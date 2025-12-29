@@ -435,10 +435,14 @@
         };
 
         const loadScenarioIntoForm = (s, itemEl) => {
+            // 1. UIのアクティブ表示切り替え
             document.querySelectorAll('.history-item').forEach(el=>el.classList.remove('active'));
             itemEl.classList.add('active');
+            
+            // 編集モードIDセット
             currentScenarioId = s.id;
             
+            // 2. 基本情報の反映
             getEl('inpTitle').value = s.title;
             getEl('inpCount').value = s.count || 1;
             getEl('inpSystem').value = s.system || 'CoC6'; updateTagColor(getEl('inpSystem'));
@@ -447,19 +451,56 @@
             getEl('inpEndName').value = s.endName || "";
             getEl('inpDate').value = s.date || "";
             getEl('inpTags').value = s.tags || "";
-            if(s.images?.trailer) { getEl('inpImgTrailer').value = s.images.trailer; getEl('imgTrailer').src = s.images.trailer; }
+            
+            // 画像反映
+            if(s.images?.trailer) { 
+                getEl('inpImgTrailer').value = s.images.trailer; 
+                getEl('imgTrailer').src = s.images.trailer; 
+            } else {
+                getEl('imgTrailer').src = ""; // 画像がない場合はクリア
+            }
 
-            const fillRole = (k, sf) => {
-                const d = s.characters?.[k] || {};
-                getEl(`inpPlName${sf}`).value = d.pl||""; getEl(`inpRes${sf}`).value = d.res||"Alive";
-                getEl(`inpSan${sf}`).value = d.san||""; getEl(`inpQuote${sf}`).value = d.quote||"";
-                getEl(`inpGrow${sf}`).value = d.grow||""; getEl(`inpMemo${sf}`).value = d.memo||"";
-                if(d.art) { getEl(`inpArtName${sf}`).value = d.art.name||""; getEl(`inpArtDesc${sf}`).value = d.art.desc||""; }
-                if(d.seq) { getEl(`inpSeqName${sf}`).value = d.seq.name||""; getEl(`inpSeqDesc${sf}`).value = d.seq.desc||""; }
-                if(d.ins) { getEl(`selInsanity${sf}`).value = d.ins.type||""; getEl(`inpInsanityDesc${sf}`).value = d.ins.desc||""; }
+            // 3. ★重要★ キャラクター選択の反映とアイコン更新
+            // 保存データからキャラIDを取り出し、プルダウンを選択させて、changeイベントを発火させる
+            const setCharSelect = (selId, charData) => {
+                const sel = getEl(selId);
+                if (charData && charData.id) {
+                    sel.value = charData.id;
+                    // プログラムで値をカエルだけではアイコンが変わらないため、手動でイベントを起こす
+                    sel.dispatchEvent(new Event('change'));
+                } else {
+                    sel.value = "";
+                    sel.dispatchEvent(new Event('change'));
+                }
             };
-            fillRole('pc', 'PC'); fillRole('kpc', 'KPC');
 
+            const pcData = s.characters?.pc || {};
+            const kpcData = s.characters?.kpc || {};
+            
+            setCharSelect('selPC', pcData);
+            setCharSelect('selKPC', kpcData);
+
+            // 4. 各ロールの詳細データ反映
+            const fillRole = (d, suffix) => {
+                getEl(`inpPlName${suffix}`).value = d.pl || "";
+                getEl(`inpRes${suffix}`).value = d.res || "Alive"; updateResColor(getEl(`inpRes${suffix}`));
+                getEl(`inpSan${suffix}`).value = d.san || "";
+                getEl(`inpQuote${suffix}`).value = d.quote || "";
+                getEl(`inpGrow${suffix}`).value = d.grow || ""; 
+                getEl(`inpMemo${suffix}`).value = d.memo || "";
+                
+                if(d.art) { getEl(`inpArtName${suffix}`).value = d.art.name||""; getEl(`inpArtDesc${suffix}`).value = d.art.desc||""; }
+                if(d.seq) { getEl(`inpSeqName${suffix}`).value = d.seq.name||""; getEl(`inpSeqDesc${suffix}`).value = d.seq.desc||""; }
+                if(d.ins) { getEl(`selInsanity${suffix}`).value = d.ins.type||""; getEl(`inpInsanityDesc${suffix}`).value = d.ins.desc||""; }
+            };
+            
+            // 少し待ってからテキストを埋める（changeイベントでの上書きを防ぐため念のため）
+            setTimeout(() => {
+                fillRole(pcData, 'PC');
+                fillRole(kpcData, 'KPC');
+            }, 50);
+
+            // 5. シナリオ詳細タブの反映
             if(s.meta) {
                 getEl('inpMetaSystem').value = s.meta.system||""; getEl('inpMetaType').value = s.meta.type||"";
                 getEl('inpDuration').value = s.meta.duration||""; getEl('inpStage').value = s.meta.stage||"";
@@ -467,8 +508,15 @@
                 getEl('inpRecSkills').value = s.meta.skills||""; getEl('inpScnType').value = s.meta.scenType||"";
             }
             if(s.urls) { getEl('inpUrlShop').value = s.urls.shop||""; getEl('inpUrlRoom').value = s.urls.room||""; }
-            getEl('inpSynopsis').value = s.overview||""; getEl('inpIntroduction').value = s.introduction||""; getEl('inpWarnings').value = s.warnings||"";
-            if(s.memos) { getEl('inpPublicMemo').value = s.memos.public||""; getEl('inpSecretMemo').value = s.memos.secret||""; }
+            
+            getEl('inpSynopsis').value = s.overview||""; 
+            getEl('inpIntroduction').value = s.introduction||""; 
+            getEl('inpWarnings').value = s.warnings||"";
+            
+            if(s.memos) { 
+                getEl('inpPublicMemo').value = s.memos.public||""; 
+                getEl('inpSecretMemo').value = s.memos.secret||""; 
+            }
         };
 
         window.resetForm = () => {
