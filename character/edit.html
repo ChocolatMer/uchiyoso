@@ -297,7 +297,6 @@
     <!-- 修正済みスクリプト -->
     <script type="module">
         import { loadFromCloud, monitorAuth, saveToCloud, deleteFromCloud } from "./firestore.js";
-        // GROUP_MAPPINGは廃止されたのでインポートから削除
         import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING } from "./data/schema.js";
         import { parseIaChara } from "./data/parser_ia.js";
 
@@ -515,22 +514,19 @@
             const nameInputVal = document.getElementById('inpName').value;
             if (nameInputVal) finalData.name = nameInputVal;
             finalData.skills = skillsObj;
-            finalData.id = activeId;
+            finalData.id = activeId; // ID強制付与
 
             // ★ パートナーリストの取得と整理
             const partnerRows = document.querySelectorAll('.partner-entry');
-            const newPartnersList = [];      // 自分のデータに保存する用（配列）
-            const currentPartnersMap = new Map(); // 相手のデータ更新用（IDごとのグループ名リスト）
+            const newPartnersList = [];      // 自分のデータに保存する用
+            const currentPartnersMap = new Map(); // 相手のデータ更新用
 
             partnerRows.forEach(row => {
                 const pid = row.querySelector('.partner-select').value;
                 const gname = row.querySelector('.partner-group-input').value;
                 
                 if (pid) {
-                    // 自分のリストに追加
                     newPartnersList.push({ id: pid, group: gname });
-
-                    // 相手更新用にまとめる
                     if (!currentPartnersMap.has(pid)) {
                         currentPartnersMap.set(pid, []);
                     }
@@ -549,35 +545,47 @@
                 // 1. 自分のデータを保存
                 await saveToCloud(finalData);
 
-                // 2. パートナー側のデータをループして更新（追加・更新・削除すべて対応）
-                // 「元々パートナーだった人」と「今パートナーの人」の和集合をとる
+                // 2. パートナー側のデータをループして更新
                 const allInvolvedIds = new Set([...oldPartnerIds, ...currentPartnersMap.keys()]);
                 let syncCount = 0;
                 
                 for (const pId of allInvolvedIds) {
-                    const partnerChar = allData[pId];
-                    if (!partnerChar) continue; // データがない場合はスキップ
+                    // 自分自身はスキップ（これが原因でエラーになることがあるため）
+                    if (pId === activeId) continue;
 
-                    if (!partnerChar.id) partnerChar.id = pId;
+                    // データ取得と存在確認
+                    const originalPartner = allData[pId];
+                    if (!originalPartner) continue; 
 
-                    let pPartners = partnerChar.partners || [];
+                    // 【最重要】オブジェクトをコピーし、IDを強制的に付与する
+                    // これにより "IDがありません" エラーを確実に回避する
+                    const partnerDataToSave = { ...originalPartner };
+                    partnerDataToSave.id = pId; 
 
-                    // A. まず「自分(activeId)」に関するエントリを無条件で削除
-                    //    （これで「削除」操作も、「更新前のクリーンアップ」も兼ねる）
+                    let pPartners = partnerDataToSave.partners || [];
+                    if (!Array.isArray(pPartners)) pPartners = [];
+
+                    // A. 自分(activeId)のエントリを一度すべて削除
+                    const initialLen = pPartners.length;
                     pPartners = pPartners.filter(item => item.id !== activeId);
 
-                    // B. 「現在パートナーである」なら、新しい情報を追加する
-                    //    （削除済みの相手ならここに入らないので、Aで消されたままになる＝正しく削除同期される）
+                    // B. 現在パートナーなら追加
+                    let isChanged = (pPartners.length !== initialLen); // 削除があったか？
+                    
                     if (currentPartnersMap.has(pId)) {
                         const newGroups = currentPartnersMap.get(pId);
                         newGroups.forEach(groupName => {
                             pPartners.push({ id: activeId, group: groupName });
                         });
+                        isChanged = true; // 追加したので変更あり
                     }
                     
-                    partnerChar.partners = pPartners;
-                    await saveToCloud(partnerChar);
-                    syncCount++;
+                    // 変更があった場合のみ保存（無駄な書き込みエラー防止）
+                    if (isChanged) {
+                        partnerDataToSave.partners = pPartners;
+                        await saveToCloud(partnerDataToSave);
+                        syncCount++;
+                    }
                 }
 
                 if (syncCount > 0) {
@@ -586,7 +594,6 @@
                     alert("保存完了しました。");
                 }
                 
-                // 画面状態を維持（リロードしない）
                 await init(); 
                 if (charSelect) charSelect.value = activeId;
                 if (allData[activeId]) loadCharacterToForm(allData[activeId]);
