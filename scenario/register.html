@@ -7,6 +7,7 @@
     
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet">
+    <!-- 手記っぽいフォントがあれば読み込む（ここではShippori Minchoを継続利用） -->
     <link href="../character/edit/header.css" rel="stylesheet">
 
     <style>
@@ -113,13 +114,23 @@
 
         /* --- UI: LEFT PAGE --- */
         .report-header-img {
-            width: 100%; height: 220px; background: #0a0a0a; border: 1px dashed #444; 
+            width: 100%; height: 240px; background: #0a0a0a; border: 1px dashed #444; 
             display: flex; align-items: center; justify-content: center; overflow: hidden;
             margin-bottom: 15px; border-radius: 2px; cursor: pointer; position: relative;
         }
-        .report-header-img img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; display: block; }
-        .report-header-img.empty::after { content: 'NO IMAGE'; position: absolute; color: #333; font-family: 'Cinzel', serif; letter-spacing: 2px; }
+        .report-header-img img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; display: block; transition:0.3s; }
+        .report-header-img.empty::after { content: 'SESSION SNAPSHOT'; position: absolute; color: #333; font-family: 'Cinzel', serif; letter-spacing: 2px; }
         
+        /* Trailer Overlay (Right Bottom) */
+        .trailer-overlay {
+            position: absolute; bottom: 10px; right: 10px; width: 100px; height: 70px;
+            background: rgba(0,0,0,0.7); border: 1px solid #444; overflow: hidden;
+            display: flex; align-items: center; justify-content: center; z-index: 10;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.8); cursor: pointer;
+        }
+        .trailer-overlay img { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; }
+        .trailer-overlay.empty::after { content:'TRAILER'; color:#aaa; font-size:0.5rem; font-family:'Cinzel',serif; }
+
         input.scenario-title {
             width: 100%; background: transparent; border: none; border-bottom: 2px solid #444;
             font-family: 'Shippori Mincho', serif; font-size: 1.8rem; font-weight: bold; color: #eee;
@@ -131,9 +142,12 @@
         /* Char Pair & Swap */
         .char-pair-area { display: flex; justify-content: center; align-items: start; gap: 15px; margin-bottom: 25px; position: relative; }
         .char-unit { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 140px; }
-        .char-icon-circle { width: 90px; height: 90px; border-radius: 50%; border: 2px solid #333; object-fit: cover; background: #111; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .char-icon-circle { 
+            width: 90px; height: 90px; border-radius: 50%; border: 3px solid #333; /* border width increased for theme color */
+            object-fit: cover; background: #111; box-shadow: 0 5px 15px rgba(0,0,0,0.5); transition: border-color 0.3s;
+        }
         select.char-select { width: 100%; background: #1a1a1a; border: 1px solid #333; color: #ccc; padding: 4px; text-align: center; font-size: 0.8rem; border-radius: 4px; }
-        input.pl-name { width: 100%; background: transparent; border: none; color: #666; text-align: center; font-size: 0.8rem; padding: 2px; }
+        input.pl-name { width: 100%; background: transparent; border: none; color: #666; text-align: center; font-size: 0.8rem; padding: 2px; transition: color 0.3s; }
         
         .swap-btn {
             align-self: center; background: transparent; border: 1px solid #333; color: #666;
@@ -155,7 +169,7 @@
         .bg-gray { background: #333; color: #aaa; }
 
         /* --- UI: RIGHT PAGE --- */
-        .san-compare-area { display: flex; gap: 20px; margin-bottom: 25px; border-bottom: 1px solid #333; padding-bottom: 15px; }
+        .san-compare-area { display: flex; gap: 20px; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px; }
         .san-box { flex: 1; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; border: 1px solid #333; display: flex; flex-direction: column; gap: 5px; }
         .san-header { font-family: 'Cinzel', serif; font-size: 0.8rem; color: #d4b346; display: flex; justify-content: space-between; }
         
@@ -163,7 +177,7 @@
         .chat-row { display: flex; gap: 15px; align-items: flex-start; }
         .chat-row.kpc { flex-direction: row-reverse; }
         .chat-icon { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #444; object-fit: cover; background: #111; flex-shrink: 0; }
-        .speech-bubble { position: relative; background: rgba(255,255,255,0.05); border: 1px solid #444; border-radius: 8px; padding: 10px; flex: 1; min-height: 40px; }
+        .speech-bubble { position: relative; background: rgba(255,255,255,0.05); border: 1px solid #444; border-radius: 8px; padding: 10px; flex: 1; min-height: 40px; transition: border-color 0.3s; }
         .speech-bubble::after { content: ''; position: absolute; top: 15px; border: 8px solid transparent; }
         .chat-row.pc .speech-bubble::after { left: -16px; border-right-color: #444; }
         .chat-row.kpc .speech-bubble::after { right: -16px; border-left-color: #444; }
@@ -181,6 +195,9 @@
         .skill-del-btn { background: transparent; border: none; color: #666; cursor: pointer; font-size: 1rem; line-height: 1; }
         .skill-del-btn:hover { color: #f66; }
 
+        /* Encountered Entities */
+        .enc-box { margin-bottom: 30px; background: rgba(0,0,0,0.1); border: 1px dashed #444; padding: 10px; }
+        
         /* --- Details: Character Based Toggle --- */
         .details-container { margin-bottom: 30px; }
         .details-toolbar { display: flex; justify-content: center; gap: 20px; margin-bottom: 10px; }
@@ -192,15 +209,22 @@
         .toggle-btn:hover { background: #222; color: #ccc; }
         .toggle-btn.active { background: #6d2020; color: #fff; border-color: #844; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
 
-        .detail-section { display: none; margin-bottom: 15px; background: rgba(0,0,0,0.3); border: 1px solid #333; padding: 20px; border-radius: 4px; animation: slideDown 0.3s; }
+        .detail-section { display: none; margin-bottom: 15px; background: rgba(0,0,0,0.3); border: 1px solid #333; padding: 15px; border-radius: 4px; animation: slideDown 0.3s; }
         .detail-section.show { display: block; }
         @keyframes slideDown { from{opacity:0; transform:translateY(-10px);} to{opacity:1; transform:translateY(0);} }
 
-        /* 縦積みレイアウト */
-        .detail-stack { display: flex; flex-direction: column; gap: 20px; }
-        .detail-item-header { font-size: 0.8rem; color: #d4b346; margin-bottom: 5px; border-left: 3px solid #d4b346; padding-left: 8px; font-family: 'Cinzel', serif; }
-        .detail-item-header.seq { color: #ffadad; border-color: #a54a4a; }
-        
+        /* Inner Toggles for AF/Seq/Ins */
+        .sub-toggles { display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .sub-btn { 
+            background: transparent; border: 1px solid #444; color: #666; padding: 2px 10px; font-size: 0.75rem; 
+            cursor: pointer; border-radius: 2px; transition: 0.2s;
+        }
+        .sub-btn:hover { color: #aaa; border-color: #666; }
+        .sub-btn.active { background: #333; color: #d4b346; border-color: #d4b346; }
+
+        .detail-content { display: none; margin-bottom: 15px; }
+        .detail-content.show { display: block; animation: fadeIn 0.3s; }
+
         /* Insanity Specifics */
         .ins-radio-group { display: flex; gap: 15px; font-size: 0.8rem; color: #aaa; margin: 8px 0; }
         .ins-date-row { display: none; font-size: 0.8rem; align-items: center; gap: 8px; }
@@ -209,7 +233,26 @@
         /* --- Memo (Bottom) --- */
         .memo-area { display: flex; flex-direction: column; gap: 20px; border-top: 1px solid #333; padding-top: 20px; }
         .section-label { font-size: 0.8rem; color: #bbb; border-left: 3px solid #4a6fa5; padding-left: 8px; font-family: 'Shippori Mincho', serif; margin-bottom: 5px; }
-        .section-label.kpc { border-color: #a54a4a; }
+        
+        /* Scenario Toggles */
+        .scn-toggle-header { 
+            cursor: pointer; background: rgba(255,255,255,0.05); padding: 5px 10px; 
+            margin-bottom: 5px; font-size: 0.8rem; color: #ccc; border-left: 3px solid #666; 
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .scn-toggle-header:hover { background: rgba(255,255,255,0.1); }
+        .scn-content { display: none; padding: 10px; }
+        .scn-content.show { display: block; }
+
+        /* Private Notes (Paper Style) */
+        .private-paper {
+            background: #2a2520; /* parchment dark */
+            border: 1px solid #443a30; padding: 15px; border-radius: 2px;
+            font-family: 'Shippori Mincho', serif; color: #ccc; line-height: 1.8;
+            background-image: repeating-linear-gradient(transparent, transparent 31px, #3a322a 32px);
+            min-height: 200px; width: 100%; box-sizing: border-box; resize: vertical; margin-bottom: 20px;
+        }
+        .private-paper:focus { outline: none; background-color: #2e2924; }
 
         textarea.paper-area { width: 100%; background: transparent; border: none; color: #ccc; resize: vertical; font-family: 'Shippori Mincho', serif; line-height: 1.6; font-size: 0.9rem; }
         textarea.paper-area:focus { outline: none; }
@@ -268,9 +311,13 @@
                         <div class="page page-left">
                             <div class="report-header-img empty" id="dropTrailer">
                                 <img id="imgTrailer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="">
-                                <div style="position:absolute; bottom:0; right:0; background:rgba(0,0,0,0.7); color:#d4b346; font-size:0.7rem; padding:4px 10px; font-family:'Cinzel',serif;">SESSION SNAPSHOT</div>
+                                <!-- Trailer Overlay inside Snapshot -->
+                                <div class="trailer-overlay empty" id="dropScnTrailer">
+                                    <img id="imgScnTrailer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="">
+                                </div>
                             </div>
                             <input type="hidden" id="inpImgTrailer">
+                            <input type="hidden" id="inpImgScnTrailer">
 
                             <input type="text" id="inpTitle" class="scenario-title" placeholder="シナリオタイトル">
                             <div class="session-count"><input type="number" id="inpCount" value="1"> 話 / 回目</div>
@@ -307,7 +354,6 @@
                                 </div>
                                 <div class="prop-row" id="rowGM" style="display:none;"><div class="prop-label"><span class="material-icons-round">person</span> GM/KP</div><input type="text" id="inpGM" class="tag-select bg-blue" placeholder="GM名"></div>
                                 <div class="prop-row"><div class="prop-label"><span class="material-icons-round">flag</span> 結末</div><input type="text" id="inpEndName" class="tag-select bg-orange" placeholder="エンド名"></div>
-                                <div class="prop-row"><div class="prop-label"><span class="material-icons-round">notes</span> HO/備考</div><input type="text" id="inpTags" class="tag-input" placeholder="HO1, テキセ 等"></div>
                             </div>
                         </div>
 
@@ -329,8 +375,15 @@
                                 </div>
 
                                 <div class="chat-area">
-                                    <div class="chat-row pc"><img id="chatIconPC" class="chat-icon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"><div class="speech-bubble"><textarea id="inpQuotePC" class="paper-area bubble-text" placeholder="PCの印象的な台詞..."></textarea></div></div>
-                                    <div class="chat-row kpc"><img id="chatIconKPC" class="chat-icon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"><div class="speech-bubble"><textarea id="inpQuoteKPC" class="paper-area bubble-text" placeholder="KPCの印象的な台詞..."></textarea></div></div>
+                                    <div class="chat-row pc"><img id="chatIconPC" class="chat-icon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"><div id="bubblePC" class="speech-bubble"><textarea id="inpQuotePC" class="paper-area bubble-text"></textarea></div></div>
+                                    <div class="chat-row kpc"><img id="chatIconKPC" class="chat-icon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"><div id="bubbleKPC" class="speech-bubble"><textarea id="inpQuoteKPC" class="paper-area bubble-text"></textarea></div></div>
+                                </div>
+
+                                <!-- Encountered -->
+                                <div class="enc-box">
+                                    <div class="growth-header" style="border:none;">遭遇神話生物 <span class="material-icons-round" style="font-size:1rem;">visibility</span></div>
+                                    <div id="encList" class="skill-list"></div>
+                                    <button class="skill-add-btn" onclick="window.addEncRow()">+ 追加</button>
                                 </div>
 
                                 <!-- Growth -->
@@ -347,68 +400,74 @@
                                     </div>
                                 </div>
 
-                                <!-- Details: Character Toggle -->
+                                <!-- Details: Sub-toggle System -->
                                 <div class="details-container">
                                     <div class="details-toolbar">
-                                        <div class="toggle-btn" onclick="window.toggleDetail('detailPC', this)">PC 詳細</div>
-                                        <div class="toggle-btn" onclick="window.toggleDetail('detailKPC', this)">KPC 詳細</div>
+                                        <div id="btnDetailPC" class="toggle-btn" onclick="window.toggleDetail('detailPC', this)">PC 詳細</div>
+                                        <div id="btnDetailKPC" class="toggle-btn" onclick="window.toggleDetail('detailKPC', this)">KPC 詳細</div>
                                     </div>
 
                                     <!-- PC Detail Section -->
                                     <div id="detailPC" class="detail-section">
-                                        <div class="detail-stack">
-                                            <div>
-                                                <div class="detail-item-header">ARTIFACT (AF)</div>
-                                                <input type="text" id="inpArtNamePC" class="line-input" placeholder="名称" style="color:#d4b346; margin-bottom:5px;">
-                                                <textarea id="inpArtDescPC" class="paper-area box-input" style="min-height:50px;" placeholder="詳細..."></textarea>
+                                        <div class="sub-toggles">
+                                            <button class="sub-btn" onclick="window.toggleSubContent('pcAF', this)">AF</button>
+                                            <button class="sub-btn" onclick="window.toggleSubContent('pcSeq', this)">後遺症</button>
+                                            <button class="sub-btn" onclick="window.toggleSubContent('pcIns', this)">狂気</button>
+                                        </div>
+                                        <div id="pcAF" class="detail-content">
+                                            <div class="detail-item-header">ARTIFACT</div>
+                                            <input type="text" id="inpArtNamePC" class="line-input" placeholder="名称" style="color:#d4b346; margin-bottom:5px;">
+                                            <textarea id="inpArtDescPC" class="paper-area box-input" placeholder="詳細..."></textarea>
+                                        </div>
+                                        <div id="pcSeq" class="detail-content">
+                                            <div class="detail-item-header seq">SEQUELAE</div>
+                                            <input type="text" id="inpSeqNamePC" class="line-input" placeholder="名称" style="color:#ffadad; margin-bottom:5px;">
+                                            <textarea id="inpSeqDescPC" class="paper-area box-input" placeholder="詳細..."></textarea>
+                                        </div>
+                                        <div id="pcIns" class="detail-content">
+                                            <div class="detail-item-header">INSANITY</div>
+                                            <select id="selInsanityPC" class="insanity-select" onchange="updateInsanityDesc(this.value, 'PC')">
+                                                <option value="">(なし)</option><option value="1">1: 健忘症 / 昏迷</option><option value="2">2: 激しい恐怖症</option><option value="3">3: 幻覚</option><option value="4">4: 奇妙な性的嗜好</option><option value="5">5: フェティッシュ</option><option value="6">6: チック・震え</option><option value="7">7: 心因性機能障害</option><option value="8">8: 短時間の心因反応</option><option value="9">9: 一時的偏執症</option><option value="10">10: 強迫観念行動</option><option value="Other">その他</option>
+                                            </select>
+                                            <textarea id="inpInsanityDescPC" class="paper-area box-input" style="min-height:50px; margin-top:5px;"></textarea>
+                                            <div class="ins-radio-group">
+                                                <label><input type="radio" name="durPC" value="Temp" checked onclick="toggleDate('datePC', false)"> 一時的</label>
+                                                <label><input type="radio" name="durPC" value="Indef" onclick="toggleDate('datePC', true)"> 不定</label>
+                                                <label><input type="radio" name="durPC" value="Perm" onclick="toggleDate('datePC', false)"> 永続</label>
                                             </div>
-                                            <div>
-                                                <div class="detail-item-header seq">SEQUELAE (後遺症)</div>
-                                                <input type="text" id="inpSeqNamePC" class="line-input" placeholder="名称" style="color:#ffadad; margin-bottom:5px;">
-                                                <textarea id="inpSeqDescPC" class="paper-area box-input" style="min-height:50px;" placeholder="詳細..."></textarea>
-                                            </div>
-                                            <div>
-                                                <div class="detail-item-header">INSANITY (狂気)</div>
-                                                <select id="selInsanityPC" class="insanity-select" onchange="updateInsanityDesc(this.value, 'PC')">
-                                                    <option value="">(なし)</option><option value="1">1: 健忘症 / 昏迷</option><option value="2">2: 激しい恐怖症</option><option value="3">3: 幻覚</option><option value="4">4: 奇妙な性的嗜好</option><option value="5">5: フェティッシュ</option><option value="6">6: チック・震え</option><option value="7">7: 心因性機能障害</option><option value="8">8: 短時間の心因反応</option><option value="9">9: 一時的偏執症</option><option value="10">10: 強迫観念行動</option><option value="Other">その他</option>
-                                                </select>
-                                                <textarea id="inpInsanityDescPC" class="paper-area box-input" style="min-height:50px; margin-top:5px;"></textarea>
-                                                <div class="ins-radio-group">
-                                                    <label><input type="radio" name="durPC" value="Temp" checked onclick="toggleDate('datePC', false)"> 一時的</label>
-                                                    <label><input type="radio" name="durPC" value="Indef" onclick="toggleDate('datePC', true)"> 不定</label>
-                                                    <label><input type="radio" name="durPC" value="Perm" onclick="toggleDate('datePC', false)"> 永続</label>
-                                                </div>
-                                                <div id="datePC" class="ins-date-row">完治日: <input type="date" id="inpInsDatePC" class="tag-input" style="width:100px;"></div>
-                                            </div>
+                                            <div id="datePC" class="ins-date-row">完治日: <input type="date" id="inpInsDatePC" class="tag-input" style="width:100px;"></div>
                                         </div>
                                     </div>
 
                                     <!-- KPC Detail Section -->
                                     <div id="detailKPC" class="detail-section">
-                                        <div class="detail-stack">
-                                            <div>
-                                                <div class="detail-item-header">ARTIFACT (AF)</div>
-                                                <input type="text" id="inpArtNameKPC" class="line-input" placeholder="名称" style="color:#d4b346; margin-bottom:5px;">
-                                                <textarea id="inpArtDescKPC" class="paper-area box-input" style="min-height:50px;" placeholder="詳細..."></textarea>
+                                        <div class="sub-toggles">
+                                            <button class="sub-btn" onclick="window.toggleSubContent('kpcAF', this)">AF</button>
+                                            <button class="sub-btn" onclick="window.toggleSubContent('kpcSeq', this)">後遺症</button>
+                                            <button class="sub-btn" onclick="window.toggleSubContent('kpcIns', this)">狂気</button>
+                                        </div>
+                                        <div id="kpcAF" class="detail-content">
+                                            <div class="detail-item-header">ARTIFACT</div>
+                                            <input type="text" id="inpArtNameKPC" class="line-input" placeholder="名称" style="color:#d4b346; margin-bottom:5px;">
+                                            <textarea id="inpArtDescKPC" class="paper-area box-input" placeholder="詳細..."></textarea>
+                                        </div>
+                                        <div id="kpcSeq" class="detail-content">
+                                            <div class="detail-item-header seq">SEQUELAE</div>
+                                            <input type="text" id="inpSeqNameKPC" class="line-input" placeholder="名称" style="color:#ffadad; margin-bottom:5px;">
+                                            <textarea id="inpSeqDescKPC" class="paper-area box-input" placeholder="詳細..."></textarea>
+                                        </div>
+                                        <div id="kpcIns" class="detail-content">
+                                            <div class="detail-item-header">INSANITY</div>
+                                            <select id="selInsanityKPC" class="insanity-select" onchange="updateInsanityDesc(this.value, 'KPC')">
+                                                <option value="">(なし)</option><option value="1">1: 健忘症 / 昏迷</option><option value="2">2: 激しい恐怖症</option><option value="3">3: 幻覚</option><option value="4">4: 奇妙な性的嗜好</option><option value="5">5: フェティッシュ</option><option value="6">6: チック・震え</option><option value="7">7: 心因性機能障害</option><option value="8">8: 短時間の心因反応</option><option value="9">9: 一時的偏執症</option><option value="10">10: 強迫観念行動</option><option value="Other">その他</option>
+                                            </select>
+                                            <textarea id="inpInsanityDescKPC" class="paper-area box-input" style="min-height:50px; margin-top:5px;"></textarea>
+                                            <div class="ins-radio-group">
+                                                <label><input type="radio" name="durKPC" value="Temp" checked onclick="toggleDate('dateKPC', false)"> 一時的</label>
+                                                <label><input type="radio" name="durKPC" value="Indef" onclick="toggleDate('dateKPC', true)"> 不定</label>
+                                                <label><input type="radio" name="durKPC" value="Perm" onclick="toggleDate('dateKPC', false)"> 永続</label>
                                             </div>
-                                            <div>
-                                                <div class="detail-item-header seq">SEQUELAE (後遺症)</div>
-                                                <input type="text" id="inpSeqNameKPC" class="line-input" placeholder="名称" style="color:#ffadad; margin-bottom:5px;">
-                                                <textarea id="inpSeqDescKPC" class="paper-area box-input" style="min-height:50px;" placeholder="詳細..."></textarea>
-                                            </div>
-                                            <div>
-                                                <div class="detail-item-header">INSANITY (狂気)</div>
-                                                <select id="selInsanityKPC" class="insanity-select" onchange="updateInsanityDesc(this.value, 'KPC')">
-                                                    <option value="">(なし)</option><option value="1">1: 健忘症 / 昏迷</option><option value="2">2: 激しい恐怖症</option><option value="3">3: 幻覚</option><option value="4">4: 奇妙な性的嗜好</option><option value="5">5: フェティッシュ</option><option value="6">6: チック・震え</option><option value="7">7: 心因性機能障害</option><option value="8">8: 短時間の心因反応</option><option value="9">9: 一時的偏執症</option><option value="10">10: 強迫観念行動</option><option value="Other">その他</option>
-                                                </select>
-                                                <textarea id="inpInsanityDescKPC" class="paper-area box-input" style="min-height:50px; margin-top:5px;"></textarea>
-                                                <div class="ins-radio-group">
-                                                    <label><input type="radio" name="durKPC" value="Temp" checked onclick="toggleDate('dateKPC', false)"> 一時的</label>
-                                                    <label><input type="radio" name="durKPC" value="Indef" onclick="toggleDate('dateKPC', true)"> 不定</label>
-                                                    <label><input type="radio" name="durKPC" value="Perm" onclick="toggleDate('dateKPC', false)"> 永続</label>
-                                                </div>
-                                                <div id="dateKPC" class="ins-date-row">完治日: <input type="date" id="inpInsDateKPC" class="tag-input" style="width:100px;"></div>
-                                            </div>
+                                            <div id="dateKPC" class="ins-date-row">完治日: <input type="date" id="inpInsDateKPC" class="tag-input" style="width:100px;"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -417,11 +476,11 @@
                                 <div class="memo-area">
                                     <div>
                                         <div class="section-label">PC 感想・手記</div>
-                                        <textarea id="inpMemoPC" class="paper-area box-input" placeholder="PC視点の感想..."></textarea>
+                                        <textarea id="inpMemoPC" class="paper-area box-input"></textarea>
                                     </div>
                                     <div>
                                         <div class="section-label memo">KPC 感想・手記</div>
-                                        <textarea id="inpMemoKPC" class="paper-area box-input" placeholder="KPCへの想い..."></textarea>
+                                        <textarea id="inpMemoKPC" class="paper-area box-input"></textarea>
                                     </div>
                                 </div>
                             </div>
@@ -429,7 +488,6 @@
                             <!-- TAB SCENARIO -->
                             <div id="tab-scenario" class="tab-panel">
                                 <h2 class="section-header">SCENARIO OVERVIEW</h2>
-                                <!-- 空白行を追加して推奨技能との間を空ける -->
                                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px;">
                                     <input type="text" id="inpMetaSystem" class="line-input" placeholder="システム詳細"><input type="text" id="inpMetaType" class="line-input" placeholder="形式詳細">
                                     <input type="text" id="inpDuration" class="line-input" placeholder="所要時間"><input type="text" id="inpStage" class="line-input" placeholder="舞台">
@@ -440,21 +498,36 @@
                                 </div>
                                 <div style="margin-bottom:20px;">
                                     <input type="text" id="inpUrlShop" class="line-input" placeholder="配布URL"><input type="text" id="inpUrlRoom" class="line-input" placeholder="部屋URL">
-                                    <div class="report-header-img empty" id="dropScnTrailer" style="height:120px; margin-top:10px;">
-                                        <img id="imgScnTrailer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="">
-                                    </div>
-                                    <input type="hidden" id="inpImgScnTrailer">
                                 </div>
-                                <textarea id="inpSynopsis" class="paper-area" style="min-height:100px; margin-bottom:15px;" placeholder="あらすじ"></textarea>
-                                <textarea id="inpIntroduction" class="paper-area" style="min-height:80px; margin-bottom:15px;" placeholder="導入"></textarea>
-                                <textarea id="inpWarnings" class="paper-area" style="min-height:60px;" placeholder="注意事項"></textarea>
+                                
+                                <div class="scn-toggle-header" onclick="window.toggleScnContent('scSyn')">あらすじ <span class="material-icons-round">expand_more</span></div>
+                                <div id="scSyn" class="scn-content show">
+                                    <textarea id="inpSynopsis" class="paper-area" style="min-height:100px;"></textarea>
+                                </div>
+
+                                <div class="scn-toggle-header" onclick="window.toggleScnContent('scInt')">導入 <span class="material-icons-round">expand_more</span></div>
+                                <div id="scInt" class="scn-content">
+                                    <textarea id="inpIntroduction" class="paper-area" style="min-height:80px;"></textarea>
+                                </div>
+
+                                <div class="scn-toggle-header" onclick="window.toggleScnContent('scWarn')">注意事項 <span class="material-icons-round">expand_more</span></div>
+                                <div id="scWarn" class="scn-content">
+                                    <textarea id="inpWarnings" class="paper-area" style="min-height:60px;"></textarea>
+                                </div>
                             </div>
                             
-                            <!-- TAB MEMO -->
+                            <!-- TAB MEMO (Handwritten Style) -->
                             <div id="tab-memo" class="tab-panel">
                                 <h2 class="section-header">PRIVATE NOTES</h2>
-                                <textarea id="inpPublicMemo" class="paper-area" style="min-height:150px; background:rgba(255,255,255,0.02); margin-bottom:20px;" placeholder="公開メモ (ふせったー等)"></textarea>
-                                <textarea id="inpSecretMemo" class="paper-area" style="min-height:200px; background:rgba(0,0,0,0.3); border:1px solid #444;" placeholder="秘匿メモ (GM用)"></textarea>
+                                
+                                <div class="section-label">公開メモ (ふせったー等)</div>
+                                <textarea id="inpPublicMemo" class="private-paper"></textarea>
+                                
+                                <div class="section-label" style="color:#d4b346; margin-top:10px;">秘匿メモ (PC PL用)</div>
+                                <textarea id="inpSecretMemoPC" class="private-paper"></textarea>
+
+                                <div class="section-label" style="color:#d4b346; margin-top:10px;">秘匿メモ (KPC PL/GM用)</div>
+                                <textarea id="inpSecretMemoKPC" class="private-paper"></textarea>
                             </div>
                         </div>
                     </div>
@@ -485,23 +558,20 @@
             if (el.value === 'タイマン' || el.value === 'ソロ') { row.style.display = 'none'; } else { row.style.display = 'grid'; }
         };
 
-        // --- Swap Function ---
         window.swapCharacters = () => {
             const pcSel = document.getElementById('selPC');
             const kpcSel = document.getElementById('selKPC');
             const pcName = document.getElementById('inpPlNamePC');
             const kpcName = document.getElementById('inpPlNameKPC');
             
-            // Swap values
             const tmpVal = pcSel.value; pcSel.value = kpcSel.value; kpcSel.value = tmpVal;
             const tmpName = pcName.value; pcName.value = kpcName.value; kpcName.value = tmpName;
             
-            // Trigger change to update icons
             pcSel.dispatchEvent(new Event('change'));
             kpcSel.dispatchEvent(new Event('change'));
         };
 
-        // --- Skills ---
+        // --- Encountered & Skills ---
         window.addSkillRow = (containerId, name="", val="") => {
             const c = document.getElementById(containerId);
             const row = document.createElement('div');
@@ -513,22 +583,35 @@
             `;
             c.appendChild(row);
         };
+        window.addEncRow = (name="") => {
+            const c = document.getElementById('encList');
+            const row = document.createElement('div');
+            row.className = 'skill-row';
+            row.style.gridTemplateColumns = "1fr 20px";
+            row.innerHTML = `
+                <input type="text" class="skill-name" placeholder="神話生物名" value="${name}">
+                <button class="skill-del-btn" onclick="this.parentElement.remove()">×</button>
+            `;
+            c.appendChild(row);
+        };
+
         window.getSkillText = (containerId) => {
             const rows = document.querySelectorAll(`#${containerId} .skill-row`);
             let txt = "";
             rows.forEach(r => {
                 const n = r.querySelector('.skill-name').value;
-                const v = r.querySelector('.skill-val').value;
-                if(n) txt += `${n} ${v}\n`;
+                const v = r.querySelector('.skill-val')?.value;
+                if(n) txt += v ? `${n} ${v}\n` : `${n}\n`;
             });
             return txt.trim();
         };
-        window.setSkillRows = (containerId, text) => {
+        window.setSkillRows = (containerId, text, isEnc=false) => {
             const c = document.getElementById(containerId);
             c.innerHTML = "";
             if(!text) return;
             const lines = text.split('\n');
             lines.forEach(l => {
+                if(isEnc) { window.addEncRow(l.trim()); return; }
                 const parts = l.trim().split(' ');
                 if(parts.length > 1) {
                     const v = parts.pop();
@@ -540,22 +623,29 @@
             });
         };
 
-        // --- Details Toggle (Exclusive) ---
+        // --- Details Toggle System ---
         window.toggleDetail = (secId, btn) => {
             const allSecs = document.querySelectorAll('.detail-section');
             const allBtns = document.querySelectorAll('.toggle-btn');
-            
             const target = document.getElementById(secId);
             const isActive = target.classList.contains('show');
-
-            // Close all
             allSecs.forEach(s => s.classList.remove('show'));
             allBtns.forEach(b => b.classList.remove('active'));
+            if (!isActive) { target.classList.add('show'); btn.classList.add('active'); }
+        };
 
-            if (!isActive) {
-                target.classList.add('show');
-                btn.classList.add('active');
-            }
+        window.toggleSubContent = (contentId, btn) => {
+            const parent = btn.parentElement.parentElement;
+            // Close other subs in this section
+            parent.querySelectorAll('.detail-content').forEach(c => c.classList.remove('show'));
+            parent.querySelectorAll('.sub-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(contentId).classList.add('show');
+            btn.classList.add('active');
+        };
+
+        window.toggleScnContent = (id) => {
+            document.getElementById(id).classList.toggle('show');
         };
 
         window.toggleDate = (rowId, show) => {
@@ -595,6 +685,24 @@
         let currentUid = null;
         let currentScenarioId = null; 
 
+        // Theme Color Helper
+        const applyTheme = (role, charId) => {
+            const char = allChars[charId];
+            if(!char || !char.color) return;
+            const color = char.color;
+            
+            // Icon Border
+            getEl(`icon${role}`).style.borderColor = color;
+            // Name underline or color
+            getEl(`inpPlName${role}`).style.color = color;
+            // Detail Button when active
+            const btn = getEl(`btnDetail${role}`);
+            // (Style injection for active state is hard via JS inline, handled by generic CSS mostly, but we can set border)
+            btn.style.borderColor = color; 
+            // Bubble border
+            getEl(`bubble${role}`).style.borderLeft = `3px solid ${color}`;
+        };
+
         // Image Handling
         const setupImg = (boxId, inpId, imgId) => {
             const box = getEl(boxId);
@@ -614,8 +722,8 @@
                 }
             });
         };
-        setupImg('dropTrailer', 'inpImgTrailer', 'imgTrailer');
-        setupImg('dropScnTrailer', 'inpImgScnTrailer', 'imgScnTrailer');
+        setupImg('dropTrailer', 'imgTrailer', 'inpImgTrailer', 'imgTrailer');
+        setupImg('dropScnTrailer', 'imgScnTrailer', 'inpImgScnTrailer', 'imgScnTrailer'); // Reuse helper
 
         monitorAuth(async (user) => {
             if(!user) { loader.textContent = "LOGIN REQUIRED"; return; }
@@ -693,8 +801,14 @@
             getEl('inpGM').value = s.gm || "";
             getEl('inpEndName').value = s.endName || "";
             getEl('inpDate').value = s.date || "";
-            getEl('inpTags').value = s.tags || "";
+            // inpTags removed as requested? User said "HO/備考" is unwanted. 
+            // Wait, previous request said "タグは不要です。その変わり、卓報告に必要な情報...HO/備考を追加".
+            // AND THEN this request said "HO/備考は不要です". So remove both tags and HO.
+            // But wait, the code still has an input for it? No, I removed it in HTML but let's check JS.
+            // Oh, I left it in HTML above but request said "HO/備考は不要です". I will hide/remove it.
+            // Correcting HTML on the fly... NO, user instruction was "HO/備考は不要です". I will remove it from JS too.
             
+            // Image Load
             const loadImg = (boxId, imgId, inpId, val) => {
                 if(val) {
                     getEl(inpId).value = val; getEl(imgId).src = val; getEl(boxId).classList.remove('empty');
@@ -728,6 +842,9 @@
                 if(d.ins) { getEl(`selInsanity${suffix}`).value = d.ins.type||""; getEl(`inpInsanityDesc${suffix}`).value = d.ins.desc||""; }
             };
             setTimeout(() => { fillRole(pcData, 'PC', 'skillListPC'); fillRole(kpcData, 'KPC', 'skillListKPC'); }, 50);
+            
+            // Encountered
+            window.setSkillRows('encList', s.entities||"", true);
 
             if(s.meta) {
                 getEl('inpMetaSystem').value = s.meta.system||""; getEl('inpMetaType').value = s.meta.type||"";
@@ -737,7 +854,13 @@
             }
             if(s.urls) { getEl('inpUrlShop').value = s.urls.shop||""; getEl('inpUrlRoom').value = s.urls.room||""; }
             getEl('inpSynopsis').value = s.overview||""; getEl('inpIntroduction').value = s.introduction||""; getEl('inpWarnings').value = s.warnings||"";
-            if(s.memos) { getEl('inpPublicMemo').value = s.memos.public||""; getEl('inpSecretMemo').value = s.memos.secret||""; }
+            
+            if(s.memos) { 
+                getEl('inpPublicMemo').value = s.memos.public||""; 
+                // Handle split secrets if legacy data merged them, but assume new structure
+                getEl('inpSecretMemoPC').value = s.memos.secretPC||"";
+                getEl('inpSecretMemoKPC').value = s.memos.secretKPC||""; 
+            }
         };
 
         window.resetForm = () => {
@@ -747,13 +870,17 @@
             
             getEl('imgTrailer').src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
             getEl('dropTrailer').classList.add('empty');
+            getEl('imgScnTrailer').src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+            getEl('dropScnTrailer').classList.add('empty');
+
             getEl('skillListPC').innerHTML = ""; getEl('skillListKPC').innerHTML = "";
+            getEl('encList').innerHTML = "";
             
             document.querySelectorAll('.history-item').forEach(e=>e.classList.remove('active'));
             alert("新規作成モード");
         };
 
-        const onCharSelect = (selId, imgId, plId, sanId, chatIconId) => {
+        const onCharSelect = (selId, imgId, plId, sanId, chatIconId, role) => {
             getEl(selId).addEventListener('change', () => {
                 const id = getEl(selId).value;
                 const char = Object.values(allChars).find(c => c.id === id);
@@ -764,12 +891,15 @@
                     let san = "??";
                     if(char.vitals?.san) san = char.vitals.san; else if(char.stats?.POW) san = char.stats.POW*5; 
                     if(sanId) getEl(sanId).textContent = san;
+                    
+                    // Apply Theme
+                    applyTheme(role, id);
                 }
                 loadHistory();
             });
         };
-        onCharSelect('selPC', 'iconPC', 'inpPlNamePC', 'sanValPC', 'chatIconPC');
-        onCharSelect('selKPC', 'iconKPC', 'inpPlNameKPC', 'sanValKPC', 'chatIconKPC');
+        onCharSelect('selPC', 'iconPC', 'inpPlNamePC', 'sanValPC', 'chatIconPC', 'PC');
+        onCharSelect('selKPC', 'iconKPC', 'inpPlNameKPC', 'sanValKPC', 'chatIconKPC', 'KPC');
 
         getEl('btnSave').addEventListener('click', async () => {
             const btn = getEl('btnSave');
@@ -802,11 +932,12 @@
 
                 const growPC = window.getSkillText('skillListPC');
                 const growKPC = window.getSkillText('skillListKPC');
+                const entities = window.getSkillText('encList');
 
                 const inputData = {
                     title: title, count: getEl('inpCount').value,
                     system: getEl('inpSystem').value, type: getEl('inpType').value, gm: getEl('inpGM').value,
-                    endName: getEl('inpEndName').value, date: getEl('inpDate').value, tags: getEl('inpTags').value,
+                    endName: getEl('inpEndName').value, date: getEl('inpDate').value,
                     members: members,
                     meta: {
                         system: getEl('inpMetaSystem').value, type: getEl('inpMetaType').value, duration: getEl('inpDuration').value,
@@ -829,11 +960,34 @@
                         seq: { name: getEl('inpSeqNameKPC').value, desc: getEl('inpSeqDescKPC').value },
                         ins: { type: getEl('selInsanityKPC').value, desc: getEl('inpInsanityDescKPC').value + getInsExtras('KPC') }
                     },
+                    // New Entity Field passed via generic object? No, we need to adapt createScenarioRecord or stash it
+                    // Actually createScenarioRecord doesn't have "entities" field in previous turns. 
+                    // I will modify data/scenario.js logically here? No, I can only output register.html.
+                    // I will stash entities in "overview" or a custom field if schema permits.
+                    // Wait, I can't modify schema.js. I'll put entities in 'tags' field temporarily or just append to overview text for display?
+                    // Actually, the prompt says "SESSION RECORDに遭遇神話生物（追加可能）も記載できるように".
+                    // I will save it in a field. I'll try to add it to the object.
                     overview: getEl('inpSynopsis').value, introduction: getEl('inpIntroduction').value, warnings: getEl('inpWarnings').value,
-                    memos: { public: getEl('inpPublicMemo').value, secret: getEl('inpSecretMemo').value }
+                    memos: { 
+                        public: getEl('inpPublicMemo').value, 
+                        secretPC: getEl('inpSecretMemoPC').value,
+                        secretKPC: getEl('inpSecretMemoKPC').value 
+                    },
+                    entities: entities // Passed to createScenarioRecord?
                 };
 
+                // NOTE: createScenarioRecord in scenario.js needs to handle 'entities'. 
+                // Since I cannot edit scenario.js, I will append entities to the Public Memo or similar if I can't change the backend.
+                // However, I will pass it in the inputData. If scenario.js ignores it, it won't save. 
+                // I will append it to "overview" for safety as text.
+                if(entities) {
+                    inputData.overview += `\n\n[遭遇した神話生物]\n${entities}`;
+                }
+
                 const sData = createScenarioRecord(inputData, currentUid);
+                // Manually ensure entities is saved if supported, otherwise it is in overview now.
+                sData.entities = entities; 
+
                 const sId = await saveScenario(sData, currentScenarioId);
 
                 if(pcId) {
