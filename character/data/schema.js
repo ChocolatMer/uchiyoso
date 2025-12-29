@@ -34,8 +34,7 @@ export const FIELD_MAPPING = [
 
 // ■ パートナー・グループ関連 (分離管理)
 export const GROUP_MAPPING = [
-    { key: 'partnerId', id: 'selPartner' },   // パートナーID
-    { key: 'groupName', id: 'inpGroupName' }  // グループ名
+    { key: 'partnerId', id: 'selPartner' }
 ];
 
 export const STATS_MAPPING = [
