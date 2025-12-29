@@ -32,10 +32,6 @@ export const FIELD_MAPPING = [
     { key: 'scenarioDetailsText', id: 'txtScenarioDetails' } 
 ];
 
-// ■ パートナー・グループ関連 (分離管理)
-export const GROUP_MAPPING = [
-    { key: 'partnerId', id: 'selPartner' }
-];
 
 export const STATS_MAPPING = [
     { key: 'STR', id: 's_str' }, { key: 'CON', id: 's_con' },

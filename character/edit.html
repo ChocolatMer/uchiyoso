@@ -83,9 +83,10 @@
             background: #111; color: #888; border: 1px solid #333; font-size: 0.7rem; padding: 2px; width: 100%;
         }
 
-        /* コンビ名リスト用のスタイル */
-        .group-entry { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
-        .group-entry input { flex: 1; }
+        /* パートナーリスト用 */
+        .partner-entry { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; background: #1a1a1a; padding: 5px; border-radius: 4px; border:1px solid #444; }
+        .partner-entry select { width: 40%; font-size:0.8rem; }
+        .partner-entry input { width: 50%; font-size:0.8rem; }
 
         input[type="color"] { width: 100%; height: 40px; padding: 2px; background: #2a2a2a; border: 1px solid #444; cursor: pointer; }
     </style>
@@ -158,21 +159,13 @@
                 <div style="margin-bottom:5px;">📊 <b>BMI:</b> <span id="outBMI" class="calc-val">--</span></div>
             </div>
 
-            <!-- ▼▼▼ パートナー・グループ設定（複数・削除対応版） ▼▼▼ -->
-            <div class="grid-3" style="margin-top:25px; background:#252525; padding:20px; border-radius:4px; border-left: 4px solid #00f3ff; border-top:1px solid #444; border-bottom:1px solid #444;">
-                <div class="form-row">
-                    <label style="color:#00f3ff; font-weight:bold;">PARTNER (関係性の深い相手)</label>
-                    <select id="selPartner" style="width:100%; box-sizing:border-box; background:#1a1a1a; padding:10px;">
-                        <option value="">-- 指定なし --</option>
-                    </select>
-                </div>
-                <div class="form-row" style="grid-column: span 2;">
-                    <label style="color:#00f3ff; font-weight:bold;">GROUP / UNIT NAMES</label>
-                    <!-- 複数追加用コンテナ -->
-                    <div id="groupListContainer"></div>
-                    <button type="button" class="btn-add" onclick="addGroupRow()">+ ADD GROUP NAME</button>
-                </div>
+            <!-- ▼▼▼ パートナー関係性リスト (修正完了) ▼▼▼ -->
+            <div class="form-row full" style="margin-top:25px; background:#252525; padding:20px; border-radius:4px; border-left: 4px solid #00f3ff; border-top:1px solid #444; border-bottom:1px solid #444;">
+                <label style="color:#00f3ff; font-weight:bold; margin-bottom:10px;">RELATIONSHIPS (パートナー & コンビ名)</label>
+                <div id="partnerListContainer"></div>
+                <button type="button" class="btn-add" style="width:auto; padding:5px 15px;" onclick="addPartnerRow()">+ Add Partner</button>
             </div>
+            <!-- ▲▲▲ 修正完了 ▲▲▲ -->
 
             <h2>VISUALS (Drag & Drop Image)</h2>
             <div class="visual-grid">
@@ -306,8 +299,8 @@
     <!-- ここからスクリプト -->
     <script type="module">
         import { loadFromCloud, monitorAuth, saveToCloud, deleteFromCloud } from "./firestore.js";
-        // GROUP_MAPPING をインポート
-        import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING, GROUP_MAPPING } from "./data/schema.js";
+        // GROUP_MAPPINGは廃止されたのでインポートから削除
+        import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING } from "./data/schema.js";
         import { parseIaChara } from "./data/parser_ia.js";
 
         const getEl = (id) => document.getElementById(id);
@@ -335,13 +328,25 @@
             }
         }
 
-        // --- コンビ名追加機能 ---
-        window.addGroupRow = (val = "") => {
-            const container = getEl('groupListContainer');
+        // --- パートナー行の追加 ---
+        window.addPartnerRow = (partnerId = "", groupName = "") => {
+            const container = getEl('partnerListContainer');
             const div = document.createElement('div');
-            div.className = 'group-entry';
+            div.className = 'partner-entry';
+            
+            // セレクトボックスの作成
+            let selectHtml = `<select class="partner-select">`;
+            selectHtml += `<option value="">-- Partner --</option>`;
+            Object.values(allData).forEach(c => {
+                if (c.id === currentId) return; // 自分は除く
+                const selected = (c.id === partnerId) ? 'selected' : '';
+                selectHtml += `<option value="${c.id}" ${selected}>${c.name}</option>`;
+            });
+            selectHtml += `</select>`;
+
             div.innerHTML = `
-                <input type="text" class="group-name-input" value="${val}" placeholder="ユニット名・コンビ名">
+                ${selectHtml}
+                <input type="text" class="partner-group-input" value="${groupName}" placeholder="ユニット名・コンビ名">
                 <button class="btn-remove" onclick="this.parentElement.remove()">✕</button>
             `;
             container.appendChild(div);
@@ -453,21 +458,7 @@
             }
         };
 
-        function updatePartnerSelect() {
-            const sel = document.getElementById('selPartner');
-            if(!sel) return;
-            const currentVal = sel.value;
-            sel.innerHTML = '<option value="">-- 指定なし --</option>';
-            Object.values(allData).forEach(c => {
-                if (c.id === currentId) return; 
-                const opt = document.createElement('option');
-                opt.value = c.id;
-                opt.textContent = c.name; 
-                sel.appendChild(opt);
-            });
-            if (currentVal) sel.value = currentVal;
-        }
-
+        // --- 保存処理 (複数パートナー同期) ---
         window.prepareSaveData = async function() {
             // ID安全確保
             const charSelect = document.getElementById('charSelect');
@@ -516,52 +507,67 @@
             finalData.skills = skillsObj;
             finalData.id = activeId;
 
-            // ★ グループ名をリストとして取得
-            const groupInputs = document.querySelectorAll('.group-name-input');
-            const groupList = [];
-            groupInputs.forEach(input => {
-                if (input.value.trim()) groupList.push(input.value.trim());
+            // ★ パートナーリストの取得
+            const partnerRows = document.querySelectorAll('.partner-entry');
+            const partnersList = [];
+            partnerRows.forEach(row => {
+                const pid = row.querySelector('.partner-select').value;
+                const gname = row.querySelector('.partner-group-input').value;
+                if (pid) {
+                    partnersList.push({ id: pid, group: gname });
+                }
             });
-            finalData.groupName = groupList; // 配列として保存
+            finalData.partners = partnersList; // 配列として保存
 
             if (!finalData.id) {
                 alert("致命的エラー: 保存データのIDが消失しました。");
                 return;
             }
 
-            const partnerId = getEl('selPartner').value;
-
             try {
                 // 1. 自分のデータを保存
                 await saveToCloud(finalData);
 
-                // 2. パートナーがいる場合、相手のデータも更新
-                if (partnerId && allData[partnerId]) {
-                    const partnerData = { ...allData[partnerId] };
-                    if (!partnerData.id) partnerData.id = partnerId;
+                // 2. パートナー側のデータをループして更新
+                let syncCount = 0;
+                for (const p of partnersList) {
+                    const partnerChar = allData[p.id];
+                    if (!partnerChar) continue;
 
-                    if (partnerData.id) {
-                        partnerData.partnerId = activeId; 
-                        partnerData.groupName = groupList; // ★ 配列をそのまま同期
-                        await saveToCloud(partnerData);
-                        alert(`保存完了！\nパートナー(${partnerData.name})の設定も更新しました。`);
+                    // パートナーのデータにIDがなければ補填
+                    if (!partnerChar.id) partnerChar.id = p.id;
+
+                    // パートナーの「パートナーリスト」を取得し、自分(activeId)のエントリを探す
+                    let pPartners = partnerChar.partners || [];
+                    
+                    // 自分とのエントリがあるか確認
+                    const myEntryIndex = pPartners.findIndex(item => item.id === activeId);
+                    
+                    if (myEntryIndex >= 0) {
+                        // 既にあるならグループ名を更新
+                        pPartners[myEntryIndex].group = p.group;
                     } else {
-                        alert("保存完了しました。（パートナー同期スキップ）");
+                        // なければ追加
+                        pPartners.push({ id: activeId, group: p.group });
                     }
+                    
+                    partnerChar.partners = pPartners;
+                    
+                    // 保存
+                    await saveToCloud(partnerChar);
+                    syncCount++;
+                }
+
+                if (syncCount > 0) {
+                    alert(`保存完了！\nパートナー ${syncCount} 人のデータも自動更新しました。`);
                 } else {
                     alert("保存完了しました。");
                 }
                 
-                // ★ 画面をリロードせず、データだけ再取得して表示を維持
-                await init(); // データを最新化
-                
-                // セレクトボックスの選択を維持
+                // ★ リロードせず、データ再取得して画面維持
+                await init(); 
                 if (charSelect) charSelect.value = activeId;
-                
-                // 念のためフォームの内容もリフレッシュ（同期された情報などが変わった場合のため）
-                if (allData[activeId]) {
-                    loadCharacterToForm(allData[activeId]);
-                }
+                if (allData[activeId]) loadCharacterToForm(allData[activeId]);
 
             } catch(e) {
                 console.error(e);
@@ -590,7 +596,6 @@
         function renderSelect() {
             const sel = getEl('charSelect');
             if(!sel) return; 
-            // 選択状態を保持するための準備
             const currentVal = sel.value; 
             
             sel.innerHTML = '<option value="">-- SELECT CHARACTER --</option>';
@@ -602,7 +607,6 @@
                 sel.appendChild(opt);
             });
             
-            // 選択状態を復元 (currentIdがglobalにあればそれを使う)
             if (currentId && allData[currentId]) {
                 sel.value = currentId;
             }
@@ -626,23 +630,18 @@
             getEl('editorArea').style.opacity='1';
             getEl('editorArea').style.pointerEvents='auto';
             
-            updatePartnerSelect();
-
             FIELD_MAPPING.forEach(field => { setVal(field.id, d[field.key]); });
-            GROUP_MAPPING.forEach(field => { setVal(field.id, d[field.key]); });
 
-            // ★ グループ名の読み込み処理 (リスト対応)
-            const groupContainer = getEl('groupListContainer');
-            groupContainer.innerHTML = '';
-            if (Array.isArray(d.groupName)) {
-                // 配列ならループして追加
-                d.groupName.forEach(name => addGroupRow(name));
-            } else if (d.groupName) {
-                // 古いデータ(文字列)なら1つ追加
-                addGroupRow(d.groupName);
+            // ★ パートナーリストの読み込み
+            const container = getEl('partnerListContainer');
+            container.innerHTML = '';
+            if (d.partners && Array.isArray(d.partners)) {
+                d.partners.forEach(p => addPartnerRow(p.id, p.group));
+            } else if (d.partnerId) {
+                // 古いデータ形式(単一パートナー)の場合の互換処理
+                addPartnerRow(d.partnerId, d.groupName || "");
             } else {
-                // 空なら1つ空欄を追加
-                addGroupRow();
+                // なにもない場合、空行は作らない（ユーザーが追加ボタンで追加する）
             }
 
             setSrc('previewBody', d.image); setSrc('previewIcon', d.icon);
@@ -740,7 +739,9 @@
             const p = parseIaChara(text);
             const updateVal = (id, val) => { if(val !== undefined && val !== null && val !== "") { setVal(id, val); } };
             FIELD_MAPPING.forEach(f => { if(p[f.key]) updateVal(f.id, p[f.key]); });
-            GROUP_MAPPING.forEach(f => { if(p[f.key]) updateVal(f.id, p[f.key]); });
+            
+            // パートナーリストのマージは複雑なためスキップまたは単純化
+            // (通常importではパートナー関係は含まれないことが多いため)
 
             STATS_MAPPING.forEach(f => updateVal(f.id, p.stats[f.key]));
             VITALS_MAPPING.forEach(f => updateVal(f.id, p.vitals[f.key]));
