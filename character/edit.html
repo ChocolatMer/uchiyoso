@@ -83,15 +83,218 @@
             background: #111; color: #888; border: 1px solid #333; font-size: 0.7rem; padding: 2px; width: 100%;
         }
 
-        /* パートナーリスト用スタイル */
+        /* パートナーリスト用 */
         .partner-entry { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; background: #1a1a1a; padding: 5px; border-radius: 4px; border:1px solid #444; }
-        .partner-select { width: 40%; font-size:0.8rem; background: #222; color: #fff; border: 1px solid #555; padding: 5px; }
-        .partner-group-input { width: 50%; font-size:0.8rem; background: #2a2a2a; color: #fff; border: 1px solid #444; padding: 5px; }
+        .partner-entry select { width: 40%; font-size:0.8rem; }
+        .partner-entry input { width: 50%; font-size:0.8rem; }
 
         input[type="color"] { width: 100%; height: 40px; padding: 2px; background: #2a2a2a; border: 1px solid #444; cursor: pointer; }
     </style>
 </head>
 <body>
+    <script type="module">
+        try {
+            const mod = await import("./header.js");
+            if(mod.initHeader) mod.initHeader();
+        } catch(e) { console.log("Header not found, skipping."); }
+    </script>
+
+    <div class="container">
+        <div class="toolbar">
+            <div>
+                <label>EDIT TARGET</label>
+                <select id="charSelect"><option value="">LOADING...</option></select>
+            </div>
+            <div>
+                <button id="btnCreateNew" class="btn-new">+ NEW</button>
+            </div>
+        </div>
+
+        <div id="editorArea" style="opacity:0.3; pointer-events:none;">
+            
+            <div id="dropZone" class="import-area">
+                <h3 style="margin-top:0; color:#00f3ff;">SMART IMPORT (Drop .txt File Here)</h3>
+                <p style="font-size:0.8rem; color:#888; margin-bottom:5px;">いあきゃらのテキストファイル(.txt)をここにドロップするか、テキストを貼り付けてください。</p>
+                <textarea id="txtImportSource" placeholder="テキストデータを貼り付け..."></textarea>
+                <button id="btnMerge" class="btn-merge">✨ FILL MISSING INFO (解析＆補完)</button>
+            </div>
+
+            <h2>BASIC PROFILE</h2>
+            <div class="form-grid">
+                <div class="form-row"><label>NAME</label><input type="text" id="inpName"></div>
+                <div class="form-row"><label>KANA</label><input type="text" id="inpKana"></div>
+            </div>
+
+            <div class="form-grid" style="margin-top:15px;">
+                <div class="form-row"><label>JOB</label><input type="text" id="inpJob"></div>
+                <div class="form-row"><label>TAGS</label><input type="text" id="inpTags"></div>
+            </div>
+
+            <div class="grid-4" style="margin-top:15px;">
+                <div class="form-row"><label>AGE</label><input type="text" id="inpAge" placeholder="年齢(不詳可)"></div>
+                <div class="form-row"><label>GENDER</label><input type="text" id="inpGender"></div>
+                <div class="form-row"><label>MONEY (所持金)</label><input type="text" id="inpMoney"></div>
+                <div class="form-row"><label>DEBT (借金)</label><input type="text" id="inpDebt"></div>
+            </div>
+            
+            <div class="grid-4" style="margin-top:15px;">
+                <div class="form-row"><label>BIRTHDAY</label><input type="text" id="inpBirthday"></div>
+                <div class="form-row"><label>BIRTHPLACE</label><input type="text" id="inpOrigin"></div>
+                <div class="form-row"><label>THEME COLOR</label><input type="color" id="inpThemeColor" value="#d9333f"></div>
+                <div class="form-row"><label>PL NAME</label><input type="text" id="inpPlName" placeholder="プレイヤー名"></div>
+            </div>
+
+            <div id="eduCheckArea" class="analysis-box" style="display:none;"><span>🎓 EDU分析:</span><span id="eduMsg"></span></div>
+
+            <div class="grid-3" style="margin-top:20px; background:#2b2b2b; padding:15px; border-radius:4px;">
+                <div class="form-row"><label>HEIGHT (cm)</label><input type="number" id="inpHeight"></div>
+                <div class="form-row"><label>WEIGHT (kg)</label><input type="number" id="inpWeight"></div>
+                <div class="form-row"><label>HAIR / EYE / SKIN</label>
+                    <input type="text" id="inpHair" placeholder="髪色" style="margin-bottom:5px;">
+                    <input type="text" id="inpEye" placeholder="瞳の色" style="margin-bottom:5px;">
+                    <input type="text" id="inpSkin" placeholder="肌の色">
+                </div>
+            </div>
+            <div id="bodyCheckArea" class="analysis-box">
+                <div style="margin-bottom:5px;">📊 <b>BMI:</b> <span id="outBMI" class="calc-val">--</span></div>
+            </div>
+
+            <div class="form-row full" style="margin-top:25px; background:#252525; padding:20px; border-radius:4px; border-left: 4px solid #00f3ff; border-top:1px solid #444; border-bottom:1px solid #444;">
+                <label style="color:#00f3ff; font-weight:bold; margin-bottom:10px;">RELATIONSHIPS (パートナー & コンビ名)</label>
+                <div id="partnerListContainer"></div>
+                <button type="button" class="btn-add" style="width:auto; padding:5px 15px;" onclick="addPartnerRow()">+ Add Partner</button>
+            </div>
+
+            <h2>VISUALS (Drag & Drop Image)</h2>
+            <div class="visual-grid">
+                <div>
+                    <label>STANDING ART (立ち絵)</label>
+                    <div class="img-preview-box" id="dropBody">
+                        <span class="drop-msg">Drop Image Here</span>
+                        <img id="previewBody" class="img-preview">
+                    </div>
+                    <input type="text" id="inpImageBody" placeholder="URL or Base64..." style="margin-top:5px;">
+                </div>
+                <div>
+                    <label>FACE ICON (顔アイコン)</label>
+                    <div class="img-preview-box" id="dropIcon">
+                        <span class="drop-msg">Drop Image Here</span>
+                        <img id="previewIcon" class="img-preview">
+                    </div>
+                    <input type="text" id="inpImageIcon" placeholder="URL or Base64..." style="margin-top:5px;">
+                </div>
+            </div>
+
+            <h2>STATS & VITALS</h2>
+            <div class="stats-container">
+                <div class="stat-box"><label>STR</label><input type="number" id="s_str"></div>
+                <div class="stat-box"><label>CON</label><input type="number" id="s_con"></div>
+                <div class="stat-box"><label>POW</label><input type="number" id="s_pow"></div>
+                <div class="stat-box"><label>DEX</label><input type="number" id="s_dex"></div>
+                <div class="stat-box"><label>APP</label><input type="number" id="s_app"></div>
+                <div class="stat-box"><label>SIZ</label><input type="number" id="s_siz"></div>
+                <div class="stat-box"><label>INT</label><input type="number" id="s_int"></div>
+                <div class="stat-box"><label>EDU</label><input type="number" id="s_edu"></div>
+            </div>
+            <div class="grid-4" style="margin-top:20px;">
+                <div class="form-row"><label>HP</label><input type="number" id="v_hp"></div>
+                <div class="form-row"><label>MP</label><input type="number" id="v_mp"></div>
+                <div class="form-row"><label>SAN</label><input type="number" id="v_san"></div>
+                <div class="form-row"><label>DB</label><input type="text" id="v_db"></div>
+            </div>
+
+            <h2>DETAILS</h2>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <div>
+                    <div class="text-section">
+                        <h3>経歴</h3><button class="btn-clear-text" onclick="document.getElementById('txtBackground').value=''">× CLEAR</button>
+                        <textarea id="txtBackground"></textarea>
+                    </div>
+                    <div class="text-section">
+                        <h3>性格</h3><button class="btn-clear-text" onclick="document.getElementById('txtPersonality').value=''">× CLEAR</button>
+                        <textarea id="txtPersonality"></textarea>
+                    </div>
+                    <div class="text-section">
+                        <h3>人間関係</h3><button class="btn-clear-text" onclick="document.getElementById('txtRelations').value=''">× CLEAR</button>
+                        <textarea id="txtRelations"></textarea>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-section">
+                        <h3>外見的特徴</h3><button class="btn-clear-text" onclick="document.getElementById('txtAppearance').value=''">× CLEAR</button>
+                        <textarea id="txtAppearance"></textarea>
+                    </div>
+                    <div class="text-section">
+                        <h3>RP補足</h3><button class="btn-clear-text" onclick="document.getElementById('txtRoleplay').value=''">× CLEAR</button>
+                        <textarea id="txtRoleplay"></textarea>
+                    </div>
+                    <div class="text-section">
+                        <h3>メモ</h3><button class="btn-clear-text" onclick="document.getElementById('txtMemo').value=''">× CLEAR</button>
+                        <textarea id="txtMemo"></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-row full">
+                <div class="text-section">
+                    <h3>技能データ (SKILLS & DETAIL)</h3>
+                    <div id="skillArea" class="list-container" style="max-height: 600px; overflow-y: auto;">
+                        </div>
+                </div>
+            </div>
+
+            <div class="text-section" style="margin-top:20px; border-left-color: #d4b346;">
+                <h3 style="color: #d4b346;">技能成長履歴 (GROWTH LOG)</h3>
+                <button class="btn-clear-text" onclick="document.getElementById('txtGrowth').value=''">× CLEAR</button>
+                <textarea id="txtGrowth" style="height:120px;" placeholder="例：&#13;シナリオA: 回避+5, 目星+3"></textarea>
+            </div>
+
+            <h2>INVENTORY & HISTORY</h2>
+            <div class="grid-3">
+                <div class="form-row full" style="grid-column:span 2;">
+                    <label>所持品 (ITEMS)</label>
+                    <div class="list-container">
+                        <div id="itemList"></div>
+                        <button type="button" class="btn-add" onclick="addItemRow()">+ ADD ITEM</button>
+                        <textarea id="txtItems" style="display:none;"></textarea>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label>魔術/AF (SPELLS/ARTIFACTS)</label>
+                    <textarea id="txtSpells" style="height:90px;"></textarea>
+                    
+                    <label style="margin-top:10px;">遭遇した存在 (ENTITIES)</label>
+                    <textarea id="txtEncountered" style="height:90px;"></textarea>
+                </div>
+            </div>
+
+            <div class="form-row full" style="margin-top:15px;">
+                <label>戦闘・武器・防具 (WEAPONS)</label>
+                <div class="list-container">
+                    <div class="weapon-header">
+                        <div>名前</div><div>成功率</div><div>ダメ</div><div>射程</div><div>回数</div><div>装弾</div><div>HP</div><div>故障</div><div></div>
+                    </div>
+                    <div id="weaponList"></div>
+                    <button type="button" class="btn-add" onclick="addWeaponRow()">+ ADD WEAPON</button>
+                </div>
+            </div>
+
+            <div class="form-row full" style="margin-top:20px;">
+                <label>通過シナリオ詳細 (SCENARIO LOGS)</label>
+                <textarea id="txtScenarioDetails" style="height:200px;" placeholder="[シナリオタイトル]&#13;内容..."></textarea>
+                <div class="form-row">
+                    <label>通過シナリオ(簡易一覧)</label>
+                    <textarea id="txtScenarios" style="height:60px;" placeholder="シナリオ名..."></textarea>
+                </div>
+            </div>
+
+            <div style="margin-top:50px; text-align:right;">
+                <button id="btnDelete" class="btn-delete">DELETE CHARACTER</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 修正済みスクリプト -->
     <script type="module">
         import { loadFromCloud, monitorAuth, saveToCloud, deleteFromCloud } from "./firestore.js";
         // GROUP_MAPPINGは廃止されたのでインポートから削除
@@ -253,7 +456,7 @@
             }
         };
 
-        // --- ★ 保存処理 (修正済み完全版) ---
+        // --- ★ 保存処理 (修正済み) ---
         window.prepareSaveData = async function() {
             // 1. IDと選択状態の安全確認
             const charSelect = document.getElementById('charSelect');
