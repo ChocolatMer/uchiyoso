@@ -88,12 +88,12 @@
         .tab-btn {
             width: 40px; height: 100px; background: #222; border: 1px solid #333; border-left: none;
             border-radius: 0 4px 4px 0; color: #666; cursor: pointer; writing-mode: vertical-rl; 
-            text-align: center; font-family: 'Shippori Mincho', serif; font-weight: bold; letter-spacing: 2px; font-size: 0.85rem;
+            text-align: center; font-family: 'Cinzel', serif; letter-spacing: 2px; font-size: 0.75rem;
             transition: 0.3s; box-shadow: 3px 3px 10px rgba(0,0,0,0.6);
         }
         .tab-btn:hover { background: #333; color: #aaa; transform: translateX(3px); }
         .tab-btn.active { 
-            background: #6d2020; color: #fff; width: 55px;
+            background: #6d2020; color: #fff; width: 55px; font-weight: bold;
             box-shadow: 5px 5px 15px rgba(0,0,0,0.5); transform: translateX(3px); border-top: 1px solid #844;
         }
         .tab-panel { display: none; animation: fadeIn 0.4s; padding-bottom: 40px; }
@@ -162,7 +162,7 @@
 
         .details-container { margin-top: 20px; }
         .detail-block { margin-bottom: 15px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 4px; }
-        .detail-header { font-family: 'Shippori Mincho', serif; font-weight: bold; color: #888; border-bottom: 1px dashed #444; margin-bottom: 8px; font-size: 0.8rem; letter-spacing: 1px; }
+        .detail-header { font-family: 'Cinzel', serif; color: #888; border-bottom: 1px dashed #444; margin-bottom: 8px; font-size: 0.8rem; letter-spacing: 1px; }
         .detail-row { display: grid; grid-template-columns: 80px 1fr; gap: 10px; margin-bottom: 10px; }
 
         /* SAVE BUTTON */
@@ -196,7 +196,7 @@
             <div class="sidebar-title">HISTORY LOG</div>
             <div id="loadingIndicator">System Check...</div>
             <div id="historyList" class="history-list"></div>
-            <button onclick="window.resetForm()" style="margin-top:auto; background:transparent; border:1px solid #444; color:#666; padding:5px; cursor:pointer; font-family:'Cinzel',serif;">+ 新規作成</button>
+            <button onclick="window.resetForm()" style="margin-top:auto; background:transparent; border:1px solid #444; color:#666; padding:5px; cursor:pointer; font-family:'Cinzel',serif;">+ NEW ENTRY</button>
         </div>
 
         <!-- BOOK -->
@@ -246,6 +246,7 @@
                                 </div>
                                 <div class="prop-row">
                                     <div class="prop-label"><span class="material-icons-round">category</span> 形式</div>
+                                    <!-- タイマン選択時にGMを消すロジックを追加 -->
                                     <select id="inpType" class="tag-select bg-pink" onchange="updateTagColor(this); window.toggleGMField(this);">
                                         <option value="タイマン">タイマン</option><option value="2PL">2PL</option><option value="ソロ">ソロ</option><option value="4PL">4PL</option>
                                     </select>
@@ -338,7 +339,7 @@
             </div>
         </div>
 
-        <!-- SAVE BTN -->
+        <!-- SAVE BTN: テキストを「保存」に変更 -->
         <div id="btnSave" class="sealing-stamp">
             <span class="material-icons-round" style="font-size:2rem; margin-bottom:-5px; opacity:0.8;">history_edu</span>
             <span id="btnText" style="font-size:0.85rem; font-weight:bold; letter-spacing:1px;">保存</span>
@@ -356,12 +357,13 @@
         window.updateTagColor = (el) => { el.className = 'tag-select'; if(el.value.includes('CoC')) el.classList.add('bg-green'); else if(el.value==='タイマン') el.classList.add('bg-pink'); else if(el.value.includes('PL')) el.classList.add('bg-blue'); else el.classList.add('bg-gray'); };
         window.updateResColor = (el) => { el.className = 'tag-select'; if(el.value==='Alive') el.classList.add('bg-blue'); else if(el.value==='Lost') el.classList.add('bg-pink'); else el.classList.add('bg-gray'); };
         
+        // ★GM枠の表示切替ロジック
         window.toggleGMField = (el) => {
             const row = document.getElementById('rowGM');
             if (el.value === 'タイマン' || el.value === 'ソロ') {
                 row.style.display = 'none';
             } else {
-                row.style.display = 'grid';
+                row.style.display = 'grid'; // .prop-row is grid
             }
         };
 
@@ -410,7 +412,8 @@
                 const opts = '<option value="">(選択)</option>' + list.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
                 getEl('selPC').innerHTML = opts;
                 getEl('selKPC').innerHTML = opts;
-                
+
+                // 初期状態のUIセット
                 window.toggleGMField(getEl('inpType'));
 
             } catch(e) { console.error(e); loader.textContent="エラー"; }
