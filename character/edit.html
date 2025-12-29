@@ -785,4 +785,36 @@
             if(p.image) { setVal('inpImageBody', p.image); setSrc('previewBody', p.image); }
             if(p.icon) { setVal('inpImageIcon', p.icon); setSrc('previewIcon', p.icon); }
             alert("解析・補完しました！");
-            runCalculat
+            runCalculations();
+        });
+
+        function runCalculations() {
+            const age = parseInt(getEl('inpAge')?.value)||0; const edu = parseInt(getEl('s_edu')?.value)||0;
+            const eduArea = getEl('eduCheckArea'); const eduMsg = getEl('eduMsg');
+            if(eduArea) { if(edu>0 && age>0) { const minAge=edu+6; eduArea.style.display='block'; if(age<minAge){ eduMsg.className='warn-text'; eduMsg.textContent=`⚠️ 年齢不足 (EDU${edu}なら最低${minAge}歳)`; } else { eduMsg.className='calc-val'; eduMsg.textContent=`✅ OK (最低${minAge}歳)`; } } else eduArea.style.display='none'; }
+            const h = parseFloat(getEl('inpHeight')?.value), w = parseFloat(getEl('inpWeight')?.value);
+            if(h>0 && w>0) { const bmi = w/((h/100)**2); getEl('outBMI').textContent = `${bmi.toFixed(1)}`; }
+        }
+        ['inpAge','inpHeight','inpWeight','s_edu'].forEach(id=>getEl(id)?.addEventListener('input', runCalculations));
+
+        const btnCreate = getEl('btnCreateNew');
+        if(btnCreate) {
+            btnCreate.addEventListener('click', ()=>{
+                const id=crypto.randomUUID();
+                allData[id]={id: id, name:"新規キャラ", stats:{}, vitals:{}, items:[], weapons:[], scenarioList:[], skills:{}};
+                currentId=id; renderSelect(); loadCharacterToForm(allData[id]);
+            });
+        }
+        
+        const btnDel = getEl('btnDelete');
+        if(btnDel) {
+            btnDel.addEventListener('click', async ()=>{
+                if(!currentId) return;
+                if(confirm('本当に削除しますか？\n（この操作は取り消せません）')) { 
+                    await deleteFromCloud(currentId);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
