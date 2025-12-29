@@ -1,113 +1,115 @@
-// --- uchiyoso/character/data/scenario.js ---
+// --- START OF FILE data/scenario.js ---
 
 /**
- * フォームの入力値から、保存用のシナリオデータを作成する
- * @param {Object} input - HTMLフォームからの入力値オブジェクト
- * @param {string} userId - ログイン中のユーザーID
+ * フォーム入力値(input)から、Firestore保存用のシナリオオブジェクトを作成
  */
 export function createScenarioRecord(input, userId) {
-    return {
-        // 管理情報
-        userId: userId,
-        createdAt: new Date().toISOString(),
+    // 参加メンバーID配列作成（検索用）
+    const members = [];
+    if (input.pcId) members.push(input.pcId);
+    if (input.kpcId) members.push(input.kpcId);
 
-        // 基本情報
+    return {
+        userId: userId,
         title: input.title,
+        count: parseInt(input.count) || 1,
         system: input.system,
         date: input.date,
-        duration: input.duration,
-        stage: input.stage,
-        type: input.type,
-        gm: input.gm,
-        players: input.players,
-        format: input.format,
-        public: input.public,
-
-        // 検索用: 参加キャラクターIDリスト
-        members: input.members || [],
-
-        // 結果・状態
-        charStatus: input.charStatus,
-        result: input.result,
-        lostDetail: input.lostDetail,
-
-        // 詳細データ
-        images: input.images || {}, 
-        urls: input.urls || {},     
-        trailerText: input.trailerText || "",
-        
-        details: input.details || {}, 
-        
-        // 報酬・成長
         endName: input.endName,
-        rewards: input.rewards || {}, 
-        entities: input.entities,
-        spells: input.spells,
-        growth: input.growth,
+        tags: input.tags,
+        
+        // 検索用インデックス
+        members: members,
+        
+        // メタデータ
+        gm: input.gm,
+        type: input.type,
+        meta: {
+            duration: input.duration,
+        },
+        
+        // PC詳細
+        pcData: {
+            id: input.pcId,
+            pl: input.pcName,
+            res: input.pcRes,
+            san: input.pcSan,
+            grow: input.pcGrow,
+            quote: input.pcQuote
+        },
+        
+        // KPC詳細
+        kpcData: {
+            id: input.kpcId,
+            pl: input.kpcName,
+            res: input.kpcRes,
+            san: input.kpcSan,
+            grow: input.kpcGrow,
+            quote: input.kpcQuote
+        },
 
-        // メモ
-        memos: input.memos || {}
+        // 共通・詳細
+        overview: input.overview,
+        urls: {
+            shop: input.url
+        },
+        memos: {
+            public: input.publicMemo,
+            secret: input.secretMemo
+        },
+        images: {
+            trailer: input.image
+        }
     };
 }
 
 /**
- * シナリオデータを元に、キャラクターデータを更新して新しいデータを返す
- * ※ここは計算のみで、保存は行いません
- * 
- * @param {Object} charData - 元のキャラクターデータ
- * @param {Object} scenarioData - 保存するシナリオデータ
- * @param {string} scenarioId - 発行されたシナリオID
+ * キャラクターデータにシナリオ履歴を追記した新しいオブジェクトを返す
+ * @param {Object} charData 元のキャラクターデータ
+ * @param {Object} sData シナリオデータ(createScenarioRecordの結果+α)
+ * @param {String} sId シナリオID
  */
-export function syncScenarioToCharacter(charData, scenarioData, scenarioId) {
-    // 元のデータを壊さないようにコピー
+export function syncScenarioToCharacter(charData, sData, sId) {
     const newChar = JSON.parse(JSON.stringify(charData));
 
-    // 1. 通過シナリオ簡易一覧 (scenarios) の作成
+    // 1. 簡易履歴 (scenarios: string)
     // 書式: [タイトル] 生還 - End名 (日付)
-    const resultStr = scenarioData.result === 'Cleared' ? '生還' : scenarioData.result;
-    const endStr = scenarioData.endName ? ` - ${scenarioData.endName}` : '';
-    const dateStr = scenarioData.date ? `(${scenarioData.date})` : '';
-    
-    const newHistoryLine = `[${scenarioData.title}] ${resultStr}${endStr} ${dateStr}`;
-    
-    // 既存データになければ追記 (先頭に追加)
+    const resStr = (sData.result === 'Alive') ? '生還' : (sData.result === 'Lost' ? 'ロスト' : sData.result);
+    const endStr = sData.endName ? ` - ${sData.endName}` : '';
+    const dateStr = sData.date ? `(${sData.date})` : '';
+    const logLine = `[${sData.title}] ${resStr}${endStr} ${dateStr}`;
+
     if (!newChar.scenarios) newChar.scenarios = "";
-    if (!newChar.scenarios.includes(newHistoryLine)) {
-        newChar.scenarios = newHistoryLine + "\n" + newChar.scenarios;
+    // 二重追加防止のため、単純な文字列チェックを行う（完全ではないが実用的）
+    if (!newChar.scenarios.includes(`[${sData.title}]`)) {
+        newChar.scenarios = logLine + "\n" + newChar.scenarios;
     }
 
-    // 2. 詳細シナリオログ (配列) への追加
+    // 2. 詳細リスト (scenarioList: array)
     if (!newChar.scenarioList) newChar.scenarioList = [];
-    newChar.scenarioList.push({
-        scenarioId: scenarioId,
-        title: scenarioData.title,
-        desc: `GM: ${scenarioData.gm}\n結果: ${resultStr}${endStr}\nSAN推移: ${scenarioData.rewards.san || '-'}\n成長: ${scenarioData.growth || 'なし'}`
-    });
-
-    // テキストエリアへの追記用ヘルパー関数
-    const appendToField = (fieldKey, header, content) => {
-        if (!content) return;
-        const current = newChar[fieldKey] || "";
-        const entry = `[${header}] ${content}`;
-        // 既存になければ改行して追記
-        if(!current.includes(entry)) {
-            newChar[fieldKey] = current + (current ? "\n\n" : "") + entry;
-        }
-    };
-
-    // 3. 各種テキストフィールドへの追記
-    appendToField('encountered', scenarioData.title, scenarioData.entities); // 遭遇
-    appendToField('spells', scenarioData.title, scenarioData.spells);        // 魔術・AF
-    appendToField('growth', scenarioData.title, scenarioData.growth);        // 成長
-
-    // 4. 報酬(所持品)
-    if (scenarioData.rewards.items) {
-        if (!newChar.items) newChar.items = [];
-        newChar.items.push({
-            name: "獲得報酬", 
-            desc: `[${scenarioData.title}] ${scenarioData.rewards.items}`
+    const exists = newChar.scenarioList.find(i => i.scenarioId === sId);
+    if (!exists) {
+        newChar.scenarioList.push({
+            scenarioId: sId,
+            title: sData.title,
+            desc: `GM: ${sData.gm || '-'}\n結果: ${resStr}\nSAN: ${sData.pcData?.san || sData.kpcData?.san || '-'}\n成長: ${sData.growth || 'なし'}`
         });
     }
+
+    // 3. 成長・呪文・AFなどのテキスト追記 (改行区切り)
+    // input.grow が渡ってくることを想定
+    if (sData.growth && sData.growth.trim() !== "") {
+        const currentGrow = newChar.growth || "";
+        const growEntry = `[${sData.title}] ${sData.growth}`;
+        if (!currentGrow.includes(growEntry)) {
+            newChar.growth = currentGrow + (currentGrow ? "\n" : "") + growEntry;
+        }
+    }
+
+    // 4. SAN値の更新 (簡易実装)
+    // フォーマット "50 -> 40" などの右側を取得して更新したい場合があるが
+    // 誤作動を防ぐため、ここでは文字列としての記録にとどめ、Vitalsの自動更新は行わない
+    // (必要であればここに newChar.vitals.san = newValue を実装する)
 
     return newChar;
 }
