@@ -17,8 +17,8 @@
             background-size: 20px 20px;
             color: #ccc; font-family: 'Shippori Mincho', serif; 
             margin: 0; padding: 0; 
-            height: 100vh; /* 画面高さを固定 */
-            overflow: hidden; /* 全体スクロール禁止 */
+            height: 100vh; 
+            overflow: hidden;
         }
 
         .layout-container {
@@ -32,7 +32,7 @@
         .sidebar {
             padding: 25px 15px; border-right: 1px solid #222; background: rgba(0,0,0,0.6);
             display: flex; flex-direction: column; gap: 20px;
-            height: 100%; overflow-y: auto; /* サイドバー内のみスクロール */
+            height: 100%; overflow-y: auto; 
             backdrop-filter: blur(5px);
         }
         .sidebar-title {
@@ -63,16 +63,16 @@
         .h-chars { color: #aaa; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
         .h-date { font-family: 'Cinzel', serif; color: #666; font-size: 0.7rem; }
 
-        /* --- CENTER: BOOK (Responsive Fit) --- */
+        /* --- CENTER: BOOK --- */
         .book-area {
-            display: flex; justify-content: center; align-items: center; /* 垂直中央 */
+            display: flex; justify-content: center; align-items: center; 
             height: 100vh; padding: 20px; box-sizing: border-box;
             perspective: 2000px;
         }
         .book-wrapper { 
             position: relative; 
-            height: 90vh; /* 画面高さの90% */
-            aspect-ratio: 1.4 / 1; /* 本の比率を維持 */
+            height: 85vh; /* 画面下部に隙間を作るため少し縮小 (90vh -> 85vh) */
+            aspect-ratio: 1.4 / 1; 
             max-width: 95%;
             transform-style: preserve-3d;
         }
@@ -92,7 +92,7 @@
             pointer-events: none; z-index: 10;
         }
         .page { 
-            flex: 1; padding: 4% 6%; position: relative; overflow-y: auto; /* ページ内のみスクロール */
+            flex: 1; padding: 4% 6%; position: relative; overflow-y: auto; 
             background-color: #232323;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
         }
@@ -118,7 +118,7 @@
 
         /* --- UI: LEFT PAGE --- */
         .header-wrapper {
-            position: relative; width: 100%; height: 28%; /* 画面比率対応 */
+            position: relative; width: 100%; height: 28%; 
             min-height: 180px; margin-bottom: 20px;
         }
         .report-header-img {
@@ -132,7 +132,7 @@
         /* Trailer Overlay (⧉ Style) */
         .trailer-overlay {
             position: absolute; bottom: -10px; right: -10px; 
-            width: 35%; height: 50%; /* 親要素に対する比率 */
+            width: 35%; height: 50%; 
             background: #111; border: 2px solid #ddd; 
             transform: rotate(-3deg); z-index: 10;
             box-shadow: 5px 5px 20px rgba(0,0,0,0.8); cursor: pointer;
@@ -381,8 +381,8 @@
                                 </div>
 
                                 <div class="chat-area">
-                                    <div class="chat-row pc"><img id="chatIconPC" class="chat-icon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"><div id="bubblePC" class="speech-bubble"><textarea id="inpQuotePC" class="paper-area bubble-text"></textarea></div></div>
-                                    <div class="chat-row kpc"><img id="chatIconKPC" class="chat-icon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"><div id="bubbleKPC" class="speech-bubble"><textarea id="inpQuoteKPC" class="paper-area bubble-text"></textarea></div></div>
+                                    <div class="chat-row pc"><img id="chatIconPC" class="chat-icon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"><div id="bubblePC" class="speech-bubble"><textarea id="inpQuotePC" class="paper-area bubble-text" placeholder="PCの印象的な台詞..."></textarea></div></div>
+                                    <div class="chat-row kpc"><img id="chatIconKPC" class="chat-icon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"><div id="bubbleKPC" class="speech-bubble"><textarea id="inpQuoteKPC" class="paper-area bubble-text" placeholder="KPCの印象的な台詞..."></textarea></div></div>
                                 </div>
 
                                 <!-- Encountered -->
@@ -504,6 +504,12 @@
                                 </div>
                                 <div style="margin-bottom:20px;">
                                     <input type="text" id="inpUrlShop" class="line-input" placeholder="配布URL"><input type="text" id="inpUrlRoom" class="line-input" placeholder="部屋URL">
+                                    
+                                    <!-- Trailer Image In Scenario Tab (Synced) -->
+                                    <div class="report-header-img empty" id="dropScnTrailerTab" style="height:150px; margin-top:20px;">
+                                        <img id="imgScnTrailerTab" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="">
+                                        <div style="position:absolute; bottom:0; right:0; background:rgba(0,0,0,0.7); color:#fff; font-size:0.6rem; padding:2px 5px;">TRAILER IMAGE</div>
+                                    </div>
                                 </div>
                                 
                                 <div class="scn-toggle-header" onclick="window.toggleScnContent('scSyn')">あらすじ <span class="material-icons-round">expand_more</span></div>
@@ -561,13 +567,7 @@
         
         window.toggleGMField = (el) => {
             const row = document.getElementById('rowGM');
-            const type = el.value;
-            const isPair = (type === 'タイマン' || type === 'ソロ');
-            
-            // Toggle GM row
-            if (isPair) { row.style.display = 'none'; } else { row.style.display = 'grid'; }
-            
-            // Update labels (PC/KPC vs PC1/PC2)
+            if (el.value === 'タイマン' || el.value === 'ソロ') { row.style.display = 'none'; } else { row.style.display = 'grid'; }
             window.updateRoleLabels();
         };
 
@@ -577,7 +577,7 @@
             
             const pcName = document.getElementById('selPC').options[document.getElementById('selPC').selectedIndex]?.text || "";
             const kpcName = document.getElementById('selKPC').options[document.getElementById('selKPC').selectedIndex]?.text || "";
-            const isDefault = (pcName === "(PC)" || pcName === "");
+            const isDefault = (pcName === "(PC)" || pcName === "(選択)" || pcName === "");
 
             let txtPC = "PC";
             let txtKPC = "KPC";
@@ -588,7 +588,6 @@
                 txtKPC = isDefault ? "PC2" : `PC2 (${kpcName})`;
             }
 
-            // Update all labels
             document.querySelectorAll('.lbl-pc').forEach(el => el.textContent = txtPC);
             document.querySelectorAll('.lbl-kpc').forEach(el => el.textContent = txtKPC);
         };
@@ -742,16 +741,30 @@
                 if(f){ 
                     const r=new FileReader(); 
                     r.onload=v=>{
+                        // Update hidden input
                         getEl(inpId).value=v.target.result; 
-                        getEl(imgId).src=v.target.result;
+                        
+                        // Update specific target image
+                        const img = getEl(imgId);
+                        img.src=v.target.result;
                         getEl(boxId).classList.remove('empty');
+
+                        // Sync logic for Scenario Trailer
+                        // If updating trailer (inpImgScnTrailer), update both overlay and tab image
+                        if(inpId === 'inpImgScnTrailer') {
+                            const otherImgId = (imgId === 'imgScnTrailer') ? 'imgScnTrailerTab' : 'imgScnTrailer';
+                            const otherBoxId = (boxId === 'dropScnTrailer') ? 'dropScnTrailerTab' : 'dropScnTrailer';
+                            getEl(otherImgId).src = v.target.result;
+                            getEl(otherBoxId).classList.remove('empty');
+                        }
                     }; 
                     r.readAsDataURL(f); 
                 }
             });
         };
-        setupImg('dropTrailer', 'imgTrailer', 'inpImgTrailer', 'imgTrailer');
-        setupImg('dropScnTrailer', 'imgScnTrailer', 'inpImgScnTrailer', 'imgScnTrailer'); 
+        setupImg('dropTrailer', 'inpImgTrailer', 'imgTrailer');
+        setupImg('dropScnTrailer', 'inpImgScnTrailer', 'imgScnTrailer'); 
+        setupImg('dropScnTrailerTab', 'inpImgScnTrailer', 'imgScnTrailerTab'); 
 
         monitorAuth(async (user) => {
             if(!user) { loader.textContent = "LOGIN REQUIRED"; return; }
@@ -840,7 +853,11 @@
                 }
             };
             loadImg('dropTrailer', 'imgTrailer', 'inpImgTrailer', s.images?.trailer);
-            loadImg('dropScnTrailer', 'imgScnTrailer', 'inpImgScnTrailer', s.images?.scenTrailer);
+            
+            // Sync Scenario Trailer (Overlay + Tab)
+            const scnVal = s.images?.scenTrailer;
+            loadImg('dropScnTrailer', 'imgScnTrailer', 'inpImgScnTrailer', scnVal);
+            loadImg('dropScnTrailerTab', 'imgScnTrailerTab', 'inpImgScnTrailer', scnVal);
 
             const setCharSelect = (selId, charData) => {
                 const sel = getEl(selId);
@@ -864,7 +881,6 @@
             };
             setTimeout(() => { fillRole(pcData, 'PC', 'skillListPC'); fillRole(kpcData, 'KPC', 'skillListKPC'); }, 50);
             
-            // Encountered
             window.setSkillRows('encList', s.entities||"", true);
 
             if(s.meta) {
@@ -888,10 +904,13 @@
             getEl('inpTitle').value = ""; getEl('inpCount').value = "1";
             document.querySelectorAll('.paper-area, .line-input').forEach(e => { if(!e.id.includes('PlName')) e.value = ""; });
             
-            getEl('imgTrailer').src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-            getEl('dropTrailer').classList.add('empty');
-            getEl('imgScnTrailer').src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-            getEl('dropScnTrailer').classList.add('empty');
+            const resetImg = (boxId, imgId) => {
+                getEl(imgId).src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+                getEl(boxId).classList.add('empty');
+            };
+            resetImg('dropTrailer', 'imgTrailer');
+            resetImg('dropScnTrailer', 'imgScnTrailer');
+            resetImg('dropScnTrailerTab', 'imgScnTrailerTab');
 
             getEl('skillListPC').innerHTML = ""; getEl('skillListKPC').innerHTML = "";
             getEl('encList').innerHTML = "";
@@ -913,7 +932,7 @@
                     if(sanId) getEl(sanId).textContent = san;
                     
                     applyTheme(role, id);
-                    window.updateRoleLabels(); // Update name in labels
+                    window.updateRoleLabels(); 
                 }
                 loadHistory();
             });
