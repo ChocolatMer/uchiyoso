@@ -1,23 +1,19 @@
-// --- uchiyoso/character/data/scenario.js ---
+// --- START OF FILE data/scenario.js ---
 
 /**
- * フォームの入力値から、保存用のシナリオデータを作成する
- * @param {Object} input - HTMLフォームからの入力値オブジェクト
- * @param {string} userId - ログイン中のユーザーID
- * @param {string|null} existingId - 編集モード時のシナリオID (新規ならnull)
+ * HTMLフォームの入力値から、Firestore保存用のオブジェクトを作成する
+ * @param {Object} input - フォーム入力値のまとまり
+ * @param {string} userId - 保存実行者のUID
  */
-export function createScenarioRecord(input, userId, existingId = null) {
-    const timestamp = new Date().toISOString();
-
-    const record = {
-        // 管理情報
+export function createScenarioRecord(input, userId) {
+    return {
         userId: userId,
-        updatedAt: timestamp, // 更新日時は常に最新
-
-        // 基本情報
-        title: input.title,
-        count: input.count, // セッション回数等
+        // createdAtは新規作成時のみfirestore.js側か呼び出し元で付与推奨だが、ここではデータ構造として定義
+        // update時は削除される想定
         
+        title: input.title,
+        count: input.count || "", // セッション回数
+
         // Page 1 Metadata
         system: input.system,
         type: input.type,
@@ -26,161 +22,112 @@ export function createScenarioRecord(input, userId, existingId = null) {
         date: input.date,
         tags: input.tags,
         
-        // 検索用: 参加キャラクターIDリスト
+        // 検索用IDリスト
         members: input.members || [],
 
-        // Detailed Scenario Metadata (Tab 2)
+        // 詳細メタデータ
         meta: {
-            system: input.meta.system,
-            type: input.meta.type,
-            duration: input.meta.duration,
-            stage: input.meta.stage,
-            charRel: input.meta.charRel,
-            lostRate: input.meta.lostRate,
-            skills: input.meta.skills,
-            scenType: input.meta.scenType
+            system: input.meta?.system || "",
+            type: input.meta?.type || "",
+            duration: input.meta?.duration || "",
+            stage: input.meta?.stage || "",
+            charRel: input.meta?.charRel || "",
+            lostRate: input.meta?.lostRate || "",
+            skills: input.meta?.skills || "",
+            scenType: input.meta?.scenType || ""
         },
-        
-        // PC Data
-        pcData: { 
-            id: input.pcId, pl: input.plNamePC, 
-            san: input.pcSan, grow: input.pcGrow, memo: input.pcMemo, quote: input.pcQuote,
-            res: input.pcRes,
-            art: { name: input.pcArtName, desc: input.pcArtDesc },
-            seq: { name: input.pcSeqName, desc: input.pcSeqDesc },
-            ins: { type: input.pcInsType, desc: input.pcInsDesc }
+
+        // PC Data (Color情報含む)
+        pcData: {
+            id: input.pcData.id,
+            pl: input.pcData.pl,
+            color: input.pcData.color, // テーマカラー保存
+            san: input.pcData.san,
+            grow: input.pcData.grow,
+            memo: input.pcData.memo,
+            quote: input.pcData.quote,
+            res: input.pcData.res,
+            art: input.pcData.art || { name: "", desc: "" },
+            seq: input.pcData.seq || { name: "", desc: "" },
+            ins: input.pcData.ins || { type: "", desc: "" }
         },
-        
+
         // KPC Data
-        kpcData: { 
-            id: input.kpcId, pl: input.plNameKPC, 
-            san: input.kpcSan, grow: input.kpcGrow, memo: input.kpcMemo, quote: input.kpcQuote,
-            res: input.kpcRes,
-            art: { name: input.kpcArtName, desc: input.kpcArtDesc },
-            seq: { name: input.kpcSeqName, desc: input.kpcSeqDesc },
-            ins: { type: input.kpcInsType, desc: input.kpcInsDesc }
+        kpcData: {
+            id: input.kpcData.id,
+            pl: input.kpcData.pl,
+            color: input.kpcData.color,
+            san: input.kpcData.san,
+            grow: input.kpcData.grow,
+            memo: input.kpcData.memo,
+            quote: input.kpcData.quote,
+            res: input.kpcData.res,
+            art: input.kpcData.art || { name: "", desc: "" },
+            seq: input.kpcData.seq || { name: "", desc: "" },
+            ins: input.kpcData.ins || { type: "", desc: "" }
         },
 
-        urls: { shop: input.urls.shop, room: input.urls.room },
-        overview: input.overview, 
-        introduction: input.introduction,
-        warnings: input.warnings,
-        memos: { public: input.public, secret: input.secret },
-        images: input.images || {}
+        // 共通情報
+        urls: input.urls || { shop: "", room: "" },
+        overview: input.overview || "",
+        introduction: input.introduction || "",
+        warnings: input.warnings || "",
+        memos: input.memos || { public: "", secret: "" },
+        
+        images: input.images || { trailer: "", scenTrailer: "" }
     };
-
-    // 新規作成時のみ作成日を入れる
-    if (!existingId) {
-        record.createdAt = timestamp;
-    }
-
-    return record;
 }
 
 /**
- * シナリオデータを元に、キャラクターデータを更新して新しいデータを返す
- * ※編集モードの場合、既存のログが重複しないように制御します
- * 
- * @param {Object} charData - 元のキャラクターデータ
- * @param {Object} sData - 保存するシナリオデータ
- * @param {string} sId - シナリオID
- * @param {string} role - 'PC' or 'KPC'
+ * シナリオログの内容をキャラクターデータ（経歴・所持品・成長）に同期させるためのデータを作成する
+ * ※ 実際にFirestoreに保存するのは呼び出し元の役割
  */
 export function syncScenarioToCharacter(charData, sData, sId, role) {
-    // 元のデータを壊さないようにコピー
-    const newChar = JSON.parse(JSON.stringify(charData));
+    const newChar = JSON.parse(JSON.stringify(charData)); // Deep Copy
     const myData = (role === 'PC') ? sData.pcData : sData.kpcData;
     
-    // 参加していない(ID紐づけなし)場合は何もしない
-    if (!myData.id) return newChar;
-
-    // --- 1. 簡易一覧 (scenarios string) ---
-    // ※文字列追記型のため、過去ログの厳密な編集は難しいが、
-    // 重複を避ける簡易的なチェックを行う
-    const logLineBody = `] ${myData.res}`; // タイトル以外の部分一致用
+    // ログ一行生成
+    const logLine = `[${sData.title}] ${myData.res} - ${sData.endName || 'End'} (${sData.date})`;
     
-    const resultStr = myData.res === 'Alive' ? '生還' : (myData.res === 'Lost' ? 'ロスト' : myData.res);
-    const endStr = sData.endName ? ` - ${sData.endName}` : '';
-    const dateStr = sData.date ? `(${sData.date})` : '';
-    const newHistoryLine = `[${sData.title}] ${resultStr}${endStr} ${dateStr}`;
+    // 1. 簡易履歴 (scenarios string)
+    if(!newChar.scenarios) newChar.scenarios = "";
+    // 重複防止：既に同じタイトルのログがあるかチェック（簡易的）
+    // 編集時は追記しない方が安全なため、呼び出し元で制御推奨だが、ここでは追記ロジックのみ記述
+    newChar.scenarios = logLine + "\n" + newChar.scenarios;
 
-    if (!newChar.scenarios) newChar.scenarios = "";
+    // 2. 詳細リスト (scenarioList array)
+    if(!newChar.scenarioList) newChar.scenarioList = [];
     
-    // 既に同じタイトルのログがあるか確認（完全一致チェックは難しいので、あくまで簡易的な重複防止）
-    // 編集時は「追記」しない方針とする（古いログを消すのはリスクが高いため）
-    if (!newChar.scenarios.includes(newHistoryLine)) {
-        // 先頭に追加
-        newChar.scenarios = newHistoryLine + "\n" + newChar.scenarios;
-    }
-
-    // --- 2. 詳細シナリオログ (配列) ---
-    if (!newChar.scenarioList) newChar.scenarioList = [];
-    
-    // 既存のIDがあれば更新、なければ追加
+    // 既存の同じIDのエントリがあれば更新、なければ追加
     const existingIndex = newChar.scenarioList.findIndex(item => item.scenarioId === sId);
-    
-    const listItem = {
+    const listEntry = {
         scenarioId: sId,
         title: sData.title,
         date: sData.date,
-        desc: `Role: ${role}\nGM: ${sData.gm}\nResult: ${resultStr}${endStr}\nSAN: ${myData.san || '-'}\nGrow: ${myData.grow || 'なし'}`
+        desc: `Role: ${role}\nResult: ${myData.res}\nSAN: ${myData.san}\nGrow: ${myData.grow}\nMemo: ${myData.memo}`
     };
 
     if (existingIndex >= 0) {
-        newChar.scenarioList[existingIndex] = listItem;
+        newChar.scenarioList[existingIndex] = listEntry;
     } else {
-        newChar.scenarioList.push(listItem);
+        newChar.scenarioList.push(listEntry);
     }
 
-    // ヘルパー: テキストエリアへの追記（重複チェック付き）
-    const appendToField = (fieldKey, header, content) => {
-        if (!content) return;
-        const current = newChar[fieldKey] || "";
-        const entryHeader = `[${header}]`;
-        
-        // 既にこのシナリオの記述が含まれているか簡易チェック
-        // (編集機能を入れる場合、ここを厳密にするのは難易度が高いため、
-        //  「既にタイトルが含まれていれば追記しない」安全策を取る)
-        if(current.includes(entryHeader)) {
-            // 既に記載があるので何もしない（手動編集されたものを上書きしないため）
-            return;
-        }
-        
-        const entry = `${entryHeader} ${content}`;
-        newChar[fieldKey] = current + (current ? "\n\n" : "") + entry;
-    };
-
-    // --- 3. 各種テキストフィールドへの追記 ---
-    // 編集時は「追記」を行わない（二重書き込み防止）
-    // 新規作成かどうかのフラグがないため、scenarioListの存在チェックで代用
-    const isUpdate = (existingIndex >= 0);
-
-    if (!isUpdate) {
-        if(myData.grow) appendToField('growth', sData.title, myData.grow);
-        
-        if(myData.art.name) {
-             // 呪文・AF欄
-             const content = `${myData.art.name}: ${myData.art.desc}`;
-             appendToField('spells', `AF:${sData.title}`, content);
-        }
-        
-        if(myData.seq.name) {
-            // 後遺症はメモやRoleplay欄へ
-            const content = `${myData.seq.name}: ${myData.seq.desc}`;
-            // 適切なフィールドが無ければ txtRoleplay か memos を使う
-            const targetField = newChar.txtRoleplay ? 'txtRoleplay' : 'memos';
-            appendToField(targetField, `後遺症:${sData.title}`, content);
-        }
-
-        // 報酬(所持品)
-        // input.rewards は今回のUIにはないが、将来用
-        if (sData.rewards && sData.rewards.items) {
-            if (!newChar.items) newChar.items = [];
-            newChar.items.push({
-                name: "獲得報酬", 
-                desc: `[${sData.title}] ${sData.rewards.items}`
-            });
-        }
+    // 3. 成長・AF・後遺症 (追記型)
+    // 編集モードの場合、これらを二重に追加してしまうリスクがあるため、
+    // 「追記」は新規作成時のみに行うのが一般的。ここではデータを返すだけにする。
+    
+    if(myData.grow) {
+        const growth = newChar.growth || "";
+        newChar.growth = growth + (growth?"\n":"") + `[${sData.title}] ${myData.grow}`;
+    }
+    if(myData.art && myData.art.name) {
+        const sp = newChar.spells || "";
+        newChar.spells = sp + (sp?"\n":"") + `[AF:${sData.title}] ${myData.art.name}: ${myData.art.desc}`;
+    }
+    if(myData.seq && myData.seq.name) {
+        const rp = newChar.txtRoleplay || ""; // 備考やRP設定欄などを利用
+        newChar.txtRoleplay = rp + (rp?"\n":"") + `[後遺症:${sData.title}] ${myData.seq.name}: ${myData.seq.desc}`;
     }
 
     return newChar;
