@@ -132,14 +132,13 @@
                 <div class="form-row"><label>DEBT (借金)</label><input type="text" id="inpDebt"></div>
             </div>
             
-            <!-- ▼▼▼ PL名を移動・配置 ▼▼▼ -->
+            <!-- ▼▼▼ PL名（場所：テーマカラーの隣） ▼▼▼ -->
             <div class="grid-4" style="margin-top:15px;">
                 <div class="form-row"><label>BIRTHDAY</label><input type="text" id="inpBirthday"></div>
                 <div class="form-row"><label>BIRTHPLACE</label><input type="text" id="inpOrigin"></div>
                 <div class="form-row"><label>THEME COLOR</label><input type="color" id="inpThemeColor" value="#d9333f"></div>
                 <div class="form-row"><label>PL NAME</label><input type="text" id="inpPlName" placeholder="プレイヤー名"></div>
             </div>
-            <!-- ▲▲▲ PL名配置完了 ▲▲▲ -->
 
             <div id="eduCheckArea" class="analysis-box" style="display:none;"><span>🎓 EDU分析:</span><span id="eduMsg"></span></div>
 
@@ -156,7 +155,7 @@
                 <div style="margin-bottom:5px;">📊 <b>BMI:</b> <span id="outBMI" class="calc-val">--</span></div>
             </div>
 
-            <!-- ▼▼▼ パートナー・グループ名設定エリア（PL名削除済） ▼▼▼ -->
+            <!-- ▼▼▼ パートナー・グループ設定（PL表記削除済み） ▼▼▼ -->
             <div class="grid-3" style="margin-top:25px; background:#252525; padding:20px; border-radius:4px; border-left: 4px solid #00f3ff; border-top:1px solid #444; border-bottom:1px solid #444;">
                 <div class="form-row">
                     <label style="color:#00f3ff; font-weight:bold;">PARTNER (関係性の深い相手)</label>
@@ -169,7 +168,6 @@
                     <input type="text" id="inpGroupName" placeholder="コンビ名・ユニット名">
                 </div>
             </div>
-            <!-- ▲▲▲ 追加エリア終了 ▲▲▲ -->
 
             <h2>VISUALS (Drag & Drop Image)</h2>
             <div class="visual-grid">
@@ -303,7 +301,7 @@
     <!-- ここからスクリプト -->
     <script type="module">
         import { loadFromCloud, monitorAuth, saveToCloud, deleteFromCloud } from "./firestore.js";
-        // GROUP_MAPPING 読み込み
+        // GROUP_MAPPING をインポート
         import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING, GROUP_MAPPING } from "./data/schema.js";
         import { parseIaChara } from "./data/parser_ia.js";
 
@@ -455,10 +453,19 @@
         }
 
         window.prepareSaveData = async function() {
-            if(!currentId) return null;
-            let originalData = Object.values(allData).find(c=>c.id==currentId);
-            if (!originalData) originalData = allData[currentId];
-            if (!originalData) return;
+            // ★ IDを画面上のセレクトボックスから直接再取得（変数のズレ防止）
+            const charSelect = document.getElementById('charSelect');
+            const activeId = charSelect ? charSelect.value : null;
+
+            if (!activeId) {
+                alert("キャラクターが選択されていません。再読み込みしてください。");
+                return;
+            }
+
+            // データ取得
+            let originalData = Object.values(allData).find(c=>c.id==activeId);
+            if (!originalData) originalData = allData[activeId];
+            if (!originalData) return; // データロード前などのガード
             
             const itemRows = document.querySelectorAll('.item-entry');
             const itemsArr = [];
@@ -494,12 +501,8 @@
             if (nameInputVal) finalData.name = nameInputVal;
             finalData.skills = skillsObj;
             
-            // ★ ID強制セット＆チェック (エラー防止の肝)
-            finalData.id = currentId;
-            if (!finalData.id) {
-                alert("保存エラー: IDが特定できませんでした。画面をリロードしてやり直してください。");
-                return;
-            }
+            // ★ IDを強制セット（ここで確実にセット）
+            finalData.id = activeId;
 
             const partnerId = getEl('selPartner').value;
             const groupName = getEl('inpGroupName').value;
@@ -512,21 +515,17 @@
                 if (partnerId && allData[partnerId]) {
                     const partnerData = { ...allData[partnerId] };
                     
-                    // ★ パートナー側のIDチェック
+                    // パートナー側のIDチェック
                     if (!partnerData.id) partnerData.id = partnerId;
-                    
-                    if (!partnerData.id) {
-                        // パートナーIDがない場合のエラー回避
-                        console.error("Critical: partnerData has no ID", partnerData);
-                        alert(`警告: パートナー(${partnerData.name})のデータにIDが見つからないため、リンク更新をスキップしました。`);
-                    } else {
-                        partnerData.partnerId = currentId;
+
+                    if (partnerData.id) {
+                        partnerData.partnerId = activeId; // ここも確実にactiveIdを使う
                         partnerData.groupName = groupName;
                         await saveToCloud(partnerData);
+                        alert(`保存完了！\nパートナー(${partnerData.name})の設定も更新しました。`);
                     }
-                    alert("保存完了しました。");
                 } else {
-                    // パートナーなしの場合
+                    alert("保存完了しました。");
                 }
                 
                 location.reload();
