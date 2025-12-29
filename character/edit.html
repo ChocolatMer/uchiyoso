@@ -83,7 +83,7 @@
             background: #111; color: #888; border: 1px solid #333; font-size: 0.7rem; padding: 2px; width: 100%;
         }
 
-        /* パートナーリスト用 */
+        /* パートナーリスト用スタイル */
         .partner-entry { display: flex; align-items: center; gap: 5px; margin-bottom: 5px; background: #1a1a1a; padding: 5px; border-radius: 4px; border:1px solid #444; }
         .partner-select { width: 40%; font-size:0.8rem; background: #222; color: #fff; border: 1px solid #555; padding: 5px; }
         .partner-group-input { width: 50%; font-size:0.8rem; background: #2a2a2a; color: #fff; border: 1px solid #444; padding: 5px; }
@@ -298,7 +298,7 @@
     <!-- ここからスクリプト -->
     <script type="module">
         import { loadFromCloud, monitorAuth, saveToCloud, deleteFromCloud } from "./firestore.js";
-        // GROUP_MAPPINGは廃止されたので削除
+        // GROUP_MAPPINGは廃止
         import { collectFormData, FIELD_MAPPING, STATS_MAPPING, VITALS_MAPPING } from "./data/schema.js";
         import { parseIaChara } from "./data/parser_ia.js";
 
@@ -457,7 +457,22 @@
             }
         };
 
-        // --- 保存処理 (複数パートナー同期対応) ---
+        function updatePartnerSelect() {
+            const sel = document.getElementById('selPartner');
+            if(!sel) return;
+            const currentVal = sel.value;
+            sel.innerHTML = '<option value="">-- 指定なし --</option>';
+            Object.values(allData).forEach(c => {
+                if (c.id === currentId) return; 
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name; 
+                sel.appendChild(opt);
+            });
+            if (currentVal) sel.value = currentVal;
+        }
+
+        // --- 保存処理 (同期・削除・複数対応・ID補填) ---
         window.prepareSaveData = async function() {
             // ID安全確保
             const charSelect = document.getElementById('charSelect');
@@ -468,8 +483,11 @@
                 return;
             }
 
+            // 元データ確保（変なデータにならないよう）
             let originalData = allData[activeId];
-            if (!originalData) originalData = { id: activeId, name: "回復データ" };
+            if (!originalData) {
+                originalData = { id: activeId, name: "回復データ" };
+            }
             
             const itemRows = document.querySelectorAll('.item-entry');
             const itemsArr = [];
@@ -504,7 +522,7 @@
             const nameInputVal = document.getElementById('inpName').value;
             if (nameInputVal) finalData.name = nameInputVal;
             finalData.skills = skillsObj;
-            finalData.id = activeId;
+            finalData.id = activeId; // ID強制セット
 
             // ★ パートナーリストの取得
             const partnerRows = document.querySelectorAll('.partner-entry');
@@ -516,50 +534,75 @@
                     partnersList.push({ id: pid, group: gname });
                 }
             });
-            finalData.partners = partnersList; // 配列として保存
+            finalData.partners = partnersList;
+
+            // ★ 削除されたパートナーを検出
+            const oldPartners = originalData.partners || [];
+            const newPartners = partnersList;
+            const removedPartnerIds = oldPartners
+                .map(p => p.id)
+                .filter(oldId => !newPartners.some(np => np.id === oldId));
+
+            if (!finalData.id) {
+                alert("致命的エラー: 保存データのIDが消失しました。");
+                return;
+            }
 
             try {
                 // 1. 自分のデータを保存
                 await saveToCloud(finalData);
 
-                // 2. パートナー側のデータをループして更新
-                let syncCount = 0;
-                for (const p of partnersList) {
-                    const partnerChar = allData[p.id];
-                    if (!partnerChar) continue;
+                // 2. 「削除された相手」への同期処理 (自分を消しに行く)
+                for (const removedId of removedPartnerIds) {
+                    const partnerData = allData[removedId];
+                    if (partnerData) {
+                        const pDataCopy = { ...partnerData };
+                        if (!pDataCopy.id) pDataCopy.id = removedId; // ID補填
 
-                    // パートナーのデータにIDがなければ補填 (これがエラーの原因でした)
-                    if (!partnerChar.id) partnerChar.id = p.id;
-
-                    // パートナーの「パートナーリスト」を取得し、自分(activeId)のエントリを探す
-                    let pPartners = partnerChar.partners || [];
-                    
-                    // 自分とのエントリがあるか確認
-                    const myEntryIndex = pPartners.findIndex(item => item.id === activeId);
-                    
-                    if (myEntryIndex >= 0) {
-                        // 既にあるならグループ名を更新
-                        pPartners[myEntryIndex].group = p.group;
-                    } else {
-                        // なければ追加
-                        pPartners.push({ id: activeId, group: p.group });
+                        if (pDataCopy.partners && Array.isArray(pDataCopy.partners)) {
+                            // 相手のリストから自分を削除
+                            const initialLen = pDataCopy.partners.length;
+                            pDataCopy.partners = pDataCopy.partners.filter(p => p.id !== activeId);
+                            
+                            if (pDataCopy.partners.length !== initialLen) {
+                                await saveToCloud(pDataCopy);
+                                console.log(`Removed self from partner: ${pDataCopy.name}`);
+                            }
+                        }
                     }
-                    
-                    partnerChar.partners = pPartners;
-                    
-                    // 保存
-                    await saveToCloud(partnerChar);
-                    syncCount++;
                 }
 
-                if (syncCount > 0) {
-                    alert(`保存完了！\nパートナー ${syncCount} 人のデータも自動更新しました。`);
+                // 3. 「登録されている相手」への同期処理 (自分を追加/更新しに行く)
+                let syncCount = 0;
+                for (const p of newPartners) {
+                    const partnerData = allData[p.id];
+                    if (partnerData) {
+                        const pDataCopy = { ...partnerData };
+                        if (!pDataCopy.id) pDataCopy.id = p.id; // ID補填
+
+                        let pPartners = pDataCopy.partners || [];
+                        const myIndex = pPartners.findIndex(item => item.id === activeId);
+                        
+                        if (myIndex >= 0) {
+                            pPartners[myIndex].group = p.group;
+                        } else {
+                            pPartners.push({ id: activeId, group: p.group });
+                        }
+                        pDataCopy.partners = pPartners;
+
+                        await saveToCloud(pDataCopy);
+                        syncCount++;
+                    }
+                }
+
+                if (removedPartnerIds.length > 0 || syncCount > 0) {
+                    alert(`保存完了！\nパートナー情報も相互同期（追加・更新・削除）しました。`);
                 } else {
                     alert("保存完了しました。");
                 }
                 
-                // ★ リロードせず、データ再取得して画面維持
-                await init(); 
+                // ★ 画面維持のためにデータ再読み込み
+                await init();
                 if (charSelect) charSelect.value = activeId;
                 if (allData[activeId]) loadCharacterToForm(allData[activeId]);
 
@@ -626,16 +669,15 @@
             
             FIELD_MAPPING.forEach(field => { setVal(field.id, d[field.key]); });
 
-            // ★ パートナーリストの読み込み
+            // パートナーリストの読み込み
             const container = getEl('partnerListContainer');
             container.innerHTML = '';
             if (d.partners && Array.isArray(d.partners)) {
                 d.partners.forEach(p => addPartnerRow(p.id, p.group));
             } else if (d.partnerId) {
-                // 古いデータ形式(単一パートナー)の場合の互換処理
                 addPartnerRow(d.partnerId, d.groupName || "");
             } else {
-                // なにもない場合、空行は作らない（ユーザーが追加ボタンで追加する）
+                // 空なら行を追加しない（追加ボタンで追加してもらう）
             }
 
             setSrc('previewBody', d.image); setSrc('previewIcon', d.icon);
@@ -733,7 +775,6 @@
             const p = parseIaChara(text);
             const updateVal = (id, val) => { if(val !== undefined && val !== null && val !== "") { setVal(id, val); } };
             FIELD_MAPPING.forEach(f => { if(p[f.key]) updateVal(f.id, p[f.key]); });
-            // GROUP_MAPPINGは廃止
             STATS_MAPPING.forEach(f => updateVal(f.id, p.stats[f.key]));
             VITALS_MAPPING.forEach(f => updateVal(f.id, p.vitals[f.key]));
             if(p.colorHair) updateVal('inpHair', p.colorHair); if(p.colorEye) updateVal('inpEye', p.colorEye); if(p.colorSkin) updateVal('inpSkin', p.colorSkin);
@@ -744,36 +785,4 @@
             if(p.image) { setVal('inpImageBody', p.image); setSrc('previewBody', p.image); }
             if(p.icon) { setVal('inpImageIcon', p.icon); setSrc('previewIcon', p.icon); }
             alert("解析・補完しました！");
-            runCalculations();
-        });
-
-        function runCalculations() {
-            const age = parseInt(getEl('inpAge')?.value)||0; const edu = parseInt(getEl('s_edu')?.value)||0;
-            const eduArea = getEl('eduCheckArea'); const eduMsg = getEl('eduMsg');
-            if(eduArea) { if(edu>0 && age>0) { const minAge=edu+6; eduArea.style.display='block'; if(age<minAge){ eduMsg.className='warn-text'; eduMsg.textContent=`⚠️ 年齢不足 (EDU${edu}なら最低${minAge}歳)`; } else { eduMsg.className='calc-val'; eduMsg.textContent=`✅ OK (最低${minAge}歳)`; } } else eduArea.style.display='none'; }
-            const h = parseFloat(getEl('inpHeight')?.value), w = parseFloat(getEl('inpWeight')?.value);
-            if(h>0 && w>0) { const bmi = w/((h/100)**2); getEl('outBMI').textContent = `${bmi.toFixed(1)}`; }
-        }
-        ['inpAge','inpHeight','inpWeight','s_edu'].forEach(id=>getEl(id)?.addEventListener('input', runCalculations));
-
-        const btnCreate = getEl('btnCreateNew');
-        if(btnCreate) {
-            btnCreate.addEventListener('click', ()=>{
-                const id=crypto.randomUUID();
-                allData[id]={id: id, name:"新規キャラ", stats:{}, vitals:{}, items:[], weapons:[], scenarioList:[], skills:{}};
-                currentId=id; renderSelect(); loadCharacterToForm(allData[id]);
-            });
-        }
-        
-        const btnDel = getEl('btnDelete');
-        if(btnDel) {
-            btnDel.addEventListener('click', async ()=>{
-                if(!currentId) return;
-                if(confirm('本当に削除しますか？\n（この操作は取り消せません）')) { 
-                    await deleteFromCloud(currentId);
-                }
-            });
-        }
-    </script>
-</body>
-</html>
+            runCalculat
