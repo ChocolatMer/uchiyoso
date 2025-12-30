@@ -1,3 +1,5 @@
+--- START OF FILE register.html ---
+
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -708,6 +710,13 @@
 
             document.querySelectorAll('.lbl-pc').forEach(el => el.textContent = txtPC);
             document.querySelectorAll('.lbl-kpc').forEach(el => el.textContent = txtKPC);
+
+            // KPC側のプレースホルダー更新
+            const plHolderKPC = isPair ? "KP/PL名" : "PL名";
+            const quoteHolderKPC = isPair ? "KPCの印象的な台詞..." : `${txtKPC.split(' ')[0]}の印象的な台詞...`;
+
+            document.getElementById('inpPlNameKPC').placeholder = plHolderKPC;
+            document.getElementById('inpQuoteKPC').placeholder = quoteHolderKPC;
         };
 
         window.swapCharacters = () => {
@@ -1177,7 +1186,11 @@
                         skills: getEl('inpRecSkills').value, scenType: getEl('inpScnType').value
                     },
                     urls: { shop: getEl('inpUrlShop').value, room: getEl('inpUrlRoom').value },
-                    images: { trailer: getEl('inpImgTrailer').value, scenTrailer: getEl('inpImgScnTrailer').value },
+                    // Ensure images are strings
+                    images: { 
+                        trailer: String(getEl('inpImgTrailer').value || ""), 
+                        scenTrailer: String(getEl('inpImgScnTrailer').value || "") 
+                    },
                     pcData: {
                         id: pcId, pl: getEl('inpPlNamePC').value, res: getEl('inpResPC').value, san: getEl('inpSanPC').value,
                         quote: getEl('inpQuotePC').value, grow: growPC, memo: getEl('inpMemoPC').value,
@@ -1207,14 +1220,9 @@
                 sData.entities = entities; 
 
                 // Sanitizer
-                const removeUndefined = (obj) => {
-                    Object.keys(obj).forEach(key => {
-                        if (obj[key] && typeof obj[key] === 'object') removeUndefined(obj[key]);
-                        else if (obj[key] === undefined) delete obj[key];
-                    });
-                    return obj;
-                };
-                const cleanData = removeUndefined(JSON.parse(JSON.stringify(sData)));
+                // "invalid nested entity" エラー回避のため、removeUndefined は使用せず JSON.stringify のみで undefined を除去する。
+                // これにより配列に対する不適切な delete 操作を回避できる。
+                const cleanData = JSON.parse(JSON.stringify(sData));
 
                 const sId = await saveScenario(cleanData, currentScenarioId);
 
