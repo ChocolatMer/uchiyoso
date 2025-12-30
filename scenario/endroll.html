@@ -3,196 +3,280 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chronicle Endroll</title>
+    <title>Chronicle Endroll - The Grand Theater</title>
     
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     
     <style>
-        /* --- BASE STYLES --- */
+        /* --- THEATER THEME CORE --- */
         :root {
-            --text-gold: #eebb55;
-            --text-white: #f0f0f0;
-            --bg-overlay: rgba(0, 0, 0, 0.85);
-            --accent-red: #8b0000;
+            --gold-base: #d4af37;
+            --gold-shine: #f9e295;
+            --velvet-red: #4a0404;
+            --velvet-dark: #220000;
+            --stage-black: #050505;
+            --text-main: #f0f0f0;
         }
 
         body {
             margin: 0; padding: 0;
-            background-color: #000;
-            color: var(--text-white);
+            background-color: var(--stage-black);
+            color: var(--text-main);
             font-family: 'Shippori Mincho', serif;
             overflow: hidden;
             height: 100vh; width: 100vw;
         }
 
-        /* --- BACKGROUND LAYERS --- */
-        .bg-container {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+        /* --- STAGE FRAME (PROSCENIUM) --- */
+        .stage-frame {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 500;
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
+            border: 10px solid #1a1a1a;
+            border-image: linear-gradient(to bottom, #554422, #221100, #554422) 1;
         }
+        /* Top Ornament */
+        .stage-frame::before {
+            content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 80%; height: 40px;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.8) 0%, transparent 70%);
+            z-index: 501;
+        }
+
+        /* --- CURTAINS --- */
+        .curtain-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1000; pointer-events: none;
+            display: flex;
+        }
+        .curtain {
+            width: 50%; height: 100%;
+            background: linear-gradient(90deg, 
+                var(--velvet-dark) 0%, var(--velvet-red) 50%, var(--velvet-dark) 100%);
+            background-size: 100px 100%;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+            position: relative;
+            transition: transform 3s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .curtain.left { transform: translateX(0); border-right: 2px solid rgba(0,0,0,0.5); }
+        .curtain.right { transform: translateX(0); border-left: 2px solid rgba(0,0,0,0.5); }
+        
+        /* カーテンのドレープ感 */
+        .curtain::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(90deg, 
+                rgba(0,0,0,0.3) 0px, transparent 20px, rgba(0,0,0,0.3) 40px);
+        }
+
+        /* 開くアニメーション */
+        .curtain-container.open .curtain.left { transform: translateX(-100%); }
+        .curtain-container.open .curtain.right { transform: translateX(100%); }
+
+        /* --- SPOTLIGHTS --- */
+        .spotlights {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 50; mix-blend-mode: screen;
+            opacity: 0.6;
+        }
+        .spot {
+            position: absolute; top: -20%; left: 50%; width: 60%; height: 150%;
+            background: radial-gradient(ellipse at top, rgba(255,255,200,0.15) 0%, transparent 70%);
+            transform-origin: top center;
+            animation: sway 10s infinite ease-in-out alternate;
+        }
+        .spot:nth-child(2) {
+            left: 20%; width: 40%; animation-duration: 15s; animation-delay: -5s;
+        }
+        .spot:nth-child(3) {
+            left: 60%; width: 40%; animation-duration: 12s; animation-delay: -2s;
+        }
+        @keyframes sway {
+            0% { transform: rotate(-5deg) translateX(-50%); }
+            100% { transform: rotate(5deg) translateX(-50%); }
+        }
+
+        /* --- SETUP SCREEN (PLAYBILL STYLE) --- */
+        .setup-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0a0a0a; z-index: 2000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 1s ease;
+        }
+        .setup-screen.hidden { opacity: 0; pointer-events: none; }
+
+        .playbill {
+            width: 600px; max-width: 90%; height: 80vh;
+            background: #e8dac3; color: #1a1a1a;
+            border: 8px double #1a1a1a;
+            padding: 40px; box-sizing: border-box;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            display: flex; flex-direction: column;
+            position: relative;
+            background-image: url("https://www.transparenttextures.com/patterns/cream-paper.png");
+        }
+        /* 古紙の汚れ演出 */
+        .playbill::before {
+            content: ''; position: absolute; top:0; left:0; width:100%; height:100%;
+            background: radial-gradient(circle, transparent 40%, rgba(139, 69, 19, 0.1) 100%);
+            pointer-events: none;
+        }
+
+        .playbill-header {
+            text-align: center; border-bottom: 2px solid #1a1a1a;
+            margin-bottom: 20px; padding-bottom: 10px;
+        }
+        .playbill-title {
+            font-family: 'Cinzel', serif; font-size: 2.5rem; font-weight: bold; letter-spacing: 5px;
+            margin-bottom: 5px;
+        }
+        .playbill-sub {
+            font-family: 'Playfair Display', serif; font-style: italic; font-size: 1rem; color: #555;
+        }
+
+        .program-list {
+            flex: 1; overflow-y: auto; padding-right: 10px;
+            font-family: 'Shippori Mincho', serif;
+        }
+        .program-list::-webkit-scrollbar { width: 4px; }
+        .program-list::-webkit-scrollbar-thumb { background: #555; }
+
+        .act-group { margin-bottom: 20px; }
+        .act-title {
+            font-family: 'Cinzel', serif; font-size: 1.1rem; font-weight: bold;
+            border-bottom: 1px dashed #555; margin-bottom: 10px; padding-top: 10px;
+        }
+        
+        .scene-row {
+            display: flex; justify-content: space-between; align-items: baseline;
+            padding: 6px 0; cursor: pointer; transition: 0.2s;
+            border-bottom: 1px dotted #ccc;
+        }
+        .scene-row:hover { background: rgba(0,0,0,0.05); }
+        .scene-title { flex: 1; font-weight: bold; font-size: 0.95rem; }
+        .scene-date { font-size: 0.8rem; color: #666; font-family: 'Cinzel'; margin-left: 10px;}
+        .scene-check { margin-right: 10px; accent-color: var(--velvet-red); transform: scale(1.2); }
+
+        .ticket-btn {
+            margin-top: 20px;
+            background: var(--velvet-red); color: #e8dac3;
+            border: 2px solid #1a1a1a; padding: 15px;
+            font-family: 'Cinzel', serif; font-size: 1.2rem; letter-spacing: 2px;
+            cursor: pointer; transition: 0.3s; width: 100%;
+            position: relative; z-index: 10;
+        }
+        .ticket-btn:hover {
+            background: var(--velvet-dark); color: #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        /* --- BACKGROUND & PARTICLES --- */
+        .bg-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; }
         .bg-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-size: cover; background-position: center;
-            filter: blur(5px) brightness(0.5);
+            filter: blur(3px) brightness(0.6);
             opacity: 0; transition: opacity 2s ease;
             transform: scale(1.1);
         }
         .bg-layer.active {
             opacity: 1;
-            animation: kenBurns 30s infinite alternate ease-in-out;
+            animation: kenBurns 40s infinite alternate ease-in-out;
         }
         @keyframes kenBurns {
             0% { transform: scale(1.1) translate(0, 0); }
-            100% { transform: scale(1.2) translate(-2%, -2%); }
+            100% { transform: scale(1.25) translate(-3%, -2%); }
         }
         .bg-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.95) 90%);
-            z-index: 0;
+            background: radial-gradient(circle, rgba(0,0,0,0) 20%, rgba(0,0,0,0.8) 100%);
+            z-index: -1;
         }
 
-        /* --- SETUP SCREEN (CONFIG) --- */
-        .setup-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #050505; z-index: 2000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.8s ease;
-        }
-        .setup-screen.hidden { opacity: 0; pointer-events: none; }
-
-        .setup-content {
-            width: 90%; max-width: 800px; height: 80%;
-            background: #111; border: 1px solid #333; border-radius: 4px;
-            padding: 30px; display: flex; flex-direction: column;
-            box-shadow: 0 0 50px rgba(0,0,0,0.8);
-        }
-        .setup-title {
-            font-family: 'Cinzel', serif; font-size: 2rem; color: var(--text-gold);
-            text-align: center; margin-bottom: 20px; letter-spacing: 4px;
-            border-bottom: 1px solid #333; padding-bottom: 10px;
-        }
-        .setup-list {
-            flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
-            padding-right: 10px;
-        }
-        .setup-list::-webkit-scrollbar { width: 5px; }
-        .setup-list::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
-
-        .pair-group { margin-bottom: 20px; border: 1px solid #222; padding: 10px; border-radius: 4px; }
-        .pair-title { color: var(--text-gold); font-size: 0.9rem; margin-bottom: 10px; font-weight: bold; }
-        
-        .check-row {
-            display: flex; align-items: center; gap: 10px; padding: 8px;
-            background: #1a1a1a; border-radius: 4px; cursor: pointer; transition: 0.2s;
-        }
-        .check-row:hover { background: #2a2a2a; }
-        .check-row input[type="checkbox"] { transform: scale(1.2); accent-color: var(--text-gold); }
-        .check-label { flex: 1; font-size: 0.9rem; }
-        .check-date { font-size: 0.75rem; color: #666; font-family: 'Cinzel'; }
-
-        .play-btn {
-            margin-top: 20px; padding: 15px; width: 100%;
-            background: linear-gradient(90deg, #333, #111);
-            border: 1px solid var(--text-gold); color: var(--text-gold);
-            font-family: 'Cinzel', serif; font-size: 1.2rem; letter-spacing: 3px;
-            cursor: pointer; transition: 0.3s;
-        }
-        .play-btn:hover { background: var(--text-gold); color: #000; box-shadow: 0 0 20px rgba(238, 187, 85, 0.4); }
-        
-        /* Loading Status */
-        #loadingMsg { text-align:center; color:#666; font-family:'Cinzel'; margin-top:50px; }
-
-        /* --- DUST PARTICLES --- */
-        .dust {
-            position: absolute; width: 2px; height: 2px; background: rgba(255,255,255,0.3);
-            box-shadow: 0 0 5px rgba(255,230,150,0.5); border-radius: 50%;
-            animation: floatUp linear infinite; bottom: -10px;
-        }
-        @keyframes floatUp {
-            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
-            20% { opacity: 0.8; }
-            80% { opacity: 0.5; }
-            100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
-        }
-
-        /* --- MAIN SCROLL (CENTER) --- */
+        /* --- SCROLL CONTENT --- */
         .scroll-container {
             position: absolute; bottom: -100%; left: 50%; transform: translateX(-50%);
-            width: 600px; text-align: center;
-            z-index: 10;
-            /* animation set by JS */
-            padding-bottom: 100px;
+            width: 700px; text-align: center;
+            z-index: 100;
+            padding-bottom: 200px;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.8);
         }
-        
-        .scenario-block { margin-bottom: 250px; opacity: 0.9; }
-        .section-space { margin-bottom: 120px; }
         
         .role-title {
-            font-family: 'Cinzel', serif; font-size: 0.9rem; color: #888;
-            letter-spacing: 0.2em; margin-bottom: 15px; border-bottom: 1px solid #444;
-            display: inline-block; padding-bottom: 5px;
+            font-family: 'Cinzel', serif; font-size: 0.8rem; color: var(--gold-base);
+            letter-spacing: 0.3em; margin-bottom: 10px;
+            text-transform: uppercase;
         }
         .main-title {
-            font-size: 2.5rem; font-weight: bold; color: var(--text-gold);
-            text-shadow: 0 0 20px rgba(238, 187, 85, 0.5);
+            font-family: 'Shippori Mincho', serif;
+            font-size: 3rem; font-weight: bold; color: #fff;
             margin-bottom: 15px; line-height: 1.2;
+            text-shadow: 0 0 15px rgba(255,255,255,0.3);
         }
-        .sub-text { font-size: 1rem; color: #ccc; line-height: 2; margin-bottom: 40px; white-space: pre-wrap; }
+        .sub-text { font-size: 1rem; color: #ccc; line-height: 2; margin-bottom: 60px; white-space: pre-wrap; font-family: 'Shippori Mincho'; }
         
-        .cast-box { margin-bottom: 60px; }
-        .cast-name { font-size: 1.6rem; margin-bottom: 5px; font-weight: bold; }
-        .cast-pl { font-size: 0.8rem; color: #aaa; font-family: 'Cinzel'; }
+        .cast-box { margin-bottom: 50px; }
+        .cast-name { font-size: 2rem; margin-bottom: 5px; font-weight: bold; color: #fff; }
+        .cast-pl { font-size: 0.9rem; color: #aaa; font-family: 'Cinzel'; letter-spacing: 1px; }
+
+        .section-space { margin-bottom: 180px; }
+        .scenario-divider {
+            width: 100px; height: 2px; background: var(--gold-base);
+            margin: 100px auto; opacity: 0.5;
+        }
 
         .end-mark {
-            font-family: 'Cinzel', serif; font-size: 4rem; color: var(--text-gold);
-            opacity: 0; animation: fadeInEnd 3s ease forwards;
+            font-family: 'Cinzel', serif; font-size: 5rem; color: var(--gold-base);
+            opacity: 0; animation: fadeInEnd 5s ease forwards;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
         }
-        @keyframes fadeInEnd { from{opacity:0;} to{opacity:1;} }
+        @keyframes fadeInEnd { from{opacity:0; transform:scale(0.9);} to{opacity:1; transform:scale(1);} }
 
-        /* --- SIDE ELEMENTS --- */
+        /* --- SIDE VISUALS --- */
         .side-container {
-            position: absolute; top: 0; height: 100%; width: 25%;
-            z-index: 5; display: flex; flex-direction: column; justify-content: center;
+            position: absolute; top: 0; height: 100%; width: 30%;
+            z-index: 90; display: flex; flex-direction: column; justify-content: center;
         }
-        .side-left { left: 5%; align-items: flex-start; text-align: left; }
-        .side-right { right: 5%; align-items: flex-end; text-align: right; }
+        .side-left { left: 0; align-items: center; }
+        .side-right { right: 0; align-items: center; }
 
         .char-visual {
             position: relative; opacity: 0;
             transition: all 1.5s ease;
-            max-width: 100%;
+            width: 100%; display: flex; flex-direction: column; align-items: center;
         }
         .char-img {
-            max-height: 60vh; max-width: 100%; object-fit: contain;
+            max-height: 70vh; max-width: 90%; object-fit: contain;
             filter: drop-shadow(0 0 20px rgba(0,0,0,0.8));
-            mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
+            mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
         }
         
         .quote-box {
-            margin-top: -50px; padding: 20px;
-            background: linear-gradient(90deg, rgba(0,0,0,0), rgba(0,0,0,0.7), rgba(0,0,0,0));
-            color: #fff; font-size: 1.2rem; font-style: italic;
-            text-shadow: 0 2px 10px #000;
+            margin-top: -60px; padding: 20px;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.8) 0%, transparent 70%);
+            color: #fff; font-size: 1.3rem; font-family: 'Shippori Mincho'; font-style: italic;
+            text-align: center; width: 100%;
             opacity: 0; transform: translateY(20px);
             transition: all 1s ease 0.5s;
         }
         
-        .slide-in-left { opacity: 1; transform: translateX(0); }
-        .slide-in-right { opacity: 1; transform: translateX(0); }
+        .slide-in-left { opacity: 1; transform: translateX(20px); }
+        .slide-in-right { opacity: 1; transform: translateX(-20px); }
         .hide-visual { opacity: 0; transform: scale(0.95); }
 
         /* --- CONTROLS --- */
         .controls {
-            position: fixed; bottom: 20px; right: 20px; z-index: 100;
-            display: flex; gap: 10px;
+            position: fixed; bottom: 20px; right: 20px; z-index: 2000;
+            display: flex; gap: 10px; opacity: 0; transition: opacity 0.5s;
         }
+        .controls:hover { opacity: 1; }
         .ctrl-btn {
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(0,0,0,0.5); border: 1px solid #555;
             color: #fff; width: 40px; height: 40px; border-radius: 50%;
             cursor: pointer; display: flex; align-items: center; justify-content: center;
             transition: 0.3s;
         }
-        .ctrl-btn:hover { background: var(--text-gold); color: #000; border-color: var(--text-gold); }
+        .ctrl-btn:hover { background: var(--velvet-red); border-color: var(--velvet-red); }
 
         @keyframes scrollUp {
             0% { transform: translate(-50%, 100vh); }
@@ -202,25 +286,43 @@
 </head>
 <body>
 
-    <!-- SETUP SCREEN -->
-    <div id="setupScreen" class="setup-screen hidden">
-        <div class="setup-content">
-            <div class="setup-title">ENDROLL CONFIGURATION</div>
-            <div style="text-align:right; margin-bottom:5px;">
-                <button onclick="window.toggleAll(true)" style="background:none; border:none; color:#aaa; cursor:pointer;">Select All</button> / 
-                <button onclick="window.toggleAll(false)" style="background:none; border:none; color:#aaa; cursor:pointer;">Clear</button>
+    <!-- STAGE DECORATION -->
+    <div class="stage-frame"></div>
+    <div class="curtain-container" id="curtain">
+        <div class="curtain left"></div>
+        <div class="curtain right"></div>
+    </div>
+    <div class="spotlights">
+        <div class="spot"></div><div class="spot"></div><div class="spot"></div>
+    </div>
+
+    <!-- SETUP SCREEN (PROGRAM) -->
+    <div id="setupScreen" class="setup-screen">
+        <div class="playbill">
+            <div class="playbill-header">
+                <div class="playbill-title">THE ENDROLL</div>
+                <div class="playbill-sub">Chronicle Log Theater</div>
             </div>
-            <div id="setupList" class="setup-list">
-                <div id="loadingMsg">Initializing Database...</div>
+            
+            <div class="program-list" id="setupList">
+                <div style="text-align:center; margin-top:50px;">Preparing Program...</div>
             </div>
-            <button class="play-btn" onclick="window.startSequence()">▶ START ENDROLL</button>
+
+            <div style="text-align:right; margin-top:10px; font-size:0.8rem;">
+                <span onclick="window.toggleAll(true)" style="cursor:pointer; border-bottom:1px solid #555;">Select All</span> / 
+                <span onclick="window.toggleAll(false)" style="cursor:pointer; border-bottom:1px solid #555;">Clear</span>
+            </div>
+
+            <button class="ticket-btn" onclick="window.startShow()">
+                <span class="material-icons-round" style="vertical-align:middle; font-size:1.2rem;">local_activity</span> 
+                ADMIT ONE (START)
+            </button>
         </div>
     </div>
 
-    <!-- MAIN VIEW -->
+    <!-- MAIN STAGE -->
     <div class="bg-container" id="bgContainer"></div>
     <div class="bg-overlay"></div>
-    <div id="dustContainer"></div>
 
     <div class="scroll-container" id="scrollContent"></div>
 
@@ -239,10 +341,10 @@
     </div>
 
     <div class="controls">
-        <div class="ctrl-btn" onclick="location.reload()" title="設定に戻る">
-            <span class="material-icons-round">settings</span>
+        <div class="ctrl-btn" onclick="location.reload()" title="REPLAY">
+            <span class="material-icons-round">replay</span>
         </div>
-        <div class="ctrl-btn" onclick="window.close()" title="閉じる">
+        <div class="ctrl-btn" onclick="window.close()" title="CLOSE">
             <span class="material-icons-round">close</span>
         </div>
     </div>
@@ -265,39 +367,25 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // パーティクル
-        const dustCont = document.getElementById('dustContainer');
-        for(let i=0; i<30; i++){
-            const d = document.createElement('div'); d.className = 'dust';
-            d.style.left = Math.random()*100 + 'vw';
-            d.style.top = Math.random()*100 + 'vh';
-            d.style.animationDuration = (20 + Math.random()*20) + 's';
-            d.style.opacity = Math.random()*0.5 + 0.1;
-            dustCont.appendChild(d);
-        }
-
         let allChars = {};
         let allScenarios = [];
         let selectedScenarios = [];
 
         document.addEventListener('DOMContentLoaded', () => {
-            const screen = document.getElementById('setupScreen');
-            screen.classList.remove('hidden');
-
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
-                    document.getElementById('loadingMsg').textContent = "Loading Data...";
                     await loadData();
                     
-                    // パラメータ指定があれば即再生
+                    // Direct Link Mode
                     const params = new URLSearchParams(window.location.search);
                     const singleId = params.get('id');
                     if(singleId) {
                         const target = allScenarios.find(s => s.id === singleId);
                         if(target) {
                             selectedScenarios = [target];
+                            // すぐに開始
                             document.getElementById('setupScreen').classList.add('hidden');
-                            startEndroll();
+                            setTimeout(startShowAnimation, 500);
                         } else {
                             renderSetupList();
                         }
@@ -305,36 +393,29 @@
                         renderSetupList();
                     }
                 } else {
-                    document.getElementById('loadingMsg').textContent = "LOGIN REQUIRED (Please log in on other pages)";
+                    document.getElementById('setupList').innerHTML = '<div style="text-align:center;">LOGIN REQUIRED</div>';
                 }
             });
         });
 
         async function loadData() {
             try {
-                // 1. キャラクター読み込み
+                // Load Chars
                 const charSnap = await getDocs(collection(db, "rooms", "couple_shared_data", "characters"));
                 charSnap.forEach(doc => {
                     const d = doc.data();
                     allChars[d.id || doc.id] = d;
                 });
-
-                // 2. シナリオ読み込み (クエリはシンプルに)
+                // Load Scenarios
                 const q = collection(db, "scenarios"); 
                 const scnSnap = await getDocs(q);
-                
                 scnSnap.forEach(doc => {
                     allScenarios.push({ id: doc.id, ...doc.data() });
                 });
-
-                // 3. JS側でソート (インデックスエラー回避)
+                // Sort
                 allScenarios.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
 
-            } catch(e) { 
-                console.error(e); 
-                alert("データの読み込みに失敗しました。\n" + e.message);
-                document.getElementById('loadingMsg').textContent = "ERROR"; 
-            }
+            } catch(e) { console.error(e); alert("Data Load Error"); }
         }
 
         function renderSetupList() {
@@ -342,11 +423,11 @@
             list.innerHTML = "";
 
             if(allScenarios.length === 0) {
-                list.innerHTML = '<div style="text-align:center;">NO SCENARIOS FOUND</div>';
+                list.innerHTML = '<div style="text-align:center;">No Scenarios Found</div>';
                 return;
             }
 
-            // グループ化して表示 (PC1 & PC2 ごと)
+            // Group by Pair
             const groups = new Map();
             allScenarios.forEach(s => {
                 const mems = (s.members || []).sort().join('_') || "OTHERS";
@@ -364,16 +445,18 @@
                 }
 
                 const groupDiv = document.createElement('div');
-                groupDiv.className = 'pair-group';
-                groupDiv.innerHTML = `<div class="pair-title">${title}</div>`;
+                groupDiv.className = 'act-group';
+                groupDiv.innerHTML = `<div class="act-title">${title}</div>`;
 
                 scenarios.forEach(s => {
                     const row = document.createElement('div');
-                    row.className = 'check-row';
+                    row.className = 'scene-row';
                     row.innerHTML = `
-                        <input type="checkbox" value="${s.id}" class="scn-check">
-                        <div class="check-label">${s.title}</div>
-                        <div class="check-date">${s.date || ""}</div>
+                        <div style="display:flex; align-items:center; flex:1;">
+                            <input type="checkbox" value="${s.id}" class="scene-check">
+                            <div class="scene-title" style="margin-left:10px;">${s.title}</div>
+                        </div>
+                        <div class="scene-date">${s.date || "---"}</div>
                     `;
                     row.onclick = (e) => {
                         if(e.target.type !== 'checkbox') {
@@ -388,65 +471,75 @@
         }
 
         window.toggleAll = (state) => {
-            document.querySelectorAll('.scn-check').forEach(c => c.checked = state);
+            document.querySelectorAll('.scene-check').forEach(c => c.checked = state);
         };
 
-        window.startSequence = () => {
-            const checks = document.querySelectorAll('.scn-check:checked');
-            if(checks.length === 0) { alert("シナリオを選択してください"); return; }
+        window.startShow = () => {
+            const checks = document.querySelectorAll('.scene-check:checked');
+            if(checks.length === 0 && selectedScenarios.length === 0) { 
+                alert("Please select at least one scenario."); return; 
+            }
             
-            selectedScenarios = [];
-            checks.forEach(c => {
-                const s = allScenarios.find(item => item.id === c.value);
-                if(s) selectedScenarios.push(s);
-            });
-            
-            // 再度日付順にソート
-            selectedScenarios.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+            if(checks.length > 0) {
+                selectedScenarios = [];
+                checks.forEach(c => {
+                    const s = allScenarios.find(item => item.id === c.value);
+                    if(s) selectedScenarios.push(s);
+                });
+                // Sort by Date
+                selectedScenarios.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+            }
 
             document.getElementById('setupScreen').classList.add('hidden');
-            startEndroll();
+            setTimeout(startShowAnimation, 800);
         };
 
-        // --- ENDROLL CORE ---
-        function startEndroll() {
+        // --- THEATER ANIMATION ---
+        function startShowAnimation() {
+            // 1. Curtain Open
+            document.getElementById('curtain').classList.add('open');
+
+            // 2. Start Scroll after delay
+            setTimeout(() => {
+                initScrollContent();
+            }, 2500);
+        }
+
+        function initScrollContent() {
             const container = document.getElementById('scrollContent');
             const bgContainer = document.getElementById('bgContainer');
             let html = "";
-            let currentOffset = 100;
 
             selectedScenarios.forEach((s, index) => {
-                // 背景
+                // Background
                 const bgDiv = document.createElement('div');
                 bgDiv.className = 'bg-layer';
                 bgDiv.id = `bg-${index}`;
                 bgDiv.style.backgroundImage = `url(${s.images?.trailer || ''})`;
                 bgContainer.appendChild(bgDiv);
 
-                // マーカー
+                // Marker
                 html += `<div class="scenario-marker" id="marker-${index}" data-index="${index}"></div>`;
 
-                // Title
+                // Content
                 html += `
                     <div class="scenario-block">
                         <div class="section-space">
-                            <div class="role-title">SCENARIO ${index + 1}</div>
+                            <div class="role-title">SCENARIO ACT ${index + 1}</div>
                             <div class="main-title">${s.title}</div>
-                            <div class="sub-text" style="font-family:'Cinzel'">${s.system || ""} ${s.type || ""}</div>
+                            <div class="sub-text" style="font-family:'Cinzel'">${s.system || ""}</div>
                         </div>
                 `;
 
-                // Overview
                 if(s.overview) {
                     html += `
                         <div class="section-space">
-                            <div class="role-title">STORY</div>
-                            <div class="sub-text" style="text-align:justify; width:80%; margin:0 auto;">${s.overview}</div>
+                            <div class="sub-text" style="text-align:center; width:80%; margin:0 auto; font-style:italic;">${s.overview}</div>
                         </div>
                     `;
                 }
 
-                // Cast (Data Injection)
+                // Cast
                 const pc = allChars[s.characters?.pc?.id];
                 const kpc = allChars[s.characters?.kpc?.id];
                 const pcName = pc ? pc.name : "PC";
@@ -455,63 +548,53 @@
                 html += `<div class="section-space">`;
                 html += `
                     <div class="cast-box">
-                        <div class="role-title">PLAYER CHARACTER</div>
+                        <div class="role-title">STARRING</div>
                         <div class="cast-name">${pcName}</div>
                         <div class="cast-pl">PL: ${s.characters?.pc?.pl || ""}</div>
-                        <div style="font-size:0.8rem; color:${s.characters?.pc?.res==='Lost'?'#d44':'#8a8'}; margin-top:5px;">[ ${s.characters?.pc?.res || ""} ]</div>
                     </div>
                     <div class="cast-box">
-                        <div class="role-title">KEY CHARACTER</div>
+                        <div class="role-title">CO-STARRING</div>
                         <div class="cast-name">${kpcName}</div>
                         <div class="cast-pl">KP/PL: ${s.characters?.kpc?.pl || ""}</div>
-                        <div style="font-size:0.8rem; color:${s.characters?.kpc?.res==='Lost'?'#d44':'#8a8'}; margin-top:5px;">[ ${s.characters?.kpc?.res || ""} ]</div>
                     </div>
                 `;
                 html += `</div>`;
-
-                // Entities
-                if(s.entities) {
-                    html += `
-                        <div class="section-space">
-                            <div class="role-title">ENCOUNTERED</div>
-                            <div class="sub-text" style="line-height:1.8;">${s.entities.replace(/\n/g, ' / ')}</div>
-                        </div>
-                    `;
-                }
 
                 // Footer
                 html += `
                         <div class="section-space">
                             <div class="sub-text" style="font-family:'Cinzel'">
-                                ${s.date || ""} ${s.count ? '#'+s.count : ''}<br>
-                                Ending: ${s.endName || "---"}<br>
+                                ${s.date || ""} / Ending: ${s.endName || "---"}<br>
                                 GM: ${s.gm || "---"}
                             </div>
                         </div>
-                        <hr style="border:0; border-top:1px solid #444; width:50%; margin: 100px auto;">
+                        ${index < selectedScenarios.length -1 ? '<div class="scenario-divider"></div>' : ''}
                     </div>
                 `;
             });
 
             // FIN
             html += `
-                <div style="margin-top:100px; padding-bottom:50vh;">
+                <div style="margin-top:150px; padding-bottom:60vh;">
                     <div class="end-mark">FIN</div>
                 </div>
             `;
 
             container.innerHTML = html;
 
-            // アニメーション開始
-            const duration = selectedScenarios.length * 25 + 20; 
+            // Start Scroll
+            const duration = selectedScenarios.length * 28 + 20; 
             container.style.animation = `scrollUp ${duration}s linear forwards`;
+
+            // Curtain Close at the end
+            setTimeout(() => {
+                document.getElementById('curtain').classList.remove('open');
+            }, (duration - 3) * 1000);
 
             requestAnimationFrame(checkScroll);
         }
 
-        // --- 演出制御ループ ---
         let lastIndex = -1;
-        
         function checkScroll() {
             const markers = document.querySelectorAll('.scenario-marker');
             let currentIndex = -1;
@@ -527,7 +610,6 @@
                 updateScene(currentIndex);
                 lastIndex = currentIndex;
             }
-
             requestAnimationFrame(checkScroll);
         }
 
