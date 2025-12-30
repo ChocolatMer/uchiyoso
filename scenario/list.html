@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHRONICLE LOG - Archives</title>
+    
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet">
+    <link href="../character/edit/header.css" rel="stylesheet">
+
+    <style>
+        /* --- CORE STYLES --- */
+        body {
+            background-color: #080808;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            color: #ddd;
+            font-family: 'Shippori Mincho', serif;
+            margin: 0; padding: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 80px auto 100px;
+            padding: 0 20px;
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            color: #d4b346;
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            letter-spacing: 4px;
+            text-shadow: 0 0 10px rgba(212, 179, 70, 0.3);
+        }
+        .subtitle {
+            text-align: center; color: #666; font-size: 0.8rem; margin-bottom: 50px;
+            font-family: 'Cinzel', serif; letter-spacing: 2px;
+        }
+
+        /* --- COMBI SECTION --- */
+        .combi-section {
+            margin-bottom: 60px;
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        .combi-header {
+            display: flex; align-items: baseline; gap: 15px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px; margin-bottom: 20px;
+        }
+        .combi-name {
+            font-size: 1.4rem; color: #eee; font-weight: bold;
+        }
+        .combi-members {
+            font-size: 0.9rem; color: #888;
+        }
+        .combi-badge {
+            font-family: 'Cinzel', serif; font-size: 0.7rem;
+            background: #1a1a1a; color: #d4b346; border: 1px solid #d4b346;
+            padding: 2px 8px; border-radius: 10px;
+        }
+
+        /* --- SCENARIO GRID --- */
+        .scenario-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .scenario-card {
+            background: #111; border: 1px solid #333;
+            border-radius: 4px; overflow: hidden;
+            transition: 0.3s; cursor: pointer;
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .scenario-card:hover {
+            transform: translateY(-5px);
+            border-color: #d4b346;
+            box-shadow: 0 8px 20px rgba(212, 179, 70, 0.15);
+        }
+
+        .card-img-box {
+            width: 100%; height: 140px;
+            background: #000; overflow: hidden;
+            position: relative;
+        }
+        .card-img {
+            width: 100%; height: 100%; object-fit: cover; opacity: 0.7; transition: 0.3s;
+        }
+        .scenario-card:hover .card-img { opacity: 1; transform: scale(1.05); }
+        
+        .card-badges {
+            position: absolute; top: 10px; left: 10px; display: flex; gap: 5px;
+        }
+        .badge {
+            font-size: 0.6rem; padding: 2px 6px; border-radius: 2px;
+            background: rgba(0,0,0,0.8); color: #ccc; border: 1px solid #555;
+            font-family: 'Cinzel', serif;
+        }
+        .badge.lost { color: #ff6b6b; border-color: #ff6b6b; }
+
+        .card-body { padding: 15px; }
+        .card-title {
+            font-size: 1.1rem; font-weight: bold; color: #fff;
+            margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .card-meta {
+            font-size: 0.75rem; color: #777; display: flex; justify-content: space-between;
+            font-family: 'Cinzel', serif;
+        }
+
+        /* --- MODAL --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
+            z-index: 10000; display: none; opacity: 0; transition: 0.3s;
+            align-items: center; justify-content: center;
+        }
+        .modal-overlay.open { display: flex; opacity: 1; }
+
+        .modal-content {
+            background: #1a1a1a; width: 90%; max-width: 900px; max-height: 90vh;
+            border: 1px solid #444; border-radius: 4px;
+            display: grid; grid-template-columns: 300px 1fr;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            overflow: hidden; animation: zoomIn 0.3s;
+        }
+        @keyframes zoomIn { from{transform:scale(0.9);} to{transform:scale(1);} }
+
+        .modal-left {
+            background: #111; padding: 20px; border-right: 1px solid #333;
+            display: flex; flex-direction: column; gap: 15px;
+            overflow-y: auto;
+        }
+        .modal-right {
+            padding: 30px; overflow-y: auto; background: #181818;
+            background-image: repeating-linear-gradient(transparent, transparent 29px, #222 30px);
+        }
+
+        .modal-img { width: 100%; border-radius: 4px; border: 1px solid #333; margin-bottom: 10px; }
+        .modal-label { font-size: 0.7rem; color: #666; font-family: 'Cinzel', serif; margin-bottom: 2px; }
+        .modal-val { font-size: 0.9rem; color: #ddd; margin-bottom: 15px; }
+        .modal-title { font-size: 1.8rem; color: #d4b346; margin-bottom: 10px; border-bottom: 1px double #444; padding-bottom: 10px; }
+        
+        .modal-pair-info { display: flex; gap: 15px; margin-bottom: 20px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 4px; }
+        .modal-char-box { flex: 1; display: flex; align-items: center; gap: 10px; }
+        .m-icon { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #444; object-fit: cover; }
+        
+        .modal-text { font-size: 0.95rem; line-height: 1.8; color: #ccc; white-space: pre-wrap; margin-bottom: 20px; }
+        .close-btn {
+            position: absolute; top: 20px; right: 20px;
+            background: transparent; border: none; color: #fff; font-size: 2rem; cursor: pointer;
+            z-index: 10001; text-shadow: 0 0 5px #000;
+        }
+        .close-btn:hover { color: #d4b346; }
+
+        @media (max-width: 800px) {
+            .modal-content { grid-template-columns: 1fr; }
+            .modal-left { display: none; } /* スマホでは左側省略など */
+        }
+        @keyframes fadeIn { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+    </style>
+</head>
+<body>
+
+    <!-- ヘッダー読み込み -->
+    <script type="module">
+        try { const mod = await import("../character/header.js"); if(mod.initHeader) mod.initHeader(); } catch(e){}
+    </script>
+
+    <div class="container">
+        <h1>ARCHIVES</h1>
+        <div class="subtitle">CHRONICLE LOG STORAGE</div>
+        <div id="loading" style="text-align:center; color:#666; margin-top:50px;">LOADING ARCHIVES...</div>
+        
+        <!-- ここにコンビごとのセクションが追加される -->
+        <div id="archiveContainer"></div>
+    </div>
+
+    <!-- 詳細モーダル -->
+    <div id="detailModal" class="modal-overlay" onclick="closeModal(event)">
+        <button class="close-btn" onclick="document.getElementById('detailModal').classList.remove('open')">×</button>
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-left">
+                <img id="mTrailer" class="modal-img" src="">
+                
+                <div class="modal-label">SYSTEM</div>
+                <div id="mSystem" class="modal-val"></div>
+                <div class="modal-label">TYPE</div>
+                <div id="mType" class="modal-val"></div>
+                <div class="modal-label">DATE</div>
+                <div id="mDate" class="modal-val"></div>
+                <div class="modal-label">END</div>
+                <div id="mEnd" class="modal-val" style="color:#d4b346;"></div>
+            </div>
+            <div class="modal-right">
+                <div id="mTitle" class="modal-title"></div>
+                
+                <div class="modal-pair-info">
+                    <div class="modal-char-box">
+                        <img id="mIconPC" class="m-icon">
+                        <div>
+                            <div class="modal-label">PC</div>
+                            <div id="mNamePC" style="font-weight:bold;"></div>
+                            <div id="mSanPC" style="font-size:0.8rem; color:#aaa;"></div>
+                        </div>
+                    </div>
+                    <div class="modal-char-box">
+                        <img id="mIconKPC" class="m-icon">
+                        <div>
+                            <div class="modal-label">KPC</div>
+                            <div id="mNameKPC" style="font-weight:bold;"></div>
+                            <div id="mSanKPC" style="font-size:0.8rem; color:#aaa;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-label">OVERVIEW</div>
+                <div id="mOverview" class="modal-text"></div>
+
+                <div class="modal-label" style="color:#d4b346;">IMPRESSION & MEMO</div>
+                <div id="mMemo" class="modal-text"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        
+        // firestore.jsと同じ設定（読み取り専用で使用）
+        const firebaseConfig = {
+            apiKey: "AIzaSyBZVh6NhFA_BSuyUW-sZV2QPSvSzdYJZWU",
+            authDomain: "chocolatmer-uchiyoso.firebaseapp.com",
+            projectId: "chocolatmer-uchiyoso",
+            storageBucket: "chocolatmer-uchiyoso.firebasestorage.app",
+            messagingSenderId: "251681036234",
+            appId: "1:251681036234:web:be56156da1210d45afe133"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+
+        // アイコンパス
+        const IMG_BASE = "../images/icon/";
+        const NO_IMG = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+
+        let allChars = {};
+        let allScenarios = [];
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                await loadData();
+            } else {
+                document.getElementById('loading').textContent = "LOGIN REQUIRED";
+            }
+        });
+
+        async function loadData() {
+            try {
+                // 1. 全キャラクター取得 (コンビ名解決のため)
+                const charSnap = await getDocs(collection(db, "rooms", "couple_shared_data", "characters"));
+                charSnap.forEach(doc => {
+                    const d = doc.data();
+                    if(!d.id) d.id = doc.id;
+                    allChars[d.id] = d;
+                });
+
+                // 2. 全シナリオ取得 (日付順)
+                const q = query(collection(db, "scenarios"), orderBy("date", "desc"));
+                const scnSnap = await getDocs(q);
+                scnSnap.forEach(doc => {
+                    allScenarios.push({ id: doc.id, ...doc.data() });
+                });
+
+                renderArchives();
+            } catch (e) {
+                console.error(e);
+                document.getElementById('loading').textContent = "ERROR LOADING DATA";
+            }
+        }
+
+        function renderArchives() {
+            const container = document.getElementById('archiveContainer');
+            container.innerHTML = "";
+            document.getElementById('loading').style.display = 'none';
+
+            // グループ化ロジック
+            // Map<PairKey, { name, members:[], scenarios:[] }>
+            const groups = new Map();
+            const soloKey = "SOLO_ETC"; // コンビ以外用
+
+            allScenarios.forEach(s => {
+                const mems = s.members || [];
+                let key = soloKey;
+                let groupName = "SOLO / OTHERS";
+                let memberNames = "単発・その他";
+
+                if (mems.length === 2) {
+                    // 2人ならペア判定
+                    const id1 = mems[0];
+                    const id2 = mems[1];
+                    const sortedIds = [id1, id2].sort().join('_');
+                    key = sortedIds;
+
+                    // コンビ名解決
+                    const c1 = allChars[id1];
+                    const c2 = allChars[id2];
+                    
+                    let gName = null;
+                    if(c1 && c1.partners) {
+                        const p = c1.partners.find(p => p.id === id2);
+                        if(p && p.group) gName = p.group;
+                    }
+                    if(!gName && c2 && c2.partners) {
+                        const p = c2.partners.find(p => p.id === id1);
+                        if(p && p.group) gName = p.group;
+                    }
+
+                    const n1 = c1 ? c1.name : "Unknown";
+                    const n2 = c2 ? c2.name : "Unknown";
+                    
+                    groupName = gName || `${n1} & ${n2}`;
+                    memberNames = `${n1} × ${n2}`;
+                } else if (mems.length > 0) {
+                    // その他（3人以上や1人など）
+                    // メンバー名だけ羅列
+                    const names = mems.map(id => allChars[id] ? allChars[id].name : "Unknown");
+                    memberNames = names.join(', ');
+                }
+
+                if (!groups.has(key)) {
+                    groups.set(key, { name: groupName, membersStr: memberNames, scenarios: [] });
+                }
+                groups.get(key).scenarios.push(s);
+            });
+
+            // レンダリング
+            groups.forEach((group, key) => {
+                // セクション作成
+                const sec = document.createElement('div');
+                sec.className = 'combi-section';
+                
+                const count = group.scenarios.length;
+                
+                let html = `
+                    <div class="combi-header">
+                        <div class="combi-name">${group.name}</div>
+                        <div class="combi-members">${group.membersStr}</div>
+                        <div class="combi-badge">${count} LOGS</div>
+                    </div>
+                    <div class="scenario-grid">
+                `;
+
+                group.scenarios.forEach(s => {
+                    const img = s.images?.trailer || NO_IMG;
+                    const date = s.date || "Unknown Date";
+                    const system = s.system || "CoC";
+                    const isLost = (s.characters?.pc?.res === 'Lost' || s.characters?.kpc?.res === 'Lost');
+                    const badgeHtml = isLost ? `<span class="badge lost">LOST</span>` : `<span class="badge">CLEARED</span>`;
+
+                    html += `
+                        <div class="scenario-card" onclick="window.openDetail('${s.id}')">
+                            <div class="card-img-box">
+                                <img src="${img}" class="card-img">
+                                <div class="card-badges">${badgeHtml}<span class="badge">${system}</span></div>
+                            </div>
+                            <div class="card-body">
+                                <div class="card-title">${s.title}</div>
+                                <div class="card-meta">
+                                    <span>${date}</span>
+                                    <span>#${s.count||1}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`; // Close grid
+                sec.innerHTML = html;
+                container.appendChild(sec);
+            });
+        }
+
+        // Window関数として詳細表示機能を公開
+        window.openDetail = (sId) => {
+            const s = allScenarios.find(item => item.id === sId);
+            if(!s) return;
+
+            document.getElementById('mTrailer').src = s.images?.trailer || NO_IMG;
+            document.getElementById('mTitle').textContent = s.title;
+            document.getElementById('mSystem').textContent = s.system;
+            document.getElementById('mType').textContent = s.type;
+            document.getElementById('mDate').textContent = s.date;
+            document.getElementById('mEnd').textContent = s.endName || "---";
+
+            const setChar = (role, charData) => {
+                const cid = charData?.id;
+                const c = allChars[cid];
+                const name = c ? c.name : "---";
+                const icon = (c && c.icon) ? c.icon : (c ? `${IMG_BASE}${c.name}.png` : NO_IMG);
+                
+                document.getElementById(`mIcon${role}`).src = icon;
+                document.getElementById(`mName${role}`).textContent = name;
+                
+                let sanTxt = "";
+                if(charData?.san) sanTxt = `SAN: ${charData.san}`;
+                if(charData?.res === 'Lost') sanTxt += " (LOST)";
+                document.getElementById(`mSan${role}`).textContent = sanTxt;
+            };
+
+            setChar('PC', s.characters?.pc);
+            setChar('KPC', s.characters?.kpc);
+
+            document.getElementById('mOverview').textContent = s.overview || "(あらすじなし)";
+            
+            // メモ結合
+            let memo = "";
+            if(s.characters?.pc?.quote) memo += `[PC] "${s.characters.pc.quote}"\n`;
+            if(s.characters?.kpc?.quote) memo += `[KPC] "${s.characters.kpc.quote}"\n`;
+            if(s.memos?.public) memo += `\n[公開メモ]\n${s.memos.public}\n`;
+            
+            document.getElementById('mMemo').textContent = memo;
+
+            document.getElementById('detailModal').classList.add('open');
+        };
+
+        window.closeModal = (e) => {
+            if(e.target.id === 'detailModal') {
+                document.getElementById('detailModal').classList.remove('open');
+            }
+        };
+    </script>
+</body>
+</html>
