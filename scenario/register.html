@@ -152,14 +152,13 @@
         .session-count { text-align: center; font-family: 'Cinzel', serif; color: #d4b346; font-size: 0.9rem; margin-bottom: 25px; letter-spacing: 2px; }
         .session-count input { background: transparent; border: none; color: inherit; font-family: inherit; font-size: inherit; text-align: center; width: 50px; border-bottom: 1px dashed #444; }
 
-        /* --- CHAR PAIR AREA (DESIGN FIX) --- */
+        /* --- CHAR PAIR AREA --- */
         .char-pair-container {
             margin-bottom: 30px; position: relative;
             background: rgba(255,255,255,0.02); border-radius: 8px; padding: 15px 10px 20px;
             border: 1px solid #333;
         }
         
-        /* コンビ名選択 (上部中央) */
         .pair-select-wrapper {
             position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
             z-index: 10;
@@ -776,7 +775,9 @@
 
         let allChars = {};
         let currentUid = null;
+        // ★修正: moduleスコープで管理されるID
         let currentScenarioId = null; 
+        
         let allPairs = [];
 
         const applyTheme = (role, charId) => {
@@ -893,6 +894,39 @@
             }
         };
 
+        // --- リセット機能 (moduleスコープに移動・修正) ---
+        window.resetForm = () => {
+            // ★重要: モジュール内の変数を確実にリセット
+            currentScenarioId = null;
+            
+            // フォームクリア
+            getEl('inpTitle').value = ""; getEl('inpCount').value = "1";
+            document.querySelectorAll('.paper-area, .line-input').forEach(e => { if(!e.id.includes('PlName')) e.value = ""; });
+            
+            // プルダウンリセット
+            document.querySelectorAll('select').forEach(s => { 
+                if(s.id !== 'inpSystem' && s.id !== 'inpType') s.selectedIndex = 0; 
+            });
+
+            // 画像リセット
+            const resetImg = (boxId, imgId) => {
+                getEl(imgId).src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+                getEl(boxId).classList.add('empty');
+            };
+            resetImg('dropTrailer', 'imgTrailer');
+            resetImg('dropScnTrailer', 'imgScnTrailer');
+            resetImg('dropScnTrailerTab', 'imgScnTrailerTab');
+            
+            getEl('inpImgTrailer').value = "";
+            getEl('inpImgScnTrailer').value = "";
+
+            getEl('skillListPC').innerHTML = ""; getEl('skillListKPC').innerHTML = "";
+            getEl('encList').innerHTML = "";
+            
+            document.querySelectorAll('.history-item').forEach(e=>e.classList.remove('active'));
+            alert("新規作成モードにリセットしました");
+        };
+
         const loadHistory = async () => {
             const pcId = getEl('selPC').value;
             const kpcId = getEl('selKPC').value;
@@ -949,7 +983,7 @@
             getEl('inpEndName').value = s.endName || "";
             getEl('inpDate').value = s.date || "";
             
-            // Image Load Logic (also handle empty class)
+            // Image Load Logic
             const loadImg = (boxId, imgId, inpId, val) => {
                 if(val) {
                     getEl(inpId).value = val; getEl(imgId).src = val; getEl(boxId).classList.remove('empty');
@@ -1003,26 +1037,6 @@
                 getEl('inpSecretMemoPC').value = s.memos.secretPC||"";
                 getEl('inpSecretMemoKPC').value = s.memos.secretKPC||""; 
             }
-        };
-
-        window.resetForm = () => {
-            currentScenarioId = null;
-            getEl('inpTitle').value = ""; getEl('inpCount').value = "1";
-            document.querySelectorAll('.paper-area, .line-input').forEach(e => { if(!e.id.includes('PlName')) e.value = ""; });
-            
-            const resetImg = (boxId, imgId) => {
-                getEl(imgId).src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-                getEl(boxId).classList.add('empty');
-            };
-            resetImg('dropTrailer', 'imgTrailer');
-            resetImg('dropScnTrailer', 'imgScnTrailer');
-            resetImg('dropScnTrailerTab', 'imgScnTrailerTab');
-
-            getEl('skillListPC').innerHTML = ""; getEl('skillListKPC').innerHTML = "";
-            getEl('encList').innerHTML = "";
-            
-            document.querySelectorAll('.history-item').forEach(e=>e.classList.remove('active'));
-            alert("新規作成モード");
         };
 
         const onCharSelect = (selId, imgId, plId, sanId, chatIconId, role) => {
@@ -1123,7 +1137,7 @@
                 const sData = createScenarioRecord(inputData, currentUid);
                 sData.entities = entities; 
 
-                // ★ Sanitizer: Remove undefined to fix "Unsupported field value" error
+                // Sanitizer
                 const removeUndefined = (obj) => {
                     Object.keys(obj).forEach(key => {
                         if (obj[key] && typeof obj[key] === 'object') removeUndefined(obj[key]);
@@ -1145,6 +1159,7 @@
                 }
 
                 alert("保存完了");
+                // 新規保存後、IDをセットして上書きモードにする
                 currentScenarioId = sId;
                 loadHistory();
 
