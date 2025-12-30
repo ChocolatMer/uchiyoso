@@ -695,17 +695,13 @@
             const type = document.getElementById('inpType').value;
             const isPair = (type === 'タイマン' || type === 'ソロ');
             
-            const pcName = document.getElementById('selPC').options[document.getElementById('selPC').selectedIndex]?.text || "";
-            const kpcName = document.getElementById('selKPC').options[document.getElementById('selKPC').selectedIndex]?.text || "";
-            const isDefault = (pcName === "(PC)" || pcName === "(選択)" || pcName === "");
-
             let txtPC = "PC";
             let txtKPC = "KPC";
 
             if (!isPair) {
                 // 2PL/4PL mode
-                txtPC = isDefault ? "PC1" : `PC1 (${pcName})`;
-                txtKPC = isDefault ? "PC2" : `PC2 (${kpcName})`;
+                txtPC = "PC1";
+                txtKPC = "PC2";
             }
 
             document.querySelectorAll('.lbl-pc').forEach(el => el.textContent = txtPC);
@@ -713,10 +709,14 @@
 
             // KPC側のプレースホルダー更新
             const plHolderKPC = isPair ? "KP/PL名" : "PL名";
-            const quoteHolderKPC = isPair ? "KPCの印象的な台詞..." : `${txtKPC.split(' ')[0]}の印象的な台詞...`;
+            const quoteHolderKPC = isPair ? "KPCの印象的な台詞..." : `${txtKPC}の印象的な台詞...`;
+            
+            // PC側のプレースホルダー更新
+            const quoteHolderPC = isPair ? "PCの印象的な台詞..." : `${txtPC}の印象的な台詞...`;
 
             document.getElementById('inpPlNameKPC').placeholder = plHolderKPC;
             document.getElementById('inpQuoteKPC').placeholder = quoteHolderKPC;
+            document.getElementById('inpQuotePC').placeholder = quoteHolderPC;
         };
 
         window.swapCharacters = () => {
