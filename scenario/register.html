@@ -1218,10 +1218,9 @@
                         secretPC: getEl('inpSecretMemoPC').value,
                         secretKPC: getEl('inpSecretMemoKPC').value 
                     },
-                    entities: entities 
+                    entities: entities // ★ここに入れるだけで、overviewには結合しない
                 };
 
-                if(entities) inputData.overview += `\n\n[遭遇した神話生物]\n${entities}`;
 
                 // ★データ生成
                 const sData = createScenarioRecord(inputData, currentUid);

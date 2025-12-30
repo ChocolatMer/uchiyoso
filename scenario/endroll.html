@@ -6,7 +6,7 @@
     <title>Chronicle Endroll - The Grand Theater</title>
     
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
         /* --- THEATER THEME CORE --- */
@@ -14,7 +14,7 @@
             --gold-base: #d4af37;
             --gold-shine: #f9e295;
             --velvet-red: #4a0404;
-            --velvet-dark: #1a0000;
+            --velvet-dark: #150000;
             --stage-black: #050505;
             --text-main: #f0f0f0;
         }
@@ -28,22 +28,16 @@
             height: 100vh; width: 100vw;
         }
 
-        /* --- STAGE FRAME (PROSCENIUM) --- */
+        /* --- STAGE FRAME --- */
         .stage-frame {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none; z-index: 500;
-            box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
-            border: 15px solid #1a1a1a;
+            box-shadow: inset 0 0 150px rgba(0,0,0,0.9);
+            border: 20px solid #1a1a1a;
             border-image: linear-gradient(to bottom, #554422, #221100, #554422) 1;
         }
-        .stage-frame::before {
-            content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-            width: 80%; height: 50px;
-            background: radial-gradient(ellipse at center, rgba(0,0,0,0.8) 0%, transparent 70%);
-            z-index: 501;
-        }
 
-        /* --- CURTAINS (Unchanged Quality) --- */
+        /* --- CURTAINS --- */
         .curtain-container {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 1000; pointer-events: none;
@@ -51,317 +45,214 @@
         }
         .curtain {
             width: 50%; height: 100%;
-            background: linear-gradient(90deg, 
-                var(--velvet-dark) 0%, var(--velvet-red) 50%, var(--velvet-dark) 100%);
-            background-size: 100px 100%;
-            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+            background: linear-gradient(90deg, var(--velvet-dark) 0%, var(--velvet-red) 50%, var(--velvet-dark) 100%);
+            background-size: 80px 100%;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.9);
             position: relative;
-            transition: transform 3.5s cubic-bezier(0.25, 1, 0.5, 1);
+            transition: transform 3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .curtain.left { transform: translateX(0); border-right: 2px solid rgba(0,0,0,0.5); }
-        .curtain.right { transform: translateX(0); border-left: 2px solid rgba(0,0,0,0.5); }
-        
         .curtain::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: repeating-linear-gradient(90deg, 
-                rgba(0,0,0,0.4) 0px, transparent 20px, rgba(0,0,0,0.4) 40px);
+            background: repeating-linear-gradient(90deg, rgba(0,0,0,0.3) 0px, transparent 15px, rgba(0,0,0,0.3) 30px);
         }
-
         .curtain-container.open .curtain.left { transform: translateX(-100%); }
         .curtain-container.open .curtain.right { transform: translateX(100%); }
-
-        /* --- GLOBAL AMBIENT SPOTLIGHTS --- */
-        .spotlights {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 50; mix-blend-mode: screen;
-            opacity: 0.4;
-        }
-        .spot {
-            position: absolute; top: -20%; left: 50%; width: 60%; height: 150%;
-            background: radial-gradient(ellipse at top, rgba(255,255,220,0.1) 0%, transparent 70%);
-            transform-origin: top center;
-            animation: sway 10s infinite ease-in-out alternate;
-        }
-        .spot:nth-child(2) { left: 20%; width: 40%; animation-duration: 15s; animation-delay: -5s; }
-        .spot:nth-child(3) { left: 60%; width: 40%; animation-duration: 12s; animation-delay: -2s; }
-        @keyframes sway {
-            0% { transform: rotate(-3deg) translateX(-50%); }
-            100% { transform: rotate(3deg) translateX(-50%); }
-        }
-
-        /* --- SETUP SCREEN --- */
-        .setup-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #0a0a0a; z-index: 2000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 1s ease;
-        }
-        .setup-screen.hidden { opacity: 0; pointer-events: none; }
-
-        .playbill {
-            width: 600px; max-width: 90%; height: 80vh;
-            background: #e8dac3; color: #1a1a1a;
-            border: 8px double #1a1a1a; padding: 40px; box-sizing: border-box;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-            display: flex; flex-direction: column; position: relative;
-            background-image: url("https://www.transparenttextures.com/patterns/cream-paper.png");
-        }
-        .playbill::before {
-            content: ''; position: absolute; top:0; left:0; width:100%; height:100%;
-            background: radial-gradient(circle, transparent 40%, rgba(139, 69, 19, 0.1) 100%);
-            pointer-events: none;
-        }
-
-        .playbill-header { text-align: center; border-bottom: 2px solid #1a1a1a; margin-bottom: 20px; padding-bottom: 10px; }
-        .playbill-title { font-family: 'Cinzel', serif; font-size: 2.5rem; font-weight: bold; letter-spacing: 5px; margin-bottom: 5px; }
-        .program-list { flex: 1; overflow-y: auto; padding-right: 10px; font-family: 'Shippori Mincho', serif; }
-        .act-group { margin-bottom: 20px; }
-        .act-title { font-family: 'Cinzel', serif; font-size: 1.1rem; font-weight: bold; border-bottom: 1px dashed #555; margin-bottom: 10px; }
-        .scene-row { display: flex; justify-content: space-between; padding: 6px 0; cursor: pointer; border-bottom: 1px dotted #ccc; }
-        .scene-row:hover { background: rgba(0,0,0,0.05); }
-        .scene-title { flex: 1; font-weight: bold; font-size: 0.95rem; }
-        .scene-date { font-size: 0.8rem; color: #666; font-family: 'Cinzel'; margin-left: 10px;}
-        .scene-check { margin-right: 10px; accent-color: var(--velvet-red); transform: scale(1.2); }
-
-        .ticket-btn {
-            margin-top: 20px; background: var(--velvet-red); color: #e8dac3;
-            border: 2px solid #1a1a1a; padding: 15px;
-            font-family: 'Cinzel', serif; font-size: 1.2rem; letter-spacing: 2px;
-            cursor: pointer; transition: 0.3s; width: 100%; z-index: 10;
-        }
-        .ticket-btn:hover { background: var(--velvet-dark); color: #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
 
         /* --- BACKGROUND --- */
         .bg-fixed {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at center, #111 0%, #000 100%);
-            background-image: url("https://www.transparenttextures.com/patterns/black-linen.png");
+            background: #080808;
+            background-image: radial-gradient(circle at center, #1a1a1a 0%, #000 100%);
             z-index: -2;
         }
 
-        /* --- SCROLL CONTENT (CENTER) --- */
+        /* --- SCROLL CONTENT --- */
         .scroll-container {
             position: absolute; bottom: -100%; left: 50%; transform: translateX(-50%);
             width: 800px; max-width: 90%; text-align: center;
             z-index: 100; padding-bottom: 300px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
 
         .scenario-block {
-            margin-bottom: 300px; /* Space between scenarios */
-            opacity: 1; transition: opacity 1s;
-        }
-
-        /* Elements inside Scroll */
-        .sc-label {
-            font-family: 'Cinzel', serif; color: var(--gold-base); font-size: 0.9rem;
-            letter-spacing: 0.2em; margin-bottom: 5px; text-transform: uppercase;
-        }
-        .sc-title {
-            font-family: 'Shippori Mincho', serif; font-size: 2.5rem; font-weight: bold;
-            color: #fff; margin-bottom: 10px; line-height: 1.3;
-            text-shadow: 0 0 10px rgba(255,255,255,0.4);
-        }
-        .sc-date {
-            font-family: 'Cinzel', serif; font-size: 1rem; color: #ccc; margin-bottom: 40px;
-        }
-
-        .sc-image-box {
-            margin: 40px auto; width: 100%; max-width: 600px;
+            margin-bottom: 400px; /* Scene spacing */
             position: relative;
-            border: 1px solid #333;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
         }
-        .sc-image {
-            width: 100%; height: auto; display: block;
-            filter: brightness(0.9);
+
+        /* Marker for JS Trigger */
+        .scenario-marker { position: absolute; top: -50vh; left: 0; width: 100%; height: 1px; visibility: hidden; }
+
+        /* TEXT ANIMATIONS */
+        .reveal-text {
+            opacity: 0; transform: translateY(30px);
+            transition: opacity 1s ease-out, transform 1s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
-        /* Frame effect for image */
+        .reveal-text.visible { opacity: 1; transform: translateY(0); }
+
+        .sc-header { margin-bottom: 60px; }
+        .sc-label { font-family: 'Cinzel'; color: var(--gold-base); font-size: 0.9rem; letter-spacing: 0.3em; margin-bottom: 10px; }
+        .sc-title {
+            font-size: 3rem; font-weight: bold; color: #fff; margin-bottom: 15px; line-height: 1.2;
+            text-shadow: 0 0 20px rgba(255,255,255,0.2);
+        }
+        .sc-date { font-family: 'Cinzel'; font-size: 1rem; color: #aaa; letter-spacing: 2px; }
+
+        /* CENTRAL IMAGE (TRAILER) */
+        .sc-image-box {
+            margin: 0 auto 60px auto; width: 100%; max-width: 500px;
+            aspect-ratio: 16/9; position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            border: 1px solid #333; overflow: hidden;
+            transform: scale(0.95); opacity: 0; transition: 1.5s ease;
+        }
+        .sc-image-box.visible { transform: scale(1); opacity: 1; }
+        .sc-image { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.9); }
         .sc-image-box::after {
-            content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px;
-            border: 1px solid rgba(212, 175, 55, 0.3); pointer-events: none;
+            content: ''; position: absolute; top:0; left:0; width:100%; height:100%;
+            box-shadow: inset 0 0 30px #000; pointer-events: none;
         }
 
-        .sc-text-block {
-            width: 80%; margin: 0 auto 50px auto;
-            text-align: center; line-height: 2; font-size: 0.95rem; color: #ddd;
-            white-space: pre-wrap;
-        }
-        .sc-section-title {
+        /* TEXT SECTIONS */
+        .text-section { width: 80%; margin: 0 auto 50px auto; color: #ccc; line-height: 2; font-size: 0.95rem; white-space: pre-wrap; }
+        .section-divider {
             display: flex; align-items: center; justify-content: center;
-            margin: 40px 0 20px 0; color: #888; font-size: 0.8rem; font-family: 'Cinzel';
+            margin: 40px 0 20px 0; color: #666; font-size: 0.8rem; font-family: 'Cinzel'; letter-spacing: 2px;
         }
-        .sc-section-title::before, .sc-section-title::after {
-            content: ''; height: 1px; width: 30px; background: #555; margin: 0 10px;
+        .section-divider::before, .section-divider::after {
+            content: ''; height: 1px; width: 30px; background: #444; margin: 0 15px;
         }
 
-        /* Cast & Staff Grid */
-        .cast-grid {
-            display: flex; justify-content: center; flex-wrap: wrap; gap: 40px; margin-bottom: 40px;
-        }
-        .cast-item { width: 250px; text-align: center; }
-        .cast-role { font-family: 'Cinzel'; font-size: 0.8rem; color: var(--gold-base); margin-bottom: 5px; }
-        .cast-name { font-size: 1.5rem; font-weight: bold; margin-bottom: 2px; }
-        .cast-pl { font-size: 0.9rem; color: #aaa; }
+        /* CAST GRID */
+        .cast-grid { display: flex; justify-content: center; gap: 60px; margin: 60px 0; flex-wrap: wrap; }
+        .cast-item { width: 280px; text-align: center; }
+        .cast-role { font-family: 'Cinzel'; font-size: 0.8rem; color: var(--gold-base); margin-bottom: 5px; opacity: 0.8; }
+        .cast-name { font-size: 1.6rem; font-weight: bold; margin-bottom: 5px; }
+        .cast-pl { font-size: 0.85rem; color: #888; margin-bottom: 10px; font-family: 'Cinzel'; }
         
-        .status-tag {
+        .status-badge {
             display: inline-block; padding: 2px 8px; border: 1px solid #555;
-            font-family: 'Cinzel'; font-size: 0.7rem; color: #ccc; margin-top: 5px;
-            letter-spacing: 1px;
+            font-family: 'Cinzel'; font-size: 0.7rem; color: #ccc; letter-spacing: 1px;
         }
-        .status-alive { color: #8bc34a; border-color: #8bc34a; }
-        .status-lost { color: #f44336; border-color: #f44336; }
+        .status-badge.lost { color: #ff6b6b; border-color: #ff6b6b; box-shadow: 0 0 10px rgba(255,107,107,0.2); }
+        .status-badge.alive { color: #6bffb3; border-color: #6bffb3; box-shadow: 0 0 10px rgba(107,255,179,0.2); }
 
-        .quote-text {
-            font-size: 1.1rem; font-style: italic; color: #fff;
-            margin: 10px 0; padding: 0 20px;
-            opacity: 0.8; font-family: 'Shippori Mincho';
+        .quote-box {
+            margin-top: 15px; padding: 10px;
+            font-style: italic; color: #eee; font-size: 1rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
         }
 
-        .end-info {
-            margin-top: 50px; padding: 20px;
+        /* ENDING */
+        .ending-info {
             border-top: 1px solid #333; border-bottom: 1px solid #333;
-            display: inline-block;
+            padding: 30px 0; margin-top: 50px; display: inline-block; width: 80%;
         }
-        .end-name { font-family: 'Cinzel', serif; font-size: 1.2rem; color: var(--gold-shine); }
-        
-        .scenario-divider {
-            width: 100px; height: 1px; background: linear-gradient(90deg, transparent, var(--gold-base), transparent);
-            margin: 150px auto;
-        }
+        .end-title { font-family: 'Cinzel'; font-size: 1.4rem; color: var(--gold-shine); letter-spacing: 2px; margin-bottom: 10px; }
+        .gm-info { font-size: 0.9rem; color: #888; font-family: 'Cinzel'; }
 
+        /* FIN */
         .fin-mark {
-            font-family: 'Cinzel', serif; font-size: 6rem; color: var(--gold-base);
-            margin-top: 100px; opacity: 0; animation: fadeInEnd 5s ease forwards;
-            text-shadow: 0 0 30px rgba(212, 175, 55, 0.6);
+            font-family: 'Cinzel'; font-size: 5rem; color: var(--gold-base);
+            margin-top: 150px; opacity: 0; animation: fadeInFin 4s ease forwards;
+            text-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
         }
-        @keyframes fadeInEnd { from{opacity:0; letter-spacing: 0;} to{opacity:1; letter-spacing: 10px;} }
+        @keyframes fadeInFin { from{opacity:0; letter-spacing: 0;} to{opacity:1; letter-spacing: 10px;} }
 
-        /* --- SIDE VISUALS (TACHIE & SPOTLIGHT) --- */
+        /* --- SIDE CHARACTERS (TACHIE) --- */
         .side-container {
-            position: absolute; top: 0; height: 100%; width: 25%;
+            position: absolute; top: 0; height: 100%; width: 28%;
             z-index: 90; display: flex; flex-direction: column; justify-content: center;
             pointer-events: none;
         }
-        .side-left { left: 5%; align-items: flex-start; }
-        .side-right { right: 5%; align-items: flex-end; }
+        .side-left { left: 2%; align-items: center; }
+        .side-right { right: 2%; align-items: center; }
 
         .char-visual {
-            position: relative; opacity: 0;
-            transition: all 2s ease;
-            width: 100%; display: flex; flex-direction: column; align-items: center;
+            position: relative; width: 100%; display: flex; justify-content: center;
+            opacity: 0; transform: scale(0.9); transition: all 2s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
-
-        /* Character Spotlight */
-        .char-spotlight {
+        /* Spotlight Effect */
+        .spotlight-bg {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 120%; padding-bottom: 120%; /* 1:1 Aspect Ratio */
+            width: 100%; padding-bottom: 100%; /* Circle */
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+            mix-blend-mode: screen; filter: blur(30px);
+            opacity: 0; transition: opacity 2s ease;
             z-index: -1;
-            mix-blend-mode: screen;
-            filter: blur(20px);
-            opacity: 0; transition: opacity 1.5s ease;
         }
-        
         .char-img {
-            max-height: 80vh; max-width: 100%; object-fit: contain;
-            filter: drop-shadow(0 0 10px rgba(0,0,0,0.8));
-            mask-image: linear-gradient(to bottom, black 85%, transparent 100%);
+            max-height: 85vh; max-width: 100%; object-fit: contain;
+            filter: drop-shadow(0 0 20px rgba(0,0,0,0.8));
+            mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
         }
 
-        .slide-in-left { opacity: 1; transform: translateX(0); }
-        .slide-in-right { opacity: 1; transform: translateX(0); }
-        .hide-visual { opacity: 0; transform: scale(0.95); }
-        .side-left .hide-visual { transform: translateX(-50px); }
-        .side-right .hide-visual { transform: translateX(50px); }
+        /* Animation States */
+        .visual-active { opacity: 1; transform: scale(1); }
+        .spotlight-active { opacity: 0.6; animation: spotPulse 5s infinite alternate; }
 
-        /* --- CONTROLS --- */
-        .controls {
-            position: fixed; bottom: 20px; right: 20px; z-index: 2000;
-            display: flex; gap: 10px; opacity: 0; transition: opacity 0.5s;
-        }
-        .controls:hover { opacity: 1; }
-        .ctrl-btn {
-            background: rgba(0,0,0,0.5); border: 1px solid #555;
-            color: #fff; width: 40px; height: 40px; border-radius: 50%;
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-            transition: 0.3s;
-        }
-        .ctrl-btn:hover { background: var(--velvet-red); border-color: var(--velvet-red); }
+        @keyframes spotPulse { 0%{transform: translate(-50%, -50%) scale(1);} 100%{transform: translate(-50%, -50%) scale(1.1);} }
 
+        /* Animation Keyframes for Scroll */
         @keyframes scrollUp {
             0% { transform: translate(-50%, 100vh); }
             100% { transform: translate(-50%, -100%); }
         }
+
+        /* Setup Screen */
+        .setup-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0a0a0a; z-index: 2000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 1s;
+        }
+        .setup-screen.hidden { opacity: 0; pointer-events: none; }
+        .setup-btn {
+            background: var(--velvet-red); color: #fff; border: 1px solid #333; padding: 15px 30px;
+            font-family: 'Cinzel'; font-size: 1.2rem; cursor: pointer; margin-top: 20px;
+            transition: 0.3s; letter-spacing: 2px;
+        }
+        .setup-btn:hover { background: var(--velvet-dark); box-shadow: 0 0 20px rgba(255,0,0,0.2); }
     </style>
 </head>
 <body>
 
-    <!-- STAGE DECORATION -->
+    <!-- STAGE -->
     <div class="stage-frame"></div>
     <div class="curtain-container" id="curtain">
         <div class="curtain left"></div>
         <div class="curtain right"></div>
     </div>
-    <div class="spotlights">
-        <div class="spot"></div><div class="spot"></div><div class="spot"></div>
-    </div>
 
-    <!-- SETUP SCREEN -->
+    <!-- SETUP -->
     <div id="setupScreen" class="setup-screen">
-        <div class="playbill">
-            <div class="playbill-header">
-                <div class="playbill-title">THE ENDROLL</div>
-                <div style="font-family:'Playfair Display'; font-style:italic;">Chronicle Log Theater</div>
-            </div>
-            
-            <div class="program-list" id="setupList">
-                <div style="text-align:center; margin-top:50px;">Preparing Program...</div>
-            </div>
-
-            <div style="text-align:right; margin-top:10px; font-size:0.8rem;">
-                <span onclick="window.toggleAll(true)" style="cursor:pointer; border-bottom:1px solid #555;">Select All</span> / 
-                <span onclick="window.toggleAll(false)" style="cursor:pointer; border-bottom:1px solid #555;">Clear</span>
-            </div>
-
-            <button class="ticket-btn" onclick="window.startShow()">
-                <span class="material-icons-round" style="vertical-align:middle;">local_activity</span> 
-                ADMIT ONE (START)
-            </button>
-        </div>
+        <div style="font-family:'Cinzel'; font-size:3rem; color:#d4af37; margin-bottom:10px;">THE ENDROLL</div>
+        <div style="color:#666; font-family:'Shippori Mincho'; margin-bottom:30px;">Chronicle Log Theater</div>
+        <div id="setupList" style="color:#ccc; margin-bottom:20px;">Loading Data...</div>
+        <button class="setup-btn" onclick="window.startShow()">START SHOW</button>
     </div>
 
-    <!-- MAIN STAGE -->
+    <!-- MAIN CONTENT -->
     <div class="bg-fixed"></div>
+    <div class="scroll-container" id="scrollContent"></div>
 
-    <div class="scroll-container" id="scrollContent">
-        <!-- JS will inject content here -->
-    </div>
-
-    <!-- LEFT SIDE: PC -->
+    <!-- SIDE CHARACTERS -->
     <div class="side-container side-left">
-        <div class="char-visual hide-visual" id="visPC">
-            <div class="char-spotlight" id="spotPC"></div>
+        <div class="char-visual" id="visPC">
+            <div class="spotlight-bg" id="spotPC"></div>
             <img id="imgPC" class="char-img" src="">
         </div>
     </div>
-
-    <!-- RIGHT SIDE: KPC -->
     <div class="side-container side-right">
-        <div class="char-visual hide-visual" id="visKPC">
-            <div class="char-spotlight" id="spotKPC"></div>
+        <div class="char-visual" id="visKPC">
+            <div class="spotlight-bg" id="spotKPC"></div>
             <img id="imgKPC" class="char-img" src="">
         </div>
     </div>
 
-    <div class="controls">
-        <div class="ctrl-btn" onclick="location.reload()" title="REPLAY">
-            <span class="material-icons-round">replay</span>
-        </div>
-        <div class="ctrl-btn" onclick="window.close()" title="CLOSE">
-            <span class="material-icons-round">close</span>
-        </div>
+    <!-- CONTROLS -->
+    <div style="position:fixed; bottom:20px; right:20px; z-index:2000; display:flex; gap:10px;">
+        <button onclick="location.reload()" style="background:#222; color:#fff; border:none; padding:10px; border-radius:50%; cursor:pointer;"><span class="material-icons-round">replay</span></button>
+        <button onclick="window.close()" style="background:#222; color:#fff; border:none; padding:10px; border-radius:50%; cursor:pointer;"><span class="material-icons-round">close</span></button>
     </div>
 
     <script type="module">
@@ -386,299 +277,194 @@
         let allScenarios = [];
         let selectedScenarios = [];
 
-        document.addEventListener('DOMContentLoaded', () => {
-            onAuthStateChanged(auth, async (user) => {
-                if (user) {
-                    await loadData();
-                    
-                    const params = new URLSearchParams(window.location.search);
-                    const singleId = params.get('id');
-                    if(singleId) {
-                        const target = allScenarios.find(s => s.id === singleId);
-                        if(target) {
-                            selectedScenarios = [target];
-                            document.getElementById('setupScreen').classList.add('hidden');
-                            setTimeout(startShowAnimation, 500);
-                        } else {
-                            renderSetupList();
-                        }
-                    } else {
-                        renderSetupList();
-                    }
-                } else {
-                    document.getElementById('setupList').innerHTML = '<div style="text-align:center;">LOGIN REQUIRED</div>';
+        // Load
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                await loadData();
+                renderSetup();
+                // Check URL param for direct play
+                const p = new URLSearchParams(location.search);
+                if(p.get('id')){
+                    const t = allScenarios.find(s=>s.id===p.get('id'));
+                    if(t){ selectedScenarios=[t]; document.getElementById('setupScreen').classList.add('hidden'); setTimeout(playShow,500); }
                 }
-            });
+            } else {
+                document.getElementById('setupList').innerHTML = "Login Required";
+            }
         });
 
         async function loadData() {
             try {
-                // Load Chars
-                const charSnap = await getDocs(collection(db, "rooms", "couple_shared_data", "characters"));
-                charSnap.forEach(doc => {
-                    const d = doc.data();
-                    allChars[d.id || doc.id] = d;
-                });
-                // Load Scenarios
-                const scnSnap = await getDocs(collection(db, "scenarios"));
-                scnSnap.forEach(doc => {
-                    allScenarios.push({ id: doc.id, ...doc.data() });
-                });
-                // Sort
-                allScenarios.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
-            } catch(e) { console.error(e); alert("Data Load Error"); }
+                // Char
+                const cSnap = await getDocs(collection(db, "rooms", "couple_shared_data", "characters"));
+                cSnap.forEach(d => allChars[d.id] = d.data());
+                // Scenario
+                const sSnap = await getDocs(collection(db, "scenarios"));
+                sSnap.forEach(d => allScenarios.push({id:d.id, ...d.data()}));
+                allScenarios.sort((a,b) => new Date(a.date||0) - new Date(b.date||0));
+            } catch(e){ console.error(e); }
         }
 
-        function renderSetupList() {
-            const list = document.getElementById('setupList');
-            list.innerHTML = "";
-            if(allScenarios.length === 0) {
-                list.innerHTML = '<div style="text-align:center;">No Scenarios Found</div>';
-                return;
-            }
-
-            const groups = new Map();
-            allScenarios.forEach(s => {
-                const mems = (s.members || []).sort().join('_') || "OTHERS";
-                if(!groups.has(mems)) groups.set(mems, []);
-                groups.get(mems).push(s);
-            });
-
-            groups.forEach((scenarios, key) => {
-                let title = "SOLO / OTHERS";
-                if(key !== "OTHERS") {
-                    const ids = key.split('_');
-                    const n1 = allChars[ids[0]]?.name || "Unknown";
-                    const n2 = allChars[ids[1]]?.name || "";
-                    title = n2 ? `${n1} & ${n2}` : n1;
-                }
-                const groupDiv = document.createElement('div');
-                groupDiv.className = 'act-group';
-                groupDiv.innerHTML = `<div class="act-title">${title}</div>`;
-
-                scenarios.forEach(s => {
-                    const row = document.createElement('div');
-                    row.className = 'scene-row';
-                    row.innerHTML = `
-                        <div style="display:flex; align-items:center; flex:1;">
-                            <input type="checkbox" value="${s.id}" class="scene-check">
-                            <div class="scene-title" style="margin-left:10px;">${s.title}</div>
-                        </div>
-                        <div class="scene-date">${s.date || "---"}</div>
-                    `;
-                    row.onclick = (e) => {
-                        if(e.target.type !== 'checkbox') {
-                            const chk = row.querySelector('input');
-                            chk.checked = !chk.checked;
-                        }
-                    };
-                    groupDiv.appendChild(row);
-                });
-                list.appendChild(groupDiv);
-            });
+        function renderSetup(){
+            const div = document.getElementById('setupList');
+            div.innerHTML = `<select id="selScn" style="padding:10px; font-size:1rem; width:300px;"><option value="">-- SELECT SCENARIO --</option>${allScenarios.map((s,i)=>`<option value="${i}">${s.title} (${s.date})</option>`).join('')}</select>`;
         }
-
-        window.toggleAll = (state) => {
-            document.querySelectorAll('.scene-check').forEach(c => c.checked = state);
-        };
 
         window.startShow = () => {
-            const checks = document.querySelectorAll('.scene-check:checked');
-            if(checks.length === 0 && selectedScenarios.length === 0) { 
-                alert("Please select at least one scenario."); return; 
-            }
-            if(checks.length > 0) {
-                selectedScenarios = [];
-                checks.forEach(c => {
-                    const s = allScenarios.find(item => item.id === c.value);
-                    if(s) selectedScenarios.push(s);
-                });
-                selectedScenarios.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
-            }
+            const idx = document.getElementById('selScn').value;
+            if(idx === "") return alert("Select a scenario");
+            selectedScenarios = [allScenarios[idx]];
             document.getElementById('setupScreen').classList.add('hidden');
-            setTimeout(startShowAnimation, 800);
+            setTimeout(playShow, 800);
         };
 
-        function startShowAnimation() {
+        function playShow() {
+            // 1. Open Curtain
             document.getElementById('curtain').classList.add('open');
-            setTimeout(() => {
-                initScrollContent();
-            }, 3000); // Wait for curtain to fully open
-        }
-
-        function initScrollContent() {
+            
+            // 2. Build Content
             const container = document.getElementById('scrollContent');
             let html = "";
-
-            selectedScenarios.forEach((s, index) => {
-                const pcId = s.characters?.pc?.id;
-                const kpcId = s.characters?.kpc?.id;
-                const pc = allChars[pcId] || { name: "PC", color: "#888" };
-                const kpc = allChars[kpcId] || { name: "KPC", color: "#888" };
+            
+            selectedScenarios.forEach((s, i) => {
+                const pc = allChars[s.characters?.pc?.id] || {name:"PC", color:"#88ccff"};
+                const kpc = allChars[s.characters?.kpc?.id] || {name:"KPC", color:"#ff8888"};
                 
-                // Status mapping (Statusがデータにない場合は空欄)
-                const pcStatus = s.characters?.pc?.status || ""; 
-                const kpcStatus = s.characters?.kpc?.status || "";
-                
-                // KP Name Logic
-                let kpName = s.gm || "";
-                if (!kpName && s.characters?.kpc?.pl) {
-                    kpName = s.characters.kpc.pl;
-                }
+                // KP Name logic
+                let kpDisp = s.gm || "";
+                if(!kpDisp && s.type === "2PL") kpDisp = "UNKNOWN KP"; 
+                else if(!kpDisp) kpDisp = kpc.plName || "KPC";
 
-                // Marker for scroll detection
-                html += `<div class="scenario-marker" id="marker-${index}" data-index="${index}"></div>`;
-
-                html += `<div class="scenario-block">`;
-
-                // 1. Title & Date
                 html += `
-                    <div class="sc-label">SCENARIO ACT ${index + 1}</div>
-                    <div class="sc-title">${s.title}</div>
-                    <div class="sc-date">${s.date || "Unknown Date"}</div>
-                `;
-
-                // 2. Central Image (Trailer)
-                if(s.images?.trailer) {
-                    html += `
-                        <div class="sc-image-box">
-                            <img src="${s.images.trailer}" class="sc-image" alt="Scenario Art">
+                    <div class="scenario-block" id="scene-${i}" data-index="${i}">
+                        <div class="scenario-marker"></div>
+                        
+                        <div class="sc-header reveal-text">
+                            <div class="sc-label">SCENARIO LOG</div>
+                            <div class="sc-title">${s.title}</div>
+                            <div class="sc-date">${s.date || ""}</div>
                         </div>
-                    `;
-                }
 
-                // 3. Intro & Synopsis
-                if(s.intro || s.overview) {
-                    html += `<div class="sc-section-title">STORY</div>`;
-                    if(s.intro) {
-                        html += `<div class="sc-text-block" style="font-style:italic;">${s.intro}</div>`;
-                    }
-                    if(s.overview) {
-                        html += `<div class="sc-text-block">${s.overview}</div>`;
-                    }
-                }
+                        ${s.images?.trailer ? `
+                        <div class="sc-image-box reveal-text">
+                            <img src="${s.images.trailer}" class="sc-image">
+                        </div>` : ''}
 
-                // 4. Cast & Quotes
-                html += `<div class="sc-section-title">CAST & LINES</div>`;
-                html += `<div class="cast-grid">`;
+                        ${(s.introduction || s.overview) ? `
+                        <div class="text-section reveal-text">
+                            <div class="section-divider">INTRODUCTION & STORY</div>
+                            ${s.introduction ? `<div style="font-style:italic; margin-bottom:20px;">${s.introduction}</div>` : ''}
+                            ${s.overview ? `<div>${s.overview}</div>` : ''}
+                            ${s.entities ? `<div style="margin-top:20px; color:#a44; font-size:0.85rem;">[遭遇] ${s.entities}</div>` : ''}
+                        </div>` : ''}
 
-                // PC
-                html += `
-                    <div class="cast-item">
-                        <div class="cast-role">PLAYER CHARACTER</div>
-                        <div class="cast-name" style="color:${pc.color || '#fff'}">${pc.name}</div>
-                        <div class="cast-pl">PL: ${s.characters?.pc?.pl || "---"}</div>
-                        ${pcStatus ? `<span class="status-tag ${pcStatus.toLowerCase().includes('lost')?'status-lost':'status-alive'}">${pcStatus}</span>` : ''}
-                        ${s.characters?.pc?.quote ? `<div class="quote-text">"${s.characters.pc.quote}"</div>` : ''}
+                        <div class="cast-grid">
+                            <div class="cast-item reveal-text">
+                                <div class="cast-role">PLAYER CHARACTER</div>
+                                <div class="cast-name" style="color:${pc.color || '#ddd'}">${pc.name}</div>
+                                <div class="cast-pl">PL: ${s.characters?.pc?.pl || pc.plName || ""}</div>
+                                <span class="status-badge ${s.characters?.pc?.res==='Lost'?'lost':'alive'}">${s.characters?.pc?.res || 'Alive'}</span>
+                                ${s.characters?.pc?.quote ? `<div class="quote-box">"${s.characters.pc.quote}"</div>` : ''}
+                            </div>
+                            <div class="cast-item reveal-text">
+                                <div class="cast-role">${s.type==='2PL'?'PLAYER 2':'KEY PERSON'}</div>
+                                <div class="cast-name" style="color:${kpc.color || '#ddd'}">${kpc.name}</div>
+                                <div class="cast-pl">${s.type==='2PL'?'PL':'KP/PL'}: ${s.characters?.kpc?.pl || kpc.plName || ""}</div>
+                                <span class="status-badge ${s.characters?.kpc?.res==='Lost'?'lost':'alive'}">${s.characters?.kpc?.res || 'Alive'}</span>
+                                ${s.characters?.kpc?.quote ? `<div class="quote-box">"${s.characters.kpc.quote}"</div>` : ''}
+                            </div>
+                        </div>
+
+                        <div class="ending-info reveal-text">
+                            <div class="section-divider">CONCLUSION</div>
+                            <div class="end-title">${s.endName || "END"}</div>
+                            <div class="gm-info">Game Master: ${kpDisp}</div>
+                        </div>
                     </div>
                 `;
-
-                // KPC
-                html += `
-                    <div class="cast-item">
-                        <div class="cast-role">KEY PERSON</div>
-                        <div class="cast-name" style="color:${kpc.color || '#fff'}">${kpc.name}</div>
-                        <div class="cast-pl">PL: ${s.characters?.kpc?.pl || "---"}</div>
-                        ${kpcStatus ? `<span class="status-tag ${kpcStatus.toLowerCase().includes('lost')?'status-lost':'status-alive'}">${kpcStatus}</span>` : ''}
-                        ${s.characters?.kpc?.quote ? `<div class="quote-text">"${s.characters.kpc.quote}"</div>` : ''}
-                    </div>
-                `;
-                html += `</div>`; // End cast-grid
-
-                // 5. Ending & GM
-                html += `<div class="end-info">`;
-                if(s.endName) {
-                    html += `<div>ENDING: <span class="end-name">${s.endName}</span></div>`;
-                }
-                if(kpName) {
-                    html += `<div style="margin-top:10px; font-size:0.9rem; color:#aaa;">KEEPER: ${kpName}</div>`;
-                }
-                html += `</div>`;
-
-                if(index < selectedScenarios.length -1) {
-                    html += `<div class="scenario-divider"></div>`;
-                }
-                html += `</div>`; // End scenario-block
             });
 
-            // FIN
-            html += `
-                <div style="margin-top:200px; padding-bottom:60vh;">
-                    <div class="fin-mark">FIN</div>
-                </div>
-            `;
-
+            html += `<div class="fin-mark">FIN</div>`;
             container.innerHTML = html;
 
-            // Calculate animation duration based on content length
-            // More content = need more time.
-            const baseDuration = 40; // minimum seconds
-            const durationPerScene = 30; // seconds per scenario
-            const totalDuration = baseDuration + (selectedScenarios.length * durationPerScene);
+            // 3. Start Animation
+            // duration: longer if text is long
+            const duration = 40 + (selectedScenarios.length * 30);
+            container.style.animation = `scrollUp ${duration}s linear forwards`;
 
-            container.style.animation = `scrollUp ${totalDuration}s linear forwards`;
+            // 4. Close Curtain logic
+            setTimeout(() => { document.getElementById('curtain').classList.remove('open'); }, (duration - 4) * 1000);
 
-            // Close curtain near end
-            setTimeout(() => {
-                document.getElementById('curtain').classList.remove('open');
-            }, (totalDuration - 5) * 1000);
-
-            requestAnimationFrame(checkScroll);
+            // 5. Observers for Reveal & Characters
+            startObservers();
         }
 
-        let lastIndex = -1;
-        function checkScroll() {
-            const markers = document.querySelectorAll('.scenario-marker');
-            let currentIndex = -1;
+        function startObservers() {
+            // Text Reveal Observer
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(e => {
+                    if(e.isIntersecting) {
+                        e.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1, rootMargin: "0px 0px -100px 0px" });
 
-            // Trigger when marker is around center/top-third of screen
-            markers.forEach(m => {
-                const rect = m.getBoundingClientRect();
-                if (rect.top < window.innerHeight * 0.7) {
-                    currentIndex = parseInt(m.dataset.index);
-                }
-            });
+            document.querySelectorAll('.reveal-text').forEach(el => observer.observe(el));
 
-            if (currentIndex !== -1 && currentIndex !== lastIndex) {
-                updateVisuals(currentIndex);
-                lastIndex = currentIndex;
-            }
-            requestAnimationFrame(checkScroll);
+            // Character Trigger (Scene Start)
+            // Use a simpler scroll loop to update characters as soon as scene starts
+            const checkScene = () => {
+                const markers = document.querySelectorAll('.scenario-marker');
+                markers.forEach(m => {
+                    const rect = m.getBoundingClientRect();
+                    // Trigger when the top of the scene is near the bottom of the screen (early entry)
+                    if(rect.top < window.innerHeight * 0.9 && rect.top > -window.innerHeight) {
+                        const idx = m.parentElement.dataset.index;
+                        if(currentSceneIdx !== idx) {
+                            updateCharacters(idx);
+                            currentSceneIdx = idx;
+                        }
+                    }
+                });
+                requestAnimationFrame(checkScene);
+            };
+            requestAnimationFrame(checkScene);
         }
 
-        function updateVisuals(idx) {
+        let currentSceneIdx = -1;
+
+        function updateCharacters(idx) {
             const s = selectedScenarios[idx];
-            updateCharacter('PC', s);
-            updateCharacter('KPC', s);
-        }
-
-        function updateCharacter(role, s) {
-            const container = document.getElementById(`vis${role}`);
-            const img = document.getElementById(`img${role}`);
-            const spot = document.getElementById(`spot${role}`);
             
-            // Fade out
-            container.classList.add('hide-visual');
-            container.classList.remove('slide-in-left', 'slide-in-right');
-            spot.style.opacity = '0';
-
-            setTimeout(() => {
-                const charId = s.characters?.[role.toLowerCase()]?.id;
-                const charData = allChars[charId];
+            // Setup PC
+            const pcId = s.characters?.pc?.id;
+            const pc = allChars[pcId];
+            if(pc && pc.image) {
+                document.getElementById('imgPC').src = pc.image;
+                document.getElementById('visPC').classList.add('visual-active');
                 
-                if (charData && charData.image) {
-                    img.src = charData.image;
-                    
-                    // Set Spotlight Color
-                    const themeColor = charData.color || (role === 'PC' ? '#88ccff' : '#ff8888');
-                    spot.style.background = `radial-gradient(circle, ${themeColor} 0%, transparent 70%)`;
-                    
-                    // Fade In
-                    container.classList.remove('hide-visual');
-                    container.classList.add(role === 'PC' ? 'slide-in-left' : 'slide-in-right');
-                    spot.style.opacity = '0.5'; // Soft glow
-                }
-            }, 1000);
+                // Update Spotlight Color
+                const spot = document.getElementById('spotPC');
+                spot.style.background = `radial-gradient(circle, ${pc.color||'#88ccff'} 0%, transparent 70%)`;
+                spot.classList.add('spotlight-active');
+            } else {
+                document.getElementById('visPC').classList.remove('visual-active');
+            }
+
+            // Setup KPC
+            const kpcId = s.characters?.kpc?.id;
+            const kpc = allChars[kpcId];
+            if(kpc && kpc.image) {
+                document.getElementById('imgKPC').src = kpc.image;
+                document.getElementById('visKPC').classList.add('visual-active');
+
+                // Update Spotlight Color
+                const spot = document.getElementById('spotKPC');
+                spot.style.background = `radial-gradient(circle, ${kpc.color||'#ff8888'} 0%, transparent 70%)`;
+                spot.classList.add('spotlight-active');
+            } else {
+                document.getElementById('visKPC').classList.remove('visual-active');
+            }
         }
     </script>
 </body>
