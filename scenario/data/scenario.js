@@ -98,7 +98,7 @@ export function syncScenarioToCharacter(charData, sData, sId, roleKey) {
         appendText('memo', `後遺症:${sData.title}`, `${myResult.seq.name}: ${myResult.seq.desc}`);
     }
     // ★遭遇神話生物もキャラシにメモとして残したい場合はここで追記可能
-    // if (sData.entities) appendText('spells', `遭遇:${sData.title}`, sData.entities);
+    if (sData.entities) appendText('spells', `遭遇:${sData.title}`, sData.entities);
 
     return newChar;
 }
