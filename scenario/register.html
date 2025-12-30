@@ -615,7 +615,7 @@
                             <div id="tab-scenario" class="tab-panel">
                                 <h2 class="section-header">SCENARIO OVERVIEW</h2>
                                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px;">
-                                    <input type="text" id="inpMetaSystem" class="line-input" placeholder="システム詳細"><input type="text" id="inpMetaType" class="line-input" placeholder="形式詳細">
+                                    <input type="text" id="inpMetaSystem" class="line-input" placeholder="システム"><input type="text" id="inpMetaType" class="line-input" placeholder="人数">
                                     <input type="text" id="inpDuration" class="line-input" placeholder="所要時間"><input type="text" id="inpStage" class="line-input" placeholder="舞台">
                                     <input type="text" id="inpCharRel" class="line-input" placeholder="推奨関係"><input type="text" id="inpLostRate" class="line-input" placeholder="ロスト率">
                                     <!-- Spacer row -->
@@ -626,14 +626,14 @@
                                     <input type="text" id="inpUrlShop" class="line-input" placeholder="配布URL"><input type="text" id="inpUrlRoom" class="line-input" placeholder="部屋URL">
                                     
                                     <!-- Trailer Image In Scenario Tab (Synced) -->
-                                    <div class="report-header-img empty" id="dropScnTrailerTab" style="height:150px; margin-top:20px;">
+                                    <div class="report-header-img empty" id="dropScnTrailerTab" style="width:100%; aspect-ratio:16/9; margin-top:20px;" onclick="document.getElementById('fileScnTrailer').click()">
                                         <img id="imgScnTrailerTab" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="">
                                         <div style="position:absolute; bottom:0; right:0; background:rgba(0,0,0,0.7); color:#fff; font-size:0.6rem; padding:2px 5px;">TRAILER IMAGE</div>
                                     </div>
                                 </div>
                                 
                                 <div class="scn-toggle-header" onclick="window.toggleScnContent('scSyn')">あらすじ <span class="material-icons-round">expand_more</span></div>
-                                <div id="scSyn" class="scn-content show">
+                                <div id="scSyn" class="scn-content">
                                     <textarea id="inpSynopsis" class="paper-area" style="min-height:100px;"></textarea>
                                 </div>
 
