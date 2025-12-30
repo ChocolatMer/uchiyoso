@@ -184,7 +184,7 @@
             background: #111;
             color: #d4b346;
             border: 1px solid #d4b346;
-            border-top: none; /* 上辺なしで「吊り下げ」感を出す */
+            border-top: none; /* 上辺なし */
             padding: 5px 25px;
             font-family: 'Cinzel', 'Shippori Mincho', serif;
             font-size: 0.85rem;
@@ -835,15 +835,12 @@
         let currentUid = null;
         let currentScenarioId = null; 
         
-        // コンビ情報保持用
         let allPairs = [];
 
-        // Theme Color Helper
         const applyTheme = (role, charId) => {
             const char = allChars[charId];
             if(!char || !char.color) return;
             const color = char.color;
-            
             getEl(`icon${role}`).style.borderColor = color;
             getEl(`inpPlName${role}`).style.color = color;
             const btn = getEl(`btnDetail${role}`);
@@ -851,7 +848,7 @@
             getEl(`bubble${role}`).style.borderLeft = `3px solid ${color}`;
         };
 
-        // Image Handling
+        // --- Image Handling (Click & Drop) ---
         const setupImg = (boxId, inpId, imgId, fileInputId) => {
             const box = getEl(boxId);
             const fileInput = getEl(fileInputId);
@@ -887,7 +884,6 @@
                     getEl(boxId).classList.remove('empty');
 
                     // Sync logic for Scenario Trailer
-                    // If updating trailer (inpImgScnTrailer), update both overlay and tab image
                     if(inpId === 'inpImgScnTrailer') {
                         const otherImgId = (imgId === 'imgScnTrailer') ? 'imgScnTrailerTab' : 'imgScnTrailer';
                         const otherBoxId = (boxId === 'dropScnTrailer') ? 'dropScnTrailerTab' : 'dropScnTrailer';
@@ -924,7 +920,6 @@
                 list.forEach(c => {
                     if(c.partners && Array.isArray(c.partners)) {
                         c.partners.forEach(p => {
-                            // 重複排除キー作成 (ID順でソート)
                             const ids = [c.id, p.id].sort().join('_');
                             if(!pairMap.has(ids)) {
                                 pairMap.set(ids, {
@@ -947,7 +942,7 @@
             } catch(e) { console.error(e); loader.textContent="ERROR"; }
         });
 
-        // コンビ選択時の処理
+        // ★コンビ名選択時の処理 (デザイン変更対応)
         window.applyPair = (el) => {
             const idx = el.value;
             // ラベルの更新
@@ -964,7 +959,6 @@
             if(pair && pair.ids.length >= 2) {
                 const pcSel = getEl('selPC');
                 const kpcSel = getEl('selKPC');
-                // 簡易的に割り当て (0番目をPC, 1番目をKPC)
                 pcSel.value = pair.ids[0];
                 kpcSel.value = pair.ids[1];
                 pcSel.dispatchEvent(new Event('change'));
@@ -1081,10 +1075,8 @@
                 if (charData && charData.id) { sel.value = charData.id; sel.dispatchEvent(new Event('change')); }
                 else { sel.value = ""; sel.dispatchEvent(new Event('change')); }
             };
-            const pcData = s.characters?.pc || {};
-            const kpcData = s.characters?.kpc || {};
-            setCharSelect('selPC', pcData);
-            setCharSelect('selKPC', kpcData);
+            setCharSelect('selPC', s.characters?.pc || {});
+            setCharSelect('selKPC', s.characters?.kpc || {});
 
             const fillRole = (d, suffix, listId) => {
                 getEl(`inpPlName${suffix}`).value = d.pl||""; getEl(`inpRes${suffix}`).value = d.res||"Alive"; updateResColor(getEl(`inpRes${suffix}`));
@@ -1123,7 +1115,10 @@
                 if(char) {
                     const src = char.icon || `${IMG_CONFIG.iconBase}${char.name}.png`;
                     getEl(imgId).src = src; if(chatIconId) getEl(chatIconId).src = src;
-                    if(char.plName && !getEl(plId).value) getEl(plId).value = char.plName;
+                    
+                    // ★ PL名を常に更新
+                    getEl(plId).value = char.plName || "";
+                    
                     let san = "??";
                     if(char.vitals?.san) san = char.vitals.san; else if(char.stats?.POW) san = char.stats.POW*5; 
                     if(sanId) getEl(sanId).textContent = san;
@@ -1137,6 +1132,7 @@
         onCharSelect('selPC', 'iconPC', 'inpPlNamePC', 'sanValPC', 'chatIconPC', 'PC');
         onCharSelect('selKPC', 'iconKPC', 'inpPlNameKPC', 'sanValKPC', 'chatIconKPC', 'KPC');
 
+        // --- Save Function with Sanitizer ---
         getEl('btnSave').addEventListener('click', async () => {
             const btn = getEl('btnSave');
             const btnText = getEl('btnText');
@@ -1232,6 +1228,7 @@
                 }
 
                 alert("保存完了");
+                // 新規保存後、IDをセットして上書きモードにする
                 currentScenarioId = sId;
                 loadHistory();
 
