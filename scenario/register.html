@@ -71,7 +71,7 @@
         }
         .book-wrapper { 
             position: relative; 
-            height: 85vh; /* 画面下部に隙間を作るため少し縮小 (90vh -> 85vh) */
+            height: 85vh; 
             aspect-ratio: 1.4 / 1; 
             max-width: 95%;
             transform-style: preserve-3d;
@@ -124,12 +124,13 @@
         .report-header-img {
             width: 100%; height: 100%; background: #0a0a0a; border: 1px dashed #444; 
             display: flex; align-items: center; justify-content: center; overflow: hidden;
-            border-radius: 2px; cursor: pointer; position: relative; z-index: 1;
+            border-radius: 2px; cursor: pointer; position: relative; z-index: 1; transition: 0.2s;
         }
+        .report-header-img:hover { border-color: #d4b346; background: #111; }
         .report-header-img img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; display: block; transition:0.3s; }
-        .report-header-img.empty::after { content: 'SESSION SNAPSHOT'; position: absolute; color: #333; font-family: 'Cinzel', serif; letter-spacing: 2px; }
+        .report-header-img.empty::after { content: 'SESSION SNAPSHOT (Click)'; position: absolute; color: #333; font-family: 'Cinzel', serif; letter-spacing: 2px; }
         
-        /* Trailer Overlay (⧉ Style) */
+        /* Trailer Overlay */
         .trailer-overlay {
             position: absolute; bottom: -10px; right: -10px; 
             width: 35%; height: 50%; 
@@ -139,7 +140,7 @@
             overflow: hidden; display: flex; align-items: center; justify-content: center;
             transition: 0.3s;
         }
-        .trailer-overlay:hover { transform: rotate(0deg) scale(1.05); z-index: 20; }
+        .trailer-overlay:hover { transform: rotate(0deg) scale(1.05); z-index: 20; border-color: #fff; }
         .trailer-overlay img { width: 100%; height: 100%; object-fit: cover; opacity: 1; }
         .trailer-overlay.empty::after { content:'TRAILER'; color:#555; font-size:0.6rem; font-family:'Cinzel',serif; }
 
@@ -148,35 +149,71 @@
             font-family: 'Shippori Mincho', serif; font-size: 1.8rem; font-weight: bold; color: #eee;
             text-align: center; padding: 5px 0; margin-bottom: 5px;
         }
-        .session-count { text-align: center; font-family: 'Cinzel', serif; color: #d4b346; font-size: 0.9rem; margin-bottom: 20px; letter-spacing: 2px; }
+        .session-count { text-align: center; font-family: 'Cinzel', serif; color: #d4b346; font-size: 0.9rem; margin-bottom: 25px; letter-spacing: 2px; }
         .session-count input { background: transparent; border: none; color: inherit; font-family: inherit; font-size: inherit; text-align: center; width: 50px; border-bottom: 1px dashed #444; }
 
-        /* Char Pair & Swap */
-        .char-pair-area { display: flex; justify-content: center; align-items: start; gap: 15px; margin-bottom: 25px; position: relative; }
-        .char-unit { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; max-width: 140px; }
-        .char-icon-circle { 
-            width: 90px; height: 90px; border-radius: 50%; border: 3px solid #333; 
-            object-fit: cover; background: #111; box-shadow: 0 5px 15px rgba(0,0,0,0.5); transition: border-color 0.3s;
+        /* --- CHAR PAIR AREA (DESIGN FIX) --- */
+        .char-pair-container {
+            margin-bottom: 30px; position: relative;
+            background: rgba(255,255,255,0.02); border-radius: 8px; padding: 15px 10px 20px;
+            border: 1px solid #333;
         }
-        select.char-select { width: 100%; background: #1a1a1a; border: 1px solid #333; color: #ccc; padding: 4px; text-align: center; font-size: 0.8rem; border-radius: 4px; }
-        input.pl-name { width: 100%; background: transparent; border: none; color: #666; text-align: center; font-size: 0.8rem; padding: 2px; transition: color 0.3s; }
         
-        .swap-btn {
-            align-self: center; background: transparent; border: 1px solid #333; color: #666;
-            width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
-            transition: 0.3s;
-        }
-        .swap-btn:hover { color: #d4b346; border-color: #d4b346; transform: rotate(180deg); }
-
-        /* コンビ名選択用 */
-        .pair-selector-wrap {
-            position: absolute; top: -30px; left: 50%; transform: translateX(-50%);
-            width: 200px; z-index: 100; text-align: center;
+        /* コンビ名選択 (上部中央) */
+        .pair-select-wrapper {
+            position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+            z-index: 10;
         }
         .pair-selector {
-            width: 100%; background: #111; border: 1px solid #444; color: #aaa;
-            font-size: 0.75rem; padding: 2px; border-radius: 10px; text-align: center;
+            background: #111; color: #d4b346; border: 1px solid #d4b346; 
+            padding: 2px 15px; font-size: 0.8rem; border-radius: 20px;
+            text-align: center; font-family: 'Shippori Mincho', serif; min-width: 180px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5); cursor: pointer;
         }
+        .pair-selector:focus { outline: none; background: #222; }
+
+        .char-pair-area { 
+            display: flex; justify-content: space-around; align-items: flex-start; 
+            gap: 20px; margin-top: 15px; 
+        }
+        
+        .char-unit { 
+            flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; 
+            max-width: 160px; position: relative;
+        }
+        
+        .role-label {
+            font-family: 'Cinzel', serif; font-size: 0.7rem; color: #666; letter-spacing: 1px; margin-bottom: -5px;
+        }
+
+        .char-icon-circle { 
+            width: 100px; height: 100px; border-radius: 50%; border: 3px solid #333; 
+            object-fit: cover; background: #111; box-shadow: 0 5px 15px rgba(0,0,0,0.5); 
+            transition: border-color 0.3s;
+        }
+        
+        select.char-select { 
+            width: 100%; background: transparent; border: none; border-bottom: 1px solid #444; 
+            color: #ddd; padding: 4px; text-align: center; font-size: 0.9rem; font-weight: bold;
+            font-family: 'Shippori Mincho', serif; cursor: pointer;
+        }
+        select.char-select:focus { outline: none; border-bottom-color: #d4b346; }
+        
+        input.pl-name { 
+            width: 100%; background: transparent; border: none; color: #888; 
+            text-align: center; font-size: 0.75rem; padding: 2px; 
+        }
+        
+        .swap-btn {
+            align-self: center; margin-top: 25px;
+            background: transparent; border: 1px solid #444; color: #666;
+            width: 32px; height: 32px; border-radius: 50%; 
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: 0.3s;
+        }
+        .swap-btn:hover { color: #d4b346; border-color: #d4b346; transform: rotate(180deg); background: #222; }
+
+        /* -------------------------- */
 
         .prop-list { display: flex; flex-direction: column; border-top: 1px solid #333; margin-top: 10px; }
         .prop-row { display: grid; grid-template-columns: 120px 1fr; align-items: center; border-bottom: 1px solid #333; padding: 6px 0; }
@@ -323,14 +360,17 @@
                         <!-- LEFT PAGE -->
                         <div class="page page-left">
                             <div class="header-wrapper">
-                                <!-- Main Snapshot -->
-                                <div class="report-header-img empty" id="dropTrailer">
+                                <!-- Main Snapshot (Click to Upload) -->
+                                <div class="report-header-img empty" id="dropTrailer" onclick="document.getElementById('fileTrailer').click()">
                                     <img id="imgTrailer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="">
                                 </div>
-                                <!-- Overlapping Trailer (Picture-in-picture) -->
-                                <div class="trailer-overlay empty" id="dropScnTrailer">
+                                <input type="file" id="fileTrailer" style="display:none" accept="image/*">
+
+                                <!-- Overlapping Trailer (Click to Upload) -->
+                                <div class="trailer-overlay empty" id="dropScnTrailer" onclick="document.getElementById('fileScnTrailer').click()">
                                     <img id="imgScnTrailer" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="">
                                 </div>
+                                <input type="file" id="fileScnTrailer" style="display:none" accept="image/*">
                             </div>
                             <input type="hidden" id="inpImgTrailer">
                             <input type="hidden" id="inpImgScnTrailer">
@@ -338,26 +378,30 @@
                             <input type="text" id="inpTitle" class="scenario-title" placeholder="シナリオタイトル">
                             <div class="session-count"><input type="number" id="inpCount" value="1"> 話 / 回目</div>
 
-                            <div class="char-pair-area">
-                                <!-- ★コンビ名選択リスト -->
-                                <div class="pair-selector-wrap">
+                            <!-- NEW CHAR PAIR AREA -->
+                            <div class="char-pair-container">
+                                <div class="pair-select-wrapper">
                                     <select id="selPair" class="pair-selector" onchange="window.applyPair(this.value)">
                                         <option value="">-- UNIT / PAIR --</option>
                                     </select>
                                 </div>
 
-                                <div class="char-unit">
-                                    <img id="iconPC" class="char-icon-circle" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
-                                    <select id="selPC" class="char-select"><option value="">(PC)</option></select>
-                                    <input type="text" id="inpPlNamePC" class="pl-name" placeholder="PL名">
-                                </div>
-                                <div class="swap-btn" onclick="window.swapCharacters()">
-                                    <span class="material-icons-round" style="font-size:1.2rem;">swap_horiz</span>
-                                </div>
-                                <div class="char-unit">
-                                    <img id="iconKPC" class="char-icon-circle" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
-                                    <select id="selKPC" class="char-select"><option value="">(KPC)</option></select>
-                                    <input type="text" id="inpPlNameKPC" class="pl-name" placeholder="KP/PL名">
+                                <div class="char-pair-area">
+                                    <div class="char-unit">
+                                        <span class="role-label lbl-pc">PC</span>
+                                        <img id="iconPC" class="char-icon-circle" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+                                        <select id="selPC" class="char-select"><option value="">(PC)</option></select>
+                                        <input type="text" id="inpPlNamePC" class="pl-name" placeholder="PL名">
+                                    </div>
+                                    <div class="swap-btn" onclick="window.swapCharacters()">
+                                        <span class="material-icons-round" style="font-size:1.2rem;">swap_horiz</span>
+                                    </div>
+                                    <div class="char-unit">
+                                        <span class="role-label lbl-kpc">KPC</span>
+                                        <img id="iconKPC" class="char-icon-circle" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
+                                        <select id="selKPC" class="char-select"><option value="">(KPC)</option></select>
+                                        <input type="text" id="inpPlNameKPC" class="pl-name" placeholder="KP/PL名">
+                                    </div>
                                 </div>
                             </div>
 
@@ -733,16 +777,12 @@
         let allChars = {};
         let currentUid = null;
         let currentScenarioId = null; 
-        
-        // コンビ情報保持用
         let allPairs = [];
 
-        // Theme Color Helper
         const applyTheme = (role, charId) => {
             const char = allChars[charId];
             if(!char || !char.color) return;
             const color = char.color;
-            
             getEl(`icon${role}`).style.borderColor = color;
             getEl(`inpPlName${role}`).style.color = color;
             const btn = getEl(`btnDetail${role}`);
@@ -750,35 +790,53 @@
             getEl(`bubble${role}`).style.borderLeft = `3px solid ${color}`;
         };
 
-        // Image Handling
-        const setupImg = (boxId, inpId, imgId) => {
+        // --- Image Handling (Click & Drop) ---
+        const setupImg = (boxId, inpId, imgId, fileInputId) => {
             const box = getEl(boxId);
+            const fileInput = getEl(fileInputId);
+
+            // Drag & Drop
             box.addEventListener('dragover', e=>{e.preventDefault(); box.style.borderColor='#d4b346';});
             box.addEventListener('dragleave', e=>{e.preventDefault(); box.style.borderColor='#444';});
             box.addEventListener('drop', e=>{
                 e.preventDefault(); box.style.borderColor='#444';
                 const f = e.dataTransfer.files[0];
-                if(f){ 
-                    const r=new FileReader(); 
-                    r.onload=v=>{
-                        getEl(inpId).value=v.target.result; 
-                        const img = getEl(imgId);
-                        img.src=v.target.result;
-                        getEl(boxId).classList.remove('empty');
-                        if(inpId === 'inpImgScnTrailer') {
-                            const otherImgId = (imgId === 'imgScnTrailer') ? 'imgScnTrailerTab' : 'imgScnTrailer';
-                            const otherBoxId = (boxId === 'dropScnTrailer') ? 'dropScnTrailerTab' : 'dropScnTrailer';
-                            getEl(otherImgId).src = v.target.result;
-                            getEl(otherBoxId).classList.remove('empty');
-                        }
-                    }; 
-                    r.readAsDataURL(f); 
-                }
+                handleFile(f);
             });
+
+            // Click to Upload
+            if(fileInput) {
+                fileInput.addEventListener('change', (e) => {
+                    if (e.target.files && e.target.files[0]) {
+                        handleFile(e.target.files[0]);
+                    }
+                });
+            }
+
+            const handleFile = (f) => {
+                if(!f) return;
+                const r=new FileReader(); 
+                r.onload=v=>{
+                    getEl(inpId).value=v.target.result; 
+                    const img = getEl(imgId);
+                    img.src=v.target.result;
+                    getEl(boxId).classList.remove('empty');
+                    
+                    // Trailer Sync logic
+                    if(inpId === 'inpImgScnTrailer') {
+                        const otherImgId = (imgId === 'imgScnTrailer') ? 'imgScnTrailerTab' : 'imgScnTrailer';
+                        const otherBoxId = (boxId === 'dropScnTrailer') ? 'dropScnTrailerTab' : 'dropScnTrailer';
+                        getEl(otherImgId).src = v.target.result;
+                        getEl(otherBoxId).classList.remove('empty');
+                    }
+                }; 
+                r.readAsDataURL(f);
+            };
         };
-        setupImg('dropTrailer', 'inpImgTrailer', 'imgTrailer');
-        setupImg('dropScnTrailer', 'inpImgScnTrailer', 'imgScnTrailer'); 
-        setupImg('dropScnTrailerTab', 'inpImgScnTrailer', 'imgScnTrailerTab'); 
+        // Setup with hidden file inputs
+        setupImg('dropTrailer', 'inpImgTrailer', 'imgTrailer', 'fileTrailer');
+        setupImg('dropScnTrailer', 'inpImgScnTrailer', 'imgScnTrailer', 'fileScnTrailer'); 
+        setupImg('dropScnTrailerTab', 'inpImgScnTrailer', 'imgScnTrailerTab', null); 
 
         monitorAuth(async (user) => {
             if(!user) { loader.textContent = "LOGIN REQUIRED"; return; }
@@ -796,13 +854,11 @@
                 getEl('selPC').innerHTML = opts;
                 getEl('selKPC').innerHTML = opts;
 
-                // --- コンビ名抽出ロジック ---
-                const pairMap = new Map(); // "PC_KPC" -> "GroupName"
-                
+                // Create Pair List
+                const pairMap = new Map();
                 list.forEach(c => {
                     if(c.partners && Array.isArray(c.partners)) {
                         c.partners.forEach(p => {
-                            // 重複排除キー作成 (ID順でソート)
                             const ids = [c.id, p.id].sort().join('_');
                             if(!pairMap.has(ids)) {
                                 pairMap.set(ids, {
@@ -814,7 +870,6 @@
                         });
                     }
                 });
-
                 allPairs = Array.from(pairMap.values());
                 const pairOpts = '<option value="">-- UNIT / PAIR --</option>' + 
                     allPairs.map((p, idx) => `<option value="${idx}">${p.name} (${p.chars.join('&')})</option>`).join('');
@@ -825,14 +880,12 @@
             } catch(e) { console.error(e); loader.textContent="ERROR"; }
         });
 
-        // コンビ選択時の処理
         window.applyPair = (idx) => {
             if(idx === "") return;
             const pair = allPairs[idx];
             if(pair && pair.ids.length >= 2) {
                 const pcSel = getEl('selPC');
                 const kpcSel = getEl('selKPC');
-                // 簡易的に割り当て (0番目をPC, 1番目をKPC)
                 pcSel.value = pair.ids[0];
                 kpcSel.value = pair.ids[1];
                 pcSel.dispatchEvent(new Event('change'));
@@ -896,6 +949,7 @@
             getEl('inpEndName').value = s.endName || "";
             getEl('inpDate').value = s.date || "";
             
+            // Image Load Logic (also handle empty class)
             const loadImg = (boxId, imgId, inpId, val) => {
                 if(val) {
                     getEl(inpId).value = val; getEl(imgId).src = val; getEl(boxId).classList.remove('empty');
@@ -916,10 +970,8 @@
                 if (charData && charData.id) { sel.value = charData.id; sel.dispatchEvent(new Event('change')); }
                 else { sel.value = ""; sel.dispatchEvent(new Event('change')); }
             };
-            const pcData = s.characters?.pc || {};
-            const kpcData = s.characters?.kpc || {};
-            setCharSelect('selPC', pcData);
-            setCharSelect('selKPC', kpcData);
+            setCharSelect('selPC', s.characters?.pc || {});
+            setCharSelect('selKPC', s.characters?.kpc || {});
 
             const fillRole = (d, suffix, listId) => {
                 getEl(`inpPlName${suffix}`).value = d.pl||""; getEl(`inpRes${suffix}`).value = d.res||"Alive"; updateResColor(getEl(`inpRes${suffix}`));
@@ -931,7 +983,9 @@
                 if(d.seq) { getEl(`inpSeqName${suffix}`).value = d.seq.name||""; getEl(`inpSeqDesc${suffix}`).value = d.seq.desc||""; }
                 if(d.ins) { getEl(`selInsanity${suffix}`).value = d.ins.type||""; getEl(`inpInsanityDesc${suffix}`).value = d.ins.desc||""; }
             };
-            setTimeout(() => { fillRole(pcData, 'PC', 'skillListPC'); fillRole(kpcData, 'KPC', 'skillListKPC'); }, 50);
+            const pcD = s.characters?.pc || {};
+            const kpcD = s.characters?.kpc || {};
+            setTimeout(() => { fillRole(pcD, 'PC', 'skillListPC'); fillRole(kpcD, 'KPC', 'skillListKPC'); }, 50);
             
             window.setSkillRows('encList', s.entities||"", true);
 
@@ -979,7 +1033,7 @@
                     const src = char.icon || `${IMG_CONFIG.iconBase}${char.name}.png`;
                     getEl(imgId).src = src; if(chatIconId) getEl(chatIconId).src = src;
                     
-                    // ★ PL名の自動補填 (空欄の場合のみ)
+                    // PL名自動補填
                     if(char.plName && !getEl(plId).value) getEl(plId).value = char.plName;
                     
                     let san = "??";
@@ -995,6 +1049,7 @@
         onCharSelect('selPC', 'iconPC', 'inpPlNamePC', 'sanValPC', 'chatIconPC', 'PC');
         onCharSelect('selKPC', 'iconKPC', 'inpPlNameKPC', 'sanValKPC', 'chatIconKPC', 'KPC');
 
+        // --- Save Function with Sanitizer ---
         getEl('btnSave').addEventListener('click', async () => {
             const btn = getEl('btnSave');
             const btnText = getEl('btnText');
@@ -1068,15 +1123,25 @@
                 const sData = createScenarioRecord(inputData, currentUid);
                 sData.entities = entities; 
 
-                const sId = await saveScenario(sData, currentScenarioId);
+                // ★ Sanitizer: Remove undefined to fix "Unsupported field value" error
+                const removeUndefined = (obj) => {
+                    Object.keys(obj).forEach(key => {
+                        if (obj[key] && typeof obj[key] === 'object') removeUndefined(obj[key]);
+                        else if (obj[key] === undefined) delete obj[key];
+                    });
+                    return obj;
+                };
+                const cleanData = removeUndefined(JSON.parse(JSON.stringify(sData)));
+
+                const sId = await saveScenario(cleanData, currentScenarioId);
 
                 if(pcId) {
                     const char = Object.values(allChars).find(c => c.id === pcId);
-                    if(char) await saveToCloud(syncScenarioToCharacter(char, sData, sId, 'pc'));
+                    if(char) await saveToCloud(syncScenarioToCharacter(char, cleanData, sId, 'pc'));
                 }
                 if(kpcId) {
                     const char = Object.values(allChars).find(c => c.id === kpcId);
-                    if(char) await saveToCloud(syncScenarioToCharacter(char, sData, sId, 'kpc'));
+                    if(char) await saveToCloud(syncScenarioToCharacter(char, cleanData, sId, 'kpc'));
                 }
 
                 alert("保存完了");
