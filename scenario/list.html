@@ -10,7 +10,7 @@
     <link href="../character/edit/header.css" rel="stylesheet">
 
     <style>
-        /* --- CORE STYLES (Based on Endless Archive) --- */
+        /* --- CORE STYLES --- */
         :root {
             --bg-color: #050302;
             --wood-dark: #120804;
@@ -275,6 +275,10 @@
         }
         .detail-text { font-size: 0.9rem; line-height: 1.8; white-space: pre-wrap; margin-bottom: 20px; }
 
+        /* Scrollbar customization for modal */
+        .page-right::-webkit-scrollbar { width: 8px; }
+        .page-right::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.4); border-radius: 4px; }
+
     </style>
 </head>
 <body>
@@ -500,8 +504,21 @@
             else if(s.type === 'タイマン') color = 'brown';
             book.setAttribute('data-color', color);
 
-            // 本の厚みをランダムまたはシナリオ量に応じて変える
-            const thickness = Math.floor(Math.random() * 20 + 30);
+            // ★修正: 所要時間（テキスト）から数値を抜き出して厚みを決める
+            let hours = 5; // デフォルト時間
+            if (s.meta && s.meta.duration) {
+                // 文字列から最初の数字を取り出す ("3~4時間" -> 3)
+                const num = s.meta.duration.match(/\d+/);
+                if (num) {
+                    hours = parseInt(num[0]);
+                }
+            }
+            
+            // 厚みの計算 (基本25px + 1時間あたり3px) 
+            // 最小25px, 最大80pxくらいに制限
+            let thickness = 25 + (hours * 3);
+            thickness = Math.min(Math.max(thickness, 25), 80);
+
             book.style.width = thickness + 'px';
             
             // ランダムな傾きで自然に見せる
