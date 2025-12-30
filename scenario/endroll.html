@@ -98,6 +98,9 @@
             cursor: pointer; transition: 0.3s;
         }
         .play-btn:hover { background: var(--text-gold); color: #000; box-shadow: 0 0 20px rgba(238, 187, 85, 0.4); }
+        
+        /* Loading Status */
+        #loadingMsg { text-align:center; color:#666; font-family:'Cinzel'; margin-top:50px; }
 
         /* --- DUST PARTICLES --- */
         .dust {
@@ -156,7 +159,7 @@
 
         .char-visual {
             position: relative; opacity: 0;
-            transition: all 1.5s ease; /* ゆっくり変化 */
+            transition: all 1.5s ease;
             max-width: 100%;
         }
         .char-img {
@@ -191,7 +194,6 @@
         }
         .ctrl-btn:hover { background: var(--text-gold); color: #000; border-color: var(--text-gold); }
 
-        /* Scroll Animation Keyframes (Dynamic) */
         @keyframes scrollUp {
             0% { transform: translate(-50%, 100vh); }
             100% { transform: translate(-50%, -100%); }
@@ -209,23 +211,18 @@
                 <button onclick="window.toggleAll(false)" style="background:none; border:none; color:#aaa; cursor:pointer;">Clear</button>
             </div>
             <div id="setupList" class="setup-list">
-                <!-- JS inits list here -->
-                <div style="text-align:center; margin-top:20px;">Loading History...</div>
+                <div id="loadingMsg">Initializing Database...</div>
             </div>
             <button class="play-btn" onclick="window.startSequence()">▶ START ENDROLL</button>
         </div>
     </div>
 
     <!-- MAIN VIEW -->
-    <div class="bg-container" id="bgContainer">
-        <!-- Backgrounds will be injected here -->
-    </div>
+    <div class="bg-container" id="bgContainer"></div>
     <div class="bg-overlay"></div>
     <div id="dustContainer"></div>
 
-    <div class="scroll-container" id="scrollContent">
-        <!-- Credits injected here -->
-    </div>
+    <div class="scroll-container" id="scrollContent"></div>
 
     <div class="side-container side-left" id="sidePC">
         <div class="char-visual hide-visual" id="visPC">
@@ -253,6 +250,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, doc, getDoc, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         
         const firebaseConfig = {
             apiKey: "AIzaSyBZVh6NhFA_BSuyUW-sZV2QPSvSzdYJZWU",
@@ -265,6 +263,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
         // パーティクル
         const dustCont = document.getElementById('dustContainer');
@@ -281,51 +280,71 @@
         let allScenarios = [];
         let selectedScenarios = [];
 
-        // --- INIT ---
-        document.addEventListener('DOMContentLoaded', async () => {
-            const params = new URLSearchParams(window.location.search);
-            const singleId = params.get('id');
+        document.addEventListener('DOMContentLoaded', () => {
+            const screen = document.getElementById('setupScreen');
+            screen.classList.remove('hidden');
 
-            await loadData();
-
-            if(singleId) {
-                // シングルモード: ID指定があれば即再生
-                const target = allScenarios.find(s => s.id === singleId);
-                if(target) {
-                    selectedScenarios = [target];
-                    startEndroll();
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    document.getElementById('loadingMsg').textContent = "Loading Data...";
+                    await loadData();
+                    
+                    // パラメータ指定があれば即再生
+                    const params = new URLSearchParams(window.location.search);
+                    const singleId = params.get('id');
+                    if(singleId) {
+                        const target = allScenarios.find(s => s.id === singleId);
+                        if(target) {
+                            selectedScenarios = [target];
+                            document.getElementById('setupScreen').classList.add('hidden');
+                            startEndroll();
+                        } else {
+                            renderSetupList();
+                        }
+                    } else {
+                        renderSetupList();
+                    }
                 } else {
-                    alert("指定されたシナリオが見つかりません。");
-                    showSetup();
+                    document.getElementById('loadingMsg').textContent = "LOGIN REQUIRED (Please log in on other pages)";
                 }
-            } else {
-                // マルチモード: 設定画面表示
-                showSetup();
-            }
+            });
         });
 
         async function loadData() {
             try {
-                // キャラ取得
+                // 1. キャラクター読み込み
                 const charSnap = await getDocs(collection(db, "rooms", "couple_shared_data", "characters"));
                 charSnap.forEach(doc => {
                     const d = doc.data();
                     allChars[d.id || doc.id] = d;
                 });
-                // シナリオ取得 (日付の古い順 = 時系列順に再生したいので昇順)
-                const q = query(collection(db, "scenarios"), orderBy("date", "asc")); 
+
+                // 2. シナリオ読み込み (クエリはシンプルに)
+                const q = collection(db, "scenarios"); 
                 const scnSnap = await getDocs(q);
+                
                 scnSnap.forEach(doc => {
                     allScenarios.push({ id: doc.id, ...doc.data() });
                 });
-            } catch(e) { console.error(e); alert("データ読み込みエラー"); }
+
+                // 3. JS側でソート (インデックスエラー回避)
+                allScenarios.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+
+            } catch(e) { 
+                console.error(e); 
+                alert("データの読み込みに失敗しました。\n" + e.message);
+                document.getElementById('loadingMsg').textContent = "ERROR"; 
+            }
         }
 
-        function showSetup() {
-            const screen = document.getElementById('setupScreen');
+        function renderSetupList() {
             const list = document.getElementById('setupList');
-            screen.classList.remove('hidden');
             list.innerHTML = "";
+
+            if(allScenarios.length === 0) {
+                list.innerHTML = '<div style="text-align:center;">NO SCENARIOS FOUND</div>';
+                return;
+            }
 
             // グループ化して表示 (PC1 & PC2 ごと)
             const groups = new Map();
@@ -336,7 +355,6 @@
             });
 
             groups.forEach((scenarios, key) => {
-                // グループ名の決定
                 let title = "SOLO / OTHERS";
                 if(key !== "OTHERS") {
                     const ids = key.split('_');
@@ -383,7 +401,7 @@
                 if(s) selectedScenarios.push(s);
             });
             
-            // 日付順(昇順)にソートしなおす
+            // 再度日付順にソート
             selectedScenarios.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
 
             document.getElementById('setupScreen').classList.add('hidden');
@@ -395,21 +413,20 @@
             const container = document.getElementById('scrollContent');
             const bgContainer = document.getElementById('bgContainer');
             let html = "";
-            let currentOffset = 100; // vh start
+            let currentOffset = 100;
 
-            // シナリオごとのHTML生成
             selectedScenarios.forEach((s, index) => {
-                // 背景レイヤー準備
+                // 背景
                 const bgDiv = document.createElement('div');
                 bgDiv.className = 'bg-layer';
                 bgDiv.id = `bg-${index}`;
                 bgDiv.style.backgroundImage = `url(${s.images?.trailer || ''})`;
                 bgContainer.appendChild(bgDiv);
 
-                // マーカー (JSでスクロール位置検知に使う)
+                // マーカー
                 html += `<div class="scenario-marker" id="marker-${index}" data-index="${index}"></div>`;
 
-                // Title Section
+                // Title
                 html += `
                     <div class="scenario-block">
                         <div class="section-space">
@@ -430,7 +447,6 @@
                 }
 
                 // Cast (Data Injection)
-                // 各シナリオ時点でのPC/KPCデータ（キャラ情報は最新だが、PL名や台詞はシナリオデータ優先）
                 const pc = allChars[s.characters?.pc?.id];
                 const kpc = allChars[s.characters?.kpc?.id];
                 const pcName = pc ? pc.name : "PC";
@@ -451,7 +467,7 @@
                         <div style="font-size:0.8rem; color:${s.characters?.kpc?.res==='Lost'?'#d44':'#8a8'}; margin-top:5px;">[ ${s.characters?.kpc?.res || ""} ]</div>
                     </div>
                 `;
-                html += `</div>`; // End Cast
+                html += `</div>`;
 
                 // Entities
                 if(s.entities) {
@@ -486,12 +502,10 @@
 
             container.innerHTML = html;
 
-            // --- ANIMATION START ---
-            // 全体の長さに応じて時間を決定 (1シナリオあたり30秒 + バッファ)
+            // アニメーション開始
             const duration = selectedScenarios.length * 25 + 20; 
             container.style.animation = `scrollUp ${duration}s linear forwards`;
 
-            // スクロール位置監視ループ
             requestAnimationFrame(checkScroll);
         }
 
@@ -502,10 +516,8 @@
             const markers = document.querySelectorAll('.scenario-marker');
             let currentIndex = -1;
 
-            // 画面内(または画面の少し下)にある最新のマーカーを探す
             markers.forEach(m => {
                 const rect = m.getBoundingClientRect();
-                // 画面下部から入ってきたタイミング (windowHeight * 0.8 くらい)
                 if (rect.top < window.innerHeight * 0.8) {
                     currentIndex = parseInt(m.dataset.index);
                 }
@@ -522,12 +534,10 @@
         function updateScene(idx) {
             const s = selectedScenarios[idx];
             
-            // 背景切り替え
             document.querySelectorAll('.bg-layer').forEach(el => el.classList.remove('active'));
             const activeBg = document.getElementById(`bg-${idx}`);
             if(activeBg) activeBg.classList.add('active');
 
-            // 立ち絵 & 台詞更新
             updateCharacter('PC', s);
             updateCharacter('KPC', s);
         }
@@ -537,7 +547,6 @@
             const img = document.getElementById(`img${role}`);
             const qBox = document.getElementById(`quote${role}`);
             
-            // 一旦隠す
             vis.classList.add('hide-visual');
             vis.classList.remove('slide-in-left', 'slide-in-right');
 
@@ -560,14 +569,13 @@
                     qBox.style.opacity = '0';
                 }
 
-                // 表示アニメーション (PCは左から、KPCは右からでもよいが、シンプルにフェードイン)
                 vis.classList.remove('hide-visual');
                 vis.style.opacity = '1';
                 vis.style.transform = 'scale(1)';
+                vis.classList.add(role === 'PC' ? 'slide-in-left' : 'slide-in-right');
                 
-            }, 1000); // フェードアウトを待ってから切り替え
+            }, 1000);
         }
-
     </script>
 </body>
 </html>
