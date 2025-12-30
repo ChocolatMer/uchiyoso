@@ -3,46 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Grand Finale | Chronicle Log</title>
+    <title>Chronicle Endroll - The Grand Theater</title>
+    
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    
     <style>
+        /* --- THEATER THEME CORE --- */
         :root {
-            --theater-red-dark: #2a0202;
-            --theater-red-mid: #4a0404;
-            --theater-red-light: #6e0a0a;
-            --gold-text: #e6c35c;
-            --stage-black: #020202;
+            --gold-base: #d4af37;
+            --gold-shine: #f9e295;
+            --velvet-red: #4a0404;
+            --velvet-dark: #220000;
+            --stage-black: #050505;
+            --text-main: #f0f0f0;
         }
 
-        body, html {
+        body {
             margin: 0; padding: 0;
-            width: 100%; height: 100%;
             background-color: var(--stage-black);
-            overflow: hidden;
+            color: var(--text-main);
             font-family: 'Shippori Mincho', serif;
-            color: #eeeeee;
+            overflow: hidden;
+            height: 100vh; width: 100vw;
         }
 
-        /* --- STAGE CONTAINER --- */
-        .theater-stage {
+        /* --- STAGE FRAME (PROSCENIUM) --- */
+        .stage-frame {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 500;
+            box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
+            border: 10px solid #1a1a1a;
+            border-image: linear-gradient(to bottom, #554422, #221100, #554422) 1;
+        }
+        /* Top Ornament */
+        .stage-frame::before {
+            content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+            width: 80%; height: 40px;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.8) 0%, transparent 70%);
+            z-index: 501;
+        }
+
+        /* --- CURTAINS --- */
+        .curtain-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1000; pointer-events: none;
+            display: flex;
+        }
+        .curtain {
+            width: 50%; height: 100%;
+            background: linear-gradient(90deg, 
+                var(--velvet-dark) 0%, var(--velvet-red) 50%, var(--velvet-dark) 100%);
+            background-size: 100px 100%;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
             position: relative;
-            width: 100vw; height: 100vh;
-            display: flex; justify-content: center; align-items: center;
-            perspective: 1200px; overflow: hidden;
-            background: #000;
+            transition: transform 3s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .curtain.left { transform: translateX(0); border-right: 2px solid rgba(0,0,0,0.5); }
+        .curtain.right { transform: translateX(0); border-left: 2px solid rgba(0,0,0,0.5); }
+        
+        /* カーテンのドレープ感 */
+        .curtain::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(90deg, 
+                rgba(0,0,0,0.3) 0px, transparent 20px, rgba(0,0,0,0.3) 40px);
         }
 
-        /* --- BACKDROP SCREEN (Dynamic Background) --- */
-        .backdrop-container {
-            position: absolute; top: 0; left: 0; width: 100%; height: 85%; /* 床の上まで */
-            z-index: 1; overflow: hidden;
+        /* 開くアニメーション */
+        .curtain-container.open .curtain.left { transform: translateX(-100%); }
+        .curtain-container.open .curtain.right { transform: translateX(100%); }
+
+        /* --- SPOTLIGHTS --- */
+        .spotlights {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 50; mix-blend-mode: screen;
+            opacity: 0.6;
         }
+        .spot {
+            position: absolute; top: -20%; left: 50%; width: 60%; height: 150%;
+            background: radial-gradient(ellipse at top, rgba(255,255,200,0.15) 0%, transparent 70%);
+            transform-origin: top center;
+            animation: sway 10s infinite ease-in-out alternate;
+        }
+        .spot:nth-child(2) {
+            left: 20%; width: 40%; animation-duration: 15s; animation-delay: -5s;
+        }
+        .spot:nth-child(3) {
+            left: 60%; width: 40%; animation-duration: 12s; animation-delay: -2s;
+        }
+        @keyframes sway {
+            0% { transform: rotate(-5deg) translateX(-50%); }
+            100% { transform: rotate(5deg) translateX(-50%); }
+        }
+
+        /* --- SETUP SCREEN (PLAYBILL STYLE) --- */
+        .setup-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0a0a0a; z-index: 2000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 1s ease;
+        }
+        .setup-screen.hidden { opacity: 0; pointer-events: none; }
+
+        .playbill {
+            width: 600px; max-width: 90%; height: 80vh;
+            background: #e8dac3; color: #1a1a1a;
+            border: 8px double #1a1a1a;
+            padding: 40px; box-sizing: border-box;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            display: flex; flex-direction: column;
+            position: relative;
+            background-image: url("https://www.transparenttextures.com/patterns/cream-paper.png");
+        }
+        /* 古紙の汚れ演出 */
+        .playbill::before {
+            content: ''; position: absolute; top:0; left:0; width:100%; height:100%;
+            background: radial-gradient(circle, transparent 40%, rgba(139, 69, 19, 0.1) 100%);
+            pointer-events: none;
+        }
+
+        .playbill-header {
+            text-align: center; border-bottom: 2px solid #1a1a1a;
+            margin-bottom: 20px; padding-bottom: 10px;
+        }
+        .playbill-title {
+            font-family: 'Cinzel', serif; font-size: 2.5rem; font-weight: bold; letter-spacing: 5px;
+            margin-bottom: 5px;
+        }
+        .playbill-sub {
+            font-family: 'Playfair Display', serif; font-style: italic; font-size: 1rem; color: #555;
+        }
+
+        .program-list {
+            flex: 1; overflow-y: auto; padding-right: 10px;
+            font-family: 'Shippori Mincho', serif;
+        }
+        .program-list::-webkit-scrollbar { width: 4px; }
+        .program-list::-webkit-scrollbar-thumb { background: #555; }
+
+        .act-group { margin-bottom: 20px; }
+        .act-title {
+            font-family: 'Cinzel', serif; font-size: 1.1rem; font-weight: bold;
+            border-bottom: 1px dashed #555; margin-bottom: 10px; padding-top: 10px;
+        }
+        
+        .scene-row {
+            display: flex; justify-content: space-between; align-items: baseline;
+            padding: 6px 0; cursor: pointer; transition: 0.2s;
+            border-bottom: 1px dotted #ccc;
+        }
+        .scene-row:hover { background: rgba(0,0,0,0.05); }
+        .scene-title { flex: 1; font-weight: bold; font-size: 0.95rem; }
+        .scene-date { font-size: 0.8rem; color: #666; font-family: 'Cinzel'; margin-left: 10px;}
+        .scene-check { margin-right: 10px; accent-color: var(--velvet-red); transform: scale(1.2); }
+
+        .ticket-btn {
+            margin-top: 20px;
+            background: var(--velvet-red); color: #e8dac3;
+            border: 2px solid #1a1a1a; padding: 15px;
+            font-family: 'Cinzel', serif; font-size: 1.2rem; letter-spacing: 2px;
+            cursor: pointer; transition: 0.3s; width: 100%;
+            position: relative; z-index: 10;
+        }
+        .ticket-btn:hover {
+            background: var(--velvet-dark); color: #fff;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        /* --- BACKGROUND & PARTICLES --- */
+        .bg-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -2; }
         .bg-layer {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-size: cover; background-position: center;
+            filter: blur(3px) brightness(0.6);
             opacity: 0; transition: opacity 2s ease;
-            filter: blur(2px) brightness(0.4); transform: scale(1.1);
+            transform: scale(1.1);
         }
         .bg-layer.active {
             opacity: 1;
@@ -50,268 +185,168 @@
         }
         @keyframes kenBurns {
             0% { transform: scale(1.1) translate(0, 0); }
-            100% { transform: scale(1.2) translate(-2%, -2%); }
+            100% { transform: scale(1.25) translate(-3%, -2%); }
         }
-
-        /* --- ENVIRONMENT --- */
-        .spotlight {
-            position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
-            background: radial-gradient(ellipse at center, rgba(255, 220, 150, 0.08) 0%, rgba(0, 0, 0, 0) 50%);
-            pointer-events: none; z-index: 5;
-            animation: light-flicker 15s infinite alternate ease-in-out;
-        }
-        .dust-container {
-            position: absolute; width: 100%; height: 100%; z-index: 6; pointer-events: none;
-        }
-        .dust {
-            position: absolute; background: rgba(255, 255, 255, 0.3); border-radius: 50%;
-            animation: dust-rise linear infinite;
-        }
-
-        /* --- STAGE PROPS --- */
-        .valance {
-            position: absolute; top: -5%; left: -5%; width: 110%; height: 20%;
-            z-index: 21; border-radius: 0 0 50% 50% / 0 0 20% 20%;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            background: 
-                linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%),
-                repeating-linear-gradient(90deg, var(--theater-red-dark) 0%, var(--theater-red-mid) 4%, var(--theater-red-light) 8%, var(--theater-red-mid) 12%, var(--theater-red-dark) 16%);
-        }
-
-        .curtain {
-            position: absolute; top: 0; width: 50%; height: 100%; z-index: 20;
-            background: 
-                linear-gradient(90deg, rgba(0,0,0,0.5) 0%, transparent 50%, rgba(0,0,0,0.5) 100%),
-                repeating-linear-gradient(90deg, var(--theater-red-dark) 0%, var(--theater-red-mid) 5%, var(--theater-red-light) 10%, var(--theater-red-mid) 15%, var(--theater-red-dark) 20%);
-            box-shadow: 0 0 100px rgba(0,0,0,0.9) inset;
-            transition: transform 3.5s cubic-bezier(0.25, 0.1, 0.25, 1);
-        }
-        .curtain-left { left: 0; transform-origin: left center; border-right: 2px solid rgba(0,0,0,0.4); }
-        .curtain-right { 
-            right: 0; transform-origin: right center; border-left: 2px solid rgba(0,0,0,0.4);
-            background: 
-                linear-gradient(270deg, rgba(0,0,0,0.5) 0%, transparent 50%, rgba(0,0,0,0.5) 100%),
-                repeating-linear-gradient(270deg, var(--theater-red-dark) 0%, var(--theater-red-mid) 5%, var(--theater-red-light) 10%, var(--theater-red-mid) 15%, var(--theater-red-dark) 20%);
-        }
-
-        body.curtain-open .curtain-left { transform: translateX(-85%); }
-        body.curtain-open .curtain-right { transform: translateX(85%); }
-
-        .floor {
-            position: absolute; bottom: 0; width: 100%; height: 15%;
-            background: linear-gradient(to top, #0a0a0a, #1a1a1a 40%, #000 100%);
-            z-index: 15; box-shadow: 0 -30px 60px rgba(0,0,0,0.95);
-            transform-style: preserve-3d; transform: rotateX(20deg) translateY(20px) scale(1.1);
-        }
-
-        /* --- SCROLLING CREDITS --- */
-        .credits-container {
-            position: relative; width: 70%; height: 100%;
-            display: flex; justify-content: center; z-index: 10;
-            mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
-        }
-
-        .credits-scroll {
-            position: absolute; top: 100%; width: 100%; text-align: center;
-            opacity: 0; 
-            /* Animation applied by JS */
-        }
-        
-        body.curtain-open .credits-scroll { opacity: 1; transition: opacity 1s ease-in 3s; }
-
-        /* Typography */
-        .main-title {
-            font-family: 'Shippori Mincho', serif; font-size: 3.5rem; font-weight: 700;
-            color: var(--gold-text); margin-bottom: 1rem; letter-spacing: 0.1em;
-            text-shadow: 0 0 10px rgba(230, 195, 92, 0.4), 0 4px 10px rgba(0,0,0,0.8);
-        }
-        .sub-title {
-            font-family: 'Cinzel', serif; font-size: 1rem; color: #aaa; letter-spacing: 0.2em; margin-bottom: 5rem;
-        }
-
-        .role {
-            font-family: 'Cinzel', serif; font-size: 0.8rem; color: var(--gold-text);
-            text-transform: uppercase; letter-spacing: 0.25em; margin-top: 3rem; margin-bottom: 0.5rem;
-            opacity: 0.8; font-weight: 700;
-        }
-        .name {
-            font-size: 1.4rem; font-weight: 400; margin: 0; letter-spacing: 0.05em;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-        }
-        .story-text {
-            width: 70%; margin: 0 auto 5rem; line-height: 2; color: #ccc; font-size: 0.95rem;
-            text-align: justify; text-align-last: center;
-        }
-
-        .staff-grid {
-            display: grid; grid-template-columns: 1fr 1fr; column-gap: 3rem; row-gap: 1rem;
-            width: 70%; margin: 4rem auto; align-items: baseline;
-        }
-        .staff-grid .role { text-align: right; margin: 0; font-size: 0.8rem; }
-        .staff-grid .name { text-align: left; margin: 0; font-size: 1.2rem; }
-
-        .divider {
-            width: 120px; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--gold-text), transparent);
-            margin: 6rem auto; opacity: 0.6;
-        }
-
-        .section-spacer { height: 15rem; } /* シナリオ間の余白 */
-        .scenario-marker { position: absolute; width: 100%; height: 1px; visibility: hidden; }
-
-        /* --- CHARACTER VISUALS (On Stage) --- */
-        .actor-container {
-            position: absolute; bottom: 0; width: 35%; height: 80%;
-            z-index: 12; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
-            pointer-events: none;
-        }
-        .actor-left { left: -5%; align-items: flex-start; }
-        .actor-right { right: -5%; align-items: flex-end; }
-
-        .actor-img {
-            max-height: 75vh; max-width: 100%; object-fit: contain;
-            filter: drop-shadow(0 10px 30px rgba(0,0,0,0.8));
-            opacity: 0; transform: scale(0.95);
-            transition: all 1.5s cubic-bezier(0.22, 1, 0.36, 1);
-            mask-image: linear-gradient(to bottom, black 70%, transparent 100%);
-        }
-        .actor-img.show { opacity: 1; transform: scale(1); }
-
-        .actor-quote {
-            position: absolute; bottom: 15%; 
-            background: radial-gradient(ellipse at center, rgba(0,0,0,0.8) 0%, transparent 80%);
-            color: #fff; font-size: 1.2rem; font-style: italic; text-align: center;
-            padding: 20px; width: 300px;
-            opacity: 0; transform: translateY(20px); transition: all 1s ease 0.5s;
-        }
-        .actor-left .actor-quote { left: 10%; text-align: left; }
-        .actor-right .actor-quote { right: 10%; text-align: right; }
-        .actor-quote.show { opacity: 1; transform: translateY(0); }
-
-        /* --- SETUP SCREEN (Playbill) --- */
-        .setup-screen {
+        .bg-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 2000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 1s ease;
+            background: radial-gradient(circle, rgba(0,0,0,0) 20%, rgba(0,0,0,0.8) 100%);
+            z-index: -1;
         }
-        .setup-screen.hidden { opacity: 0; pointer-events: none; }
 
-        .playbill {
-            width: 500px; max-width: 90%; height: 75vh;
-            background: #f4ecd8; color: #1a1a1a;
-            border: 8px double #1a1a1a; padding: 30px; box-sizing: border-box;
-            box-shadow: 0 30px 80px rgba(0,0,0,1);
-            display: flex; flex-direction: column;
-            background-image: url("https://www.transparenttextures.com/patterns/cream-paper.png");
+        /* --- SCROLL CONTENT --- */
+        .scroll-container {
+            position: absolute; bottom: -100%; left: 50%; transform: translateX(-50%);
+            width: 700px; text-align: center;
+            z-index: 100;
+            padding-bottom: 200px;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.8);
         }
-        .playbill-header { text-align: center; border-bottom: 2px solid #1a1a1a; margin-bottom: 15px; padding-bottom: 10px; }
-        .playbill-title { font-family: 'Cinzel', serif; font-size: 2rem; font-weight: bold; letter-spacing: 4px; }
         
-        .program-list { flex: 1; overflow-y: auto; padding-right: 5px; }
-        .scene-row {
-            display: flex; align-items: center; padding: 8px 0; border-bottom: 1px dotted #ccc;
-            cursor: pointer; transition: 0.2s;
+        .role-title {
+            font-family: 'Cinzel', serif; font-size: 0.8rem; color: var(--gold-base);
+            letter-spacing: 0.3em; margin-bottom: 10px;
+            text-transform: uppercase;
         }
-        .scene-row:hover { background: rgba(0,0,0,0.05); }
-        .scene-check { transform: scale(1.3); margin-right: 10px; accent-color: var(--theater-red-mid); }
-        .scene-info { flex: 1; }
-        .scene-title { font-weight: bold; font-size: 1rem; }
-        .scene-sub { font-size: 0.75rem; color: #666; font-family: 'Cinzel'; }
+        .main-title {
+            font-family: 'Shippori Mincho', serif;
+            font-size: 3rem; font-weight: bold; color: #fff;
+            margin-bottom: 15px; line-height: 1.2;
+            text-shadow: 0 0 15px rgba(255,255,255,0.3);
+        }
+        .sub-text { font-size: 1rem; color: #ccc; line-height: 2; margin-bottom: 60px; white-space: pre-wrap; font-family: 'Shippori Mincho'; }
+        
+        .cast-box { margin-bottom: 50px; }
+        .cast-name { font-size: 2rem; margin-bottom: 5px; font-weight: bold; color: #fff; }
+        .cast-pl { font-size: 0.9rem; color: #aaa; font-family: 'Cinzel'; letter-spacing: 1px; }
 
-        .ticket-btn {
-            margin-top: 20px; background: var(--theater-red-mid); color: #f4ecd8;
-            border: 2px solid #1a1a1a; padding: 12px; font-family: 'Cinzel', serif;
-            font-size: 1.2rem; letter-spacing: 2px; cursor: pointer; transition: 0.3s; width: 100%;
-        }
-        .ticket-btn:hover { background: var(--theater-red-dark); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-
-        /* --- ANIMATIONS --- */
-        @keyframes scroll-up {
-            0% { transform: translateY(0); }
-            100% { transform: translateY(-100%); } /* JS calculates distance */
-        }
-        @keyframes light-flicker {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.02) rotate(1deg); }
-        }
-        @keyframes dust-rise {
-            0% { transform: translateY(100vh) scale(0.5); opacity: 0; }
-            100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+        .section-space { margin-bottom: 180px; }
+        .scenario-divider {
+            width: 100px; height: 2px; background: var(--gold-base);
+            margin: 100px auto; opacity: 0.5;
         }
 
-        /* Controls */
-        .controls { position: fixed; bottom: 20px; right: 20px; z-index: 3000; display: flex; gap: 10px; opacity:0; transition:0.3s; }
-        .controls:hover { opacity:1; }
+        .end-mark {
+            font-family: 'Cinzel', serif; font-size: 5rem; color: var(--gold-base);
+            opacity: 0; animation: fadeInEnd 5s ease forwards;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+        }
+        @keyframes fadeInEnd { from{opacity:0; transform:scale(0.9);} to{opacity:1; transform:scale(1);} }
+
+        /* --- SIDE VISUALS --- */
+        .side-container {
+            position: absolute; top: 0; height: 100%; width: 30%;
+            z-index: 90; display: flex; flex-direction: column; justify-content: center;
+        }
+        .side-left { left: 0; align-items: center; }
+        .side-right { right: 0; align-items: center; }
+
+        .char-visual {
+            position: relative; opacity: 0;
+            transition: all 1.5s ease;
+            width: 100%; display: flex; flex-direction: column; align-items: center;
+        }
+        .char-img {
+            max-height: 70vh; max-width: 90%; object-fit: contain;
+            filter: drop-shadow(0 0 20px rgba(0,0,0,0.8));
+            mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+        }
+        
+        .quote-box {
+            margin-top: -60px; padding: 20px;
+            background: radial-gradient(ellipse at center, rgba(0,0,0,0.8) 0%, transparent 70%);
+            color: #fff; font-size: 1.3rem; font-family: 'Shippori Mincho'; font-style: italic;
+            text-align: center; width: 100%;
+            opacity: 0; transform: translateY(20px);
+            transition: all 1s ease 0.5s;
+        }
+        
+        .slide-in-left { opacity: 1; transform: translateX(20px); }
+        .slide-in-right { opacity: 1; transform: translateX(-20px); }
+        .hide-visual { opacity: 0; transform: scale(0.95); }
+
+        /* --- CONTROLS --- */
+        .controls {
+            position: fixed; bottom: 20px; right: 20px; z-index: 2000;
+            display: flex; gap: 10px; opacity: 0; transition: opacity 0.5s;
+        }
+        .controls:hover { opacity: 1; }
         .ctrl-btn {
-            background: rgba(0,0,0,0.5); border: 1px solid #555; color: #fff;
-            width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-            cursor: pointer;
+            background: rgba(0,0,0,0.5); border: 1px solid #555;
+            color: #fff; width: 40px; height: 40px; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: 0.3s;
+        }
+        .ctrl-btn:hover { background: var(--velvet-red); border-color: var(--velvet-red); }
+
+        @keyframes scrollUp {
+            0% { transform: translate(-50%, 100vh); }
+            100% { transform: translate(-50%, -100%); }
         }
     </style>
 </head>
 <body>
 
-    <!-- STAGE STRUCTURE -->
-    <div class="theater-stage">
-        <!-- Environmental Effects -->
-        <div class="spotlight"></div>
-        <div class="dust-container" id="dustContainer"></div>
-        
-        <!-- Props -->
-        <div class="valance"></div>
-        <div class="curtain curtain-left" id="curtainLeft"></div>
-        <div class="curtain curtain-right" id="curtainRight"></div>
-        <div class="floor"></div>
-
-        <!-- Background Screen -->
-        <div class="backdrop-container" id="bgContainer">
-            <!-- Backgrounds injected here -->
-        </div>
-
-        <!-- Scroll Content -->
-        <div class="credits-container">
-            <div class="credits-scroll" id="scrollContent">
-                <!-- Content injected here -->
-            </div>
-        </div>
-
-        <!-- Actors on Stage -->
-        <div class="actor-container actor-left">
-            <div class="actor-quote" id="quotePC"></div>
-            <img id="imgPC" class="actor-img" src="">
-        </div>
-        <div class="actor-container actor-right">
-            <div class="actor-quote" id="quoteKPC"></div>
-            <img id="imgKPC" class="actor-img" src="">
-        </div>
+    <!-- STAGE DECORATION -->
+    <div class="stage-frame"></div>
+    <div class="curtain-container" id="curtain">
+        <div class="curtain left"></div>
+        <div class="curtain right"></div>
+    </div>
+    <div class="spotlights">
+        <div class="spot"></div><div class="spot"></div><div class="spot"></div>
     </div>
 
-    <!-- SETUP SCREEN -->
+    <!-- SETUP SCREEN (PROGRAM) -->
     <div id="setupScreen" class="setup-screen">
         <div class="playbill">
             <div class="playbill-header">
-                <div class="playbill-title">PROGRAM</div>
-                <div style="font-family:'Cinzel'; font-size:0.8rem; color:#555;">Select stories to perform</div>
+                <div class="playbill-title">THE ENDROLL</div>
+                <div class="playbill-sub">Chronicle Log Theater</div>
             </div>
             
             <div class="program-list" id="setupList">
-                <div style="text-align:center; margin-top:50px;">Waiting for Cast...</div>
+                <div style="text-align:center; margin-top:50px;">Preparing Program...</div>
             </div>
 
-            <div style="text-align:right; margin-top:5px; font-size:0.75rem;">
-                <span onclick="window.toggleAll(true)" style="cursor:pointer; text-decoration:underline;">Select All</span> / 
-                <span onclick="window.toggleAll(false)" style="cursor:pointer; text-decoration:underline;">Clear</span>
+            <div style="text-align:right; margin-top:10px; font-size:0.8rem;">
+                <span onclick="window.toggleAll(true)" style="cursor:pointer; border-bottom:1px solid #555;">Select All</span> / 
+                <span onclick="window.toggleAll(false)" style="cursor:pointer; border-bottom:1px solid #555;">Clear</span>
             </div>
 
-            <button class="ticket-btn" onclick="window.startShow()">START SHOW</button>
+            <button class="ticket-btn" onclick="window.startShow()">
+                <span class="material-icons-round" style="vertical-align:middle; font-size:1.2rem;">local_activity</span> 
+                ADMIT ONE (START)
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN STAGE -->
+    <div class="bg-container" id="bgContainer"></div>
+    <div class="bg-overlay"></div>
+
+    <div class="scroll-container" id="scrollContent"></div>
+
+    <div class="side-container side-left" id="sidePC">
+        <div class="char-visual hide-visual" id="visPC">
+            <img id="imgPC" class="char-img" src="">
+            <div class="quote-box" id="quotePC"></div>
+        </div>
+    </div>
+
+    <div class="side-container side-right" id="sideKPC">
+        <div class="char-visual hide-visual" id="visKPC">
+            <img id="imgKPC" class="char-img" src="">
+            <div class="quote-box" id="quoteKPC"></div>
         </div>
     </div>
 
     <div class="controls">
-        <div class="ctrl-btn" onclick="location.reload()"><span class="material-icons-round">replay</span></div>
-        <div class="ctrl-btn" onclick="window.close()"><span class="material-icons-round">close</span></div>
+        <div class="ctrl-btn" onclick="location.reload()" title="REPLAY">
+            <span class="material-icons-round">replay</span>
+        </div>
+        <div class="ctrl-btn" onclick="window.close()" title="CLOSE">
+            <span class="material-icons-round">close</span>
+        </div>
     </div>
 
     <script type="module">
@@ -332,17 +367,6 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // Dust Particles
-        const dustCont = document.getElementById('dustContainer');
-        for(let i=0; i<40; i++){
-            const d = document.createElement('div'); d.className = 'dust';
-            d.style.left = Math.random()*100 + '%'; d.style.top = Math.random()*100 + '%';
-            d.style.animationDuration = (10 + Math.random()*20) + 's';
-            d.style.width = d.style.height = (Math.random()*3+1)+'px';
-            d.style.opacity = Math.random()*0.5 + 0.1;
-            dustCont.appendChild(d);
-        }
-
         let allChars = {};
         let allScenarios = [];
         let selectedScenarios = [];
@@ -351,6 +375,7 @@
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     await loadData();
+                    
                     // Direct Link Mode
                     const params = new URLSearchParams(window.location.search);
                     const singleId = params.get('id');
@@ -358,8 +383,9 @@
                         const target = allScenarios.find(s => s.id === singleId);
                         if(target) {
                             selectedScenarios = [target];
+                            // すぐに開始
                             document.getElementById('setupScreen').classList.add('hidden');
-                            setTimeout(startShowAnimation, 800);
+                            setTimeout(startShowAnimation, 500);
                         } else {
                             renderSetupList();
                         }
@@ -374,41 +400,73 @@
 
         async function loadData() {
             try {
-                // Chars
+                // Load Chars
                 const charSnap = await getDocs(collection(db, "rooms", "couple_shared_data", "characters"));
-                charSnap.forEach(doc => { const d = doc.data(); allChars[d.id||doc.id] = d; });
-                // Scenarios
+                charSnap.forEach(doc => {
+                    const d = doc.data();
+                    allChars[d.id || doc.id] = d;
+                });
+                // Load Scenarios
                 const q = collection(db, "scenarios"); 
                 const scnSnap = await getDocs(q);
-                scnSnap.forEach(doc => { allScenarios.push({ id: doc.id, ...doc.data() }); });
+                scnSnap.forEach(doc => {
+                    allScenarios.push({ id: doc.id, ...doc.data() });
+                });
                 // Sort
-                allScenarios.sort((a, b) => new Date(a.date||0) - new Date(b.date||0));
-            } catch(e) { console.error(e); }
+                allScenarios.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+
+            } catch(e) { console.error(e); alert("Data Load Error"); }
         }
 
         function renderSetupList() {
             const list = document.getElementById('setupList');
             list.innerHTML = "";
-            if(allScenarios.length === 0) { list.innerHTML = '<div style="text-align:center;">No Scenarios Found</div>'; return; }
 
-            // Grouping logic omitted for brevity, listing all for simplicity in Playbill
+            if(allScenarios.length === 0) {
+                list.innerHTML = '<div style="text-align:center;">No Scenarios Found</div>';
+                return;
+            }
+
+            // Group by Pair
+            const groups = new Map();
             allScenarios.forEach(s => {
-                const row = document.createElement('div');
-                row.className = 'scene-row';
-                row.innerHTML = `
-                    <input type="checkbox" value="${s.id}" class="scene-check">
-                    <div class="scene-info">
-                        <div class="scene-title">${s.title}</div>
-                        <div class="scene-sub">${s.date || ""} | ${s.system || ""}</div>
-                    </div>
-                `;
-                row.onclick = (e) => {
-                    if(e.target.type !== 'checkbox') {
-                        const chk = row.querySelector('input');
-                        chk.checked = !chk.checked;
-                    }
-                };
-                list.appendChild(row);
+                const mems = (s.members || []).sort().join('_') || "OTHERS";
+                if(!groups.has(mems)) groups.set(mems, []);
+                groups.get(mems).push(s);
+            });
+
+            groups.forEach((scenarios, key) => {
+                let title = "SOLO / OTHERS";
+                if(key !== "OTHERS") {
+                    const ids = key.split('_');
+                    const n1 = allChars[ids[0]]?.name || "Unknown";
+                    const n2 = allChars[ids[1]]?.name || "";
+                    title = n2 ? `${n1} & ${n2}` : n1;
+                }
+
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'act-group';
+                groupDiv.innerHTML = `<div class="act-title">${title}</div>`;
+
+                scenarios.forEach(s => {
+                    const row = document.createElement('div');
+                    row.className = 'scene-row';
+                    row.innerHTML = `
+                        <div style="display:flex; align-items:center; flex:1;">
+                            <input type="checkbox" value="${s.id}" class="scene-check">
+                            <div class="scene-title" style="margin-left:10px;">${s.title}</div>
+                        </div>
+                        <div class="scene-date">${s.date || "---"}</div>
+                    `;
+                    row.onclick = (e) => {
+                        if(e.target.type !== 'checkbox') {
+                            const chk = row.querySelector('input');
+                            chk.checked = !chk.checked;
+                        }
+                    };
+                    groupDiv.appendChild(row);
+                });
+                list.appendChild(groupDiv);
             });
         }
 
@@ -418,24 +476,33 @@
 
         window.startShow = () => {
             const checks = document.querySelectorAll('.scene-check:checked');
-            if(checks.length === 0) { alert("Please select a scenario."); return; }
-            selectedScenarios = [];
-            checks.forEach(c => {
-                const s = allScenarios.find(item => item.id === c.value);
-                if(s) selectedScenarios.push(s);
-            });
-            selectedScenarios.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+            if(checks.length === 0 && selectedScenarios.length === 0) { 
+                alert("Please select at least one scenario."); return; 
+            }
+            
+            if(checks.length > 0) {
+                selectedScenarios = [];
+                checks.forEach(c => {
+                    const s = allScenarios.find(item => item.id === c.value);
+                    if(s) selectedScenarios.push(s);
+                });
+                // Sort by Date
+                selectedScenarios.sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+            }
 
             document.getElementById('setupScreen').classList.add('hidden');
-            setTimeout(startShowAnimation, 1000);
+            setTimeout(startShowAnimation, 800);
         };
 
-        // --- ANIMATION CONTROLLER ---
+        // --- THEATER ANIMATION ---
         function startShowAnimation() {
-            // Curtain Open
-            document.body.classList.add('curtain-open');
-            // Start Scroll logic
-            setTimeout(initScrollContent, 3000);
+            // 1. Curtain Open
+            document.getElementById('curtain').classList.add('open');
+
+            // 2. Start Scroll after delay
+            setTimeout(() => {
+                initScrollContent();
+            }, 2500);
         }
 
         function initScrollContent() {
@@ -444,7 +511,7 @@
             let html = "";
 
             selectedScenarios.forEach((s, index) => {
-                // Add Background
+                // Background
                 const bgDiv = document.createElement('div');
                 bgDiv.className = 'bg-layer';
                 bgDiv.id = `bg-${index}`;
@@ -455,81 +522,86 @@
                 html += `<div class="scenario-marker" id="marker-${index}" data-index="${index}"></div>`;
 
                 // Content
-                // Title
-                html += `<div style="margin-top: ${index===0 ? '100vh' : '0'};">`;
                 html += `
-                    <div class="role-title">ACT ${index + 1}</div>
-                    <div class="main-title">${s.title}</div>
-                    <div class="sub-title">${s.system || ""} - ${s.type || ""}</div>
+                    <div class="scenario-block">
+                        <div class="section-space">
+                            <div class="role-title">SCENARIO ACT ${index + 1}</div>
+                            <div class="main-title">${s.title}</div>
+                            <div class="sub-text" style="font-family:'Cinzel'">${s.system || ""}</div>
+                        </div>
                 `;
 
-                // Story
                 if(s.overview) {
                     html += `
-                        <div class="role-title">STORY</div>
-                        <div class="story-text">${s.overview}</div>
+                        <div class="section-space">
+                            <div class="sub-text" style="text-align:center; width:80%; margin:0 auto; font-style:italic;">${s.overview}</div>
+                        </div>
                     `;
                 }
 
                 // Cast
                 const pc = allChars[s.characters?.pc?.id];
                 const kpc = allChars[s.characters?.kpc?.id];
-                const pcName = pc ? pc.name : "Player Character";
-                const kpcName = kpc ? kpc.name : "Key Character";
+                const pcName = pc ? pc.name : "PC";
+                const kpcName = kpc ? kpc.name : "KPC";
 
-                html += `<div class="staff-grid">`;
-                html += `<p class="role">Starring</p><p class="name">${pcName}</p>`;
-                html += `<p class="role">Co-Starring</p><p class="name">${kpcName}</p>`;
+                html += `<div class="section-space">`;
+                html += `
+                    <div class="cast-box">
+                        <div class="role-title">STARRING</div>
+                        <div class="cast-name">${pcName}</div>
+                        <div class="cast-pl">PL: ${s.characters?.pc?.pl || ""}</div>
+                    </div>
+                    <div class="cast-box">
+                        <div class="role-title">CO-STARRING</div>
+                        <div class="cast-name">${kpcName}</div>
+                        <div class="cast-pl">KP/PL: ${s.characters?.kpc?.pl || ""}</div>
+                    </div>
+                `;
                 html += `</div>`;
 
                 // Footer
                 html += `
-                    <div class="divider"></div>
-                    <p style="font-family:'Cinzel'; font-size:0.8rem; color:#888;">
-                        ${s.date || ""} ${s.endName ? '/ '+s.endName : ''}<br>
-                        GM: ${s.gm || "---"}
-                    </p>
+                        <div class="section-space">
+                            <div class="sub-text" style="font-family:'Cinzel'">
+                                ${s.date || ""} / Ending: ${s.endName || "---"}<br>
+                                GM: ${s.gm || "---"}
+                            </div>
+                        </div>
+                        ${index < selectedScenarios.length -1 ? '<div class="scenario-divider"></div>' : ''}
+                    </div>
                 `;
-                
-                html += `</div><div class="section-spacer"></div>`;
             });
 
             // FIN
-            html += `<div style="padding: 30vh 0 60vh;"><div class="main-title" style="font-size:5rem;">FIN</div></div>`;
+            html += `
+                <div style="margin-top:150px; padding-bottom:60vh;">
+                    <div class="end-mark">FIN</div>
+                </div>
+            `;
 
             container.innerHTML = html;
 
-            // Calc duration (Speed adjustment)
-            const duration = selectedScenarios.length * 30 + 20; 
-            const endY = -(container.clientHeight); // Scroll entire height
-            
-            // Apply animation manually for better control
-            container.animate([
-                { transform: 'translateY(0)' },
-                { transform: `translateY(${endY}px)` }
-            ], {
-                duration: duration * 1000,
-                easing: 'linear',
-                fill: 'forwards'
-            });
+            // Start Scroll
+            const duration = selectedScenarios.length * 28 + 20; 
+            container.style.animation = `scrollUp ${duration}s linear forwards`;
 
-            // Start Monitoring
-            requestAnimationFrame(checkScroll);
-
-            // Auto Close Curtain at end
+            // Curtain Close at the end
             setTimeout(() => {
-                document.body.classList.remove('curtain-open');
+                document.getElementById('curtain').classList.remove('open');
             }, (duration - 3) * 1000);
+
+            requestAnimationFrame(checkScroll);
         }
 
         let lastIndex = -1;
         function checkScroll() {
             const markers = document.querySelectorAll('.scenario-marker');
             let currentIndex = -1;
+
             markers.forEach(m => {
                 const rect = m.getBoundingClientRect();
-                // Check if marker is around bottom of screen (entering stage)
-                if (rect.top < window.innerHeight * 0.9) {
+                if (rect.top < window.innerHeight * 0.8) {
                     currentIndex = parseInt(m.dataset.index);
                 }
             });
@@ -543,40 +615,49 @@
 
         function updateScene(idx) {
             const s = selectedScenarios[idx];
-            // Background
+            
             document.querySelectorAll('.bg-layer').forEach(el => el.classList.remove('active'));
-            const bg = document.getElementById(`bg-${idx}`);
-            if(bg) bg.classList.add('active');
+            const activeBg = document.getElementById(`bg-${idx}`);
+            if(activeBg) activeBg.classList.add('active');
 
-            // Character Visuals
-            updateActor('PC', s);
-            updateActor('KPC', s);
+            updateCharacter('PC', s);
+            updateCharacter('KPC', s);
         }
 
-        function updateActor(role, s) {
+        function updateCharacter(role, s) {
+            const vis = document.getElementById(`vis${role}`);
             const img = document.getElementById(`img${role}`);
             const qBox = document.getElementById(`quote${role}`);
             
-            // Fade Out
-            img.classList.remove('show');
-            qBox.classList.remove('show');
+            vis.classList.add('hide-visual');
+            vis.classList.remove('slide-in-left', 'slide-in-right');
 
             setTimeout(() => {
                 const charId = s.characters?.[role.toLowerCase()]?.id;
-                const char = allChars[charId];
+                const charData = allChars[charId];
                 const quote = s.characters?.[role.toLowerCase()]?.quote;
 
-                if(char && char.image) {
-                    img.src = char.image;
-                    img.classList.add('show');
+                if (charData && charData.image) {
+                    img.src = charData.image;
+                    img.style.display = 'block';
+                } else {
+                    img.style.display = 'none';
                 }
-                if(quote) {
-                    qBox.innerText = `"${quote}"`;
-                    qBox.classList.add('show');
-                }
-            }, 1500); // Wait for transition
-        }
 
+                if (quote) {
+                    qBox.innerText = `"${quote}"`;
+                    qBox.style.opacity = '1';
+                } else {
+                    qBox.style.opacity = '0';
+                }
+
+                vis.classList.remove('hide-visual');
+                vis.style.opacity = '1';
+                vis.style.transform = 'scale(1)';
+                vis.classList.add(role === 'PC' ? 'slide-in-left' : 'slide-in-right');
+                
+            }, 1000);
+        }
     </script>
 </body>
 </html>
