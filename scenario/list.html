@@ -10,223 +10,325 @@
     <link href="../character/edit/header.css" rel="stylesheet">
 
     <style>
-        /* --- CORE STYLES --- */
+        /* --- CORE STYLES (Based on Endless Archive) --- */
+        :root {
+            --bg-color: #050302;
+            --wood-dark: #120804;
+            --wood-mid: #2a1b12;
+            --gold-accent: #cba135;
+            --text-main: #d8cbb5;
+            --paper-texture: url('https://www.transparenttextures.com/patterns/cream-paper.png');
+            --wood-texture: url('https://www.transparenttextures.com/patterns/wood-pattern.png');
+            --leather-texture: url('https://www.transparenttextures.com/patterns/black-felt.png');
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            background-color: #080808;
-            background-image: 
-                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
-            color: #ddd;
+            background-color: var(--bg-color);
+            background: 
+                radial-gradient(circle at 50% 50%, transparent 0%, rgba(0,0,0,0.8) 100%),
+                radial-gradient(ellipse at 50% 0%, rgba(42, 27, 18, 0.4) 0%, var(--bg-color) 80%);
+            color: var(--text-main);
             font-family: 'Shippori Mincho', serif;
-            margin: 0; padding: 0;
-            min-height: 100vh;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 80px auto 100px;
-            padding: 0 20px;
-        }
-
-        h1 {
-            font-family: 'Cinzel', serif;
-            color: #d4b346;
-            text-align: center;
-            font-size: 2rem;
-            margin-bottom: 10px;
-            letter-spacing: 4px;
-            text-shadow: 0 0 10px rgba(212, 179, 70, 0.3);
-        }
-        .subtitle {
-            text-align: center; color: #666; font-size: 0.8rem; margin-bottom: 50px;
-            font-family: 'Cinzel', serif; letter-spacing: 2px;
-        }
-
-        /* --- COMBI SECTION --- */
-        .combi-section {
-            margin-bottom: 60px;
-            animation: fadeIn 0.6s ease-out;
-        }
-        
-        .combi-header {
-            display: flex; align-items: baseline; gap: 15px;
-            border-bottom: 1px solid #333;
-            padding-bottom: 10px; margin-bottom: 20px;
-        }
-        .combi-name {
-            font-size: 1.4rem; color: #eee; font-weight: bold;
-        }
-        .combi-members {
-            font-size: 0.9rem; color: #888;
-        }
-        .combi-badge {
-            font-family: 'Cinzel', serif; font-size: 0.7rem;
-            background: #1a1a1a; color: #d4b346; border: 1px solid #d4b346;
-            padding: 2px 8px; border-radius: 10px;
-        }
-
-        /* --- SCENARIO GRID --- */
-        .scenario-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-        }
-
-        .scenario-card {
-            background: #111; border: 1px solid #333;
-            border-radius: 4px; overflow: hidden;
-            transition: 0.3s; cursor: pointer;
-            position: relative;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-        }
-        .scenario-card:hover {
-            transform: translateY(-5px);
-            border-color: #d4b346;
-            box-shadow: 0 8px 20px rgba(212, 179, 70, 0.15);
-        }
-
-        .card-img-box {
-            width: 100%; height: 140px;
-            background: #000; overflow: hidden;
-            position: relative;
-        }
-        .card-img {
-            width: 100%; height: 100%; object-fit: cover; opacity: 0.7; transition: 0.3s;
-        }
-        .scenario-card:hover .card-img { opacity: 1; transform: scale(1.05); }
-        
-        .card-badges {
-            position: absolute; top: 10px; left: 10px; display: flex; gap: 5px;
-        }
-        .badge {
-            font-size: 0.6rem; padding: 2px 6px; border-radius: 2px;
-            background: rgba(0,0,0,0.8); color: #ccc; border: 1px solid #555;
-            font-family: 'Cinzel', serif;
-        }
-        .badge.lost { color: #ff6b6b; border-color: #ff6b6b; }
-
-        .card-body { padding: 15px; }
-        .card-title {
-            font-size: 1.1rem; font-weight: bold; color: #fff;
-            margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-        .card-meta {
-            font-size: 0.75rem; color: #777; display: flex; justify-content: space-between;
-            font-family: 'Cinzel', serif;
-        }
-
-        /* --- MODAL --- */
-        .modal-overlay {
+        /* --- Dust Particles --- */
+        .dust-container {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
-            z-index: 10000; display: none; opacity: 0; transition: 0.3s;
-            align-items: center; justify-content: center;
+            pointer-events: none; z-index: 50; overflow: hidden;
         }
-        .modal-overlay.open { display: flex; opacity: 1; }
-
-        .modal-content {
-            background: #1a1a1a; width: 90%; max-width: 900px; max-height: 90vh;
-            border: 1px solid #444; border-radius: 4px;
-            display: grid; grid-template-columns: 300px 1fr;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            overflow: hidden; animation: zoomIn 0.3s;
+        .dust {
+            position: absolute; width: 2px; height: 2px;
+            background: rgba(255, 230, 180, 0.4);
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(255, 230, 180, 0.4);
+            animation: float 20s infinite linear;
         }
-        @keyframes zoomIn { from{transform:scale(0.9);} to{transform:scale(1);} }
-
-        .modal-left {
-            background: #111; padding: 20px; border-right: 1px solid #333;
-            display: flex; flex-direction: column; gap: 15px;
-            overflow-y: auto;
-        }
-        .modal-right {
-            padding: 30px; overflow-y: auto; background: #181818;
-            background-image: repeating-linear-gradient(transparent, transparent 29px, #222 30px);
+        @keyframes float {
+            0% { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0; }
+            20% { opacity: 0.8; }
+            80% { opacity: 0.5; }
+            100% { transform: translateY(-100vh) translateX(50px) rotate(360deg); opacity: 0; }
         }
 
-        .modal-img { width: 100%; border-radius: 4px; border: 1px solid #333; margin-bottom: 10px; }
-        .modal-label { font-size: 0.7rem; color: #666; font-family: 'Cinzel', serif; margin-bottom: 2px; }
-        .modal-val { font-size: 0.9rem; color: #ddd; margin-bottom: 15px; }
-        .modal-title { font-size: 1.8rem; color: #d4b346; margin-bottom: 10px; border-bottom: 1px double #444; padding-bottom: 10px; }
-        
-        .modal-pair-info { display: flex; gap: 15px; margin-bottom: 20px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 4px; }
-        .modal-char-box { flex: 1; display: flex; align-items: center; gap: 10px; }
-        .m-icon { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #444; object-fit: cover; }
-        
-        .modal-text { font-size: 0.95rem; line-height: 1.8; color: #ccc; white-space: pre-wrap; margin-bottom: 20px; }
+        /* --- Header --- */
+        header {
+            text-align: center; padding: 15px; z-index: 60;
+            background: rgba(5, 3, 2, 0.95);
+            border-bottom: 1px solid rgba(203, 161, 53, 0.2);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.8);
+        }
+        h1 {
+            font-family: 'Cinzel', serif; font-size: 2rem; color: var(--gold-accent);
+            text-shadow: 0 0 10px rgba(203, 161, 53, 0.6); letter-spacing: 0.15em;
+        }
+
+        /* --- Layout --- */
+        .main-content-wrapper {
+            display: flex; flex-grow: 1; overflow: hidden; position: relative;
+        }
+
+        /* --- Left Overview Panel --- */
+        .overview-panel {
+            width: 320px; min-width: 300px;
+            background: var(--wood-dark); background-image: var(--wood-texture);
+            border-right: 1px solid #000;
+            box-shadow: inset -15px 0 30px rgba(0,0,0,0.9);
+            padding: 25px; z-index: 55;
+            position: relative;
+        }
+        .overview-panel::after {
+            content: ''; position: absolute; right: 0; top: 0; height: 100%; width: 5px;
+            background: linear-gradient(to left, rgba(255,255,255,0.1), transparent);
+        }
+        .overview-content {
+            background: rgba(42, 27, 18, 0.8);
+            background-image: var(--paper-texture); background-blend-mode: multiply;
+            padding: 20px; height: 100%; display: flex; flex-direction: column;
+            border: 1px solid rgba(203, 161, 53, 0.2);
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        .overview-image-container {
+            width: 100%; height: 180px; margin-bottom: 15px;
+            border: 1px solid var(--gold-accent); overflow: hidden; background: #000;
+            position: relative;
+        }
+        .overview-image-container::after {
+            content:''; position: absolute; top:0; left:0; width:100%; height:100%;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+        .overview-image { width: 100%; height: 100%; object-fit: cover; filter: sepia(0.3) contrast(1.1); opacity: 0.9; }
+        .overview-title { 
+            font-family: 'Shippori Mincho', serif; font-weight: 700;
+            font-size: 1.4rem; color: var(--gold-accent); 
+            margin-bottom: 10px; border-bottom: 1px solid var(--gold-accent);
+            padding-bottom: 5px; line-height: 1.3;
+        }
+        .overview-text { font-size: 0.85rem; line-height: 1.8; flex-grow: 1; overflow-y: auto; color: #d8cbb5; white-space: pre-wrap; }
+
+        /* --- Right Library --- */
+        .library-container {
+            flex-grow: 1; overflow-y: auto; overflow-x: hidden;
+            padding: 40px 60px;
+            perspective: 2000px;
+            background: linear-gradient(to bottom, #050302 0%, #110805 50%, #050302 100%);
+            box-shadow: inset 0 0 150px rgba(0,0,0,1);
+            opacity: 0; animation: fadeInLibrary 1s 0.5s ease forwards;
+        }
+        @keyframes fadeInLibrary { from{opacity:0;} to{opacity:1;} }
+
+        /* コンビごとの棚 */
+        .shelf-section { margin-bottom: 60px; }
+        .shelf-label {
+            font-family: 'Cinzel', 'Shippori Mincho', serif;
+            color: #d4b346; font-size: 1.1rem; margin-bottom: 5px;
+            padding-left: 10px; border-left: 3px solid #d4b346;
+            text-shadow: 0 0 5px rgba(0,0,0,0.8);
+            display: flex; align-items: baseline; gap: 10px;
+        }
+        .shelf-label small { font-size: 0.7rem; color: #888; letter-spacing: 1px; }
+
+        .shelf-row { position: relative; margin-bottom: 40px; }
+        .shelf-wood {
+            height: 35px;
+            background: #2a1b12;
+            background-image: var(--wood-texture);
+            border-top: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.95), inset 0 5px 15px rgba(0,0,0,0.8);
+            position: relative; z-index: 10; transform-style: preserve-3d;
+            border-radius: 2px;
+        }
+        .shelf-wood::before {
+            content: ''; position: absolute; top: -320px; left: 0; width: 100%; height: 320px;
+            background: linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 100%);
+            z-index: -1;
+        }
+
+        .books-scroll-container {
+            display: flex; align-items: flex-end; padding: 0 20px;
+            overflow-x: auto; overflow-y: hidden; height: 280px;
+            margin-bottom: -15px; /* 棚に乗せる */
+            position: relative; z-index: 20;
+            transform-style: preserve-3d;
+            scrollbar-width: thin; scrollbar-color: #444 transparent;
+        }
+        .books-scroll-container::-webkit-scrollbar { height: 6px; }
+        .books-scroll-container::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+
+        /* --- Book Design --- */
+        .book {
+            height: 250px; 
+            position: relative; flex-shrink: 0;
+            transform-style: preserve-3d; cursor: pointer;
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            margin-left: 6px; 
+            transform-origin: bottom center;
+        }
+        .book:hover {
+            transform: translateZ(30px) translateY(-10px) !important;
+            z-index: 100;
+        }
+
+        .spine {
+            position: absolute; width: 100%; height: 100%;
+            border-radius: 3px 6px 6px 3px;
+            display: flex; justify-content: center; align-items: center;
+            padding: 15px 4px;
+            background-color: #222;
+            background-image: var(--leather-texture);
+            background-blend-mode: soft-light;
+            background: linear-gradient(90deg, rgba(0,0,0,0.5) 0%, rgba(255,255,255,0.05) 5%, rgba(255,255,255,0.15) 20%, rgba(255,255,255,0) 40%, rgba(0,0,0,0.2) 85%, rgba(0,0,0,0.6) 100%), var(--leather-texture);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.5), 5px 5px 15px rgba(0,0,0,0.6);
+            overflow: hidden;
+        }
+
+        .spine-title {
+            writing-mode: vertical-rl; text-orientation: mixed;
+            font-size: 0.85rem; font-family: 'Shippori Mincho', serif; 
+            color: #dcb356; letter-spacing: 0.1em;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.8), 0 0 2px rgba(203, 161, 53, 0.3);
+            opacity: 0.9; max-height: 85%; z-index: 2;
+        }
+
+        /* Book Colors */
+        .book[data-color="navy"] .spine { background-color: #1a2433; }
+        .book[data-color="maroon"] .spine { background-color: #3d1818; }
+        .book[data-color="forest"] .spine { background-color: #1c2e1f; }
+        .book[data-color="black"] .spine { background-color: #1a1a1a; }
+        .book[data-color="slate"] .spine { background-color: #2f363d; }
+        .book[data-color="brown"] .spine { background-color: #3e2723; }
+
+        /* --- Open Book Modal --- */
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 100;
+            backdrop-filter: blur(8px);
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.5s ease;
+            perspective: 2500px;
+        }
+        .overlay.active { opacity: 1; pointer-events: all; }
+
+        .opened-book {
+            width: 90vw; max-width: 1200px; height: 80vh;
+            background-color: #f0e6d2; 
+            background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png'),
+                linear-gradient(to right, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0) 3%, rgba(0,0,0,0) 48%, rgba(0,0,0,0.08) 49.5%, rgba(20,10,0,0.4) 50%, rgba(0,0,0,0.08) 50.5%, rgba(0,0,0,0) 52%, rgba(0,0,0,0) 97%, rgba(0,0,0,0.2) 100%);
+            display: flex; 
+            box-shadow: 0 30px 80px rgba(0,0,0,0.9), inset 0 0 80px rgba(87, 65, 40, 0.2);
+            transform: rotateX(40deg) rotateY(-10deg) scale(0.8);
+            opacity: 0; transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border-radius: 4px; overflow: hidden; position: relative;
+        }
+        .opened-book::after {
+            content:''; position: absolute; bottom:0; left:0; width:100%; height:8px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.4)); pointer-events: none;
+        }
+        .overlay.active .opened-book { transform: rotateX(0deg) rotateY(0deg) scale(1); opacity: 1; }
+
+        .page-left, .page-right {
+            flex: 1; padding: 50px; overflow-y: auto; color: #2c1e16; position: relative;
+            opacity: 0; transform: translateY(10px);
+            transition: opacity 0.6s ease 0.4s, transform 0.6s ease 0.4s;
+        }
+        .overlay.active .page-left, .overlay.active .page-right { opacity: 1; transform: translateY(0); }
+        .page-left::before, .page-right::before {
+            content:''; position: absolute; top:0; left:0; width:100%; height:100%;
+            background-image: var(--paper-texture); opacity: 0.5; pointer-events: none;
+        }
+
+        .page-left { 
+            border-right: 1px solid rgba(0,0,0,0.05); 
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+        }
+
+        .modal-img-frame {
+            width: 80%; max-width: 400px; height: auto; aspect-ratio: 16/9;
+            border: 1px solid rgba(0,0,0,0.1); padding: 8px; background: #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15); transform: rotate(-1deg);
+            margin-bottom: 20px; transition: transform 0.5s ease;
+        }
+        .modal-img-frame:hover { transform: rotate(0deg) scale(1.02); }
+        #modalImage { width: 100%; height: 100%; object-fit: cover; filter: sepia(0.4) contrast(1.1); }
+
         .close-btn {
-            position: absolute; top: 20px; right: 20px;
-            background: transparent; border: none; color: #fff; font-size: 2rem; cursor: pointer;
-            z-index: 10001; text-shadow: 0 0 5px #000;
+            position: absolute; top: 20px; right: 30px; font-size: 2.5rem; cursor: pointer;
+            color: #5a3e2b; z-index: 10; font-family: 'Cinzel'; opacity: 0.4; transition: 0.3s;
         }
-        .close-btn:hover { color: #d4b346; }
+        .close-btn:hover { opacity: 1; }
 
-        @media (max-width: 800px) {
-            .modal-content { grid-template-columns: 1fr; }
-            .modal-left { display: none; } /* スマホでは左側省略など */
+        .info-row {
+            display: flex; justify-content: space-between; width: 100%; border-bottom: 1px dashed rgba(87,65,40,0.3);
+            padding: 5px 0; margin-bottom: 5px; font-size: 0.9rem;
         }
-        @keyframes fadeIn { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+        .info-label { font-family: 'Cinzel'; font-weight: bold; color: #5a3e2b; }
+        
+        .char-icons { display: flex; justify-content: center; gap: 15px; margin-bottom: 20px; }
+        .char-circle {
+            width: 60px; height: 60px; border-radius: 50%; border: 2px solid #5a3e2b;
+            object-fit: cover; background: #ddd; box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+        }
+        .detail-text { font-size: 0.9rem; line-height: 1.8; white-space: pre-wrap; margin-bottom: 20px; }
+
     </style>
 </head>
 <body>
+    <div class="dust-container" id="dustContainer"></div>
 
-    <!-- ヘッダー読み込み -->
-    <script type="module">
-        try { const mod = await import("../character/header.js"); if(mod.initHeader) mod.initHeader(); } catch(e){}
-    </script>
+    <header>
+        <h1>THE ENDLESS ARCHIVE</h1>
+        <div style="font-size: 0.9rem; color:var(--gold-accent); opacity: 0.8;">CHRONICLE LOG STORAGE</div>
+    </header>
+    
+    <div class="main-content-wrapper">
+        <!-- 左サイドパネル：簡易情報 -->
+        <aside class="overview-panel">
+            <div class="overview-content" id="overviewContentBox">
+                <div class="overview-image-container">
+                    <img id="overviewImage" class="overview-image" src="" style="display:none;">
+                    <div id="noImage" style="display:flex; width:100%; height:100%; justify-content:center; align-items:center; color:var(--gold-accent); font-family:'Cinzel';">Select a Book</div>
+                </div>
+                <h2 id="overviewTitle" class="overview-title"></h2>
+                <div id="overviewMeta" style="font-size:0.75rem; color:#888; font-family:'Cinzel'; margin-bottom:10px;"></div>
+                <div id="overviewText" class="overview-text"></div>
+            </div>
+        </aside>
 
-    <div class="container">
-        <h1>ARCHIVES</h1>
-        <div class="subtitle">CHRONICLE LOG STORAGE</div>
-        <div id="loading" style="text-align:center; color:#666; margin-top:50px;">LOADING ARCHIVES...</div>
-        
-        <!-- ここにコンビごとのセクションが追加される -->
-        <div id="archiveContainer"></div>
+        <!-- メイン：書架 -->
+        <main class="library-container" id="libraryContainer">
+            <div id="loading" style="text-align:center; margin-top:50px; font-family:'Cinzel'; color:#666;">Retrieving Records...</div>
+        </main>
     </div>
 
-    <!-- 詳細モーダル -->
-    <div id="detailModal" class="modal-overlay" onclick="closeModal(event)">
-        <button class="close-btn" onclick="document.getElementById('detailModal').classList.remove('open')">×</button>
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-left">
-                <img id="mTrailer" class="modal-img" src="">
-                
-                <div class="modal-label">SYSTEM</div>
-                <div id="mSystem" class="modal-val"></div>
-                <div class="modal-label">TYPE</div>
-                <div id="mType" class="modal-val"></div>
-                <div class="modal-label">DATE</div>
-                <div id="mDate" class="modal-val"></div>
-                <div class="modal-label">END</div>
-                <div id="mEnd" class="modal-val" style="color:#d4b346;"></div>
-            </div>
-            <div class="modal-right">
-                <div id="mTitle" class="modal-title"></div>
-                
-                <div class="modal-pair-info">
-                    <div class="modal-char-box">
-                        <img id="mIconPC" class="m-icon">
-                        <div>
-                            <div class="modal-label">PC</div>
-                            <div id="mNamePC" style="font-weight:bold;"></div>
-                            <div id="mSanPC" style="font-size:0.8rem; color:#aaa;"></div>
-                        </div>
-                    </div>
-                    <div class="modal-char-box">
-                        <img id="mIconKPC" class="m-icon">
-                        <div>
-                            <div class="modal-label">KPC</div>
-                            <div id="mNameKPC" style="font-weight:bold;"></div>
-                            <div id="mSanKPC" style="font-size:0.8rem; color:#aaa;"></div>
-                        </div>
-                    </div>
+    <!-- 詳細モーダル (本が開くアニメーション) -->
+    <div class="overlay" id="overlay">
+        <div class="opened-book">
+            <div class="close-btn" onclick="closeBook()">×</div>
+            
+            <div class="page-left">
+                <div class="modal-img-frame">
+                     <img id="modalImage" src="">
                 </div>
+                <h2 style="font-family:'Shippori Mincho'; color:#2c1e16; font-size:1.8rem; text-align:center; width:100%; margin-bottom:10px;" id="modalTitle"></h2>
+                
+                <div class="char-icons" id="modalIcons"></div>
 
-                <div class="modal-label">OVERVIEW</div>
-                <div id="mOverview" class="modal-text"></div>
+                <div class="info-row"><span class="info-label">SYSTEM</span><span id="modalSystem"></span></div>
+                <div class="info-row"><span class="info-label">DATE</span><span id="modalDate"></span></div>
+                <div class="info-row"><span class="info-label">RESULT</span><span id="modalResult"></span></div>
+            </div>
 
-                <div class="modal-label" style="color:#d4b346;">IMPRESSION & MEMO</div>
-                <div id="mMemo" class="modal-text"></div>
+            <div class="page-right">
+                <div class="info-label" style="border-bottom:1px solid #5a3e2b; margin-bottom:10px;">OVERVIEW</div>
+                <div id="modalOverview" class="detail-text"></div>
+
+                <div class="info-label" style="border-bottom:1px solid #5a3e2b; margin-bottom:10px;">MEMO</div>
+                <div id="modalMemo" class="detail-text" style="color:#555;"></div>
             </div>
         </div>
     </div>
@@ -236,7 +338,6 @@
         import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
         
-        // firestore.jsと同じ設定（読み取り専用で使用）
         const firebaseConfig = {
             apiKey: "AIzaSyBZVh6NhFA_BSuyUW-sZV2QPSvSzdYJZWU",
             authDomain: "chocolatmer-uchiyoso.firebaseapp.com",
@@ -250,12 +351,25 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
 
-        // アイコンパス
-        const IMG_BASE = "../images/icon/";
-        const NO_IMG = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
-
         let allChars = {};
         let allScenarios = [];
+        const NO_IMG = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+
+        // パーティクル生成
+        function createDust() { 
+            const container = document.getElementById('dustContainer'); 
+            for(let i=0; i<40; i++){ 
+                const dust = document.createElement('div'); 
+                dust.className='dust'; 
+                dust.style.left=Math.random()*100+'vw'; 
+                dust.style.top=Math.random()*100+'vh'; 
+                dust.style.animationDuration=(Math.random()*30+20)+'s'; 
+                dust.style.animationDelay=-(Math.random()*50)+'s'; 
+                dust.style.opacity=Math.random()*0.4+0.1; 
+                container.appendChild(dust); 
+            }
+        }
+        createDust();
 
         onAuthStateChanged(auth, async (user) => {
             if (user) {
@@ -267,7 +381,7 @@
 
         async function loadData() {
             try {
-                // 1. 全キャラクター取得 (コンビ名解決のため)
+                // キャラクター情報取得
                 const charSnap = await getDocs(collection(db, "rooms", "couple_shared_data", "characters"));
                 charSnap.forEach(doc => {
                     const d = doc.data();
@@ -275,38 +389,41 @@
                     allChars[d.id] = d;
                 });
 
-                // 2. 全シナリオ取得 (日付順)
+                // シナリオ情報取得 (日付順)
                 const q = query(collection(db, "scenarios"), orderBy("date", "desc"));
                 const scnSnap = await getDocs(q);
                 scnSnap.forEach(doc => {
                     allScenarios.push({ id: doc.id, ...doc.data() });
                 });
 
-                renderArchives();
+                renderLibrary();
             } catch (e) {
                 console.error(e);
                 document.getElementById('loading').textContent = "ERROR LOADING DATA";
             }
         }
 
-        function renderArchives() {
-            const container = document.getElementById('archiveContainer');
+        function renderLibrary() {
+            const container = document.getElementById('libraryContainer');
             container.innerHTML = "";
-            document.getElementById('loading').style.display = 'none';
+            
+            if(allScenarios.length === 0) {
+                document.getElementById('loading').textContent = "NO ARCHIVES FOUND";
+                return;
+            }
 
-            // グループ化ロジック
-            // Map<PairKey, { name, members:[], scenarios:[] }>
+            // --- グループ化ロジック (コンビごと) ---
             const groups = new Map();
-            const soloKey = "SOLO_ETC"; // コンビ以外用
+            const soloKey = "SOLO_ETC";
 
             allScenarios.forEach(s => {
                 const mems = s.members || [];
                 let key = soloKey;
                 let groupName = "SOLO / OTHERS";
-                let memberNames = "単発・その他";
+                let memberNames = "";
 
                 if (mems.length === 2) {
-                    // 2人ならペア判定
+                    // ペア判定
                     const id1 = mems[0];
                     const id2 = mems[1];
                     const sortedIds = [id1, id2].sort().join('_');
@@ -315,8 +432,8 @@
                     // コンビ名解決
                     const c1 = allChars[id1];
                     const c2 = allChars[id2];
-                    
                     let gName = null;
+                    
                     if(c1 && c1.partners) {
                         const p = c1.partners.find(p => p.id === id2);
                         if(p && p.group) gName = p.group;
@@ -331,113 +448,132 @@
                     
                     groupName = gName || `${n1} & ${n2}`;
                     memberNames = `${n1} × ${n2}`;
-                } else if (mems.length > 0) {
-                    // その他（3人以上や1人など）
-                    // メンバー名だけ羅列
-                    const names = mems.map(id => allChars[id] ? allChars[id].name : "Unknown");
-                    memberNames = names.join(', ');
                 }
 
                 if (!groups.has(key)) {
-                    groups.set(key, { name: groupName, membersStr: memberNames, scenarios: [] });
+                    groups.set(key, { name: groupName, sub: memberNames, scenarios: [] });
                 }
                 groups.get(key).scenarios.push(s);
             });
 
-            // レンダリング
+            // --- 棚の生成 ---
             groups.forEach((group, key) => {
-                // セクション作成
-                const sec = document.createElement('div');
-                sec.className = 'combi-section';
-                
-                const count = group.scenarios.length;
-                
-                let html = `
-                    <div class="combi-header">
-                        <div class="combi-name">${group.name}</div>
-                        <div class="combi-members">${group.membersStr}</div>
-                        <div class="combi-badge">${count} LOGS</div>
-                    </div>
-                    <div class="scenario-grid">
-                `;
+                const shelfSection = document.createElement('div');
+                shelfSection.className = 'shelf-section';
+
+                const label = document.createElement('div');
+                label.className = 'shelf-label';
+                label.innerHTML = `${group.name} <small>${group.sub}</small>`;
+                shelfSection.appendChild(label);
+
+                const row = document.createElement('div');
+                row.className = 'shelf-row';
+
+                const scrollContainer = document.createElement('div');
+                scrollContainer.className = 'books-scroll-container';
 
                 group.scenarios.forEach(s => {
-                    const img = s.images?.trailer || NO_IMG;
-                    const date = s.date || "Unknown Date";
-                    const system = s.system || "CoC";
-                    const isLost = (s.characters?.pc?.res === 'Lost' || s.characters?.kpc?.res === 'Lost');
-                    const badgeHtml = isLost ? `<span class="badge lost">LOST</span>` : `<span class="badge">CLEARED</span>`;
-
-                    html += `
-                        <div class="scenario-card" onclick="window.openDetail('${s.id}')">
-                            <div class="card-img-box">
-                                <img src="${img}" class="card-img">
-                                <div class="card-badges">${badgeHtml}<span class="badge">${system}</span></div>
-                            </div>
-                            <div class="card-body">
-                                <div class="card-title">${s.title}</div>
-                                <div class="card-meta">
-                                    <span>${date}</span>
-                                    <span>#${s.count||1}</span>
-                                </div>
-                            </div>
-                        </div>
-                    `;
+                    const book = createBookElement(s);
+                    scrollContainer.appendChild(book);
                 });
 
-                html += `</div>`; // Close grid
-                sec.innerHTML = html;
-                container.appendChild(sec);
+                const wood = document.createElement('div');
+                wood.className = 'shelf-wood';
+
+                row.appendChild(scrollContainer);
+                row.appendChild(wood);
+                shelfSection.appendChild(row);
+                container.appendChild(shelfSection);
             });
         }
 
-        // Window関数として詳細表示機能を公開
-        window.openDetail = (sId) => {
-            const s = allScenarios.find(item => item.id === sId);
-            if(!s) return;
+        function createBookElement(s) {
+            const book = document.createElement('div');
+            book.className = 'book';
+            
+            // システムによって色を変える
+            let color = 'black';
+            const sys = (s.system || "").toLowerCase();
+            if(sys.includes('coc6')) color = 'maroon';
+            else if(sys.includes('coc7')) color = 'navy';
+            else if(sys.includes('emoklore')) color = 'forest';
+            else if(s.type === 'タイマン') color = 'brown';
+            book.setAttribute('data-color', color);
 
-            document.getElementById('mTrailer').src = s.images?.trailer || NO_IMG;
-            document.getElementById('mTitle').textContent = s.title;
-            document.getElementById('mSystem').textContent = s.system;
-            document.getElementById('mType').textContent = s.type;
-            document.getElementById('mDate').textContent = s.date;
-            document.getElementById('mEnd').textContent = s.endName || "---";
+            // 本の厚みをランダムまたはシナリオ量に応じて変える
+            const thickness = Math.floor(Math.random() * 20 + 30);
+            book.style.width = thickness + 'px';
+            
+            // ランダムな傾きで自然に見せる
+            const rot = (Math.random() * 4 - 2).toFixed(1);
+            book.style.transform = `rotateZ(${rot}deg)`;
 
-            const setChar = (role, charData) => {
-                const cid = charData?.id;
-                const c = allChars[cid];
-                const name = c ? c.name : "---";
-                const icon = (c && c.icon) ? c.icon : (c ? `${IMG_BASE}${c.name}.png` : NO_IMG);
-                
-                document.getElementById(`mIcon${role}`).src = icon;
-                document.getElementById(`mName${role}`).textContent = name;
-                
-                let sanTxt = "";
-                if(charData?.san) sanTxt = `SAN: ${charData.san}`;
-                if(charData?.res === 'Lost') sanTxt += " (LOST)";
-                document.getElementById(`mSan${role}`).textContent = sanTxt;
-            };
+            book.innerHTML = `<div class="spine"><span class="spine-title">${s.title}</span></div>`;
+            
+            // イベント
+            book.onmouseenter = () => updateOverview(s);
+            book.onclick = () => openBookModal(s);
 
-            setChar('PC', s.characters?.pc);
-            setChar('KPC', s.characters?.kpc);
+            return book;
+        }
 
-            document.getElementById('mOverview').textContent = s.overview || "(あらすじなし)";
+        function updateOverview(s) {
+            const imgEl = document.getElementById('overviewImage');
+            const noImg = document.getElementById('noImage');
+            
+            if(s.images && s.images.trailer) {
+                imgEl.src = s.images.trailer;
+                imgEl.style.display = 'block';
+                noImg.style.display = 'none';
+            } else {
+                imgEl.style.display = 'none';
+                noImg.style.display = 'flex';
+            }
+
+            document.getElementById('overviewTitle').textContent = s.title;
+            document.getElementById('overviewMeta').textContent = `${s.date || 'Unknown'} | ${s.system || 'System'}`;
+            document.getElementById('overviewText').textContent = s.overview || "";
+        }
+
+        // --- Window global functions for Modal ---
+        window.openBookModal = (s) => {
+            document.getElementById('modalTitle').textContent = s.title;
+            document.getElementById('modalImage').src = s.images?.trailer || NO_IMG;
+            
+            document.getElementById('modalSystem').textContent = s.system;
+            document.getElementById('modalDate').textContent = s.date;
+            
+            let res = "---";
+            if(s.characters?.pc?.res) res = s.characters.pc.res;
+            document.getElementById('modalResult').textContent = res;
+
+            document.getElementById('modalOverview').textContent = s.overview || "(あらすじなし)";
             
             // メモ結合
             let memo = "";
             if(s.characters?.pc?.quote) memo += `[PC] "${s.characters.pc.quote}"\n`;
             if(s.characters?.kpc?.quote) memo += `[KPC] "${s.characters.kpc.quote}"\n`;
-            if(s.memos?.public) memo += `\n[公開メモ]\n${s.memos.public}\n`;
-            
-            document.getElementById('mMemo').textContent = memo;
+            if(s.memos?.public) memo += `\n${s.memos.public}\n`;
+            document.getElementById('modalMemo').textContent = memo;
 
-            document.getElementById('detailModal').classList.add('open');
+            // アイコン表示
+            const iconContainer = document.getElementById('modalIcons');
+            iconContainer.innerHTML = "";
+            (s.members || []).forEach(uid => {
+                if(allChars[uid]) {
+                    const img = document.createElement('img');
+                    img.className = "char-circle";
+                    img.src = allChars[uid].icon || NO_IMG;
+                    img.style.borderColor = allChars[uid].color || "#5a3e2b";
+                    iconContainer.appendChild(img);
+                }
+            });
+
+            document.getElementById('overlay').classList.add('active');
         };
 
-        window.closeModal = (e) => {
-            if(e.target.id === 'detailModal') {
-                document.getElementById('detailModal').classList.remove('open');
-            }
+        window.closeBook = () => {
+            document.getElementById('overlay').classList.remove('active');
         };
     </script>
 </body>
