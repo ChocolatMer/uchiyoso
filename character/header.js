@@ -1,4 +1,7 @@
-import { login, logout, saveToCloud, loadFromCloud, monitorAuth } from "./firestore.js";
+// header.js
+
+// ★ getCharacterCount をインポートに追加
+import { login, logout, saveToCloud, loadFromCloud, getCharacterCount, monitorAuth } from "./firestore.js";
 
 export function initHeader() {
     // 1. CSS自動読み込み
@@ -54,17 +57,11 @@ export function initHeader() {
     if(btnLogin) btnLogin.addEventListener('click', login);
     if(btnLogout) btnLogout.addEventListener('click', logout);
 
-    // ★修正箇所: データを受け取って保存するのではなく、保存関数を呼ぶだけにする
     if(btnSave) {
         btnSave.addEventListener('click', async () => {
             if (typeof window.prepareSaveData === 'function') {
-                const result = window.prepareSaveData();
-                // もしPromise(非同期処理)が返ってきたら、完了を待つだけでよい
-                if (result instanceof Promise) {
-                    await result;
-                }
-                // もし古い仕様でデータオブジェクトが返ってきた場合のみ、ここで保存する
-                else if (result && typeof result === 'object') {
+                const result = await window.prepareSaveData();
+                if(result && result.id) {
                     saveToCloud(result);
                 }
             } else {
@@ -81,10 +78,16 @@ export function initHeader() {
                 btnLogout.textContent = "LOGOUT";
             }
             if(infoSpan) {
-                const data = await loadFromCloud();
-                const count = data ? Object.keys(data).length : 0;
+                // ★修正: ここで重たい loadFromCloud() を使わず、軽い getCharacterCount() を使う
+                // リスト画面(list.html)など、データが必要な画面だけ独自にロードさせる
+                const count = await getCharacterCount();
                 infoSpan.textContent = `STORAGE: ${count}`;
-                if(typeof window.renderCharacterList === 'function') window.renderCharacterList(data);
+                
+                // リスト画面の場合のみ、全データをロードして表示関数に渡す
+                if(typeof window.renderCharacterList === 'function') {
+                    const data = await loadFromCloud();
+                    window.renderCharacterList(data);
+                }
             }
         },
         () => {

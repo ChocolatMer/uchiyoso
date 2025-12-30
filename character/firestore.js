@@ -2,9 +2,11 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } 
     from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { 
-    getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, addDoc, query, where, serverTimestamp 
+    // ★ getCountFromServer を追加
+    getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc, addDoc, query, where, serverTimestamp, getCountFromServer
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// 設定 (変更なし)
 const firebaseConfig = {
   apiKey: "AIzaSyBZVh6NhFA_BSuyUW-sZV2QPSvSzdYJZWU",
   authDomain: "chocolatmer-uchiyoso.firebaseapp.com",
@@ -47,30 +49,26 @@ const CHAR_SUB_COLLECTION = "characters";
 
 // --- キャラクター操作 ---
 export async function saveToCloud(charData) {
-    // ログインチェック
     if (!currentUser) {
         alert("保存にはログインが必要です。");
-        throw new Error("Login required");
+        throw new Error("Login required"); 
     }
-    
-    // IDチェック (ここがエラーの原因だった箇所への対策)
     if (!charData || !charData.id) {
-        console.error("ID Missing Data:", charData); // コンソールに詳細を出す
-        alert(`データエラー: IDがありません。\n(対象: ${charData ? charData.name : '不明'})`);
-        throw new Error("ID is missing"); // 処理を確実に止める
+        alert("データエラー: IDがありません。");
+        throw new Error("ID is missing"); 
     }
 
     try {
         const charRef = doc(db, SHARED_COLLECTION, SHARED_DOC_ID, CHAR_SUB_COLLECTION, charData.id);
-        // IDを含めて保存
         await setDoc(charRef, charData, { merge: true });
         console.log("保存完了: " + charData.name);
     } catch (e) {
         console.error("Save Error:", e);
-        throw e;
+        throw e; 
     }
 }
 
+// 全データ取得（重いので必要な時だけ使う）
 export async function loadFromCloud() {
     if (!currentUser) return alert("読み込みにはログインが必要です。");
 
@@ -81,10 +79,7 @@ export async function loadFromCloud() {
         const loadedData = {};
         querySnapshot.forEach((docSnap) => {
             const data = docSnap.data();
-            // データ内にIDが無い場合、ファイル名(doc.id)をIDとしてセットする
-            if (!data.id) {
-                data.id = docSnap.id;
-            }
+            if (!data.id) { data.id = docSnap.id; }
             loadedData[data.id] = data;
         });
         return loadedData;
@@ -92,6 +87,19 @@ export async function loadFromCloud() {
     } catch (e) {
         console.error("Load Error:", e);
         throw e;
+    }
+}
+
+// ★軽量版: キャラクター数だけを取得する（ヘッダー用）
+export async function getCharacterCount() {
+    if (!currentUser) return 0;
+    try {
+        const colRef = collection(db, SHARED_COLLECTION, SHARED_DOC_ID, CHAR_SUB_COLLECTION);
+        const snapshot = await getCountFromServer(colRef);
+        return snapshot.data().count;
+    } catch (e) {
+        console.error("Count Error:", e);
+        return 0;
     }
 }
 
@@ -109,9 +117,13 @@ export async function deleteFromCloud(charId) {
 }
 
 // --- シナリオ機能 ---
+
 export async function saveScenario(scenarioData, scenarioId = null) {
     if (!currentUser) throw new Error("User not logged in");
-    const dataToSave = { ...scenarioData, updatedAt: serverTimestamp() };
+    const dataToSave = {
+        ...scenarioData,
+        updatedAt: serverTimestamp()
+    };
     try {
         if (scenarioId) {
             const docRef = doc(db, "scenarios", scenarioId);
