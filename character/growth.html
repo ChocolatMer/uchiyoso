@@ -3,281 +3,289 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INVESTIGATOR GROWTH MATRIX</title>
+    <title>INVESTIGATOR GROWTH LOG</title>
     
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- ★パス修正: growth.html から見た data.js の位置 -->
+    <!-- data.jsの読み込み -->
     <script src="./data/data.js"></script>
 
     <style>
-        /* --- CORE STYLES --- */
+        /* --- CORE VARS --- */
         :root {
-            --theme-color: #d4b346; /* デフォルトカラー */
-            --bg-color: #080808;
+            --theme-color: #d4b346;
+            --bg-color: #0b0b0b;
             --panel-bg: #111;
             --border-color: #333;
             
-            /* Skill Category Colors */
-            --col-combat: #ff6b6b; /* 戦闘 */
-            --col-search: #4ecdc4; /* 探索 */
-            --col-action: #ffe66d; /* 行動 */
-            --col-nego: #ff9f43;   /* 交渉 */
-            --col-know: #a29bfe;   /* 知識 */
-            --col-other: #aaa;     /* その他 */
+            /* Skill Categories */
+            --cat-combat: #ff6b6b; /* 戦闘 */
+            --cat-search: #4ecdc4; /* 探索 */
+            --cat-action: #ffe66d; /* 行動 */
+            --cat-nego:   #ff9f43; /* 交渉 */
+            --cat-know:   #a29bfe; /* 知識 */
+            --cat-other:  #aaaaaa; /* その他 */
         }
 
+        /* --- RESET & BASE --- */
         body { 
             background-color: var(--bg-color); 
-            background-image: radial-gradient(#1a1a1a 1px, transparent 1px);
-            background-size: 20px 20px;
-            color: #ccc; 
-            font-family: 'Shippori Mincho', serif; 
-            margin: 0; padding: 0; 
-            height: 100vh; overflow: hidden;
+            background-image: 
+                linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),
+                url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20l20 20M20 20L0 40' stroke='%23222' stroke-width='1'/%3E%3C/svg%3E");
+            color: #ccc; font-family: 'Shippori Mincho', serif; 
+            margin: 0; padding: 0; height: 100vh; overflow: hidden;
         }
 
-        .layout {
-            display: grid; grid-template-columns: 280px 1fr;
-            height: 100vh; width: 100%; max-width: 1920px; margin: 0 auto;
+        /* --- LAYOUT GRID --- */
+        .layout-container {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            grid-template-rows: 240px 1fr;
+            height: 100vh; width: 100%;
         }
 
-        /* --- SIDEBAR --- */
+        /* 1. SIDEBAR (Left Full Height) */
         .sidebar {
-            background: rgba(0,0,0,0.85); border-right: 1px solid var(--border-color);
-            padding: 20px; display: flex; flex-direction: column; gap: 20px;
-            backdrop-filter: blur(5px); z-index: 10;
+            grid-row: 1 / 3;
+            background: rgba(10,10,10,0.95); border-right: 1px solid var(--border-color);
+            display: flex; flex-direction: column; gap: 15px; padding: 20px 15px;
+            overflow-y: auto; backdrop-filter: blur(5px); z-index: 20;
         }
-        .app-title {
-            font-family: 'Cinzel', serif; font-size: 1.2rem; color: var(--theme-color);
-            text-align: center; border-bottom: 1px double #555; padding-bottom: 15px;
-            letter-spacing: 3px; text-shadow: 0 0 10px rgba(255,255,255,0.1);
-        }
-        
-        .char-select-area {
-            background: var(--panel-bg); padding: 15px; border-radius: 4px; border: 1px solid var(--border-color);
-            text-align: center; position: relative; overflow: hidden;
-        }
-        /* テーマカラーのアクセントバー */
-        .char-select-area::top {
-            content:''; position: absolute; top:0; left:0; width:100%; height:3px;
-            background: var(--theme-color);
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #444; }
+
+        /* 2. TOP AREA (Header & SAN Graph) */
+        .top-area {
+            grid-column: 2 / 3; grid-row: 1 / 2;
+            background: rgba(0,0,0,0.6); border-bottom: 1px solid var(--border-color);
+            padding: 15px 25px; display: grid; grid-template-columns: 2fr 1fr; gap: 20px;
         }
 
-        .char-icon {
-            width: 100px; height: 100px; border-radius: 50%; 
-            border: 3px solid var(--theme-color);
-            object-fit: cover; margin-bottom: 10px; background: #000;
-            transition: border-color 0.5s;
+        /* 3. MAIN CONTENT (Matrix Table) */
+        .main-area {
+            grid-column: 2 / 3; grid-row: 2 / 3;
+            padding: 0; overflow: hidden; position: relative;
+            background: #0e0e0e;
+        }
+
+        /* --- COMPONENT: PROFILE --- */
+        .app-logo {
+            font-family: 'Cinzel'; font-size: 1.1rem; color: var(--theme-color); text-align: center;
+            border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 5px; letter-spacing: 2px;
+        }
+        .char-card {
+            text-align: center; background: #161616; padding: 15px; border-radius: 4px; border: 1px solid #333;
+        }
+        .char-img {
+            width: 80px; height: 80px; border-radius: 50%; object-fit: cover;
+            border: 2px solid var(--theme-color); margin-bottom: 10px; background: #000;
         }
         .char-select {
-            background: #000; border: 1px solid #444; color: #eee; padding: 5px;
-            width: 100%; font-family: 'Shippori Mincho'; font-size: 0.9rem;
+            width: 100%; background: #000; color: #eee; border: 1px solid #444;
+            padding: 4px; font-size: 0.8rem; font-family: 'Shippori Mincho';
         }
 
-        .kpi-box { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .kpi-card {
-            background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 8px 5px;
-            text-align: center; border-radius: 2px;
+        /* --- COMPONENT: STATS (Dice Results) --- */
+        .stats-box {
+            background: rgba(255,255,255,0.02); border: 1px solid #333; border-radius: 4px; padding: 10px;
         }
-        .kpi-label { font-family: 'Cinzel'; font-size: 0.6rem; color: #888; display: block; }
-        .kpi-val { font-size: 1rem; color: var(--theme-color); font-weight: bold; transition: color 0.5s; }
+        .stats-header { font-family: 'Cinzel'; font-size: 0.8rem; color: #888; border-bottom: 1px dashed #333; margin-bottom: 8px; }
+        
+        .dice-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.85rem; }
+        .dice-label { color: #aaa; }
+        .dice-val { font-family: 'Cinzel'; font-weight: bold; }
+        .val-crit { color: #66bb6a; }
+        .val-fumb { color: #ff6b6b; }
 
-        /* --- MAIN CONTENT --- */
-        .main-content {
-            padding: 20px 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px;
-            position: relative;
-        }
-        .main-content::-webkit-scrollbar { width: 8px; }
-        .main-content::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+        /* Skill Ranking */
+        .rank-list { list-style: none; padding: 0; margin: 0; font-size: 0.8rem; }
+        .rank-item { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #222; }
+        .rank-name { color: #ccc; }
+        .rank-count { color: var(--theme-color); font-family: 'Cinzel'; }
 
-        /* LOADING */
-        #loadingOverlay {
-            position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9);
-            display:flex; justify-content:center; align-items:center; z-index:99;
-            font-family:'Cinzel'; color:var(--theme-color); letter-spacing:2px; flex-direction: column; gap: 10px;
+        /* --- COMPONENT: SAN CHART & INSANITY --- */
+        .chart-wrapper { position: relative; width: 100%; height: 100%; min-height: 180px; }
+        .insanity-box { 
+            background: rgba(255,20,20,0.05); border: 1px solid #422; padding: 10px; 
+            overflow-y: auto; font-size: 0.85rem; border-radius: 4px;
         }
+        .insanity-row { margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px dashed #422; }
+        .ins-date { font-family: 'Cinzel'; color: #855; font-size: 0.75rem; }
+        .ins-title { color: #e88; font-weight: bold; }
 
-        /* SECTION HEADERS */
-        .section-header {
-            display: flex; align-items: center; gap: 10px; margin-bottom: 5px;
-            border-left: 4px solid var(--theme-color); padding-left: 10px;
-            transition: border-color 0.5s;
-        }
-        .sec-title { font-family: 'Cinzel'; font-size: 1.1rem; color: #eee; }
-
-        /* MATRIX TABLE AREA */
-        .matrix-container {
-            flex: 1; min-height: 400px;
-            background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 4px;
-            overflow: hidden; display: flex; flex-direction: column;
-        }
+        /* --- COMPONENT: MATRIX TABLE --- */
         .matrix-scroll {
-            overflow: auto; flex: 1;
+            width: 100%; height: 100%; overflow: auto;
             scrollbar-width: thin; scrollbar-color: #444 #111;
         }
-        .matrix-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
-        .matrix-scroll::-webkit-scrollbar-thumb { background: #444; }
+        .matrix-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+        .matrix-scroll::-webkit-scrollbar-thumb { background: #444; border: 2px solid #111; }
         .matrix-scroll::-webkit-scrollbar-track { background: #111; }
 
-        table.growth-table {
-            border-collapse: collapse; width: 100%; font-size: 0.85rem;
-            white-space: nowrap; 
+        table.growth-matrix {
+            border-collapse: separate; border-spacing: 0;
+            width: 100%; font-size: 0.85rem;
         }
-        
-        /* Headers */
-        .growth-table th {
-            background: #1a1a1a; color: #aaa; font-weight: normal;
-            border: 1px solid #333; padding: 5px;
-            font-family: 'Shippori Mincho'; position: sticky; top: 0; z-index: 5;
-        }
-        
-        /* Column: Skill Name (Sticky Left) */
-        .growth-table th.col-skill, .growth-table td.col-skill {
-            position: sticky; left: 0; z-index: 6;
-            background: #181818; border-right: 1px solid #444;
-            min-width: 130px; text-align: left; padding-left: 10px;
-            font-weight: bold; color: #eee;
-            border-left: 4px solid transparent; /* Category Color Bar */
-        }
-        .growth-table th.col-skill { z-index: 7; background: #222; color: var(--theme-color); border-left: none; }
 
+        /* Sticky Headers */
+        .growth-matrix thead th {
+            position: sticky; top: 0; z-index: 10;
+            background: #1a1a1a; color: #aaa; border-bottom: 1px solid #444; border-right: 1px solid #333;
+            padding: 5px; font-weight: normal; font-family: 'Cinzel', sans-serif;
+            height: 120px; vertical-align: bottom;
+        }
+        /* Sticky First Columns (Skill Name & Init) */
+        .growth-matrix th.sticky-col, .growth-matrix td.sticky-col {
+            position: sticky; left: 0; z-index: 11;
+            background: #222; border-right: 2px solid #444;
+        }
+        .growth-matrix th.sticky-col-2, .growth-matrix td.sticky-col-2 {
+            position: sticky; left: 160px; z-index: 11; /* Adjust based on col 1 width */
+            background: #252525; border-right: 2px solid #444;
+        }
+        .growth-matrix thead th.sticky-col { z-index: 12; background: #2a2a2a; color: #eee; }
+        .growth-matrix thead th.sticky-col-2 { z-index: 12; background: #2a2a2a; }
+
+        /* Table Content */
+        .skill-name-cell {
+            width: 160px; min-width: 160px; text-align: left; padding: 0 10px;
+            border-left: 4px solid transparent; font-weight: bold; color: #ccc;
+            display: flex; align-items: center; height: 30px;
+        }
         /* Category Colors */
-        td.cat-combat { border-left-color: var(--col-combat) !important; }
-        td.cat-search { border-left-color: var(--col-search) !important; }
-        td.cat-action { border-left-color: var(--col-action) !important; }
-        td.cat-nego   { border-left-color: var(--col-nego)   !important; }
-        td.cat-know   { border-left-color: var(--col-know)   !important; }
-        td.cat-other  { border-left-color: var(--col-other)  !important; }
+        .cat-combat .skill-name-cell { border-left-color: var(--cat-combat); color: #ffdada; }
+        .cat-search .skill-name-cell { border-left-color: var(--cat-search); color: #daffff; }
+        .cat-action .skill-name-cell { border-left-color: var(--cat-action); color: #ffffda; }
+        .cat-nego   .skill-name-cell { border-left-color: var(--cat-nego);   color: #ffeeda; }
+        .cat-know   .skill-name-cell { border-left-color: var(--cat-know);   color: #eaddff; }
+        .cat-other  .skill-name-cell { border-left-color: var(--cat-other);  color: #ddd; }
 
-        /* Column: Initial (Base) */
-        .growth-table th.col-init, .growth-table td.col-init {
-            background: #1e1e1e; border-right: 2px solid #444;
-            color: #888; text-align: center; width: 50px; font-family: 'Cinzel';
+        .init-val-cell {
+            width: 50px; min-width: 50px; text-align: center; color: #888;
+            font-family: 'Cinzel'; border-bottom: 1px solid #333;
         }
 
-        /* Cells */
-        .growth-table td {
-            border: 1px solid #333; padding: 6px 10px; text-align: center;
-            color: #666; /* Default Dim */
+        .growth-val-cell {
+            min-width: 40px; text-align: center; border-bottom: 1px solid #333; border-right: 1px solid #333;
+            color: #555;
         }
-        .growth-table tr:nth-child(even) td:not(.col-skill):not(.col-init) { background: rgba(255,255,255,0.01); }
-        .growth-table tr:hover td { background: rgba(255,255,255,0.03); }
+        .growth-val-cell.grown {
+            color: #fff; font-weight: bold; background: rgba(212, 179, 70, 0.15);
+        }
+        .growth-val-cell.highlight {
+            background: rgba(255,255,255,0.05);
+        }
 
-        /* Highlight Growth */
-        .growth-table td.grown {
-            color: #fff; font-weight: bold;
-            background: rgba(212, 179, 70, 0.15) !important;
-            box-shadow: inset 0 0 5px rgba(212, 179, 70, 0.2);
-        }
-        
-        /* Vertical Text for Headers */
+        /* Vertical Text Header */
         .v-text {
             writing-mode: vertical-rl; transform: rotate(180deg);
-            max-height: 140px; padding: 5px 2px; margin: 0 auto;
-            text-align: left; line-height: 1.2; font-size: 0.8rem;
+            white-space: nowrap; text-align: left; padding: 5px;
+            max-height: 110px; margin: 0 auto;
         }
 
-        /* Legend */
-        .legend-bar {
-            display: flex; gap: 15px; font-size: 0.7rem; color: #888; margin-top: 5px;
+        /* Loading */
+        #loadingOverlay {
+            position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.9); z-index: 999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: var(--theme-color); font-family: 'Cinzel';
         }
-        .legend-item { display: flex; align-items: center; gap: 5px; }
-        .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
 
     </style>
 </head>
 <body>
 
-<div class="layout">
+<div id="loadingOverlay">
+    <span class="material-icons-round" style="font-size:3rem; animation:spin 1s linear infinite;">autorenew</span>
+    <span id="loadingText" style="margin-top:10px;">CONNECTING...</span>
+</div>
+
+<div class="layout-container">
+    
     <!-- SIDEBAR -->
     <div class="sidebar">
-        <div>
-            <div class="app-title">INVESTIGATOR<br>GROWTH MATRIX</div>
-            <div id="authStatus" style="text-align:center; font-size:0.7rem; color:#555; margin-bottom:10px;">Checking Auth...</div>
-        </div>
-
-        <div class="char-select-area">
-            <img id="charIcon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" class="char-icon">
+        <div class="app-logo">INVESTIGATOR LOG</div>
+        
+        <!-- Profile -->
+        <div class="char-card">
+            <img id="charIcon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" class="char-img">
             <select id="charSelect" class="char-select">
                 <option value="">-- SELECT CHARACTER --</option>
             </select>
-            <div id="plName" style="font-size:0.8rem; color:#888; font-family:'Cinzel'; margin-top:5px;">PL NAME</div>
+            <div id="plName" style="color:#666; font-size:0.7rem; margin-top:5px; font-family:'Cinzel';">PLAYER NAME</div>
         </div>
 
-        <div class="kpi-box">
-            <div class="kpi-card">
-                <span class="kpi-label">SCENARIOS</span>
-                <span class="kpi-val" id="kpiScenarios">0</span>
-            </div>
-            <div class="kpi-card">
-                <span class="kpi-label">TOTAL GROWTH</span>
-                <span class="kpi-val" id="kpiTotalGrowth">0</span>
-            </div>
+        <!-- Dice Stats -->
+        <div class="stats-box">
+            <div class="stats-header">DICE STATISTICS</div>
+            <div class="dice-row"><span class="dice-label">TOTAL ROLL</span><span class="dice-val" id="statTotal">0</span></div>
+            <div class="dice-row"><span class="dice-label">CRITICAL</span><span class="dice-val val-crit" id="statCrit">0</span></div>
+            <div class="dice-row"><span class="dice-label">FUMBLE</span><span class="dice-val val-fumb" id="statFumb">0</span></div>
+            <div class="dice-row"><span class="dice-label">SUCCESS RATE</span><span class="dice-val" id="statRate">0%</span></div>
         </div>
-        
-        <div style="font-size:0.75rem; color:#555; margin-top:auto; text-align:center;">
-            Rows include Initial Values<br>+ Scenario Growth
+
+        <!-- Skill Ranking -->
+        <div class="stats-box" style="flex:1; overflow:hidden; display:flex; flex-direction:column;">
+            <div class="stats-header">TOP USED SKILLS</div>
+            <ul id="rankList" class="rank-list" style="overflow-y:auto; flex:1;">
+                <li style="color:#444; text-align:center;">NO DATA</li>
+            </ul>
         </div>
     </div>
 
-    <!-- MAIN CONTENT -->
-    <div class="main-content">
-        <div id="loadingOverlay">
-            <span class="material-icons-round" style="font-size:3rem; animation:spin 1s linear infinite;">autorenew</span>
-            <span id="loadingText">WAITING FOR LOGIN...</span>
-        </div>
-
-        <div style="display:flex; flex-direction:column; flex:1; min-height:0;">
-            <div class="section-header">
-                <span class="material-icons-round" style="color:var(--theme-color);">grid_on</span>
-                <span class="sec-title">SKILL GROWTH HISTORY</span>
-            </div>
-            
-            <div class="legend-bar">
-                <div class="legend-item"><span class="legend-dot" style="background:var(--col-combat);"></span>戦闘</div>
-                <div class="legend-item"><span class="legend-dot" style="background:var(--col-search);"></span>探索</div>
-                <div class="legend-item"><span class="legend-dot" style="background:var(--col-action);"></span>行動</div>
-                <div class="legend-item"><span class="legend-dot" style="background:var(--col-nego);"></span>交渉</div>
-                <div class="legend-item"><span class="legend-dot" style="background:var(--col-know);"></span>知識</div>
-            </div>
-
-            <div class="matrix-container" style="margin-top:10px;">
-                <div class="matrix-scroll">
-                    <table class="growth-table" id="matrixTable">
-                        <thead>
-                            <tr>
-                                <th class="col-skill">技能名</th>
-                                <th class="col-init">INIT</th>
-                                <!-- Scenarios will be added here -->
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Data rows will be added here -->
-                        </tbody>
-                    </table>
-                </div>
+    <!-- TOP AREA -->
+    <div class="top-area">
+        <!-- Chart -->
+        <div style="position:relative;">
+            <div style="position:absolute; top:0; left:0; font-family:'Cinzel'; font-size:0.8rem; color:#888;">SANITY HISTORY</div>
+            <div class="chart-wrapper">
+                <canvas id="sanChart"></canvas>
             </div>
         </div>
-
+        <!-- Insanity List -->
+        <div style="display:flex; flex-direction:column;">
+            <div style="font-family:'Cinzel'; font-size:0.8rem; color:#e88; margin-bottom:5px;">INSANITY HISTORY</div>
+            <div id="insanityList" class="insanity-box" style="flex:1;">
+                <div style="color:#522; text-align:center;">NO RECORD</div>
+            </div>
+        </div>
     </div>
+
+    <!-- MAIN AREA (MATRIX) -->
+    <div class="main-area">
+        <div class="matrix-scroll">
+            <table class="growth-matrix" id="matrixTable">
+                <thead>
+                    <tr>
+                        <th class="sticky-col">SKILL NAME</th>
+                        <th class="sticky-col-2">INIT</th>
+                        <!-- Scenarios here -->
+                        <th>TOTAL</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Rows here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
 </div>
 
-<style>
-    @keyframes spin { 100% { transform: rotate(360deg); } }
-</style>
+<style> @keyframes spin { 100% { transform: rotate(360deg); } } </style>
 
-<!-- LOGIC -->
 <script type="module">
-    // ★パス修正: firestore.js は同じ階層にある想定
     import { loadFromCloud, monitorAuth, getScenariosForCharacter } from "./firestore.js";
 
-    // data.js の BASE_SKILLS を安全に取得
-    const BASE_SKILLS_DEF = (typeof window.BASE_SKILLS !== 'undefined') ? window.BASE_SKILLS : {};
+    // 1. SKILL DEFINITIONS (Fallback if data.js missing)
+    const BASE_SKILLS_DEF = (typeof window.BASE_SKILLS !== 'undefined') ? window.BASE_SKILLS : {
+        "目星": 25, "聞き耳": 25, "図書館": 25, "回避": "DEX*2", "こぶし（パンチ）": 50
+    };
 
-    // スキルカテゴリー定義 (CoC 6th基準 + α)
+    // Skill Categories
     const SKILL_CATS = {
         combat: ["回避", "キック", "組み付き", "こぶし", "パンチ", "頭突き", "投擲", "マーシャルアーツ", "拳銃", "サブマシンガン", "ショットガン", "マシンガン", "ライフル", "日本刀", "ナイフ"],
         search: ["応急手当", "鍵開け", "隠す", "隠れる", "聞き耳", "忍び歩き", "写真術", "精神分析", "追跡", "登攀", "図書館", "目星"],
@@ -287,243 +295,348 @@
     };
 
     let allChars = {};
+    let sanChart = null;
     const el = (id) => document.getElementById(id);
 
-    // --- Init ---
+    // --- INITIALIZATION ---
     window.onload = () => {
         monitorAuth(async (user) => {
-            el('authStatus').textContent = "Logged in: " + user.displayName;
-            el('loadingText').textContent = "LOADING CHARACTERS...";
-            await initData();
+            el('loadingText').textContent = "LOADING DATA...";
+            try {
+                allChars = await loadFromCloud();
+                renderCharSelect();
+                el('loadingOverlay').style.display = 'none';
+            } catch(e) {
+                console.error(e);
+                el('loadingText').textContent = "DATA LOAD ERROR";
+            }
         }, () => {
-            el('authStatus').textContent = "Not Logged In";
             el('loadingText').textContent = "PLEASE LOGIN";
         });
     };
 
-    async function initData() {
-        try {
-            allChars = await loadFromCloud();
-            renderCharSelect();
-            el('loadingOverlay').style.display = 'none';
-        } catch (e) {
-            console.error(e);
-            el('loadingText').textContent = "ERROR: " + e.message;
-        }
-    }
-
     function renderCharSelect() {
         const sel = el('charSelect');
-        sel.innerHTML = '<option value="">-- SELECT CHARACTER --</option>';
-        const list = Object.values(allChars).sort((a,b) => (a.name||"").localeCompare(b.name||""));
-        list.forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c.id;
-            opt.textContent = c.name;
-            sel.appendChild(opt);
-        });
-
-        sel.addEventListener('change', async (e) => {
-            const charId = e.target.value;
-            if (charId) await loadCharacterMatrix(charId);
+        sel.innerHTML = '<option value="">-- SELECT --</option>';
+        Object.values(allChars)
+            .sort((a,b) => (a.name||"").localeCompare(b.name||""))
+            .forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c.id;
+                opt.textContent = c.name;
+                sel.appendChild(opt);
+            });
+        
+        sel.addEventListener('change', (e) => {
+            if(e.target.value) loadCharacter(e.target.value);
         });
     }
 
-    async function loadCharacterMatrix(charId) {
+    // --- MAIN LOADING LOGIC ---
+    async function loadCharacter(charId) {
         el('loadingOverlay').style.display = 'flex';
-        el('loadingText').textContent = "AGGREGATING...";
-
         const char = allChars[charId];
         
-        // --- テーマカラー適用 ---
-        const themeColor = char.color || '#d4b346';
-        document.documentElement.style.setProperty('--theme-color', themeColor);
-
-        // --- 画像処理 (高画質読み込み対応) ---
-        // data.jsにIMG_CONFIGがあれば使用するが、簡易的にURLチェック
-        let iconSrc = `../images/icon/${char.name}.png`; 
-        if(char.icon && char.icon.startsWith('http')) iconSrc = char.icon;
-        el('charIcon').src = iconSrc;
-        
+        // 1. Setup Profile & Theme
+        const color = char.color || '#d4b346';
+        document.documentElement.style.setProperty('--theme-color', color);
+        el('charIcon').style.borderColor = color;
+        el('charIcon').src = char.icon || `../images/icon/${char.name}.png`;
         el('plName').textContent = "PL: " + (char.plName || "Unknown");
 
-        // 1. シナリオ取得・ソート
+        // 2. Fetch Scenarios
         const scenarios = await getScenariosForCharacter(charId);
+        // Sort: Oldest -> Newest
         const sortedScenarios = scenarios.sort((a,b) => new Date(a.date||0) - new Date(b.date||0));
 
-        // 2. データ解析
-        const matrixData = buildMatrixData(char, sortedScenarios);
+        // 3. Process Data
+        const stats = processStats(char, sortedScenarios);
+        const matrix = processMatrix(char, sortedScenarios);
 
-        // 3. 描画
-        renderKPI(matrixData, sortedScenarios.length);
-        renderMatrixTable(matrixData, sortedScenarios);
+        // 4. Render
+        renderStats(stats);
+        renderSanChart(stats.sanHistory);
+        renderInsanity(stats.insanityHistory);
+        renderMatrix(matrix, sortedScenarios);
 
         el('loadingOverlay').style.display = 'none';
     }
 
-    /**
-     * データ構築ロジック
-     */
-    function buildMatrixData(char, scenarios) {
-        // --- 1. 初期技能値の特定 ---
-        const userInitials = {};
-        
-        // キャラクターデータの `skillList` (テキスト) を解析
-        // 形式: "目星:70" "聞き耳 50" など
-        if (char.skillList) {
-            const lines = char.skillList.split(/[\n\s,、]+/); 
-            lines.forEach(line => {
-                // (技能名)(区切り文字)(数値) のパターン
-                // 例: "目星70", "目星:70", "マーシャルアーツ: 50"
-                const m = line.match(/^(.+?)[:：\s]*(\d+)$/);
-                if (m) {
-                    const name = m[1].trim();
-                    const val = parseInt(m[2]);
-                    if (!isNaN(val)) userInitials[name] = val;
+    // --- DATA PROCESSING ---
+
+    // Stats (Dice & SAN)
+    function processStats(char, scenarios) {
+        let dice = { total:0, crit:0, fumb:0, succ:0 };
+        let skillCounts = {};
+        let sanHistory = [];
+        let insanityHistory = [];
+
+        // Initial SAN (from Char Data if available)
+        let initialSan = char.vitals?.san || char.stats?.POW*5 || 50;
+        sanHistory.push({ label: 'START', value: initialSan });
+
+        scenarios.forEach(s => {
+            // Find role data
+            let d = (s.characters.pc?.id === char.id) ? s.characters.pc : 
+                    (s.characters.kpc?.id === char.id) ? s.characters.kpc : null;
+            
+            if(!d) return;
+
+            // 1. Log Analysis (Dice Stats)
+            if (s.analysisData && s.analysisData[char.name]) {
+                const ana = s.analysisData[char.name];
+                dice.total += ana.dice || 0;
+                dice.crit += ana.crit || 0;
+                dice.fumb += ana.fumb || 0;
+                dice.succ += (ana.succ || 0);
+                
+                // Skill Usage Ranking
+                if (ana.skillDetails) {
+                    Object.entries(ana.skillDetails).forEach(([skill, detail]) => {
+                        skillCounts[skill] = (skillCounts[skill] || 0) + detail.count;
+                    });
                 }
+            }
+
+            // 2. SAN History
+            if (d.san) {
+                // Try parse "50 -> 45"
+                let sanVal = null;
+                const m = d.san.match(/.*[→>＞]\s*(\d+)/);
+                if (m) sanVal = parseInt(m[1]);
+                else if (!isNaN(parseInt(d.san))) sanVal = parseInt(d.san);
+                
+                if (sanVal !== null) sanHistory.push({ label: s.title, value: sanVal });
+            }
+
+            // 3. Insanity
+            if (d.ins && d.ins.type) {
+                insanityHistory.push({ date: s.date, title: s.title, desc: d.ins.desc });
+            }
+        });
+
+        return { dice, skillCounts, sanHistory, insanityHistory };
+    }
+
+    // Matrix (Skill Growth)
+    function processMatrix(char, scenarios) {
+        // 1. Identify Initial Values from Char Data Text
+        const userInitials = {};
+        if (char.skillList) {
+            // "目星:70" etc.
+            const lines = char.skillList.split(/[\n\s,、]+/);
+            lines.forEach(l => {
+                const m = l.match(/^(.+?)[:：\s]*(\d+)$/);
+                if(m) userInitials[m[1].trim()] = parseInt(m[2]);
             });
         }
 
-        // 表示すべき技能名のリスト
-        const relevantSkills = new Set();
-        Object.keys(userInitials).forEach(k => relevantSkills.add(k));
+        // 2. Collect ALL Skills (Base + User + Growth)
+        const allSkillNames = new Set(Object.keys(BASE_SKILLS_DEF));
+        Object.keys(userInitials).forEach(k => allSkillNames.add(k));
 
-        // --- 2. 成長データの収集 ---
-        const scenarioGrowths = []; 
-        
-        scenarios.forEach(s => {
-            let d = null;
-            if (s.characters.pc && s.characters.pc.id === char.id) d = s.characters.pc;
-            else if (s.characters.kpc && s.characters.kpc.id === char.id) d = s.characters.kpc;
-            
+        // 3. Collect Growth per Scenario
+        const scenarioGrowths = scenarios.map(s => {
             const growths = {};
-            if (d && d.grow) {
-                const lines = d.grow.split('\n');
-                lines.forEach(l => {
+            let d = (s.characters.pc?.id === char.id) ? s.characters.pc : 
+                    (s.characters.kpc?.id === char.id) ? s.characters.kpc : null;
+            
+            if(d && d.grow) {
+                d.grow.split('\n').forEach(l => {
                     const m = l.match(/(.+?)\s*[:：]?\s*\+?(\d+)/);
-                    if (m) {
+                    if(m) {
                         const name = m[1].trim();
                         const val = parseInt(m[2]);
-                        if (name && !isNaN(val)) {
-                            growths[name] = (growths[name] || 0) + val;
-                            relevantSkills.add(name);
-                        }
+                        growths[name] = (growths[name]||0) + val;
+                        allSkillNames.add(name); // Add found skill
                     }
                 });
             }
-            scenarioGrowths.push({ id: s.id, title: s.title, growths });
+            return { id: s.id, growths };
         });
 
-        // --- 3. 行データ生成 ---
+        // 4. Build Rows
         const rows = [];
-        let grandTotalGrowth = 0;
-
-        Array.from(relevantSkills).sort().forEach(skillName => {
-            // 初期値計算
-            let baseVal = 0;
-            if (userInitials[skillName] !== undefined) {
-                baseVal = userInitials[skillName];
+        Array.from(allSkillNames).sort().forEach(name => {
+            // Initial Calculation
+            let init = 0;
+            if (userInitials[name] !== undefined) {
+                init = userInitials[name];
             } else {
-                const def = BASE_SKILLS_DEF[skillName];
-                if (def !== undefined) {
-                    if (typeof def === 'number') baseVal = def;
-                    else if (def === 'DEX*2') baseVal = (char.stats.DEX || 0) * 2;
-                    else if (def === 'EDU*5') baseVal = (char.stats.EDU || 0) * 5;
-                }
+                const def = BASE_SKILLS_DEF[name];
+                if (typeof def === 'number') init = def;
+                else if (def === 'DEX*2') init = (char.stats?.DEX || 10) * 2;
+                else if (def === 'EDU*5') init = (char.stats?.EDU || 10) * 5;
             }
 
-            // カテゴリ判定
-            let category = 'other';
-            for (const [cat, skills] of Object.entries(SKILL_CATS)) {
-                if (skills.some(s => skillName.includes(s))) {
-                    category = cat;
-                    break;
-                }
+            // Category
+            let cat = 'other';
+            for(const [k, v] of Object.entries(SKILL_CATS)) {
+                if(v.some(s => name.includes(s))) { cat = k; break; }
             }
 
-            // 履歴計算
-            const values = []; 
-            let currentVal = baseVal;
-
-            scenarioGrowths.forEach(sg => {
-                const growthAmount = sg.growths[skillName] || 0;
-                currentVal += growthAmount;
-                grandTotalGrowth += growthAmount;
-                values.push({
-                    val: currentVal,
-                    grown: growthAmount
-                });
+            // History
+            let current = init;
+            const history = scenarioGrowths.map(sg => {
+                const g = sg.growths[name] || 0;
+                current += g;
+                return { val: current, grow: g };
             });
 
-            rows.push({
-                name: skillName,
-                category: category,
-                initial: baseVal,
-                history: values
-            });
+            rows.push({ name, cat, init, history, current });
         });
 
-        return { rows, totalGrowth: grandTotalGrowth };
+        // Sort rows by Category then Name
+        const catOrder = ['combat', 'search', 'action', 'nego', 'know', 'other'];
+        rows.sort((a,b) => {
+            const ciA = catOrder.indexOf(a.cat);
+            const ciB = catOrder.indexOf(b.cat);
+            if(ciA !== ciB) return ciA - ciB;
+            return a.name.localeCompare(b.name);
+        });
+
+        return rows;
     }
 
-    function renderKPI(data, count) {
-        el('kpiScenarios').textContent = count;
-        el('kpiTotalGrowth').textContent = "+" + data.totalGrowth;
+    // --- RENDERING ---
+
+    function renderStats(stats) {
+        // Dice
+        const d = stats.dice;
+        el('statTotal').textContent = d.total;
+        el('statCrit').textContent = d.crit;
+        el('statFumb').textContent = d.fumb;
+        const rate = d.total > 0 ? Math.round(((d.succ + d.crit)/d.total)*100) : 0;
+        el('statRate').textContent = rate + "%";
+
+        // Ranking
+        const list = el('rankList');
+        list.innerHTML = "";
+        const sorted = Object.entries(stats.skillCounts).sort((a,b) => b[1]-a[1]).slice(0, 10);
+        if(sorted.length === 0) {
+            list.innerHTML = '<li style="text-align:center; color:#444;">NO DATA</li>';
+        } else {
+            sorted.forEach(([name, count]) => {
+                list.innerHTML += `
+                    <li class="rank-item">
+                        <span class="rank-name">${name}</span>
+                        <span class="rank-count">${count}</span>
+                    </li>`;
+            });
+        }
     }
 
-    function renderMatrixTable(data, scenarios) {
+    function renderSanChart(history) {
+        const ctx = el('sanChart').getContext('2d');
+        if(sanChart) sanChart.destroy();
+
+        const labels = history.map((_, i) => i===0 ? 'Start' : `#${i}`);
+        const data = history.map(h => h.value);
+        const titles = history.map(h => h.label);
+
+        sanChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'SAN', data: data,
+                    borderColor: getComputedStyle(document.documentElement).getPropertyValue('--theme-color').trim(),
+                    backgroundColor: 'rgba(255,255,255,0.05)',
+                    borderWidth: 2, tension: 0.1, pointRadius: 3, fill: true
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { title: (c) => titles[c[0].dataIndex] } }
+                },
+                scales: {
+                    x: { display: false },
+                    y: { grid: { color: '#333' }, ticks: { color: '#666' }, suggestedMin: 0, suggestedMax: 99 }
+                }
+            }
+        });
+    }
+
+    function renderInsanity(history) {
+        const box = el('insanityList');
+        box.innerHTML = "";
+        if(history.length === 0) {
+            box.innerHTML = '<div style="color:#522; text-align:center;">NO RECORD</div>';
+            return;
+        }
+        // Reverse order (newest first)
+        [...history].reverse().forEach(h => {
+            box.innerHTML += `
+                <div class="insanity-row">
+                    <div class="ins-date">${h.date || '----'} / ${h.title}</div>
+                    <div class="ins-title">${h.desc}</div>
+                </div>`;
+        });
+    }
+
+    function renderMatrix(rows, scenarios) {
         const table = el('matrixTable');
-        const thead = table.querySelector('thead tr');
+        const theadTr = table.querySelector('thead tr');
         const tbody = table.querySelector('tbody');
 
-        // Reset Header
-        thead.innerHTML = '<th class="col-skill">SKILL NAME</th><th class="col-init">INIT</th>';
+        // Clear existing scenario headers
+        // Keep first 2 columns (Skill, Init)
+        while(theadTr.children.length > 2) theadTr.removeChild(theadTr.lastChild);
         
-        // Add Scenarios to Header
+        // Add Scenario Headers
         scenarios.forEach(s => {
             const th = document.createElement('th');
-            // タイトルを短くカットして表示
+            // Shorten title
             let t = s.title;
             if(t.length > 8) t = t.substring(0,8) + '..';
             th.innerHTML = `<div class="v-text" title="${s.title}">${t}</div>`;
-            thead.appendChild(th);
+            theadTr.appendChild(th);
         });
+        
+        // Add Total Header
+        const thTotal = document.createElement('th');
+        thTotal.textContent = "TOTAL";
+        theadTr.appendChild(thTotal);
 
-        // Reset Body
-        tbody.innerHTML = '';
-
-        if (data.rows.length === 0) {
-            const colspan = scenarios.length + 2;
-            tbody.innerHTML = `<tr><td colspan="${colspan}" style="padding:30px; color:#555;">NO DATA</td></tr>`;
-            return;
-        }
-
-        // Create Rows
-        data.rows.forEach(row => {
+        // Render Body
+        tbody.innerHTML = "";
+        rows.forEach(row => {
             const tr = document.createElement('tr');
+            tr.className = `cat-${row.cat}`;
 
             // Name
             const tdName = document.createElement('td');
-            tdName.className = `col-skill cat-${row.category}`;
+            tdName.className = "sticky-col skill-name-cell";
             tdName.textContent = row.name;
             tr.appendChild(tdName);
 
             // Init
             const tdInit = document.createElement('td');
-            tdInit.className = 'col-init';
-            tdInit.textContent = row.initial;
+            tdInit.className = "sticky-col-2 init-val-cell";
+            tdInit.textContent = row.init;
             tr.appendChild(tdInit);
 
             // History
             row.history.forEach(h => {
                 const td = document.createElement('td');
+                td.className = "growth-val-cell";
                 td.textContent = h.val;
-                if (h.grown > 0) {
+                if(h.grow > 0) {
                     td.classList.add('grown');
-                    td.title = `+${h.grown}`;
+                    td.title = `+${h.grow}`;
                 }
                 tr.appendChild(td);
             });
+
+            // Total
+            const tdTotal = document.createElement('td');
+            tdTotal.className = "growth-val-cell";
+            tdTotal.style.color = "#d4b346";
+            tdTotal.style.fontWeight = "bold";
+            tdTotal.textContent = row.current;
+            tr.appendChild(tdTotal);
 
             tbody.appendChild(tr);
         });
