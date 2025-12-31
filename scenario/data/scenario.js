@@ -32,7 +32,6 @@ export function createScenarioRecord(input, userId) {
         entities: input.entities || "",
 
         // ★追加: ログ解析データの生データ（グラフ描画用）
-        // これがないと、保存ボタンを押した瞬間に解析結果が捨てられてしまいます
         analysisData: input.analysisData || null,
 
         // テキスト・画像・URL
@@ -54,17 +53,19 @@ export function syncScenarioToCharacter(charData, sData, sId, roleKey) {
     
     if (!myResult || !myResult.id) return newChar; 
 
-    // 1. 簡易履歴
+    // 1. 簡易履歴 (シナリオ一覧文字列)
     const resText = (myResult.res === 'Alive') ? '生還' : (myResult.res === 'Lost' ? 'ロスト' : myResult.res);
     const dateText = sData.date ? `(${sData.date})` : '';
     const logLine = `[${sData.title}] ${resText} - ${sData.endName || 'End'} ${dateText}`;
 
     if (!newChar.scenarios) newChar.scenarios = "";
+    // 既存の履歴に同じタイトルの行があれば置換、なければ先頭に追加
+    // (簡易的なチェックのため、タイトルが含まれているかだけで判定していますが必要に応じて調整してください)
     if (!newChar.scenarios.includes(`[${sData.title}]`)) {
         newChar.scenarios = logLine + "\n" + newChar.scenarios;
     }
 
-    // 2. 詳細データリスト
+    // 2. 詳細データリスト (構造化データ)
     if (!newChar.scenarioList) newChar.scenarioList = [];
     const listIdx = newChar.scenarioList.findIndex(item => item.scenarioId === sId);
     
@@ -83,26 +84,39 @@ export function syncScenarioToCharacter(charData, sData, sId, roleKey) {
         newChar.scenarioList.push(listItem);
     }
 
-    // 3. テキスト項目への追記
-    const appendText = (fieldKey, header, content) => {
+    // 3. テキスト項目への追記・更新 (重複防止ロジック強化版)
+    const updateOrAppendText = (fieldKey, header, content) => {
         if (!content) return;
-        const current = newChar[fieldKey] || "";
-        const entry = `[${header}] ${content}`;
-        if (!current.includes(entry)) {
-            newChar[fieldKey] = current + (current ? "\n\n" : "") + entry;
+        let current = newChar[fieldKey] || "";
+        const headerTag = `[${header}]`;
+        const newEntry = `${headerTag} ${content}`;
+
+        // 正規表現で [ヘッダー] から始まるブロックを探す
+        // (次の [ヘッダー] が来るか、末尾までを範囲とする)
+        // エスケープ処理: タイトルに含まれる記号が正規表現を壊さないようにする
+        const escapedHeader = header.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`\\[${escapedHeader}\\][\\s\\S]*?(?=(\\n\\n\\[|$))`, 'g');
+
+        if (current.match(regex)) {
+            // 既に同じヘッダーが存在する場合は、その部分を新しい内容で置換する
+            newChar[fieldKey] = current.replace(regex, newEntry);
+        } else {
+            // 存在しない場合は追記する
+            newChar[fieldKey] = current + (current ? "\n\n" : "") + newEntry;
         }
     };
 
-    if (myResult.grow) appendText('growth', sData.title, myResult.grow);
-    if (myResult.memo) appendText('memo', sData.title, myResult.memo);
+    if (myResult.grow) updateOrAppendText('growth', sData.title, myResult.grow);
+    if (myResult.memo) updateOrAppendText('memo', sData.title, myResult.memo);
     
     if (myResult.art && myResult.art.name) {
-        appendText('spells', `AF:${sData.title}`, `${myResult.art.name}: ${myResult.art.desc}`);
+        updateOrAppendText('spells', `AF:${sData.title}`, `${myResult.art.name}: ${myResult.art.desc}`);
     }
     if (myResult.seq && myResult.seq.name) {
-        appendText('memo', `後遺症:${sData.title}`, `${myResult.seq.name}: ${myResult.seq.desc}`);
+        updateOrAppendText('memo', `後遺症:${sData.title}`, `${myResult.seq.name}: ${myResult.seq.desc}`);
     }
-    if (sData.entities) appendText('spells', `遭遇:${sData.title}`, sData.entities);
+    // 遭遇情報はPC/KPCで共通の場合が多いですが、ここではキャラシ毎に書き込みます
+    if (sData.entities) updateOrAppendText('spells', `遭遇:${sData.title}`, sData.entities);
 
     return newChar;
 }
