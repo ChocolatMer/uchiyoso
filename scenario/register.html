@@ -610,7 +610,7 @@
         const insanityData = {"1": "健忘症 / 昏迷", "2": "激しい恐怖症", "3": "幻覚", "4": "奇妙な性的嗜好", "5": "フェティッシュ", "6": "チック・震え", "7": "心因性機能障害", "8": "短時間の心因反応", "9": "一時的偏執症", "10": "強迫観念行動", "Other": ""};
         window.updateInsanityDesc = (val, role) => { const el = document.getElementById(role==='PC'?'inpInsanityDescPC':'inpInsanityDescKPC'); if(el && !el.value) el.value = insanityData[val]||""; };
 
-       /* --- LOG ANALYSIS LOGIC (INSANITY + DURATION FIX) --- */
+       /* --- LOG ANALYSIS LOGIC (INSANITY SUPPORT) --- */
         let lastParsedStats = null; 
 
         // 6版の狂気表（Short/Temp）のマッピング
@@ -650,6 +650,7 @@
                     charStats[key] = { 
                         dice:0, crit:0, fumb:0, succ:0, fail:0, 
                         sanHistory:[], skillDetails:{}, currentSan: null,
+                        // ▼ 発狂検出用データ
                         insanityHistory: [], 
                         insanityState: 0 // 0:通常, 1:内容ロール待ち, 2:期間ロール待ち
                     };
@@ -704,22 +705,18 @@
 
                 // ▼▼▼ 発狂検出ロジック (State Machine) ▼▼▼
                 
-                // 1D10を含むロールの検出
-                // 1D10+4 なども検出するため、\bチェックを少し緩くしつつ、文脈で判断
-                const d10Match = content.match(/1D10/i); 
-                
+                // 1D10ロールの検出（発狂表 or 期間）
+                const d10Match = content.match(/1D10\b/i); 
+                // ※誤爆を防ぐため "1D100" ではなく明確に "1D10" であること
+
                 if (d10Match && (st.insanityState === 1 || st.insanityState === 2)) {
-                    // 数値の抽出ロジック（修正版）
-                    // "1D10+4 > 5+4 > 9" のような場合、最後の数字 "9" を取得する
-                    // すべての "＞ 数字" を配列として取得し、末尾を使う
-                    const valMatches = [...content.matchAll(/[>＞]\s*(\d+)/g)];
-                    
-                    if (valMatches.length > 0) {
-                        const val = parseInt(valMatches[valMatches.length - 1][1]);
+                    // 数値の抽出 (例: 1D10 ... > 5)
+                    const valMatch = content.match(/[>＞]\s*(\d+)/);
+                    if (valMatch) {
+                        const val = parseInt(valMatch[1]);
                         
                         if (st.insanityState === 1) {
-                            // 発狂内容の確定 (1D10の結果そのまま)
-                            // 稀に1D10じゃない表を使う場合も考慮しつつ、まずは標準テーブル
+                            // 発狂内容の確定
                             const desc = insanityMap[val] || "その他/不明";
                             st.insanityHistory.push({
                                 typeRoll: val,
@@ -730,7 +727,7 @@
                             st.insanityState = 2; // 次は期間待ちへ
                         } 
                         else if (st.insanityState === 2) {
-                            // 期間の確定 (1D10+4 などの最終結果)
+                            // 期間の確定（直近の履歴を更新）
                             const lastEntry = st.insanityHistory[st.insanityHistory.length - 1];
                             if (lastEntry) {
                                 lastEntry.duration = val;
@@ -739,22 +736,27 @@
                         }
                     }
                 }
-                // アイデア成功の検出
+                // アイデア成功の検出（発狂フラグを立てる）
                 else if (content.match(/【(アイデア|INT|ＩＮＴ)】/i)) {
+                    // 成功判定 (決定的成功/スペシャル/成功)
                     if (content.match(/成功|スペシャル|クリティカル/)) {
                         st.insanityState = 1; // 発狂内容待ちへ
                     } else {
                         st.insanityState = 0; // 失敗ならリセット
                     }
                 }
-                // それ以外の主要なロールが挟まった場合、ステートをリセット
+                // それ以外のダイスロールが挟まった場合、ステートをリセット（誤爆防止）
+                // ただし、1D10以外のロール（例えばSANチェック）が直前にあっても良いが、
+                // 別の技能ロールなどは文脈が切れたとみなす
                 else if (content.match(/\d+d\d+/i) || content.match(/CCB/i)) {
+                     // ここでは「アイデア→(何か別のロール)→1D10」とならないよう、
+                     // 明らかな別ロールが来たらリセットする
                      st.insanityState = 0;
                 }
                 // ▲▲▲ 発狂検出ロジック終わり ▲▲▲
 
 
-                // --- 3. 統計集計 ---
+                // --- 3. 統計集計（前回修正分） ---
                 if (content.match(/\d+d\d+/i) || content.match(/CCB/i) || content.match(/Resist/i)) {
                     st.dice++;
                     
@@ -771,8 +773,8 @@
                         skillName = skillMatch[1];
                     } else if (content.match(/sanc/i) || content.match(/SAN/i)) {
                         skillName = "SAN値チェック"; 
-                    } else if (content.match(/1D10/i) && st.insanityHistory.some(h => Math.abs(h.line - lineIndex) < 5)) {
-                        // 発狂処理周りの1D10は「狂気/発狂ロール」として分類
+                    } else if (content.match(/1D10\b/i) && st.insanityHistory.some(h => Math.abs(h.line - lineIndex) < 5)) {
+                        // 直近で発狂判定があった1D10は「発狂ロール」として分類しておく
                         skillName = "狂気/発狂ロール";
                     }
 
@@ -798,6 +800,7 @@
             document.getElementById('analysisEmpty').style.display = 'none';
             document.getElementById('analysisResult').style.display = 'block';
 
+            // Identify Target Chars
             const pcSel = document.getElementById('selPC');
             const kpcSel = document.getElementById('selKPC');
             const clean = (s) => (s || "").replace(/\s+/g, "");
@@ -822,14 +825,17 @@
                 const isKPC = (kpcName && cleanName.includes(kpcName)) || (cleanName && kpcName.includes(cleanName));
                 const color = (isPC) ? '#88ccff' : (isKPC ? '#ff8888' : '#aaa');
                 
+                // Base Card
                 const card = document.createElement('div');
                 card.className = 'char-analysis-card';
                 card.style.borderColor = color;
 
+                // Header
                 let titleHtml = `<div class="char-analysis-header"><span style="color:${color}">${name}</span>`;
                 if(st.currentSan !== null) titleHtml += `<span style="font-size:0.9rem;">Final SAN: ${st.currentSan}</span>`;
                 titleHtml += `</div>`;
 
+                // Visuals (Bar)
                 const totalCheck = st.succ + st.fail + st.crit + st.fumb;
                 let visualsHtml = `
                     <div class="stats-visual-row">
@@ -850,6 +856,7 @@
                 }
                 visualsHtml += `</div>`;
 
+                // Graph
                 const canvasId = `chart-${idx}`;
                 let graphHtml = st.sanHistory.length > 0 
                     ? `<details class="analysis-details" open><summary>SAN FLUCTUATION GRAPH</summary><div class="graph-container"><canvas id="${canvasId}"></canvas></div></details>` 
@@ -870,13 +877,14 @@
                             <tr>
                                 <td style="font-family:'Cinzel'; color:#888;">#${h.typeRoll}</td>
                                 <td style="color:#ffcdd2; font-weight:bold;">${h.desc}</td>
-                                <td style="text-align:right;">${h.duration ? h.duration + ' 分/R' : '--'}</td>
+                                <td style="text-align:right;">${h.duration ? h.duration + ' 時間/R' : '--'}</td>
                             </tr>`;
                     });
                     insanityHtml += `</tbody></table></div></details>`;
                 }
                 // ▲▲▲ END SECTION ▲▲▲
 
+                // Details Table
                 let detailsHtml = "";
                 const skills = Object.entries(st.skillDetails).sort((a,b) => b[1].count - a[1].count);
                 if (skills.length > 0) {
