@@ -9,7 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- data.jsの読み込み -->
     <script src="./data/data.js"></script>
 
     <style>
@@ -21,25 +20,23 @@
             --border-color: #333;
             
             /* Skill Categories */
-            --cat-combat: #ff6b6b; /* 戦闘 */
-            --cat-search: #4ecdc4; /* 探索 */
-            --cat-action: #ffe66d; /* 行動 */
-            --cat-nego:   #ff9f43; /* 交渉 */
-            --cat-know:   #a29bfe; /* 知識 */
-            --cat-other:  #888888; /* その他 */
+            --cat-combat: #ff6b6b;
+            --cat-search: #4ecdc4;
+            --cat-action: #ffe66d;
+            --cat-nego:   #ff9f43;
+            --cat-know:   #a29bfe;
+            --cat-other:  #888;
         }
 
-        /* --- RESET & BASE --- */
+        /* --- BASE --- */
         body { 
             background-color: var(--bg-color); 
-            background-image: 
-                linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)),
-                url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 20l20 20M20 20L0 40' stroke='%23222' stroke-width='1'/%3E%3C/svg%3E");
+            background-image: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='%23222'/%3E%3C/svg%3E");
             color: #ccc; font-family: 'Shippori Mincho', serif; 
             margin: 0; padding: 0; height: 100vh; overflow: hidden;
         }
 
-        /* --- LAYOUT GRID --- */
+        /* --- LAYOUT --- */
         .layout-container {
             display: grid;
             grid-template-columns: 260px 1fr;
@@ -47,155 +44,161 @@
             height: 100vh; width: 100%;
         }
 
-        /* 1. SIDEBAR (Left Full Height) */
+        /* SIDEBAR */
         .sidebar {
             grid-row: 1 / 3;
-            background: rgba(10,10,10,0.95); border-right: 1px solid var(--border-color);
-            display: flex; flex-direction: column; gap: 15px; padding: 20px 15px;
-            overflow-y: auto; backdrop-filter: blur(5px); z-index: 20;
+            background: rgba(10,10,10,0.98); border-right: 1px solid var(--border-color);
+            display: flex; flex-direction: column; gap: 15px; padding: 15px;
+            overflow-y: auto; z-index: 20;
         }
         .sidebar::-webkit-scrollbar { width: 4px; }
         .sidebar::-webkit-scrollbar-thumb { background: #444; }
 
-        /* 2. TOP AREA (Header & SAN Graph) */
+        /* TOP AREA */
         .top-area {
             grid-column: 2 / 3; grid-row: 1 / 2;
-            background: rgba(0,0,0,0.6); border-bottom: 1px solid var(--border-color);
+            background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-color);
             padding: 10px 20px; display: grid; grid-template-columns: 2fr 1fr; gap: 20px;
         }
 
-        /* 3. MAIN CONTENT (Matrix Table) */
+        /* MAIN CONTENT */
         .main-area {
             grid-column: 2 / 3; grid-row: 2 / 3;
             padding: 0; overflow: hidden; position: relative;
             background: #0e0e0e;
         }
 
-        /* --- COMPONENT: PROFILE --- */
+        /* --- COMPONENTS --- */
         .app-logo {
             font-family: 'Cinzel'; font-size: 1.1rem; color: var(--theme-color); text-align: center;
             border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 5px; letter-spacing: 2px;
         }
         .char-card {
-            text-align: center; background: #161616; padding: 15px; border-radius: 4px; border: 1px solid #333;
+            text-align: center; background: #161616; padding: 10px; border-radius: 4px; border: 1px solid #333;
         }
         .char-img {
-            width: 80px; height: 80px; border-radius: 50%; object-fit: cover;
-            border: 2px solid var(--theme-color); margin-bottom: 10px; background: #000;
+            width: 70px; height: 70px; border-radius: 50%; object-fit: cover;
+            border: 2px solid var(--theme-color); margin-bottom: 5px; background: #000;
         }
         .char-select {
             width: 100%; background: #000; color: #eee; border: 1px solid #444;
             padding: 4px; font-size: 0.8rem; font-family: 'Shippori Mincho';
         }
 
-        /* --- COMPONENT: STATS (Dice Results) --- */
+        /* Stats Box */
         .stats-box {
             background: rgba(255,255,255,0.02); border: 1px solid #333; border-radius: 4px; padding: 10px;
         }
-        .stats-header { font-family: 'Cinzel'; font-size: 0.8rem; color: #888; border-bottom: 1px dashed #333; margin-bottom: 8px; }
-        
-        .dice-row { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.85rem; }
-        .dice-label { color: #aaa; }
+        .stats-header { font-family: 'Cinzel'; font-size: 0.75rem; color: #888; border-bottom: 1px dashed #333; margin-bottom: 6px; }
+        .dice-row { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 0.8rem; }
         .dice-val { font-family: 'Cinzel'; font-weight: bold; }
         .val-crit { color: #66bb6a; }
         .val-fumb { color: #ff6b6b; }
 
-        /* Skill Ranking */
-        .rank-list { list-style: none; padding: 0; margin: 0; font-size: 0.8rem; }
-        .rank-item { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #222; }
-        .rank-name { color: #ccc; }
+        .rank-list { list-style: none; padding: 0; margin: 0; font-size: 0.75rem; }
+        .rank-item { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #222; }
         .rank-count { color: var(--theme-color); font-family: 'Cinzel'; }
 
-        /* --- COMPONENT: SAN CHART & INSANITY --- */
+        /* Chart & Insanity */
         .chart-wrapper { position: relative; width: 100%; height: 100%; min-height: 160px; }
         .insanity-box { 
-            background: rgba(255,20,20,0.05); border: 1px solid #422; padding: 10px; 
-            overflow-y: auto; font-size: 0.85rem; border-radius: 4px; height: 160px;
+            background: rgba(255,20,20,0.03); border: 1px solid #333; padding: 8px; 
+            overflow-y: auto; font-size: 0.8rem; border-radius: 4px; height: 160px;
         }
-        .insanity-row { margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px dashed #422; }
-        .ins-date { font-family: 'Cinzel'; color: #855; font-size: 0.75rem; }
-        .ins-title { color: #e88; font-weight: bold; }
+        .insanity-row { margin-bottom: 5px; padding-bottom: 5px; border-bottom: 1px dashed #422; }
+        .ins-date { font-family: 'Cinzel'; color: #855; font-size: 0.7rem; }
+        .ins-title { color: #d88; }
 
-        /* --- COMPONENT: MATRIX TABLE --- */
+        /* --- MATRIX TABLE --- */
         .matrix-scroll {
             width: 100%; height: 100%; overflow: auto;
-            scrollbar-width: thin; scrollbar-color: #444 #111;
+            /* Scrollbar styling */
+            scrollbar-width: thin; scrollbar-color: #555 #111;
         }
-        .matrix-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
-        .matrix-scroll::-webkit-scrollbar-thumb { background: #444; border: 2px solid #111; }
+        .matrix-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+        .matrix-scroll::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
         .matrix-scroll::-webkit-scrollbar-track { background: #111; }
 
         table.growth-matrix {
             border-collapse: separate; border-spacing: 0;
-            width: 100%; font-size: 0.8rem;
+            width: max-content; /* Fit content exactly */
+            font-size: 0.8rem;
+            background: #0e0e0e;
         }
 
-        /* Sticky Headers */
+        /* Headers */
         .growth-matrix thead th {
             position: sticky; top: 0; z-index: 10;
-            background: #1a1a1a; color: #aaa; border-bottom: 1px solid #444; border-right: 1px solid #333;
-            padding: 5px; font-weight: normal; font-family: 'Cinzel', sans-serif;
-            height: 120px; vertical-align: bottom;
+            background: #111; color: #aaa; 
+            border-bottom: 1px solid #444; border-right: 1px solid #222;
+            padding: 4px; font-weight: normal; font-family: 'Cinzel', sans-serif;
+            height: 100px; vertical-align: bottom;
         }
-        /* Sticky First Columns (Skill Name & Init) */
+
+        /* Sticky Columns (SKILL & INIT) */
         .growth-matrix th.sticky-col, .growth-matrix td.sticky-col {
             position: sticky; left: 0; z-index: 11;
-            background: #222; border-right: 2px solid #444;
+            background: #161616; border-right: 1px solid #444;
         }
         .growth-matrix th.sticky-col-2, .growth-matrix td.sticky-col-2 {
-            position: sticky; left: 120px; z-index: 11; /* Reduced width */
-            background: #252525; border-right: 2px solid #444;
+            position: sticky; left: 140px; z-index: 11; /* Width of Col 1 */
+            background: #1a1a1a; border-right: 2px solid #555;
         }
-        .growth-matrix thead th.sticky-col { z-index: 12; background: #2a2a2a; color: #eee; }
-        .growth-matrix thead th.sticky-col-2 { z-index: 12; background: #2a2a2a; }
+        /* Header specifics */
+        .growth-matrix thead th.sticky-col { z-index: 12; background: #222; color: #fff; border-bottom: 2px solid #555; }
+        .growth-matrix thead th.sticky-col-2 { z-index: 12; background: #222; color: #d4b346; border-bottom: 2px solid #555; }
 
-        /* Table Content */
+        /* Cells */
         .skill-name-cell {
-            width: 120px; min-width: 120px; text-align: left; padding: 0 8px;
-            border-left: 4px solid transparent; font-weight: bold; color: #ccc;
-            display: flex; align-items: center; height: 28px;
-            overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+            width: 140px; max-width: 140px; /* Limit width */
+            text-align: left; padding: 4px 8px;
+            border-left: 3px solid transparent; font-weight: normal; color: #ccc;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            border-bottom: 1px solid #222;
         }
-        /* Category Colors */
-        .cat-combat .skill-name-cell { border-left-color: var(--cat-combat); color: #ffdada; }
-        .cat-search .skill-name-cell { border-left-color: var(--cat-search); color: #daffff; }
-        .cat-action .skill-name-cell { border-left-color: var(--cat-action); color: #ffffda; }
-        .cat-nego   .skill-name-cell { border-left-color: var(--cat-nego);   color: #ffeeda; }
-        .cat-know   .skill-name-cell { border-left-color: var(--cat-know);   color: #eaddff; }
-        .cat-other  .skill-name-cell { border-left-color: var(--cat-other);  color: #ddd; }
-
         .init-val-cell {
-            width: 40px; min-width: 40px; text-align: center; color: #888;
-            font-family: 'Cinzel'; border-bottom: 1px solid #333;
+            width: 40px; text-align: center; color: #d4b346; font-weight: bold;
+            font-family: 'Cinzel'; border-bottom: 1px solid #222;
         }
-
         .growth-val-cell {
-            min-width: 40px; text-align: center; border-bottom: 1px solid #333; border-right: 1px solid #333;
-            color: #444; /* Dim for no change */
+            min-width: 30px; text-align: center; border-bottom: 1px solid #222; border-right: 1px solid #222;
+            color: #444;
         }
-        .growth-val-cell.changed {
-            color: #ccc; /* Normal for value */
-        }
+        
+        /* Category Colors */
+        .cat-combat .skill-name-cell { border-left-color: var(--cat-combat); }
+        .cat-search .skill-name-cell { border-left-color: var(--cat-search); }
+        .cat-action .skill-name-cell { border-left-color: var(--cat-action); }
+        .cat-nego   .skill-name-cell { border-left-color: var(--cat-nego); }
+        .cat-know   .skill-name-cell { border-left-color: var(--cat-know); }
+        .cat-other  .skill-name-cell { border-left-color: var(--cat-other); }
+
+        /* Row Stripes */
+        .growth-matrix tbody tr:nth-child(even) td:not(.sticky-col):not(.sticky-col-2) { background: rgba(255,255,255,0.02); }
+        .growth-matrix tbody tr:hover td { background: rgba(255,255,255,0.05); color: #fff; }
+
+        /* Highlight Growth */
         .growth-val-cell.grown {
-            color: #fff; font-weight: bold; background: rgba(212, 179, 70, 0.15);
-            box-shadow: inset 0 0 5px rgba(212, 179, 70, 0.2);
+            color: #fff; font-weight: bold; background: rgba(212, 179, 70, 0.2) !important;
+        }
+        /* Highlight Total */
+        .growth-val-cell.total-col {
+            color: #d4b346; font-weight: bold; border-left: 1px solid #444;
         }
 
-        /* Vertical Text Header */
+        /* Vertical Header Text */
         .v-text {
             writing-mode: vertical-rl; transform: rotate(180deg);
-            white-space: nowrap; text-align: left; padding: 5px;
-            max-height: 110px; margin: 0 auto;
+            white-space: nowrap; text-align: left; padding: 4px 2px;
+            max-height: 90px; margin: 0 auto; font-size: 0.75rem;
         }
 
-        /* Loading */
         #loadingOverlay {
             position: fixed; top:0; left:0; width:100%; height:100%;
             background: rgba(0,0,0,0.9); z-index: 999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             color: var(--theme-color); font-family: 'Cinzel';
         }
-
     </style>
 </head>
 <body>
@@ -264,12 +267,12 @@
                     <tr>
                         <th class="sticky-col">SKILL</th>
                         <th class="sticky-col-2">INIT</th>
-                        <!-- Scenarios here -->
+                        <!-- Scenarios appended here -->
                         <th>TOTAL</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Rows here -->
+                    <!-- Rows appended here -->
                 </tbody>
             </table>
         </div>
@@ -285,7 +288,7 @@
     // data.js の BASE_SKILLS を安全に取得 (フォールバック定義)
     const BASE_SKILLS_DEF = (typeof window.BASE_SKILLS !== 'undefined') ? window.BASE_SKILLS : {
         "目星": 25, "聞き耳": 25, "図書館": 25, "回避": "DEX*2", "こぶし（パンチ）": 50,
-        "応急手当": 30, "隠れる": 10, "忍び歩き": 10
+        "応急手当": 30, "隠れる": 10, "忍び歩き": 10, "追跡": 10, "登攀": 40
     };
 
     // Skill Categories
@@ -340,14 +343,14 @@
         el('loadingOverlay').style.display = 'flex';
         const char = allChars[charId];
         
-        // 1. Setup Profile & Theme
+        // Setup Theme
         const color = char.color || '#d4b346';
         document.documentElement.style.setProperty('--theme-color', color);
         el('charIcon').style.borderColor = color;
         el('charIcon').src = char.icon || `../images/icon/${char.name}.png`;
         el('plName').textContent = "PL: " + (char.plName || "Unknown");
 
-        // 2. Fetch Scenarios
+        // Fetch Scenarios
         const scenarios = await getScenariosForCharacter(charId);
         
         // Sort: Count (Asc) -> Date (Asc)
@@ -358,11 +361,10 @@
             return new Date(a.date||0) - new Date(b.date||0);
         });
 
-        // 3. Process Data
+        // Process & Render
         const stats = processStats(char, sortedScenarios);
         const matrix = processMatrix(char, sortedScenarios);
 
-        // 4. Render
         renderStats(stats);
         renderSanChart(stats.sanHistory);
         renderInsanity(stats.insanityHistory);
@@ -373,33 +375,26 @@
 
     // --- DATA PROCESSING ---
 
-    // Stats (Dice & SAN)
     function processStats(char, scenarios) {
         let dice = { total:0, crit:0, fumb:0, succ:0 };
         let skillCounts = {};
         let sanHistory = [];
         let insanityHistory = [];
 
-        // Initial SAN
         let initialSan = char.vitals?.san || char.stats?.POW*5 || 50;
         sanHistory.push({ label: 'START', value: initialSan });
 
         scenarios.forEach(s => {
-            // Find role data
             let d = (s.characters.pc?.id === char.id) ? s.characters.pc : 
                     (s.characters.kpc?.id === char.id) ? s.characters.kpc : null;
-            
             if(!d) return;
 
-            // 1. Log Analysis (Dice Stats)
-            // Note: Analysis data is usually stored in scenario document root or meta
             if (s.analysisData && s.analysisData[char.name]) {
                 const ana = s.analysisData[char.name];
                 dice.total += ana.dice || 0;
                 dice.crit += ana.crit || 0;
                 dice.fumb += ana.fumb || 0;
                 dice.succ += (ana.succ || 0);
-                
                 if (ana.skillDetails) {
                     Object.entries(ana.skillDetails).forEach(([skill, detail]) => {
                         skillCounts[skill] = (skillCounts[skill] || 0) + detail.count;
@@ -407,18 +402,14 @@
                 }
             }
 
-            // 2. SAN History
             if (d.san) {
-                // Try parse "50 -> 45"
                 let sanVal = null;
                 const m = d.san.match(/.*[→>＞]\s*(\d+)/);
-                if (m) sanVal = parseInt(m[2]); // End Value
+                if (m) sanVal = parseInt(m[1]);
                 else if (!isNaN(parseInt(d.san))) sanVal = parseInt(d.san);
-                
                 if (sanVal !== null) sanHistory.push({ label: s.title, value: sanVal });
             }
 
-            // 3. Insanity
             if (d.ins && d.ins.type) {
                 insanityHistory.push({ date: s.date, title: s.title, desc: d.ins.desc });
             }
@@ -427,26 +418,34 @@
         return { dice, skillCounts, sanHistory, insanityHistory };
     }
 
-    // Matrix (Skill Growth)
     function processMatrix(char, scenarios) {
-        // 1. Identify Initial Values from Char Data Text (skillList)
-        // This includes Job P + Interest P + Others (before scenario)
-        const userInitials = {};
-        if (char.skillList) {
-            // "目星:70" "聞き耳 50" etc.
+        // --- 1. キャラクター保存データから技能一覧と初期値を抽出 ---
+        // char.skills に構造化されたデータがあればそれを使用
+        // (edit.htmlで保存されたデータ: skills.combat[{name, init, job, interest, growth...}])
+        
+        const skillBaseMap = {}; // { 技能名: {init, job, interest, etc.} }
+
+        if (char.skills && typeof char.skills === 'object') {
+            Object.values(char.skills).flat().forEach(s => {
+                if(s.name) {
+                    // 初期値 = 初期 + 職業 + 興味 + (edit画面での成長分があれば除くか含めるかはお好みだが、"シナリオ成長"とは分けるため、ここでは一旦含める)
+                    // ただし、シナリオ成長はこの後の処理で加算するため、ここでは「開始時点のベース」として扱う
+                    const base = (parseInt(s.init)||0) + (parseInt(s.job)||0) + (parseInt(s.interest)||0) + (parseInt(s.growth)||0); 
+                    skillBaseMap[s.name] = base;
+                }
+            });
+        } 
+        // 構造データがない場合 (古いテキスト形式 skillList)
+        else if (char.skillList) {
             const lines = char.skillList.split(/[\n\s,、]+/);
             lines.forEach(l => {
                 const m = l.match(/^(.+?)[:：\s]*(\d+)$/);
-                if(m) userInitials[m[1].trim()] = parseInt(m[2]);
+                if(m) skillBaseMap[m[1].trim()] = parseInt(m[2]);
             });
         }
 
-        // 2. Collect ALL Skills
-        // Start with BASE_SKILLS, add User Initials, then add Growth skills
-        const allSkillNames = new Set(Object.keys(BASE_SKILLS_DEF));
-        Object.keys(userInitials).forEach(k => allSkillNames.add(k));
-
-        // 3. Collect Growth per Scenario
+        // --- 2. シナリオごとの成長データを収集 ---
+        // (前回と同じロジック)
         const scenarioGrowths = scenarios.map(s => {
             const growths = {};
             let d = (s.characters.pc?.id === char.id) ? s.characters.pc : 
@@ -459,47 +458,40 @@
                         const name = m[1].trim();
                         const val = parseInt(m[2]);
                         growths[name] = (growths[name]||0) + val;
-                        allSkillNames.add(name); 
+                        // もしキャラシにない技能が成長していたら追加
+                        if (skillBaseMap[name] === undefined) {
+                            skillBaseMap[name] = 0; // 初期値不明なら0スタート
+                        }
                     }
                 });
             }
             return { id: s.id, growths };
         });
 
-        // 4. Build Rows
+        // --- 3. 行データ生成 ---
         const rows = [];
-        Array.from(allSkillNames).sort().forEach(name => {
-            // Initial Calculation
-            let init = 0;
+        Object.keys(skillBaseMap).sort().forEach(name => {
+            // 初期値 (キャラシの値)
+            let baseVal = skillBaseMap[name];
             
-            // Priority: User Setting (includes Job/Interest) > Calc from Stats > Default
-            if (userInitials[name] !== undefined) {
-                init = userInitials[name];
-            } else {
-                const def = BASE_SKILLS_DEF[name];
-                if (typeof def === 'number') init = def;
-                else if (def === 'DEX*2') init = (char.stats?.DEX || 10) * 2;
-                else if (def === 'EDU*5') init = (char.stats?.EDU || 10) * 5;
-            }
-
-            // Category
+            // カテゴリ判定
             let cat = 'other';
             for(const [k, v] of Object.entries(SKILL_CATS)) {
                 if(v.some(s => name.includes(s))) { cat = k; break; }
             }
 
-            // History
-            let current = init;
+            // 履歴生成
+            let current = baseVal;
             const history = scenarioGrowths.map(sg => {
                 const g = sg.growths[name] || 0;
                 current += g;
                 return { val: current, grow: g };
             });
 
-            rows.push({ name, cat, init, history, current });
+            rows.push({ name, cat, init: baseVal, history, current });
         });
 
-        // Sort rows by Category then Name
+        // カテゴリ順ソート
         const catOrder = ['combat', 'search', 'action', 'nego', 'know', 'other'];
         rows.sort((a,b) => {
             const ciA = catOrder.indexOf(a.cat);
@@ -514,7 +506,6 @@
     // --- RENDERING ---
 
     function renderStats(stats) {
-        // Dice
         const d = stats.dice;
         el('statTotal').textContent = d.total;
         el('statCrit').textContent = d.crit;
@@ -522,27 +513,16 @@
         const rate = d.total > 0 ? Math.round(((d.succ + d.crit)/d.total)*100) : 0;
         el('statRate').textContent = rate + "%";
 
-        // Ranking
         const list = el('rankList');
         list.innerHTML = "";
         const sorted = Object.entries(stats.skillCounts).sort((a,b) => b[1]-a[1]).slice(0, 10);
-        if(sorted.length === 0) {
-            list.innerHTML = '<li style="text-align:center; color:#444;">NO DATA</li>';
-        } else {
-            sorted.forEach(([name, count]) => {
-                list.innerHTML += `
-                    <li class="rank-item">
-                        <span class="rank-name">${name}</span>
-                        <span class="rank-count">${count}</span>
-                    </li>`;
-            });
-        }
+        if(sorted.length === 0) list.innerHTML = '<li style="text-align:center; color:#444;">NO DATA</li>';
+        else sorted.forEach(([n, c]) => list.innerHTML += `<li class="rank-item"><span class="rank-name">${n}</span><span class="rank-count">${c}</span></li>`);
     }
 
     function renderSanChart(history) {
         const ctx = el('sanChart').getContext('2d');
         if(sanChart) sanChart.destroy();
-
         const labels = history.map((_, i) => i===0 ? 'Start' : `#${i}`);
         const data = history.map(h => h.value);
         const titles = history.map(h => h.label);
@@ -560,14 +540,8 @@
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { callbacks: { title: (c) => titles[c[0].dataIndex] } }
-                },
-                scales: {
-                    x: { display: false },
-                    y: { grid: { color: '#333' }, ticks: { color: '#666' }, suggestedMin: 0, suggestedMax: 99 }
-                }
+                plugins: { legend: { display: false }, tooltip: { callbacks: { title: (c) => titles[c[0].dataIndex] } } },
+                scales: { x: { display: false }, y: { grid: { color: '#333' }, ticks: { color: '#666' }, suggestedMin: 0, suggestedMax: 99 } }
             }
         });
     }
@@ -575,17 +549,9 @@
     function renderInsanity(history) {
         const box = el('insanityList');
         box.innerHTML = "";
-        if(history.length === 0) {
-            box.innerHTML = '<div style="color:#522; text-align:center;">NO RECORD</div>';
-            return;
-        }
-        // Reverse order (newest first)
+        if(history.length === 0) { box.innerHTML = '<div style="color:#522; text-align:center;">NO RECORD</div>'; return; }
         [...history].reverse().forEach(h => {
-            box.innerHTML += `
-                <div class="insanity-row">
-                    <div class="ins-date">${h.date || '----'} / ${h.title}</div>
-                    <div class="ins-title">${h.desc}</div>
-                </div>`;
+            box.innerHTML += `<div class="insanity-row"><div class="ins-date">${h.date || ''} / ${h.title}</div><div class="ins-title">${h.desc}</div></div>`;
         });
     }
 
@@ -594,68 +560,54 @@
         const theadTr = table.querySelector('thead tr');
         const tbody = table.querySelector('tbody');
 
-        // Reset Header: Keep first 2 columns (Skill, Init)
+        // Reset Header
         while(theadTr.children.length > 2) theadTr.removeChild(theadTr.lastChild);
-        
-        // Add Scenario Headers
         scenarios.forEach(s => {
             const th = document.createElement('th');
             let t = s.title;
-            // Shorten if too long
-            if(t.length > 7) t = t.substring(0,7) + '..';
-            th.innerHTML = `<div class="v-text" title="${s.title} (Count: ${s.count || '-'})">${t}</div>`;
+            if(t.length > 6) t = t.substring(0,6) + '..';
+            th.innerHTML = `<div class="v-text" title="${s.title}">${t}</div>`;
             theadTr.appendChild(th);
         });
-        
-        // Add Total Header
         const thTotal = document.createElement('th');
         thTotal.innerHTML = `<div class="v-text">TOTAL</div>`;
         theadTr.appendChild(thTotal);
 
-        // Render Body
+        // Body
         tbody.innerHTML = "";
         rows.forEach(row => {
             const tr = document.createElement('tr');
             tr.className = `cat-${row.cat}`;
 
-            // Name
             const tdName = document.createElement('td');
             tdName.className = "sticky-col skill-name-cell";
             tdName.textContent = row.name;
             tr.appendChild(tdName);
 
-            // Init
             const tdInit = document.createElement('td');
             tdInit.className = "sticky-col-2 init-val-cell";
             tdInit.textContent = row.init;
             tr.appendChild(tdInit);
 
-            // History
             row.history.forEach(h => {
                 const td = document.createElement('td');
                 td.className = "growth-val-cell";
                 td.textContent = h.val;
                 if(h.grow > 0) {
                     td.classList.add('grown');
-                    td.title = `+${h.grow} Grown`;
-                } else if(h.val > 0) {
-                    td.classList.add('changed'); // Just value present
+                    td.title = `+${h.grow}`;
                 }
                 tr.appendChild(td);
             });
 
-            // Total
             const tdTotal = document.createElement('td');
-            tdTotal.className = "growth-val-cell";
-            tdTotal.style.color = getComputedStyle(document.documentElement).getPropertyValue('--theme-color').trim();
-            tdTotal.style.fontWeight = "bold";
+            tdTotal.className = "growth-val-cell total-col";
             tdTotal.textContent = row.current;
             tr.appendChild(tdTotal);
 
             tbody.appendChild(tr);
         });
     }
-
 </script>
 </body>
 </html>
