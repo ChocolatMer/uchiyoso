@@ -1,5 +1,3 @@
---- START OF FILE register.html ---
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -1093,6 +1091,9 @@
             };
             setCharSelect('selPC', s.characters?.pc || {});
             setCharSelect('selKPC', s.characters?.kpc || {});
+
+            const pcData = s.characters?.pc || {};
+            const kpcData = s.characters?.kpc || {};
 
             const fillRole = (d, suffix, listId) => {
                 getEl(`inpPlName${suffix}`).value = d.pl||""; getEl(`inpRes${suffix}`).value = d.res||"Alive"; updateResColor(getEl(`inpRes${suffix}`));
