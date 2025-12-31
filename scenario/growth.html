@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INVESTIGATOR GROWTH LOG</title>
+    
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* --- CORE STYLES --- */
+        body { 
+            background-color: #080808; 
+            background-image: 
+                linear-gradient(rgba(20, 20, 20, 0.8), rgba(10, 10, 10, 0.95)),
+                url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23222' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            color: #ccc; 
+            font-family: 'Shippori Mincho', serif; 
+            margin: 0; padding: 0; 
+            height: 100vh; overflow: hidden;
+        }
+
+        .layout {
+            display: grid; grid-template-columns: 280px 1fr;
+            height: 100vh; width: 100%; max-width: 1920px; margin: 0 auto;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            background: rgba(0,0,0,0.8); border-right: 1px solid #333;
+            padding: 20px; display: flex; flex-direction: column; gap: 20px;
+            backdrop-filter: blur(5px);
+        }
+        .app-title {
+            font-family: 'Cinzel', serif; font-size: 1.4rem; color: #d4b346;
+            text-align: center; border-bottom: 1px double #555; padding-bottom: 15px;
+            letter-spacing: 2px; text-shadow: 0 0 10px rgba(212, 179, 70, 0.2);
+        }
+        
+        .char-select-box {
+            background: #111; border: 1px solid #444; padding: 15px; border-radius: 4px;
+            text-align: center;
+        }
+        .char-icon {
+            width: 100px; height: 100px; border-radius: 50%; border: 2px solid #d4b346;
+            object-fit: cover; margin-bottom: 10px; background: #000;
+        }
+        .char-name { font-size: 1.1rem; color: #eee; margin-bottom: 5px; font-weight: bold; }
+        .char-pl { font-size: 0.8rem; color: #888; font-family: 'Cinzel'; }
+
+        .stat-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .stat-card {
+            background: rgba(255,255,255,0.03); border: 1px solid #333; padding: 10px;
+            text-align: center; border-radius: 4px;
+        }
+        .stat-label { font-family: 'Cinzel'; font-size: 0.65rem; color: #888; display: block; margin-bottom: 2px; }
+        .stat-val { font-size: 1.2rem; color: #d4b346; font-weight: bold; }
+        .stat-val.danger { color: #ff6b6b; }
+
+        /* --- MAIN AREA --- */
+        .main-content {
+            padding: 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 30px;
+        }
+        .main-content::-webkit-scrollbar { width: 8px; }
+        .main-content::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+
+        /* HEADER SECTION */
+        .section-header {
+            display: flex; justify-content: space-between; align-items: end;
+            border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 10px;
+        }
+        .title-text { font-family: 'Cinzel'; font-size: 1.5rem; color: #eee; }
+        .add-btn {
+            background: linear-gradient(135deg, #d4b346, #aa8e30);
+            color: #000; border: none; padding: 8px 20px; font-family: 'Cinzel';
+            font-weight: bold; cursor: pointer; border-radius: 2px;
+            box-shadow: 0 4px 10px rgba(212, 179, 70, 0.3); transition: 0.3s;
+        }
+        .add-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(212, 179, 70, 0.5); }
+
+        /* DASHBOARD CHARTS */
+        .dashboard-grid {
+            display: grid; grid-template-columns: 2fr 1fr; gap: 20px; height: 300px;
+        }
+        .chart-box {
+            background: rgba(0,0,0,0.4); border: 1px solid #333; border-radius: 4px;
+            padding: 15px; position: relative;
+        }
+        .chart-title { position: absolute; top: 10px; left: 15px; font-family: 'Cinzel'; font-size: 0.8rem; color: #666; }
+
+        /* RECORD CARDS */
+        .records-container { display: flex; flex-direction: column; gap: 20px; }
+        .record-card {
+            background: rgba(20, 20, 20, 0.6); border: 1px solid #333; border-left: 4px solid #555;
+            border-radius: 4px; padding: 20px; position: relative; transition: 0.3s;
+        }
+        .record-card:hover { border-color: #555; background: rgba(30, 30, 30, 0.7); }
+        .record-card.has-insanity { border-left-color: #ff6b6b; }
+        
+        .rc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .rc-title { font-size: 1.2rem; font-weight: bold; color: #eee; }
+        .rc-meta { font-family: 'Cinzel'; font-size: 0.8rem; color: #888; display: flex; gap: 15px; }
+        
+        .rc-body { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+        .rc-col { display: flex; flex-direction: column; gap: 10px; }
+        .rc-label { font-family: 'Cinzel'; font-size: 0.7rem; color: #666; border-bottom: 1px dashed #333; padding-bottom: 3px; margin-bottom: 5px; }
+
+        .skill-tag { 
+            display: inline-flex; justify-content: space-between; align-items: center;
+            background: rgba(212, 179, 70, 0.1); border: 1px solid rgba(212, 179, 70, 0.3);
+            color: #ddd; padding: 4px 10px; border-radius: 2px; font-size: 0.85rem; margin-bottom: 5px;
+        }
+        .skill-up { color: #d4b346; font-family: 'Cinzel'; font-weight: bold; margin-left: 10px; }
+
+        .san-change { 
+            display: flex; align-items: center; gap: 10px; font-family: 'Cinzel'; font-size: 1.1rem; 
+            background: rgba(0,0,0,0.3); padding: 5px 10px; border-radius: 4px; width: fit-content;
+        }
+        .san-arrow { color: #666; }
+        .san-diff { font-weight: bold; }
+        .san-diff.plus { color: #66bb6a; }
+        .san-diff.minus { color: #ff6b6b; }
+
+        .note-text { font-size: 0.85rem; color: #aaa; line-height: 1.5; white-space: pre-wrap; }
+        .insanity-badge { 
+            background: #3a1515; color: #ffadad; border: 1px solid #844; 
+            padding: 3px 8px; font-size: 0.75rem; border-radius: 2px; display: inline-block; margin-bottom: 5px;
+        }
+
+        /* MODAL FORM */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 1000; display: none;
+            justify-content: center; align-items: center; backdrop-filter: blur(3px);
+        }
+        .modal-window {
+            background: #151515; border: 1px solid #444; width: 800px; max-width: 90%;
+            max-height: 90vh; overflow-y: auto; border-radius: 4px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8); display: flex; flex-direction: column;
+        }
+        .mw-header {
+            padding: 15px 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between;
+            background: #1a1a1a;
+        }
+        .mw-body { padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+        .form-row { display: grid; grid-template-columns: 100px 1fr; gap: 10px; align-items: center; }
+        .form-label { color: #888; font-size: 0.9rem; text-align: right; padding-right: 10px; }
+        
+        input, select, textarea {
+            background: #0a0a0a; border: 1px solid #333; color: #eee; padding: 8px;
+            font-family: inherit; width: 100%; box-sizing: border-box; border-radius: 2px;
+        }
+        input:focus, textarea:focus { border-color: #d4b346; outline: none; }
+
+        .growth-inputs { display: flex; flex-direction: column; gap: 8px; border: 1px dashed #333; padding: 10px; }
+        .g-row { display: grid; grid-template-columns: 1fr 80px 30px; gap: 10px; }
+        .btn-small { background: #222; border: 1px solid #444; color: #aaa; cursor: pointer; padding: 2px; }
+        
+        .mw-footer {
+            padding: 15px 20px; border-top: 1px solid #333; text-align: right; background: #1a1a1a;
+        }
+        .btn-save {
+            background: #d4b346; color: #000; border: none; padding: 10px 30px;
+            font-family: 'Cinzel'; font-weight: bold; cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="layout">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="app-title">INVESTIGATOR<br>GROWTH LOG</div>
+        
+        <div class="char-select-box">
+            <img src="https://via.placeholder.com/100/333333/666666?text=ICON" class="char-icon" id="charIcon">
+            <select id="charSelect" onchange="loadCharacterData()" style="margin-bottom:5px; text-align:center;">
+                <option value="1">John Doe (探偵)</option>
+                <option value="2">Jane Smith (教授)</option>
+            </select>
+            <div class="char-pl">PL: Guest User</div>
+        </div>
+
+        <div class="stat-summary">
+            <div class="stat-card">
+                <span class="stat-label">TOTAL EXP</span>
+                <span class="stat-val" id="totalExp">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">CURRENT SAN</span>
+                <span class="stat-val" id="currentSan">--</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">SCENARIOS</span>
+                <span class="stat-val" id="totalScenarios">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">INSANITY</span>
+                <span class="stat-val danger" id="totalInsanity">0</span>
+            </div>
+        </div>
+
+        <div style="font-size:0.75rem; color:#555; text-align:center; margin-top:auto;">
+            SYSTEM: CoC 6th / 7th<br>Compatible
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <!-- Dashboard -->
+        <div class="dashboard-grid">
+            <div class="chart-box">
+                <div class="chart-title">SANITY TREND</div>
+                <canvas id="sanChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <div class="chart-title">TOP GROWTH SKILLS</div>
+                <canvas id="skillChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Records List -->
+        <div>
+            <div class="section-header">
+                <div class="title-text">CAMPAIGN RECORDS</div>
+                <button class="add-btn" onclick="openModal()">+ NEW RECORD</button>
+            </div>
+            
+            <div id="recordsContainer" class="records-container">
+                <!-- Records will be injected here via JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: ADD RECORD -->
+<div id="modalOverlay" class="modal-overlay">
+    <div class="modal-window">
+        <div class="mw-header">
+            <span style="font-family:'Cinzel'; color:#d4b346;">ADD NEW LOG</span>
+            <span class="material-icons-round" style="cursor:pointer; color:#666;" onclick="closeModal()">close</span>
+        </div>
+        <div class="mw-body">
+            <!-- Scenario Info -->
+            <div class="form-row">
+                <label class="form-label">TITLE</label>
+                <input type="text" id="inpTitle" placeholder="シナリオタイトル">
+            </div>
+            <div class="form-row">
+                <label class="form-label">DATE</label>
+                <input type="date" id="inpDate">
+            </div>
+
+            <!-- SAN -->
+            <div class="form-row">
+                <label class="form-label">SANITY</label>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <input type="number" id="inpSanStart" placeholder="開始" style="width:80px;">
+                    <span class="material-icons-round" style="font-size:1rem; color:#666;">arrow_forward</span>
+                    <input type="number" id="inpSanEnd" placeholder="終了" style="width:80px;">
+                </div>
+            </div>
+
+            <!-- Skills -->
+            <div class="form-row" style="align-items:start;">
+                <label class="form-label" style="padding-top:8px;">GROWTH</label>
+                <div class="growth-inputs" id="growthList">
+                    <!-- Dynamic Rows -->
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <button class="btn-small" onclick="addGrowthRow()" style="width:100px;">+ Add Skill</button>
+            </div>
+
+            <!-- Details -->
+            <div class="form-row" style="align-items:start;">
+                <label class="form-label" style="padding-top:8px;">DETAILS</label>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <textarea id="inpAf" placeholder="獲得アーティファクト / 魔導書" style="height:80px;"></textarea>
+                    <textarea id="inpSeq" placeholder="後遺症 / 傷跡" style="height:80px;"></textarea>
+                </div>
+            </div>
+
+            <!-- Insanity -->
+            <div class="form-row">
+                <label class="form-label">INSANITY</label>
+                <div style="display:flex; gap:10px;">
+                    <select id="inpInsType" style="width:120px;">
+                        <option value="">(なし)</option>
+                        <option value="Temp">一時的狂気</option>
+                        <option value="Indef">不定の狂気</option>
+                        <option value="Perm">永久的狂気</option>
+                    </select>
+                    <input type="text" id="inpInsDesc" placeholder="狂気の内容 (例: 健忘症)">
+                </div>
+            </div>
+        </div>
+        <div class="mw-footer">
+            <button class="btn-save" onclick="saveRecord()">RECORD SAVE</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- MOCK DATA & STATE ---
+    let records = [
+        {
+            id: 1,
+            title: "毒入りスープ",
+            date: "2024-01-15",
+            sanStart: 60,
+            sanEnd: 55,
+            growth: [
+                { name: "目星", val: 5 },
+                { name: "聞き耳", val: 3 }
+            ],
+            af: "",
+            seq: "",
+            insanity: { type: "Temp", desc: "気絶" }
+        },
+        {
+            id: 2,
+            title: "狂気山脈",
+            date: "2024-02-20",
+            sanStart: 55,
+            sanEnd: 48,
+            growth: [
+                { name: "登攀", val: 12 },
+                { name: "ナビゲート", val: 6 },
+                { name: "目星", val: 2 }
+            ],
+            af: "ミスカトニック大学の徽章",
+            seq: "凍傷（完治済み）",
+            insanity: { type: "Indef", desc: "高所恐怖症" }
+        }
+    ];
+
+    // --- CHART INSTANCES ---
+    let sanChartInst = null;
+    let skillChartInst = null;
+
+    // --- INITIALIZE ---
+    window.onload = function() {
+        renderRecords();
+        updateDashboard();
+        addGrowthRow(); // Initial row in modal
+    };
+
+    // --- FUNCTIONS ---
+
+    function updateDashboard() {
+        // 1. Stats
+        let totalExp = 0;
+        let insCount = 0;
+        records.forEach(r => {
+            if(r.growth) r.growth.forEach(g => totalExp += parseInt(g.val));
+            if(r.insanity && r.insanity.type) insCount++;
+        });
+        
+        document.getElementById('totalExp').innerText = totalExp;
+        document.getElementById('totalScenarios').innerText = records.length;
+        document.getElementById('totalInsanity').innerText = insCount;
+        
+        const lastRec = records[records.length - 1];
+        document.getElementById('currentSan').innerText = lastRec ? lastRec.sanEnd : "--";
+
+        // 2. SAN Chart
+        const ctxSan = document.getElementById('sanChart').getContext('2d');
+        const sanData = [records.length > 0 ? records[0].sanStart : 0]; // Start
+        const labels = ['Start'];
+        
+        records.forEach((r, i) => {
+            sanData.push(r.sanEnd);
+            labels.push(`#${i+1}`);
+        });
+
+        if(sanChartInst) sanChartInst.destroy();
+        sanChartInst = new Chart(ctxSan, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'SAN',
+                    data: sanData,
+                    borderColor: '#d4b346',
+                    backgroundColor: 'rgba(212, 179, 70, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 4
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: '#333' }, ticks: { color: '#888' } },
+                    y: { grid: { color: '#333' }, ticks: { color: '#888' }, suggestedMin: 0, suggestedMax: 99 }
+                }
+            }
+        });
+
+        // 3. Skill Chart (Top 5)
+        const skillMap = {};
+        records.forEach(r => {
+            if(r.growth) {
+                r.growth.forEach(g => {
+                    skillMap[g.name] = (skillMap[g.name] || 0) + parseInt(g.val);
+                });
+            }
+        });
+        const sortedSkills = Object.entries(skillMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
+        
+        const ctxSkill = document.getElementById('skillChart').getContext('2d');
+        if(skillChartInst) skillChartInst.destroy();
+        skillChartInst = new Chart(ctxSkill, {
+            type: 'bar',
+            data: {
+                labels: sortedSkills.map(s => s[0]),
+                datasets: [{
+                    label: 'Growth',
+                    data: sortedSkills.map(s => s[1]),
+                    backgroundColor: '#4a6fa5',
+                    borderColor: '#2b3d52',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { color: '#333' }, ticks: { color: '#888' } },
+                    y: { grid: { display: false }, ticks: { color: '#ccc', font: { family: "Shippori Mincho" } } }
+                }
+            }
+        });
+    }
+
+    function renderRecords() {
+        const container = document.getElementById('recordsContainer');
+        container.innerHTML = "";
+
+        // Reverse order (newest first)
+        [...records].reverse().forEach(r => {
+            const hasIns = (r.insanity && r.insanity.type);
+            const diff = r.sanEnd - r.sanStart;
+            const diffClass = diff >= 0 ? 'plus' : 'minus';
+            const diffText = diff >= 0 ? `±0` : diff;
+            const diffDisplay = diff > 0 ? `+${diff}` : diffText;
+
+            let skillsHtml = "";
+            if(r.growth && r.growth.length > 0) {
+                r.growth.forEach(g => {
+                    skillsHtml += `<div class="skill-tag"><span>${g.name}</span><span class="skill-up">+${g.val}</span></div>`;
+                });
+            } else {
+                skillsHtml = `<span style="color:#666; font-size:0.8rem;">(成長なし)</span>`;
+            }
+
+            let insanityHtml = "";
+            if(hasIns) {
+                const typeLabel = r.insanity.type === 'Temp' ? '一時的' : (r.insanity.type === 'Indef' ? '不定' : '永久');
+                insanityHtml = `<div class="rc-label" style="color:#ffadad;">INSANITY</div>
+                                <span class="insanity-badge">${typeLabel}</span>
+                                <div class="note-text" style="color:#ecc;">${r.insanity.desc}</div>`;
+            }
+
+            const html = `
+                <div class="record-card ${hasIns ? 'has-insanity' : ''}">
+                    <div class="rc-header">
+                        <div class="rc-title">${r.title}</div>
+                        <div class="rc-meta">
+                            <span><span class="material-icons-round" style="font-size:0.8rem; vertical-align:middle;">calendar_today</span> ${r.date}</span>
+                        </div>
+                    </div>
+                    <div class="rc-body">
+                        <!-- Left: Status -->
+                        <div class="rc-col">
+                            <div class="rc-label">SANITY CHECK</div>
+                            <div class="san-change">
+                                <span>${r.sanStart}</span>
+                                <span class="san-arrow">→</span>
+                                <span>${r.sanEnd}</span>
+                                <span class="san-diff ${diffClass}">(${diffDisplay})</span>
+                            </div>
+                            <div style="margin-top:10px;">
+                                ${insanityHtml}
+                            </div>
+                        </div>
+                        <!-- Middle: Skills -->
+                        <div class="rc-col">
+                            <div class="rc-label">SKILL GROWTH</div>
+                            <div style="display:flex; flex-wrap:wrap; gap:5px;">
+                                ${skillsHtml}
+                            </div>
+                        </div>
+                        <!-- Right: Details -->
+                        <div class="rc-col">
+                            <div class="rc-label">DETAILS</div>
+                            ${r.af ? `<div class="note-text" style="color:#d4b346; margin-bottom:5px;">[AF] ${r.af}</div>` : ''}
+                            ${r.seq ? `<div class="note-text" style="color:#aaa;">[後遺症] ${r.seq}</div>` : ''}
+                            ${!r.af && !r.seq ? '<span style="color:#444; font-size:0.8rem;">---</span>' : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.innerHTML += html;
+        });
+    }
+
+    // --- MODAL & FORM LOGIC ---
+    function openModal() {
+        document.getElementById('modalOverlay').style.display = 'flex';
+        // Reset Inputs
+        document.getElementById('inpTitle').value = "";
+        document.getElementById('inpDate').value = new Date().toISOString().split('T')[0];
+        const lastRec = records[records.length - 1];
+        document.getElementById('inpSanStart').value = lastRec ? lastRec.sanEnd : 50;
+        document.getElementById('inpSanEnd').value = lastRec ? lastRec.sanEnd : 50;
+        document.getElementById('inpAf').value = "";
+        document.getElementById('inpSeq').value = "";
+        document.getElementById('inpInsType').value = "";
+        document.getElementById('inpInsDesc').value = "";
+        document.getElementById('growthList').innerHTML = "";
+        addGrowthRow();
+    }
+
+    function closeModal() {
+        document.getElementById('modalOverlay').style.display = 'none';
+    }
+
+    function addGrowthRow() {
+        const div = document.createElement('div');
+        div.className = 'g-row';
+        div.innerHTML = `
+            <input type="text" class="inp-skill-name" placeholder="技能名 (例: 目星)">
+            <input type="number" class="inp-skill-val" placeholder="+値" value="1">
+            <button class="btn-small" onclick="this.parentElement.remove()" style="color:#f55;">×</button>
+        `;
+        document.getElementById('growthList').appendChild(div);
+    }
+
+    function saveRecord() {
+        const title = document.getElementById('inpTitle').value;
+        if(!title) { alert("タイトルを入力してください"); return; }
+
+        // Gather Skills
+        const growth = [];
+        document.querySelectorAll('#growthList .g-row').forEach(row => {
+            const name = row.querySelector('.inp-skill-name').value;
+            const val = row.querySelector('.inp-skill-val').value;
+            if(name && val) growth.push({ name: name, val: parseInt(val) });
+        });
+
+        // Gather Insanity
+        const insType = document.getElementById('inpInsType').value;
+        const insDesc = document.getElementById('inpInsDesc').value;
+        let insanity = null;
+        if(insType) insanity = { type: insType, desc: insDesc };
+
+        const newRecord = {
+            id: Date.now(),
+            title: title,
+            date: document.getElementById('inpDate').value,
+            sanStart: parseInt(document.getElementById('inpSanStart').value) || 0,
+            sanEnd: parseInt(document.getElementById('inpSanEnd').value) || 0,
+            growth: growth,
+            af: document.getElementById('inpAf').value,
+            seq: document.getElementById('inpSeq').value,
+            insanity: insanity
+        };
+
+        records.push(newRecord);
+        renderRecords();
+        updateDashboard();
+        closeModal();
+    }
+
+    // Dummy for sidebar select
+    function loadCharacterData() {
+        // In a real app, this would fetch data from DB
+        alert("キャラクター切り替え: 実際のアプリではDBからデータを再ロードします");
+    }
+
+</script>
+</body>
+</html>
