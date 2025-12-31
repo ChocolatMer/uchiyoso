@@ -18,8 +18,7 @@
         :root {
             --theme: #d4b346;
             --bg-dark: #0a0a0a;
-            --panel: rgba(20, 20, 20, 0.7);
-            --border: rgba(255, 255, 255, 0.15);
+            --border: rgba(255, 255, 255, 0.12);
             --text-main: #e0e0e0;
             
             /* Category Colors */
@@ -29,6 +28,11 @@
             --c-nego:   #ff9f43;
             --c-know:   #a29bfe;
             --c-other:  #a5b1c2;
+
+            /* Dimensions */
+            --w-skill: 120px;
+            --w-base: 32px;
+            --w-scen: 22px;
         }
 
         /* --- 2. BASE STYLES --- */
@@ -39,6 +43,7 @@
             font-family: 'Shippori Mincho', serif; 
             margin: 0; padding: 0; 
             height: 100vh; overflow: hidden;
+            font-size: 0.8rem; /* Base font size reduced */
         }
 
         /* Dynamic Background */
@@ -57,7 +62,7 @@
         /* Layout */
         .layout {
             display: grid;
-            grid-template-columns: 280px 1fr;
+            grid-template-columns: 260px 1fr;
             grid-template-rows: auto 1fr;
             height: 100vh; width: 100%;
             backdrop-filter: blur(10px);
@@ -66,9 +71,9 @@
         /* --- 3. SIDEBAR --- */
         .sidebar {
             grid-row: 1 / 3;
-            background: rgba(10, 10, 10, 0.85);
+            background: rgba(10, 10, 10, 0.9);
             border-right: 1px solid var(--border);
-            display: flex; flex-direction: column; gap: 20px; padding: 20px;
+            display: flex; flex-direction: column; gap: 15px; padding: 15px;
             overflow-y: auto; z-index: 20;
             box-shadow: 5px 0 20px rgba(0,0,0,0.5);
         }
@@ -76,10 +81,10 @@
         .sidebar::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
 
         .app-title {
-            font-family: 'Cinzel'; font-size: 1.4rem; color: var(--theme);
+            font-family: 'Cinzel'; font-size: 1.2rem; color: var(--theme);
             text-align: center; text-shadow: 0 0 10px rgba(212, 179, 70, 0.4);
-            letter-spacing: 2px; margin-bottom: 10px;
-            border-bottom: 1px solid var(--border); padding-bottom: 15px;
+            letter-spacing: 2px; margin-bottom: 5px;
+            border-bottom: 1px solid var(--border); padding-bottom: 10px;
         }
 
         /* Character Profile */
@@ -87,48 +92,47 @@
             text-align: center;
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--border);
-            border-radius: 8px; padding: 15px;
+            border-radius: 6px; padding: 10px;
             transition: 0.3s;
         }
-        .char-card:hover { border-color: var(--theme); box-shadow: 0 0 15px rgba(212, 179, 70, 0.1); }
         
         .char-icon-wrapper {
-            position: relative; width: 100px; height: 100px; margin: 0 auto 10px;
+            position: relative; width: 80px; height: 80px; margin: 0 auto 8px;
         }
         .char-img {
             width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
-            border: 3px solid var(--theme); background: #000;
+            border: 2px solid var(--theme); background: #000;
             transition: 0.5s;
         }
         
         .char-select {
             width: 100%; background: #111; color: #eee;
-            border: 1px solid #444; padding: 6px; border-radius: 4px;
-            font-family: 'Shippori Mincho'; cursor: pointer;
+            border: 1px solid #444; padding: 4px; border-radius: 4px;
+            font-family: 'Shippori Mincho'; cursor: pointer; font-size: 0.75rem;
         }
         .char-select:focus { outline: none; border-color: var(--theme); }
 
         /* Stats Panel */
         .stats-panel {
-            background: rgba(0, 0, 0, 0.4); border-radius: 6px; padding: 12px;
+            background: rgba(0, 0, 0, 0.4); border-radius: 4px; padding: 10px;
             border: 1px solid var(--border);
         }
         .panel-head {
-            font-family: 'Cinzel'; font-size: 0.8rem; color: #aaa;
-            border-bottom: 1px dashed #444; margin-bottom: 8px; padding-bottom: 4px;
+            font-family: 'Cinzel'; font-size: 0.75rem; color: #888;
+            border-bottom: 1px dashed #444; margin-bottom: 6px; padding-bottom: 2px;
             display: flex; justify-content: space-between; align-items: center;
         }
         
-        .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
-        .kpi-item { text-align: center; background: rgba(255,255,255,0.02); padding: 5px; border-radius: 4px; }
-        .kpi-label { font-size: 0.6rem; color: #888; font-family: 'Cinzel'; display: block; }
-        .kpi-val { font-size: 1.1rem; color: var(--theme); font-weight: bold; font-family: 'Cinzel'; }
+        .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 10px; }
+        .kpi-item { text-align: center; background: rgba(255,255,255,0.02); padding: 4px; border-radius: 3px; }
+        .kpi-label { font-size: 0.55rem; color: #888; font-family: 'Cinzel'; display: block; }
+        .kpi-val { font-size: 1rem; color: var(--theme); font-weight: bold; font-family: 'Cinzel'; }
 
         /* Skill Ranking */
-        .rank-list { list-style: none; padding: 0; margin: 0; font-size: 0.8rem; max-height: 200px; overflow-y: auto; }
+        .rank-list { list-style: none; padding: 0; margin: 0; font-size: 0.75rem; max-height: 200px; overflow-y: auto; }
         .rank-list::-webkit-scrollbar { width: 2px; }
         .rank-row {
-            display: flex; justify-content: space-between; padding: 4px 0;
+            display: flex; justify-content: space-between; padding: 3px 0;
             border-bottom: 1px solid rgba(255,255,255,0.05);
         }
         .rank-name { color: #ccc; }
@@ -137,38 +141,39 @@
         /* --- 4. TOP AREA (Graph & Filter) --- */
         .top-area {
             grid-column: 2 / 3; grid-row: 1 / 2;
-            padding: 20px 30px;
-            display: grid; grid-template-columns: 2fr 1fr; gap: 30px;
+            padding: 15px 20px;
+            display: grid; grid-template-columns: 2fr 1fr; gap: 20px;
             background: rgba(0,0,0,0.2);
             border-bottom: 1px solid var(--border);
+            height: 180px; /* Fixed height for compactness */
         }
 
-        .chart-box { position: relative; height: 180px; width: 100%; }
+        .chart-box { position: relative; width: 100%; height: 100%; }
         .chart-title {
             position: absolute; top: 0; left: 0; 
-            font-family: 'Cinzel'; font-size: 0.8rem; color: #666;
-            background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 2px;
+            font-family: 'Cinzel'; font-size: 0.7rem; color: #666;
+            background: rgba(0,0,0,0.6); padding: 2px 5px; border-radius: 2px;
         }
 
         /* Insanity Log */
         .insanity-container {
-            display: flex; flex-direction: column; height: 180px;
+            display: flex; flex-direction: column; height: 100%;
             background: rgba(20, 0, 0, 0.3); border: 1px solid rgba(100, 50, 50, 0.5);
-            border-radius: 6px; overflow: hidden;
+            border-radius: 4px; overflow: hidden;
         }
         .ins-header {
-            background: rgba(50, 0, 0, 0.4); padding: 5px 10px;
-            font-family: 'Cinzel'; font-size: 0.8rem; color: #ff8888;
+            background: rgba(50, 0, 0, 0.4); padding: 4px 8px;
+            font-family: 'Cinzel'; font-size: 0.75rem; color: #ff8888;
             border-bottom: 1px solid rgba(100, 50, 50, 0.5);
         }
-        .ins-list { overflow-y: auto; padding: 5px 10px; flex: 1; }
-        .ins-list::-webkit-scrollbar { width: 4px; }
+        .ins-list { overflow-y: auto; padding: 4px 8px; flex: 1; }
+        .ins-list::-webkit-scrollbar { width: 3px; }
         .ins-list::-webkit-scrollbar-thumb { background: #522; }
         .ins-item {
-            font-size: 0.85rem; padding: 6px 0; border-bottom: 1px dashed rgba(100, 50, 50, 0.3);
+            font-size: 0.75rem; padding: 4px 0; border-bottom: 1px dashed rgba(100, 50, 50, 0.3);
             animation: fadeIn 0.5s ease;
         }
-        .ins-meta { font-size: 0.7rem; color: #a66; font-family: 'Cinzel'; }
+        .ins-meta { font-size: 0.65rem; color: #a66; font-family: 'Cinzel'; }
         .ins-text { color: #ecc; text-shadow: 0 0 5px rgba(255, 0, 0, 0.2); }
 
         /* --- 5. MAIN AREA (Toolbar & Matrix) --- */
@@ -180,20 +185,20 @@
 
         /* Toolbar */
         .matrix-toolbar {
-            padding: 10px 30px; display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 20px; display: flex; align-items: center; justify-content: space-between;
             background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border);
         }
         
-        .filter-group { display: flex; gap: 5px; }
+        .filter-group { display: flex; gap: 4px; }
         .filter-btn {
             background: transparent; border: 1px solid #444; color: #888;
-            padding: 4px 12px; border-radius: 15px; cursor: pointer;
-            font-size: 0.8rem; transition: 0.2s; font-family: 'Noto Sans JP';
+            padding: 2px 10px; border-radius: 12px; cursor: pointer;
+            font-size: 0.75rem; transition: 0.2s; font-family: 'Noto Sans JP';
         }
         .filter-btn:hover { border-color: #666; color: #ccc; }
         .filter-btn.active { 
             background: var(--theme); color: #000; border-color: var(--theme); 
-            font-weight: bold; box-shadow: 0 0 10px rgba(212, 179, 70, 0.3);
+            font-weight: bold;
         }
         /* Category specific active styles */
         .filter-btn.cat-combat.active { background: var(--c-combat); border-color: var(--c-combat); }
@@ -202,32 +207,32 @@
         .filter-btn.cat-nego.active   { background: var(--c-nego);   border-color: var(--c-nego); }
         .filter-btn.cat-know.active   { background: var(--c-know);   border-color: var(--c-know); }
 
-        .toggle-wrapper { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #aaa; cursor: pointer; }
+        .toggle-wrapper { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: #aaa; cursor: pointer; }
         .toggle-switch {
-            width: 36px; height: 20px; background: #333; border-radius: 10px;
+            width: 30px; height: 16px; background: #333; border-radius: 8px;
             position: relative; transition: 0.3s;
         }
         .toggle-switch::after {
-            content:''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
+            content:''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px;
             background: #888; border-radius: 50%; transition: 0.3s;
         }
         input[type="checkbox"]:checked + .toggle-switch { background: var(--theme); }
-        input[type="checkbox"]:checked + .toggle-switch::after { left: 18px; background: #fff; }
+        input[type="checkbox"]:checked + .toggle-switch::after { left: 16px; background: #fff; }
 
         /* Matrix Table Scroll */
         .matrix-scroll {
             flex: 1; overflow: auto; width: 100%;
             scrollbar-width: thin; scrollbar-color: #555 #111;
         }
-        .matrix-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+        .matrix-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
         .matrix-scroll::-webkit-scrollbar-corner { background: #111; }
-        .matrix-scroll::-webkit-scrollbar-thumb { background: #555; border: 2px solid #111; border-radius: 5px; }
+        .matrix-scroll::-webkit-scrollbar-thumb { background: #555; border: 2px solid #111; border-radius: 4px; }
         .matrix-scroll::-webkit-scrollbar-track { background: #111; }
 
         table.growth-matrix {
             border-collapse: separate; border-spacing: 0;
-            width: max-content; min-width: 100%;
-            font-size: 0.8rem;
+            width: max-content;
+            font-size: 0.75rem; /* Very compact font */
         }
 
         /* --- STICKY HEADERS & COLUMNS --- */
@@ -236,37 +241,37 @@
         thead th {
             position: sticky; top: 0; z-index: 10;
             background: #111; color: #aaa;
-            border-bottom: 1px solid #444; border-right: 1px solid #333;
-            padding: 0; height: 130px; vertical-align: bottom;
+            border-bottom: 1px solid #444; border-right: 1px solid #222;
+            padding: 0; height: 120px; vertical-align: bottom;
             transition: 0.2s;
         }
         thead th:hover { background: #222; }
 
         /* 2. Fixed Columns (Left) */
-        /* Skill Name (Width 160px) */
+        /* Skill Name */
         th.col-skill, td.col-skill {
             position: sticky; left: 0; z-index: 12;
-            background: #161616; border-right: 1px solid #444; width: 160px;
+            background: #161616; border-right: 1px solid #444; width: var(--w-skill);
         }
         
-        /* Base Stats Columns (Width 40px each) */
-        /* Total fixed width = 160(Skill) + 40(Init) + 40(Job) + 40(Int) + 40(Oth) = 320px */
-        th.col-base, td.col-base { position: sticky; left: 160px; z-index: 11; width: 40px; border-right: 1px solid #333; background: #1a1a1a; }
-        th.col-job,  td.col-job  { position: sticky; left: 200px; z-index: 11; width: 40px; border-right: 1px solid #333; background: #1a1a1a; }
-        th.col-int,  td.col-int  { position: sticky; left: 240px; z-index: 11; width: 40px; border-right: 1px solid #333; background: #1a1a1a; }
-        th.col-oth,  td.col-oth  { position: sticky; left: 280px; z-index: 11; width: 40px; border-right: 2px solid #555; background: #1a1a1a; }
+        /* Base Stats Columns (4 columns) */
+        /* Positions calculated based on widths */
+        th.col-base, td.col-base { position: sticky; left: var(--w-skill); z-index: 11; width: var(--w-base); border-right: 1px solid #333; background: #1a1a1a; }
+        th.col-job,  td.col-job  { position: sticky; left: calc(var(--w-skill) + var(--w-base)); z-index: 11; width: var(--w-base); border-right: 1px solid #333; background: #1a1a1a; }
+        th.col-int,  td.col-int  { position: sticky; left: calc(var(--w-skill) + var(--w-base)*2); z-index: 11; width: var(--w-base); border-right: 1px solid #333; background: #1a1a1a; }
+        th.col-oth,  td.col-oth  { position: sticky; left: calc(var(--w-skill) + var(--w-base)*3); z-index: 11; width: var(--w-base); border-right: 2px solid #555; background: #1a1a1a; }
 
         /* Header Corner Z-Index Fix */
-        thead th[class*="col-"] { z-index: 15; background: #222; border-bottom: 2px solid #555; color: #888; font-size: 0.65rem; font-family:'Cinzel'; vertical-align: middle; }
-        thead th.col-skill { color: var(--theme); font-size: 0.8rem; }
+        thead th[class*="col-"] { z-index: 15; background: #222; border-bottom: 2px solid #555; color: #888; font-size: 0.6rem; font-family:'Cinzel'; vertical-align: middle; }
+        thead th.col-skill { color: var(--theme); font-size: 0.75rem; }
 
         /* --- CELLS STYLING --- */
         .skill-cell-content {
-            display: flex; align-items: center; height: 32px; padding: 0 8px;
+            display: flex; align-items: center; height: 28px; padding: 0 6px;
             border-left: 3px solid transparent; font-weight: 500; color: #ccc;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        .skill-icon { font-size: 0.9rem; margin-right: 6px; opacity: 0.7; }
+        .skill-icon { font-size: 0.85rem; margin-right: 4px; opacity: 0.7; }
 
         /* Category Left Borders */
         .cat-combat .skill-cell-content { border-left-color: var(--c-combat); color: #ffdada; }
@@ -277,14 +282,15 @@
         .cat-other  .skill-cell-content { border-left-color: var(--c-other);  color: #ddd; }
 
         /* Values */
-        td.val-base { text-align: center; color: #666; font-family: 'Cinzel'; border-bottom: 1px solid #222; }
+        td.val-base { text-align: center; color: #666; font-family: 'Cinzel'; border-bottom: 1px solid #222; font-size: 0.7rem; }
         td.val-base.has-val { color: #eee; }
 
-        /* Scenario Columns */
+        /* Scenario Columns - SUPER COMPACT */
         td.val-growth {
-            min-width: 28px; width: 28px; /* Compact */
+            min-width: var(--w-scen); width: var(--w-scen); 
             text-align: center; color: #444; font-family: 'Cinzel';
             border-bottom: 1px solid #222; border-right: 1px solid #222;
+            padding: 0; font-size: 0.7rem;
             transition: 0.1s;
         }
         
@@ -296,7 +302,7 @@
         }
         /* Total Column */
         .total-col {
-            color: var(--theme); font-weight: bold; border-left: 2px solid #444; background: rgba(0,0,0,0.3); min-width: 50px;
+            color: var(--theme); font-weight: bold; border-left: 2px solid #444; background: rgba(0,0,0,0.3); min-width: 40px;
         }
 
         /* Hover Highlights */
@@ -306,31 +312,31 @@
         /* Vertical Header Text */
         .v-header {
             writing-mode: vertical-rl; transform: rotate(180deg);
-            white-space: nowrap; text-align: left; padding: 10px 4px;
-            max-height: 120px; margin: 0 auto; font-size: 0.75rem; color: #ccc;
-            cursor: help;
+            white-space: nowrap; text-align: left; padding: 8px 2px;
+            max-height: 110px; margin: 0 auto; font-size: 0.7rem; color: #ccc;
+            cursor: help; letter-spacing: 1px;
         }
 
         /* Spacer Row */
-        .spacer-row td { height: 12px; background: rgba(0,0,0,0.3); border: none; }
+        .spacer-row td { height: 8px; background: rgba(0,0,0,0.4); border: none; }
 
         /* TOOLTIP */
         #tooltip {
             position: fixed; pointer-events: none; opacity: 0; z-index: 1000;
             background: rgba(15, 15, 15, 0.98); border: 1px solid var(--theme);
-            padding: 12px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            padding: 10px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
             transition: opacity 0.15s; color: #eee; font-size: 0.8rem;
-            min-width: 200px; max-width: 300px;
+            min-width: 180px; max-width: 280px;
         }
-        #tooltip h4 { margin: 0 0 8px 0; color: var(--theme); font-family: 'Shippori Mincho'; border-bottom: 1px solid #444; padding-bottom: 4px; font-size: 0.9rem; }
-        #tooltip .tt-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        #tooltip h4 { margin: 0 0 6px 0; color: var(--theme); font-family: 'Shippori Mincho'; border-bottom: 1px solid #444; padding-bottom: 4px; font-size: 0.85rem; }
+        #tooltip .tt-row { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 0.75rem; }
         #tooltip .tt-label { color: #888; font-family: 'Cinzel'; }
         #tooltip .tt-val { font-weight: bold; }
-        #tooltip .growth-list { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #444; color: #aaa; font-size: 0.75rem; }
-        #tooltip .growth-item { display: inline-block; margin-right: 8px; color: #ddd; }
-        #tooltip .growth-val { color: var(--theme); font-family: 'Cinzel'; }
+        #tooltip .growth-list { margin-top: 6px; padding-top: 6px; border-top: 1px dashed #444; color: #aaa; font-size: 0.7rem; line-height: 1.4; }
+        #tooltip .growth-item { display: inline-block; margin-right: 6px; color: #ddd; background: rgba(255,255,255,0.1); padding: 1px 4px; border-radius: 2px; }
+        #tooltip .growth-val { color: var(--theme); font-family: 'Cinzel'; margin-left: 2px; }
 
-        /* LOADING & ANIMATION */
+        /* ANIMATION */
         @keyframes fadeIn { from{opacity:0; transform:translateY(5px);} to{opacity:1; transform:translateY(0);} }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
@@ -392,13 +398,13 @@
             </div>
             
             <div class="panel-head" style="margin-top:10px;"><span>DICE STATS</span><span class="material-icons-round" style="font-size:1rem;">casino</span></div>
-            <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:5px;">
+            <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:4px;">
                 <span style="color:#aaa;">TOTAL ROLL</span><span style="color:#fff; font-family:'Cinzel';" id="statTotal">0</span>
             </div>
-            <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:5px;">
+            <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:4px;">
                 <span style="color:#aaa;">CRITICAL</span><span style="color:#66bb6a; font-family:'Cinzel';" id="statCrit">0</span>
             </div>
-            <div style="display:flex; justify-content:space-between; font-size:0.8rem;">
+            <div style="display:flex; justify-content:space-between; font-size:0.75rem;">
                 <span style="color:#aaa;">FUMBLE</span><span style="color:#ff6b6b; font-family:'Cinzel';" id="statFumb">0</span>
             </div>
         </div>
@@ -513,7 +519,6 @@
             el('loadingText').textContent = "PLEASE LOGIN";
         });
 
-        // Event Listeners
         el('charSelect').addEventListener('change', (e) => { if(e.target.value) loadCharacter(e.target.value); });
         
         document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -632,12 +637,12 @@
                 if(s.name) skillMap[s.name] = { 
                     init: parseInt(s.init)||0, job: parseInt(s.job)||0, 
                     interest: parseInt(s.interest)||0, 
-                    // other: データ構造にotherがあれば使用、なければ0 (growthは無視)
+                    // ★ growth (初期入力の成長) は無視し、other (その他) のみを採用
                     other: (s.other ? parseInt(s.other) : 0)
                 };
             });
         } else if (char.skillList) {
-            // Text Fallback (旧形式)
+            // Text Fallback (旧形式) - 初期値として扱う
             char.skillList.split(/[\n\s,、]+/).forEach(l => {
                 const m = l.match(/^(.+?)[:：\s]*(\d+)$/);
                 if(m) skillMap[m[1].trim()] = { init: parseInt(m[2]), job:0, interest:0, other:0 };
@@ -792,7 +797,6 @@
         if(!currentMatrixData) return;
         const { rows, scenarios } = currentMatrixData;
         
-        // Filter
         const activeFilter = document.querySelector('.filter-btn.active').dataset.cat;
         const growthOnly = el('toggleGrowthOnly').checked;
 
@@ -800,7 +804,7 @@
         const thead = table.querySelector('thead tr');
         const tbody = table.querySelector('tbody');
 
-        // Headers
+        // Reset Headers
         while(thead.children.length > 5) thead.removeChild(thead.lastChild);
         
         scenarios.forEach(s => {
@@ -810,7 +814,7 @@
             th.onmouseleave = hideTooltip;
             
             let t = s.title;
-            if(t.length > 6) t = t.substring(0,6) + '..';
+            if(t.length > 10) t = t.substring(0,9) + '..'; // Shorten but readable
             th.innerHTML = `<div class="v-header">${t}</div>`;
             thead.appendChild(th);
         });
@@ -824,7 +828,6 @@
         let prevCat = "";
 
         rows.forEach(row => {
-            // Filter Check
             if(activeFilter !== 'all' && row.cat !== activeFilter) return;
             if(growthOnly && !row.hasGrowth) return;
 
@@ -840,7 +843,7 @@
             const tr = document.createElement('tr');
             tr.className = `cat-${row.cat}`;
 
-            // Name + Icon
+            // Name
             const tdName = document.createElement('td');
             tdName.className = "col-skill skill-cell-content";
             tdName.innerHTML = `<span class="material-icons-round skill-icon">${row.icon}</span>${row.name}`;
@@ -867,7 +870,7 @@
                     td.classList.add('grown');
                     td.title = `+${h.grow}`;
                 }
-                // Hover effect helper
+                // Hover highlight (adjusted index for 5 fixed cols)
                 td.onmouseenter = () => highlightColumn(i + 6); 
                 td.onmouseleave = () => removeHighlight(i + 6);
                 tr.appendChild(td);
@@ -886,13 +889,11 @@
     // --- UTILS ---
     function animateCount(id, target) {
         const el = document.getElementById(id);
-        const start = 0;
         const duration = 1000;
         const startTime = performance.now();
         function update(t) {
             const p = Math.min((t - startTime) / duration, 1);
-            const val = Math.floor(p * target);
-            el.textContent = val;
+            el.textContent = Math.floor(p * target);
             if(p < 1) requestAnimationFrame(update);
         }
         requestAnimationFrame(update);
@@ -937,7 +938,6 @@
             ${growthHtml}
         `;
         
-        // Position
         const rect = tooltip.getBoundingClientRect();
         let left = e.clientX + 15;
         let top = e.clientY + 15;
