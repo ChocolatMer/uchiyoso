@@ -8,6 +8,8 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet">
     <link href="../character/edit/header.css" rel="stylesheet">
+    <!-- Chart.js for Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         /* --- CORE SETTINGS --- */
@@ -194,10 +196,8 @@
         .bg-orange { background: #523e2b; color: #ffdfbf; }
         .bg-gray { background: #333; color: #aaa; }
 
-        /* --- Analysis Tab Styles --- */
-        .analysis-container {
-            display: flex; flex-direction: column; gap: 20px; height: 100%;
-        }
+        /* --- Analysis Tab Styles (Improved) --- */
+        .analysis-container { display: flex; flex-direction: column; gap: 20px; height: 100%; }
         .file-upload-box {
             border: 2px dashed #444; padding: 20px; text-align: center;
             border-radius: 4px; color: #888; font-family: 'Cinzel'; cursor: pointer;
@@ -205,22 +205,27 @@
         }
         .file-upload-box:hover { border-color: #d4b346; color: #d4b346; background: rgba(212, 179, 70, 0.05); }
         
-        .stat-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-bottom: 20px; }
-        .stat-table th { text-align: left; border-bottom: 1px solid #555; padding: 5px; color: #d4b346; font-family: 'Cinzel'; }
-        .stat-table td { border-bottom: 1px solid #333; padding: 5px; color: #ccc; }
-        .stat-val { text-align: right; font-family: 'Cinzel'; }
+        .char-analysis-card {
+            background: rgba(0,0,0,0.3); border: 1px solid #333; 
+            border-left: 4px solid #555; padding: 15px; margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .char-analysis-header {
+            font-family: 'Shippori Mincho'; font-weight: bold; font-size: 1.2rem;
+            color: #eee; margin-bottom: 10px; display: flex; justify-content: space-between;
+        }
+        .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; }
+        .sum-item { text-align: center; }
+        .sum-label { font-size: 0.7rem; color: #888; font-family: 'Cinzel'; }
+        .sum-val { font-size: 1.1rem; color: #ddd; font-weight: bold; font-family: 'Cinzel'; }
         
-        .stat-summary {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;
-        }
-        .stat-card {
-            background: rgba(0,0,0,0.2); padding: 10px; border: 1px solid #333;
-            display: flex; flex-direction: column; align-items: center;
-        }
-        .stat-label { font-size: 0.7rem; color: #888; font-family: 'Cinzel'; margin-bottom: 5px; }
-        .stat-number { font-size: 1.2rem; color: #eee; font-weight: bold; }
+        .graph-container { position: relative; height: 200px; width: 100%; margin-bottom: 15px; background: rgba(0,0,0,0.2); border-radius: 4px; }
+        
+        .skill-rank-box { font-size: 0.85rem; color: #bbb; border-top: 1px dashed #444; padding-top: 10px; }
+        .rank-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        .rank-bar { display: inline-block; height: 4px; background: #444; border-radius: 2px; }
 
-        /* Other Styles (Same as original) */
+        /* Other Styles */
         .san-compare-area { display: flex; gap: 20px; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px; }
         .san-box { flex: 1; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; border: 1px solid #333; display: flex; flex-direction: column; gap: 5px; }
         .san-header { font-family: 'Cinzel', serif; font-size: 0.8rem; color: #d4b346; display: flex; justify-content: space-between; }
@@ -319,7 +324,6 @@
                 <div class="tabs-container">
                     <div class="tab-btn active" onclick="window.openTab('tab-record', this)">記録</div>
                     <div class="tab-btn" onclick="window.openTab('tab-scenario', this)">概要</div>
-                    <!-- 新しいタブ -->
                     <div class="tab-btn" onclick="window.openTab('tab-analysis', this)">解析</div>
                     <div class="tab-btn" onclick="window.openTab('tab-memo', this)">手記</div>
                 </div>
@@ -533,7 +537,7 @@
                                 <div class="scn-toggle-header" onclick="window.toggleScnContent('scWarn')">注意事項 <span class="material-icons-round">expand_more</span></div><div id="scWarn" class="scn-content"><textarea id="inpWarnings" class="paper-area" style="min-height:60px;"></textarea></div>
                             </div>
 
-                            <!-- ★ TAB ANALYSIS (NEW) -->
+                            <!-- ★ TAB ANALYSIS (IMPROVED) -->
                             <div id="tab-analysis" class="tab-panel">
                                 <h2 class="section-header">LOG ANALYSIS</h2>
                                 <div class="analysis-container">
@@ -544,24 +548,12 @@
                                     </div>
                                     
                                     <div id="analysisResult" style="display:none;">
-                                        <div class="stat-summary">
-                                            <div class="stat-card"><div class="stat-label">TOTAL ROLLS</div><div class="stat-number" id="stDiceCount">0</div></div>
-                                            <div class="stat-card"><div class="stat-label">CRITICAL</div><div class="stat-number" id="stCritCount" style="color:#8bc34a;">0</div></div>
-                                            <div class="stat-card"><div class="stat-label">FUMBLE</div><div class="stat-number" id="stFumbleCount" style="color:#f44336;">0</div></div>
-                                            <div class="stat-card"><div class="stat-label">MESSAGES</div><div class="stat-number" id="stMsgCount">0</div></div>
-                                        </div>
-
-                                        <table class="stat-table">
-                                            <thead><tr><th>ITEM</th><th style="text-align:right;">VALUE</th></tr></thead>
-                                            <tbody id="stDetailBody"></tbody>
-                                        </table>
-
-                                        <div class="section-label" style="margin-top:20px;">RESULT MEMO</div>
-                                        <textarea id="inpAnalysisMemo" class="paper-area box-input" style="min-height:200px;" placeholder="解析結果のメモ..."></textarea>
+                                        <div id="analysisContent"></div>
+                                        <textarea id="inpAnalysisMemo" class="paper-area box-input" style="min-height:100px; margin-top:20px;" placeholder="解析メモ..."></textarea>
                                     </div>
                                     
                                     <div id="analysisEmpty" style="text-align:center; padding:30px; color:#666;">
-                                        ログファイルを読み込むと、<br>ダイス結果やSAN値変動が集計されます。
+                                        ログファイルを読み込むと、<br>キャラクター毎のダイス結果やSAN値変動が集計されます。
                                     </div>
                                 </div>
                             </div>
@@ -686,15 +678,12 @@
         const insanityData = {"1": "健忘症 / 昏迷", "2": "激しい恐怖症", "3": "幻覚", "4": "奇妙な性的嗜好", "5": "フェティッシュ", "6": "チック・震え", "7": "心因性機能障害", "8": "短時間の心因反応", "9": "一時的偏執症", "10": "強迫観念行動", "Other": ""};
         window.updateInsanityDesc = (val, role) => { const el = document.getElementById(role==='PC'?'inpInsanityDescPC':'inpInsanityDescKPC'); if(el && !el.value) el.value = insanityData[val]||""; };
 
-        /* --- LOG ANALYSIS LOGIC --- */
+        /* --- LOG ANALYSIS LOGIC (UPDATED) --- */
         window.handleLogUpload = function(input) {
             const file = input.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
-                const text = e.target.result;
-                parseLog(text);
-            };
+            reader.onload = function(e) { parseLog(e.target.result); };
             reader.readAsText(file);
         };
 
@@ -703,140 +692,177 @@
             const doc = parser.parseFromString(htmlContent, 'text/html');
             const paragraphs = doc.querySelectorAll('p');
             
-            let stats = {
-                lines: 0,
-                dice: 0,
-                critical: 0,
-                fumble: 0,
-                success: 0,
-                failure: 0,
-                sanLoss: {}, // { charName: totalLoss }
-                skills: {}   // { charName: { skillName: count } }
-            };
+            // Map character names to stats
+            // { charName: { dice:0, crit:0, fumb:0, succ:0, fail:0, sanHistory:[{t:idx, v:val}], skills:{} } }
+            let charStats = {};
 
             const pcSel = document.getElementById('selPC');
             const kpcSel = document.getElementById('selKPC');
             const pcName = pcSel.options[pcSel.selectedIndex].text;
             const kpcName = kpcSel.options[kpcSel.selectedIndex].text;
+            
+            // Helper to get or init stats
+            const getStats = (name) => {
+                if(!charStats[name]) charStats[name] = { dice:0, crit:0, fumb:0, succ:0, fail:0, sanHistory:[], skills:{}, currentSan: null };
+                return charStats[name];
+            };
 
-            const targetNames = [pcName, kpcName];
+            let lineIndex = 0;
 
             paragraphs.forEach(p => {
-                stats.lines++;
+                lineIndex++;
                 const spans = p.querySelectorAll('span');
                 if (spans.length < 2) return;
-
-                // [タブ] 名前: 内容 形式を想定
-                // ココフォリアのログは span が分かれていることが多い
-                // span[0] = tab, span[1] = name, span[2] = content...
                 
-                let name = "";
+                let name = spans[1].innerText.replace(/[:：]/g, '').trim();
                 let content = "";
-                
-                // 簡易パース: 2番目のspanを名前、それ以降を内容とする
-                if(spans.length >= 2) {
-                    name = spans[1].innerText.replace(/[:：]/g, '').trim();
-                    for(let i=2; i<spans.length; i++) content += spans[i].innerText;
-                }
+                for(let i=2; i<spans.length; i++) content += spans[i].innerText;
 
-                if (!content) return;
+                // Simple check if this name is relevant (PC or KPC) or new
+                // Filter out system messages if name is empty
+                if(!name) return;
 
-                // --- Dice Roll Detection (1d100<=XX) ---
-                if (content.match(/\d+d\d+/i) || content.match(/CCB/i)) {
-                    stats.dice++;
-                    
-                    if (content.includes("クリティカル") || content.includes("決定的成功")) stats.critical++;
-                    if (content.includes("ファンブル") || content.includes("致命的失敗")) stats.fumble++;
-                    if (content.includes("成功")) stats.success++;
-                    if (content.includes("失敗")) stats.failure++;
+                const st = getStats(name);
 
-                    // Skill Usage: 【技能名】
-                    const skillMatch = content.match(/【(.*?)】/);
-                    if (skillMatch) {
-                        const skill = skillMatch[1];
-                        if (!stats.skills[name]) stats.skills[name] = {};
-                        stats.skills[name][skill] = (stats.skills[name][skill] || 0) + 1;
+                // --- SAN Check ---
+                // "sanc" or "SAN" and arrow "->" "→"
+                // e.g. 1d100<=50 ... 50 -> 45
+                if (content.match(/SAN/i) && content.match(/[→>]/)) {
+                    // Extract new value at end of string usually
+                    const matches = content.match(/(\d+)\s*[→>]\s*(\d+)/);
+                    if(matches) {
+                        const newVal = parseInt(matches[2]);
+                        st.sanHistory.push({ x: lineIndex, y: newVal });
+                        st.currentSan = newVal;
                     }
                 }
 
-                // --- SAN Check Loss (1d3 -> 2 等) ---
-                // "sanc" が含まれ、かつ減少量が出ている行
-                // 例: ... ＞ 1d3 ＞ 2
-                if (content.toLowerCase().includes("sanc") || content.includes("SAN")) {
-                    const lossMatch = content.match(/＞\s*(\d+)\s*$/); // 行末の数字を減少量とみなす
-                    if (lossMatch) {
-                        const loss = parseInt(lossMatch[1]);
-                        if (!stats.sanLoss[name]) stats.sanLoss[name] = 0;
-                        stats.sanLoss[name] += loss;
+                // --- Dice Roll ---
+                if (content.match(/\d+d\d+/i) || content.match(/CCB/i)) {
+                    st.dice++;
+                    if (content.includes("クリティカル") || content.includes("決定的成功")) st.crit++;
+                    if (content.includes("ファンブル") || content.includes("致命的失敗")) st.fumb++;
+                    if (content.includes("成功")) st.succ++;
+                    if (content.includes("失敗")) st.fail++;
+
+                    const skillMatch = content.match(/【(.*?)】/);
+                    if (skillMatch) {
+                        const skill = skillMatch[1];
+                        st.skills[skill] = (st.skills[skill] || 0) + 1;
                     }
                 }
             });
 
-            renderAnalysisResult(stats, pcName, kpcName);
+            // Filter out characters with very little activity (likely noise or NPCs if desired, but here we show all found)
+            // Or prioritize PC/KPC
+            renderCharacterStats(charStats, pcName, kpcName);
         }
 
-        function renderAnalysisResult(stats, pcName, kpcName) {
+        function renderCharacterStats(charStats, pcName, kpcName) {
+            const container = document.getElementById('analysisContent');
+            container.innerHTML = "";
             document.getElementById('analysisEmpty').style.display = 'none';
             document.getElementById('analysisResult').style.display = 'block';
 
-            document.getElementById('stDiceCount').textContent = stats.dice;
-            document.getElementById('stCritCount').textContent = stats.critical;
-            document.getElementById('stFumbleCount').textContent = stats.fumble;
-            document.getElementById('stMsgCount').textContent = stats.lines;
-
-            const tbody = document.getElementById('stDetailBody');
-            tbody.innerHTML = "";
-
-            // Helper to add row
-            const addRow = (label, value) => {
-                tbody.innerHTML += `<tr><td>${label}</td><td class="stat-val">${value}</td></tr>`;
-            };
-
-            // Success Rate
-            const totalCheck = stats.success + stats.failure;
-            const rate = totalCheck > 0 ? Math.round((stats.success / totalCheck) * 100) : 0;
-            addRow("成功率 (成功/判定)", `${rate}% (${stats.success}/${totalCheck})`);
-
-            // SAN Loss
-            let sanText = "";
-            for (const [name, loss] of Object.entries(stats.sanLoss)) {
-                // 名前がPC/KPCに含まれる、あるいは近い場合のみ表示（雑音排除のため）
-                if (name.includes(pcName) || name.includes(kpcName) || pcName.includes(name) || kpcName.includes(name)) {
-                    sanText += `${name}: -${loss}\n`;
-                }
-            }
-            if(!sanText) sanText = "変動なし/検出不可";
-            addRow("SAN減少合計", sanText.replace(/\n/g, '<br>'));
-
-            // Skill Ranking (Top 3)
-            let allSkills = [];
-            for (const charSkills of Object.values(stats.skills)) {
-                for (const [skill, count] of Object.entries(charSkills)) {
-                    allSkills.push({name: skill, count: count});
-                }
-            }
-            // 合算
-            const skillMap = {};
-            allSkills.forEach(s => { skillMap[s.name] = (skillMap[s.name] || 0) + s.count; });
-            const sortedSkills = Object.entries(skillMap).sort((a,b)=>b[1]-a[1]).slice(0, 5);
+            // Identify Target Chars
+            const targets = [pcName, kpcName];
             
-            const skillText = sortedSkills.map(s => `${s[0]}(${s[1]})`).join(', ');
-            addRow("頻出技能", skillText || "なし");
+            // Loop through PC, KPC first, then others
+            const sortedKeys = Object.keys(charStats).sort((a,b) => {
+                const aScore = (a === pcName ? 2 : (a === kpcName ? 1 : 0));
+                const bScore = (b === pcName ? 2 : (b === kpcName ? 1 : 0));
+                return bScore - aScore;
+            });
 
-            // Memo output
-            const memoText = `[ログ解析結果]
-総発言数: ${stats.lines}
-ダイスロール回数: ${stats.dice}
-クリティカル: ${stats.critical} / ファンブル: ${stats.fumble}
-成功率: ${rate}% (${stats.success}成功 / ${stats.failure}失敗)
+            sortedKeys.forEach((name, idx) => {
+                const st = charStats[name];
+                if(st.dice === 0 && st.sanHistory.length === 0) return; // Skip empty
 
-【SAN値減少合計】
-${sanText.trim()}
+                const isTarget = targets.includes(name);
+                const color = (name === pcName) ? '#88ccff' : (name === kpcName ? '#ff8888' : '#aaa');
+                
+                // Create Card
+                const card = document.createElement('div');
+                card.className = 'char-analysis-card';
+                card.style.borderColor = color;
 
-【よく使った技能】
-${skillText}
-`;
-            document.getElementById('inpAnalysisMemo').value = memoText;
+                // Title
+                let titleHtml = `<div class="char-analysis-header"><span style="color:${color}">${name}</span>`;
+                if(st.currentSan !== null) titleHtml += `<span style="font-size:0.9rem;">Final SAN: ${st.currentSan}</span>`;
+                titleHtml += `</div>`;
+
+                // Summary
+                const totalCheck = st.succ + st.fail;
+                const rate = totalCheck > 0 ? Math.round((st.succ/totalCheck)*100) : 0;
+                
+                let summaryHtml = `
+                    <div class="summary-grid">
+                        <div class="sum-item"><div class="sum-label">ROLLS</div><div class="sum-val">${st.dice}</div></div>
+                        <div class="sum-item"><div class="sum-label">CRIT</div><div class="sum-val" style="color:#8bc34a">${st.crit}</div></div>
+                        <div class="sum-item"><div class="sum-label">FUMB</div><div class="sum-val" style="color:#f44336">${st.fumb}</div></div>
+                        <div class="sum-item"><div class="sum-label">RATE</div><div class="sum-val">${rate}%</div></div>
+                    </div>
+                `;
+
+                // Graph Canvas
+                const canvasId = `chart-${idx}`;
+                let graphHtml = "";
+                if(st.sanHistory.length > 0) {
+                    graphHtml = `<div class="graph-container"><canvas id="${canvasId}"></canvas></div>`;
+                } else {
+                    graphHtml = `<div style="font-size:0.7rem; color:#666; text-align:center; margin-bottom:10px;">(SAN変動なし)</div>`;
+                }
+
+                // Skill Ranking
+                const topSkills = Object.entries(st.skills).sort((a,b)=>b[1]-a[1]).slice(0, 5);
+                let skillHtml = "";
+                if(topSkills.length > 0) {
+                    skillHtml = `<div class="skill-rank-box"><div style="margin-bottom:5px; font-family:'Cinzel'; font-size:0.7rem;">TOP SKILLS</div>`;
+                    const maxCount = topSkills[0][1];
+                    topSkills.forEach(s => {
+                        const width = Math.max((s[1] / maxCount) * 100, 5);
+                        skillHtml += `
+                            <div class="rank-row">
+                                <span style="flex:1;">${s[0]}</span>
+                                <span style="width:30px; text-align:right;">${s[1]}</span>
+                            </div>
+                            <div class="rank-bar" style="width:${width}%; background:${color}"></div>
+                        `;
+                    });
+                    skillHtml += `</div>`;
+                }
+
+                card.innerHTML = titleHtml + summaryHtml + graphHtml + skillHtml;
+                container.appendChild(card);
+
+                // Draw Graph if exists
+                if(st.sanHistory.length > 0) {
+                    const ctx = document.getElementById(canvasId).getContext('2d');
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            datasets: [{
+                                label: 'SAN',
+                                data: st.sanHistory,
+                                borderColor: color,
+                                backgroundColor: color,
+                                tension: 0.1,
+                                borderDash: [5, 5],
+                                pointRadius: 3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            scales: {
+                                x: { type: 'linear', display: false }, // Time axis hidden
+                                y: { beginAtZero: false, suggestedMin: 0, suggestedMax: 100, grid: { color: '#333'} }
+                            },
+                            plugins: { legend: { display: false } }
+                        }
+                    });
+                }
+            });
         }
 
     </script>
