@@ -5,266 +5,400 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>INVESTIGATOR GROWTH LOG</title>
     
+    <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&family=Noto+Sans+JP:wght@300;500;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
+    <!-- Data Script -->
     <script src="./data/data.js"></script>
 
     <style>
-        /* --- CORE VARS --- */
+        /* --- 1. CORE VARIABLES --- */
         :root {
-            --theme-color: #d4b346;
-            --bg-color: #0b0b0b;
-            --panel-bg: #111;
-            --border-color: #333;
+            --theme: #d4b346;
+            --bg-dark: #0a0a0a;
+            --panel: rgba(20, 20, 20, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --text-main: #e0e0e0;
+            --text-dim: #888;
             
-            /* Skill Categories */
-            --cat-combat: #ff6b6b;
-            --cat-search: #4ecdc4;
-            --cat-action: #ffe66d;
-            --cat-nego:   #ff9f43;
-            --cat-know:   #a29bfe;
-            --cat-other:  #888;
+            /* Category Colors */
+            --c-combat: #ff6b6b;
+            --c-search: #4ecdc4;
+            --c-action: #ffe66d;
+            --c-nego:   #ff9f43;
+            --c-know:   #a29bfe;
+            --c-other:  #a5b1c2;
         }
 
-        /* --- BASE --- */
+        /* --- 2. BASE STYLES --- */
+        * { box-sizing: border-box; }
         body { 
-            background-color: var(--bg-color); 
-            background-image: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.85)), url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='1' cy='1' r='1' fill='%23222'/%3E%3C/svg%3E");
-            color: #ccc; font-family: 'Shippori Mincho', serif; 
-            margin: 0; padding: 0; height: 100vh; overflow: hidden;
+            background-color: var(--bg-dark); 
+            color: var(--text-main); 
+            font-family: 'Shippori Mincho', serif; 
+            margin: 0; padding: 0; 
+            height: 100vh; overflow: hidden;
         }
 
-        /* --- LAYOUT --- */
-        .layout-container {
+        /* Dynamic Background */
+        #bgLayer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-size: cover; background-position: center;
+            opacity: 0.15; filter: blur(20px) saturate(0.5); z-index: -1;
+            transition: background-image 1s ease;
+        }
+        #bgOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, rgba(0,0,0,0.4), #000);
+            z-index: -1;
+        }
+
+        /* Layout */
+        .layout {
             display: grid;
-            grid-template-columns: 260px 1fr;
-            grid-template-rows: 200px 1fr;
+            grid-template-columns: 280px 1fr;
+            grid-template-rows: auto 1fr;
             height: 100vh; width: 100%;
+            backdrop-filter: blur(10px);
         }
 
-        /* SIDEBAR */
+        /* --- 3. SIDEBAR --- */
         .sidebar {
             grid-row: 1 / 3;
-            background: rgba(10,10,10,0.98); border-right: 1px solid var(--border-color);
-            display: flex; flex-direction: column; gap: 15px; padding: 15px;
+            background: rgba(10, 10, 10, 0.85);
+            border-right: 1px solid var(--border);
+            display: flex; flex-direction: column; gap: 20px; padding: 20px;
             overflow-y: auto; z-index: 20;
+            box-shadow: 5px 0 20px rgba(0,0,0,0.5);
         }
         .sidebar::-webkit-scrollbar { width: 4px; }
-        .sidebar::-webkit-scrollbar-thumb { background: #444; }
+        .sidebar::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
 
-        /* TOP AREA */
-        .top-area {
-            grid-column: 2 / 3; grid-row: 1 / 2;
-            background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-color);
-            padding: 10px 20px; display: grid; grid-template-columns: 2fr 1fr; gap: 20px;
+        .app-title {
+            font-family: 'Cinzel'; font-size: 1.4rem; color: var(--theme);
+            text-align: center; text-shadow: 0 0 10px rgba(212, 179, 70, 0.4);
+            letter-spacing: 2px; margin-bottom: 10px;
+            border-bottom: 1px solid var(--border); padding-bottom: 15px;
         }
 
-        /* MAIN CONTENT */
-        .main-area {
-            grid-column: 2 / 3; grid-row: 2 / 3;
-            padding: 0; overflow: hidden; position: relative;
-            background: #0e0e0e;
-        }
-
-        /* --- COMPONENTS --- */
-        .app-logo {
-            font-family: 'Cinzel'; font-size: 1.1rem; color: var(--theme-color); text-align: center;
-            border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 5px; letter-spacing: 2px;
-        }
+        /* Character Profile */
         .char-card {
-            text-align: center; background: #161616; padding: 10px; border-radius: 4px; border: 1px solid #333;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 8px; padding: 15px;
+            transition: 0.3s;
+        }
+        .char-card:hover { border-color: var(--theme); box-shadow: 0 0 15px rgba(212, 179, 70, 0.1); }
+        
+        .char-icon-wrapper {
+            position: relative; width: 100px; height: 100px; margin: 0 auto 10px;
         }
         .char-img {
-            width: 70px; height: 70px; border-radius: 50%; object-fit: cover;
-            border: 2px solid var(--theme-color); margin-bottom: 5px; background: #000;
+            width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
+            border: 3px solid var(--theme); background: #000;
+            transition: 0.5s;
         }
+        
         .char-select {
-            width: 100%; background: #000; color: #eee; border: 1px solid #444;
-            padding: 4px; font-size: 0.8rem; font-family: 'Shippori Mincho';
+            width: 100%; background: #111; color: #eee;
+            border: 1px solid #444; padding: 6px; border-radius: 4px;
+            font-family: 'Shippori Mincho'; cursor: pointer;
+        }
+        .char-select:focus { outline: none; border-color: var(--theme); }
+
+        /* Stats Panel */
+        .stats-panel {
+            background: rgba(0, 0, 0, 0.4); border-radius: 6px; padding: 12px;
+            border: 1px solid var(--border);
+        }
+        .panel-head {
+            font-family: 'Cinzel'; font-size: 0.8rem; color: var(--text-dim);
+            border-bottom: 1px dashed #444; margin-bottom: 8px; padding-bottom: 4px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        
+        .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; }
+        .kpi-item { text-align: center; background: rgba(255,255,255,0.02); padding: 5px; border-radius: 4px; }
+        .kpi-label { font-size: 0.6rem; color: #888; font-family: 'Cinzel'; display: block; }
+        .kpi-val { font-size: 1.1rem; color: var(--theme); font-weight: bold; font-family: 'Cinzel'; }
+
+        /* Skill Ranking */
+        .rank-list { list-style: none; padding: 0; margin: 0; font-size: 0.8rem; max-height: 200px; overflow-y: auto; }
+        .rank-list::-webkit-scrollbar { width: 2px; }
+        .rank-row {
+            display: flex; justify-content: space-between; padding: 4px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .rank-name { color: #ccc; }
+        .rank-num { color: var(--theme); font-family: 'Cinzel'; }
+
+        /* --- 4. TOP AREA (Graph & Filter) --- */
+        .top-area {
+            grid-column: 2 / 3; grid-row: 1 / 2;
+            padding: 20px 30px;
+            display: grid; grid-template-columns: 2fr 1fr; gap: 30px;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid var(--border);
         }
 
-        /* Stats Box */
-        .stats-box {
-            background: rgba(255,255,255,0.02); border: 1px solid #333; border-radius: 4px; padding: 10px;
+        .chart-box { position: relative; height: 180px; width: 100%; }
+        .chart-title {
+            position: absolute; top: 0; left: 0; 
+            font-family: 'Cinzel'; font-size: 0.8rem; color: #666;
+            background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 2px;
         }
-        .stats-header { font-family: 'Cinzel'; font-size: 0.75rem; color: #888; border-bottom: 1px dashed #333; margin-bottom: 6px; }
-        .dice-row { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 0.8rem; }
-        .dice-val { font-family: 'Cinzel'; font-weight: bold; }
-        .val-crit { color: #66bb6a; }
-        .val-fumb { color: #ff6b6b; }
 
-        .rank-list { list-style: none; padding: 0; margin: 0; font-size: 0.75rem; }
-        .rank-item { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #222; }
-        .rank-count { color: var(--theme-color); font-family: 'Cinzel'; }
-
-        /* Chart & Insanity */
-        .chart-wrapper { position: relative; width: 100%; height: 100%; min-height: 160px; }
-        .insanity-box { 
-            background: rgba(255,20,20,0.03); border: 1px solid #333; padding: 8px; 
-            overflow-y: auto; font-size: 0.8rem; border-radius: 4px; height: 160px;
+        /* Insanity Log */
+        .insanity-container {
+            display: flex; flex-direction: column; height: 180px;
+            background: rgba(20, 0, 0, 0.3); border: 1px solid rgba(100, 50, 50, 0.5);
+            border-radius: 6px; overflow: hidden;
         }
-        .insanity-row { margin-bottom: 5px; padding-bottom: 5px; border-bottom: 1px dashed #422; }
-        .ins-date { font-family: 'Cinzel'; color: #855; font-size: 0.7rem; }
-        .ins-title { color: #d88; }
+        .ins-header {
+            background: rgba(50, 0, 0, 0.4); padding: 5px 10px;
+            font-family: 'Cinzel'; font-size: 0.8rem; color: #ff8888;
+            border-bottom: 1px solid rgba(100, 50, 50, 0.5);
+        }
+        .ins-list { overflow-y: auto; padding: 5px 10px; flex: 1; }
+        .ins-list::-webkit-scrollbar { width: 4px; }
+        .ins-list::-webkit-scrollbar-thumb { background: #522; }
+        .ins-item {
+            font-size: 0.85rem; padding: 6px 0; border-bottom: 1px dashed rgba(100, 50, 50, 0.3);
+            animation: fadeIn 0.5s ease;
+        }
+        .ins-meta { font-size: 0.7rem; color: #a66; font-family: 'Cinzel'; }
+        .ins-text { color: #ecc; text-shadow: 0 0 5px rgba(255, 0, 0, 0.2); }
 
-        /* --- MATRIX TABLE --- */
+        /* --- 5. MAIN AREA (Toolbar & Matrix) --- */
+        .main-area {
+            grid-column: 2 / 3; grid-row: 2 / 3;
+            display: flex; flex-direction: column;
+            overflow: hidden; background: rgba(0,0,0,0.4);
+        }
+
+        /* Toolbar */
+        .matrix-toolbar {
+            padding: 10px 30px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border);
+        }
+        
+        .filter-group { display: flex; gap: 5px; }
+        .filter-btn {
+            background: transparent; border: 1px solid #444; color: #888;
+            padding: 4px 12px; border-radius: 15px; cursor: pointer;
+            font-size: 0.8rem; transition: 0.2s; font-family: 'Noto Sans JP';
+        }
+        .filter-btn:hover { border-color: #666; color: #ccc; }
+        .filter-btn.active { 
+            background: var(--theme); color: #000; border-color: var(--theme); 
+            font-weight: bold; box-shadow: 0 0 10px rgba(212, 179, 70, 0.3);
+        }
+        .filter-btn.cat-combat.active { background: var(--c-combat); border-color: var(--c-combat); }
+        .filter-btn.cat-search.active { background: var(--c-search); border-color: var(--c-search); }
+        .filter-btn.cat-action.active { background: var(--c-action); border-color: var(--c-action); }
+        .filter-btn.cat-nego.active   { background: var(--c-nego);   border-color: var(--c-nego); }
+        .filter-btn.cat-know.active   { background: var(--c-know);   border-color: var(--c-know); }
+
+        .toggle-wrapper { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #aaa; cursor: pointer; }
+        .toggle-switch {
+            width: 36px; height: 20px; background: #333; border-radius: 10px;
+            position: relative; transition: 0.3s;
+        }
+        .toggle-switch::after {
+            content:''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
+            background: #888; border-radius: 50%; transition: 0.3s;
+        }
+        input[type="checkbox"]:checked + .toggle-switch { background: var(--theme); }
+        input[type="checkbox"]:checked + .toggle-switch::after { left: 18px; background: #fff; }
+
+        /* Matrix Table */
         .matrix-scroll {
-            width: 100%; height: 100%; overflow: auto;
+            flex: 1; overflow: auto; width: 100%;
+            /* Scrollbar */
             scrollbar-width: thin; scrollbar-color: #555 #111;
         }
-        .matrix-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
-        .matrix-scroll::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+        .matrix-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+        .matrix-scroll::-webkit-scrollbar-corner { background: #111; }
+        .matrix-scroll::-webkit-scrollbar-thumb { background: #555; border: 2px solid #111; border-radius: 5px; }
         .matrix-scroll::-webkit-scrollbar-track { background: #111; }
 
         table.growth-matrix {
             border-collapse: separate; border-spacing: 0;
-            width: max-content;
-            font-size: 0.8rem;
-            background: #0e0e0e;
+            width: max-content; min-width: 100%;
+            font-size: 0.85rem;
         }
 
-        /* Headers */
-        .growth-matrix thead th {
-            position: sticky; top: 0; z-index: 15;
-            background: #111; color: #aaa; 
-            border-bottom: 1px solid #444; border-right: 1px solid #222;
-            padding: 4px; font-weight: normal; font-family: 'Cinzel', sans-serif;
-            height: 100px; vertical-align: bottom;
+        /* --- STICKY HEADERS --- */
+        thead th {
+            position: sticky; top: 0; z-index: 10;
+            background: #161616; color: #aaa;
+            border-bottom: 1px solid #444; border-right: 1px solid #333;
+            padding: 0; height: 140px; vertical-align: bottom;
+            transition: 0.2s;
         }
+        thead th:hover { background: #222; }
 
-        /* Sticky Columns Configuration */
-        /* Col 1: Skill Name */
-        .growth-matrix .col-skill {
-            position: sticky; left: 0; z-index: 11;
-            background: #161616; border-right: 1px solid #444; width: 140px;
+        /* --- STICKY COLUMNS --- */
+        /* Skill Name */
+        th.col-skill, td.col-skill {
+            position: sticky; left: 0; z-index: 12;
+            background: #1a1a1a; border-right: 1px solid #444; width: 160px;
         }
-        /* Col 2: Init */
-        .growth-matrix .col-base {
-            position: sticky; left: 140px; z-index: 11;
-            background: #1a1a1a; border-right: 1px solid #333; width: 40px;
-        }
-        /* Col 3: Job */
-        .growth-matrix .col-job {
-            position: sticky; left: 180px; z-index: 11;
-            background: #1a1a1a; border-right: 1px solid #333; width: 40px;
-        }
-        /* Col 4: Interest */
-        .growth-matrix .col-interest {
-            position: sticky; left: 220px; z-index: 11;
-            background: #1a1a1a; border-right: 1px solid #333; width: 40px;
-        }
-        /* Col 5: Other */
-        .growth-matrix .col-other {
-            position: sticky; left: 260px; z-index: 11;
-            background: #1a1a1a; border-right: 2px solid #555; width: 40px;
-        }
+        thead th.col-skill { z-index: 15; background: #222; border-bottom: 2px solid #555; color: var(--theme); }
 
-        /* Header Sticky High Z-Index */
-        .growth-matrix thead th.col-skill { z-index: 20; background: #222; color: #fff; border-bottom: 2px solid #555; }
-        .growth-matrix thead th.col-base,
-        .growth-matrix thead th.col-job,
-        .growth-matrix thead th.col-interest,
-        .growth-matrix thead th.col-other {
-            z-index: 20; background: #222; color: #888; border-bottom: 2px solid #555; font-size: 0.65rem;
-        }
+        /* Base Values (4 columns) */
+        /* init:160+40*0=160, job:200, int:240, oth:280 */
+        th.col-base, td.col-base { position: sticky; left: 160px; z-index: 11; width: 40px; border-right: 1px solid #333; background: #1e1e1e; }
+        th.col-job,  td.col-job  { position: sticky; left: 200px; z-index: 11; width: 40px; border-right: 1px solid #333; background: #1e1e1e; }
+        th.col-int,  td.col-int  { position: sticky; left: 240px; z-index: 11; width: 40px; border-right: 1px solid #333; background: #1e1e1e; }
+        th.col-oth,  td.col-oth  { position: sticky; left: 280px; z-index: 11; width: 40px; border-right: 2px solid #555; background: #1e1e1e; }
 
-        /* Cells */
-        .skill-name-cell {
-            text-align: left; padding: 4px 8px;
-            border-left: 3px solid transparent; font-weight: normal; color: #ccc;
+        thead th[class*="col-"] { z-index: 15; background: #222; border-bottom: 2px solid #555; color: #888; font-size: 0.7rem; font-family:'Cinzel'; }
+
+        /* --- CELLS --- */
+        .skill-cell-content {
+            display: flex; align-items: center; height: 36px; padding: 0 10px;
+            border-left: 4px solid transparent; font-weight: 500;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            border-bottom: 1px solid #222;
         }
-        .val-cell {
-            text-align: center; color: #666;
-            font-family: 'Cinzel'; border-bottom: 1px solid #222; font-size: 0.75rem;
-        }
-        .val-cell.has-val { color: #eee; }
+        .skill-icon { font-size: 1rem; margin-right: 6px; opacity: 0.7; }
 
-        .growth-val-cell {
-            min-width: 30px; text-align: center; border-bottom: 1px solid #222; border-right: 1px solid #222;
-            color: #444;
+        /* Category Styles */
+        .cat-combat .skill-cell-content { border-left-color: var(--c-combat); color: #ffdada; }
+        .cat-search .skill-cell-content { border-left-color: var(--c-search); color: #daffff; }
+        .cat-action .skill-cell-content { border-left-color: var(--c-action); color: #ffffda; }
+        .cat-nego   .skill-cell-content { border-left-color: var(--c-nego);   color: #ffeeda; }
+        .cat-know   .skill-cell-content { border-left-color: var(--c-know);   color: #eaddff; }
+        .cat-other  .skill-cell-content { border-left-color: var(--c-other);  color: #ddd; }
+
+        /* Values */
+        td.val-base { text-align: center; color: #666; font-family: 'Cinzel'; border-bottom: 1px solid #222; }
+        td.val-base.has-val { color: #eee; }
+
+        td.val-growth {
+            min-width: 40px; text-align: center; color: #444;
+            border-bottom: 1px solid #222; border-right: 1px solid #222;
+            transition: 0.1s;
         }
         
-        /* Category Colors */
-        .cat-combat .skill-name-cell { border-left-color: var(--cat-combat); }
-        .cat-search .skill-name-cell { border-left-color: var(--cat-search); }
-        .cat-action .skill-name-cell { border-left-color: var(--cat-action); }
-        .cat-nego   .skill-name-cell { border-left-color: var(--cat-nego); }
-        .cat-know   .skill-name-cell { border-left-color: var(--cat-know); }
-        .cat-other  .skill-name-cell { border-left-color: var(--cat-other); }
-
-        /* Row Stripes */
-        .growth-matrix tbody tr:nth-child(even) td:not([class*="col-"]) { background: rgba(255,255,255,0.02); }
-        .growth-matrix tbody tr:hover td { background: rgba(255,255,255,0.05); color: #fff; }
-
-        /* Highlight Growth */
-        .growth-val-cell.grown {
-            color: #fff; font-weight: bold; background: rgba(212, 179, 70, 0.2) !important;
+        /* Effects */
+        .grown { 
+            color: #fff !important; font-weight: bold; 
+            background: rgba(212, 179, 70, 0.2) !important;
+            box-shadow: inset 0 0 8px rgba(212, 179, 70, 0.3);
         }
-        /* Highlight Total */
-        .growth-val-cell.total-col {
-            color: #d4b346; font-weight: bold; border-left: 1px solid #444;
+        .total-col {
+            color: var(--theme); font-weight: bold; border-left: 2px solid #444; background: rgba(0,0,0,0.3);
         }
 
-        /* Spacer Row */
-        .spacer-row td {
-            height: 15px; background: #000; border: none;
-        }
+        /* Cross Highlight Logic */
+        tbody tr:hover td { background: rgba(255,255,255,0.03); }
+        /* Using JS to highlight column on hover */
+        .col-hover { background: rgba(255,255,255,0.03) !important; }
 
-        /* Vertical Header Text */
-        .v-text {
+        /* Vertical Text */
+        .v-header {
             writing-mode: vertical-rl; transform: rotate(180deg);
-            white-space: nowrap; text-align: left; padding: 4px 2px;
-            max-height: 90px; margin: 0 auto; font-size: 0.75rem;
+            white-space: nowrap; text-align: left; padding: 10px 4px;
+            max-height: 130px; margin: 0 auto; font-size: 0.75rem;
+            cursor: help;
         }
+
+        /* Spacer */
+        .spacer-row td { height: 10px; background: rgba(0,0,0,0.2); border: none; }
+
+        /* TOOLTIP */
+        #tooltip {
+            position: fixed; pointer-events: none; opacity: 0; z-index: 1000;
+            background: rgba(10, 10, 10, 0.95); border: 1px solid var(--theme);
+            padding: 10px; border-radius: 4px; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            transition: opacity 0.2s; color: #eee; font-size: 0.8rem;
+            min-width: 150px;
+        }
+        #tooltip h4 { margin: 0 0 5px 0; color: var(--theme); font-family: 'Shippori Mincho'; border-bottom: 1px solid #444; padding-bottom: 3px; }
+        #tooltip p { margin: 2px 0; color: #aaa; font-family: 'Cinzel'; font-size: 0.75rem; }
+
+        /* ANIMATION */
+        @keyframes fadeIn { from{opacity:0; transform:translateY(5px);} to{opacity:1; transform:translateY(0);} }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
         #loadingOverlay {
             position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.9); z-index: 999;
+            background: rgba(0,0,0,0.9); z-index: 9999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: var(--theme-color); font-family: 'Cinzel';
+            color: var(--theme); font-family: 'Cinzel'; backdrop-filter: blur(5px);
         }
+        .hidden { display: none !important; }
+
     </style>
 </head>
 <body>
 
+<!-- BACKGROUND -->
+<div id="bgLayer"></div>
+<div id="bgOverlay"></div>
+
+<!-- LOADING -->
 <div id="loadingOverlay">
-    <span class="material-icons-round" style="font-size:3rem; animation:spin 1s linear infinite;">autorenew</span>
-    <span id="loadingText" style="margin-top:10px;">CONNECTING...</span>
+    <span class="material-icons-round" style="font-size:3rem; animation:spin 1s linear infinite; margin-bottom:15px;">autorenew</span>
+    <span id="loadingText">INITIALIZING...</span>
 </div>
 
-<div class="layout-container">
+<!-- TOOLTIP -->
+<div id="tooltip"></div>
+
+<div class="layout">
     
     <!-- SIDEBAR -->
     <div class="sidebar">
-        <div class="app-logo">INVESTIGATOR LOG</div>
-        
-        <!-- Profile -->
-        <div class="char-card">
-            <img id="charIcon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" class="char-img">
-            <select id="charSelect" class="char-select">
-                <option value="">-- SELECT CHARACTER --</option>
-            </select>
-            <div id="plName" style="color:#666; font-size:0.7rem; margin-top:5px; font-family:'Cinzel';">PLAYER NAME</div>
+        <div>
+            <div class="app-title">INVESTIGATOR<br>GROWTH LOG</div>
+            
+            <div class="char-card">
+                <div class="char-icon-wrapper">
+                    <img id="charIcon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" class="char-img">
+                </div>
+                <select id="charSelect" class="char-select">
+                    <option value="">-- SELECT --</option>
+                </select>
+                <div id="plName" style="color:#888; font-size:0.7rem; margin-top:8px; font-family:'Cinzel'; letter-spacing:1px;">PLAYER NAME</div>
+            </div>
         </div>
 
-        <!-- Dice Stats -->
-        <div class="stats-box">
-            <div class="stats-header">DICE STATISTICS</div>
-            <div class="dice-row"><span class="dice-label">TOTAL ROLL</span><span class="dice-val" id="statTotal">0</span></div>
-            <div class="dice-row"><span class="dice-label">CRITICAL</span><span class="dice-val val-crit" id="statCrit">0</span></div>
-            <div class="dice-row"><span class="dice-label">FUMBLE</span><span class="dice-val val-fumb" id="statFumb">0</span></div>
-            <div class="dice-row"><span class="dice-label">SUCCESS RATE</span><span class="dice-val" id="statRate">0%</span></div>
+        <!-- Stats -->
+        <div class="stats-panel">
+            <div class="panel-head"><span>GROWTH KPI</span><span class="material-icons-round" style="font-size:1rem;">query_stats</span></div>
+            <div class="kpi-grid">
+                <div class="kpi-item">
+                    <span class="kpi-label">SCENARIOS</span>
+                    <span class="kpi-val count-up" id="kpiScenarios">0</span>
+                </div>
+                <div class="kpi-item">
+                    <span class="kpi-label">TOTAL EXP</span>
+                    <span class="kpi-val count-up" id="kpiTotalGrowth">0</span>
+                </div>
+            </div>
+            
+            <div class="panel-head" style="margin-top:10px;"><span>DICE STATS</span><span class="material-icons-round" style="font-size:1rem;">casino</span></div>
+            <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:5px;">
+                <span style="color:#aaa;">TOTAL</span><span style="color:#fff; font-family:'Cinzel';" id="statTotal">0</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:5px;">
+                <span style="color:#aaa;">CRITICAL</span><span style="color:#66bb6a; font-family:'Cinzel';" id="statCrit">0</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:0.8rem;">
+                <span style="color:#aaa;">FUMBLE</span><span style="color:#ff6b6b; font-family:'Cinzel';" id="statFumb">0</span>
+            </div>
         </div>
 
-        <!-- Skill Ranking -->
-        <div class="stats-box" style="flex:1; overflow:hidden; display:flex; flex-direction:column;">
-            <div class="stats-header">TOP USED SKILLS</div>
-            <ul id="rankList" class="rank-list" style="overflow-y:auto; flex:1;">
-                <li style="color:#444; text-align:center;">NO DATA</li>
+        <!-- Ranking -->
+        <div class="stats-panel" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
+            <div class="panel-head"><span>TOP SKILLS</span><span class="material-icons-round" style="font-size:1rem;">trending_up</span></div>
+            <ul id="rankList" class="rank-list">
+                <li style="text-align:center; color:#555; padding:10px;">NO DATA</li>
             </ul>
         </div>
     </div>
@@ -272,34 +406,57 @@
     <!-- TOP AREA -->
     <div class="top-area">
         <!-- Chart -->
-        <div style="position:relative;">
-            <div style="position:absolute; top:0; left:0; font-family:'Cinzel'; font-size:0.8rem; color:#888;">SANITY HISTORY</div>
-            <div class="chart-wrapper">
+        <div class="chart-box">
+            <div class="chart-title">SANITY HISTORY</div>
+            <div style="width:100%; height:100%;">
                 <canvas id="sanChart"></canvas>
             </div>
         </div>
-        <!-- Insanity List -->
-        <div style="display:flex; flex-direction:column;">
-            <div style="font-family:'Cinzel'; font-size:0.8rem; color:#e88; margin-bottom:5px;">INSANITY HISTORY</div>
-            <div id="insanityList" class="insanity-box">
-                <div style="color:#522; text-align:center;">NO RECORD</div>
+        <!-- Insanity -->
+        <div class="insanity-container">
+            <div class="ins-header">
+                <span class="material-icons-round" style="font-size:0.9rem; vertical-align:middle;">psychology</span> INSANITY RECORD
+            </div>
+            <div id="insanityList" class="ins-list">
+                <div style="text-align:center; color:#522; margin-top:20px;">NO RECORD</div>
             </div>
         </div>
     </div>
 
-    <!-- MAIN AREA (MATRIX) -->
+    <!-- MAIN AREA -->
     <div class="main-area">
+        
+        <!-- Toolbar -->
+        <div class="matrix-toolbar">
+            <div class="filter-group">
+                <button class="filter-btn active" data-cat="all">ALL</button>
+                <button class="filter-btn cat-combat" data-cat="combat">戦闘</button>
+                <button class="filter-btn cat-search" data-cat="search">探索</button>
+                <button class="filter-btn cat-action" data-cat="action">行動</button>
+                <button class="filter-btn cat-nego"   data-cat="nego">交渉</button>
+                <button class="filter-btn cat-know"   data-cat="know">知識</button>
+                <button class="filter-btn" data-cat="other">他</button>
+            </div>
+            
+            <label class="toggle-wrapper">
+                <input type="checkbox" id="toggleGrowthOnly" style="display:none;">
+                <div class="toggle-switch"></div>
+                <span>成長のみ表示</span>
+            </label>
+        </div>
+
+        <!-- Table -->
         <div class="matrix-scroll">
             <table class="growth-matrix" id="matrixTable">
                 <thead>
                     <tr>
                         <th class="col-skill">SKILL</th>
-                        <th class="col-base"><span class="v-text">初期</span></th>
-                        <th class="col-job"><span class="v-text">職業</span></th>
-                        <th class="col-interest"><span class="v-text">興味</span></th>
-                        <th class="col-other"><span class="v-text">その他</span></th>
+                        <th class="col-base"><div class="v-header">初期</div></th>
+                        <th class="col-job"><div class="v-header">職業</div></th>
+                        <th class="col-int"><div class="v-header">興味</div></th>
+                        <th class="col-oth"><div class="v-header">他</div></th>
                         <!-- Scenarios appended here -->
-                        <th><span class="v-text">TOTAL</span></th>
+                        <th><div class="v-header" style="color:var(--theme);">TOTAL</div></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -311,28 +468,24 @@
 
 </div>
 
-<style> @keyframes spin { 100% { transform: rotate(360deg); } } </style>
-
+<!-- LOGIC -->
 <script type="module">
     import { loadFromCloud, monitorAuth, getScenariosForCharacter } from "./firestore.js";
 
-    // data.js の BASE_SKILLS を安全に取得
-    const BASE_SKILLS_DEF = (typeof window.BASE_SKILLS !== 'undefined') ? window.BASE_SKILLS : {
-        "目星": 25, "聞き耳": 25, "図書館": 25, "回避": "DEX*2", "こぶし（パンチ）": 50,
-        "応急手当": 30, "隠れる": 10, "忍び歩き": 10, "追跡": 10, "登攀": 40
-    };
+    const BASE_SKILLS_DEF = (typeof window.BASE_SKILLS !== 'undefined') ? window.BASE_SKILLS : {};
 
-    // Skill Categories
-    const SKILL_CATS = {
-        combat: ["回避", "キック", "組み付き", "こぶし", "パンチ", "頭突き", "投擲", "マーシャルアーツ", "拳銃", "サブマシンガン", "ショットガン", "マシンガン", "ライフル", "日本刀", "ナイフ"],
-        search: ["応急手当", "鍵開け", "隠す", "隠れる", "聞き耳", "忍び歩き", "写真術", "精神分析", "追跡", "登攀", "図書館", "目星"],
-        action: ["運転", "機械修理", "重機械操作", "乗馬", "水泳", "製作", "操縦", "跳躍", "電気修理", "ナビゲート", "変装"],
-        nego:   ["言いくるめ", "信用", "説得", "値切り", "母国語"],
-        know:   ["医学", "オカルト", "化学", "クトゥルフ神話", "芸術", "経理", "考古学", "コンピューター", "心理学", "人類学", "生物学", "地質学", "電子工学", "天文学", "博物学", "物理学", "法律", "薬学", "歴史"]
+    // Icons & Categories
+    const SKILL_CONFIG = {
+        combat: { icon: 'swords', list: ["回避", "キック", "組み付き", "こぶし", "パンチ", "頭突き", "投擲", "マーシャルアーツ", "拳銃", "サブマシンガン", "ショットガン", "マシンガン", "ライフル", "日本刀", "ナイフ"] },
+        search: { icon: 'search', list: ["応急手当", "鍵開け", "隠す", "隠れる", "聞き耳", "忍び歩き", "写真術", "精神分析", "追跡", "登攀", "図書館", "目星"] },
+        action: { icon: 'directions_run', list: ["運転", "機械修理", "重機械操作", "乗馬", "水泳", "製作", "操縦", "跳躍", "電気修理", "ナビゲート", "変装"] },
+        nego:   { icon: 'chat',   list: ["言いくるめ", "信用", "説得", "値切り", "母国語"] },
+        know:   { icon: 'school', list: ["医学", "オカルト", "化学", "クトゥルフ神話", "芸術", "経理", "考古学", "コンピューター", "心理学", "人類学", "生物学", "地質学", "電子工学", "天文学", "博物学", "物理学", "法律", "薬学", "歴史"] }
     };
 
     let allChars = {};
     let sanChart = null;
+    let currentMatrixData = null; // Store processed data for filtering
     const el = (id) => document.getElementById(id);
 
     // --- INITIALIZATION ---
@@ -342,202 +495,210 @@
             try {
                 allChars = await loadFromCloud();
                 renderCharSelect();
-                el('loadingOverlay').style.display = 'none';
+                el('loadingOverlay').classList.add('hidden');
             } catch(e) {
                 console.error(e);
-                el('loadingText').textContent = "DATA LOAD ERROR";
+                el('loadingText').textContent = "DATA ERROR";
             }
         }, () => {
             el('loadingText').textContent = "PLEASE LOGIN";
         });
+
+        // Event Listeners
+        el('charSelect').addEventListener('change', (e) => { if(e.target.value) loadCharacter(e.target.value); });
+        
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                renderMatrixTable();
+            });
+        });
+
+        el('toggleGrowthOnly').addEventListener('change', renderMatrixTable);
     };
 
     function renderCharSelect() {
         const sel = el('charSelect');
-        sel.innerHTML = '<option value="">-- SELECT --</option>';
-        Object.values(allChars)
-            .sort((a,b) => (a.name||"").localeCompare(b.name||""))
-            .forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c.id;
-                opt.textContent = c.name;
-                sel.appendChild(opt);
-            });
-        
-        sel.addEventListener('change', (e) => {
-            if(e.target.value) loadCharacter(e.target.value);
+        sel.innerHTML = '<option value="">-- SELECT CHARACTER --</option>';
+        Object.values(allChars).sort((a,b) => (a.name||"").localeCompare(b.name||"")).forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.name;
+            sel.appendChild(opt);
         });
     }
 
-    // --- MAIN LOADING LOGIC ---
+    // --- LOADING & PROCESSING ---
     async function loadCharacter(charId) {
-        el('loadingOverlay').style.display = 'flex';
+        const overlay = el('loadingOverlay');
+        overlay.classList.remove('hidden');
+        el('loadingText').textContent = "ANALYZING LOGS...";
+
         const char = allChars[charId];
         
-        // Setup Theme
-        const color = char.color || '#d4b346';
-        document.documentElement.style.setProperty('--theme-color', color);
-        el('charIcon').style.borderColor = color;
+        // 1. UI Theme Update
+        const themeColor = char.color || '#d4b346';
+        document.documentElement.style.setProperty('--theme', themeColor);
         el('charIcon').src = char.icon || `../images/icon/${char.name}.png`;
+        el('charIcon').style.borderColor = themeColor;
         el('plName').textContent = "PL: " + (char.plName || "Unknown");
-
-        // Fetch Scenarios
-        const scenarios = await getScenariosForCharacter(charId);
         
-        // Sort: Count (Asc) -> Date (Asc)
+        // Bg Effect
+        const bgLayer = el('bgLayer');
+        if(char.image) bgLayer.style.backgroundImage = `url(${char.image})`;
+        else bgLayer.style.backgroundImage = 'none';
+
+        // 2. Data Fetch
+        const scenarios = await getScenariosForCharacter(charId);
         const sortedScenarios = scenarios.sort((a,b) => {
-            const countA = parseInt(a.count) || 999;
-            const countB = parseInt(b.count) || 999;
-            if(countA !== countB) return countA - countB;
+            const cA = parseInt(a.count)||999;
+            const cB = parseInt(b.count)||999;
+            if(cA !== cB) return cA - cB;
             return new Date(a.date||0) - new Date(b.date||0);
         });
 
-        // Process & Render
+        // 3. Stats & Matrix
         const stats = processStats(char, sortedScenarios);
-        const matrix = processMatrix(char, sortedScenarios);
+        currentMatrixData = processMatrix(char, sortedScenarios);
 
+        // 4. Render
         renderStats(stats);
-        renderSanChart(stats.sanHistory);
+        renderSanChart(stats.sanHistory, sortedScenarios);
         renderInsanity(stats.insanityHistory);
-        renderMatrix(matrix, sortedScenarios);
+        renderMatrixTable(); // Uses currentMatrixData
 
-        el('loadingOverlay').style.display = 'none';
+        // Animation
+        animateCount('kpiScenarios', sortedScenarios.length);
+        animateCount('kpiTotalGrowth', currentMatrixData.totalGrowth);
+
+        overlay.classList.add('hidden');
     }
-
-    // --- DATA PROCESSING ---
 
     function processStats(char, scenarios) {
         let dice = { total:0, crit:0, fumb:0, succ:0 };
         let skillCounts = {};
-        let sanHistory = [];
+        let sanHistory = [char.vitals?.san || char.stats?.POW*5 || 50]; // Start
         let insanityHistory = [];
 
-        let initialSan = char.vitals?.san || char.stats?.POW*5 || 50;
-        sanHistory.push({ label: 'START', value: initialSan });
-
         scenarios.forEach(s => {
-            let d = (s.characters.pc?.id === char.id) ? s.characters.pc : 
-                    (s.characters.kpc?.id === char.id) ? s.characters.kpc : null;
+            let d = (s.characters.pc?.id === char.id) ? s.characters.pc : (s.characters.kpc?.id === char.id) ? s.characters.kpc : null;
             if(!d) return;
 
+            // Log Analysis
             if (s.analysisData && s.analysisData[char.name]) {
                 const ana = s.analysisData[char.name];
-                dice.total += ana.dice || 0;
-                dice.crit += ana.crit || 0;
-                dice.fumb += ana.fumb || 0;
-                dice.succ += (ana.succ || 0);
-                if (ana.skillDetails) {
-                    Object.entries(ana.skillDetails).forEach(([skill, detail]) => {
-                        skillCounts[skill] = (skillCounts[skill] || 0) + detail.count;
+                dice.total += ana.dice||0; dice.crit += ana.crit||0;
+                dice.fumb += ana.fumb||0;  dice.succ += ana.succ||0;
+                if(ana.skillDetails) {
+                    Object.entries(ana.skillDetails).forEach(([k,v]) => {
+                        skillCounts[k] = (skillCounts[k]||0) + v.count;
                     });
                 }
             }
 
-            if (d.san) {
-                let sanVal = null;
+            // SAN
+            if(d.san) {
                 const m = d.san.match(/.*[→>＞]\s*(\d+)/);
-                if (m) sanVal = parseInt(m[1]);
-                else if (!isNaN(parseInt(d.san))) sanVal = parseInt(d.san);
-                if (sanVal !== null) sanHistory.push({ label: s.title, value: sanVal });
+                if(m) sanHistory.push(parseInt(m[1]));
+                else if(!isNaN(parseInt(d.san))) sanHistory.push(parseInt(d.san));
+                else sanHistory.push(sanHistory[sanHistory.length-1]); // Keep previous if invalid
+            } else {
+                sanHistory.push(sanHistory[sanHistory.length-1]);
             }
 
-            if (d.ins && d.ins.type) {
-                insanityHistory.push({ date: s.date, title: s.title, desc: d.ins.desc });
-            }
+            // Insanity
+            if(d.ins && d.ins.type) insanityHistory.push({date:s.date, title:s.title, desc:d.ins.desc});
         });
 
         return { dice, skillCounts, sanHistory, insanityHistory };
     }
 
     function processMatrix(char, scenarios) {
-        // --- 1. キャラクター保存データから技能一覧と初期値を抽出 ---
-        // { 技能名: { init, job, interest, other } }
-        const skillBaseMap = {};
+        // Init Values from Char Data
+        const skillMap = {}; // { Name: {init, job, int, oth} }
 
         if (char.skills && typeof char.skills === 'object') {
             Object.values(char.skills).flat().forEach(s => {
-                if(s.name) {
-                    skillBaseMap[s.name] = {
-                        init: parseInt(s.init) || 0,
-                        job: parseInt(s.job) || 0,
-                        interest: parseInt(s.interest) || 0,
-                        other: parseInt(s.growth) || 0 // 保存データの"growth"は"その他"扱い
-                    };
-                }
+                if(s.name) skillMap[s.name] = { 
+                    init: parseInt(s.init)||0, job: parseInt(s.job)||0, 
+                    interest: parseInt(s.interest)||0, other: parseInt(s.growth)||0 
+                };
             });
-        } 
-        else if (char.skillList) {
-            const lines = char.skillList.split(/[\n\s,、]+/);
-            lines.forEach(l => {
+        } else if (char.skillList) {
+            // Text Fallback
+            char.skillList.split(/[\n\s,、]+/).forEach(l => {
                 const m = l.match(/^(.+?)[:：\s]*(\d+)$/);
-                if(m) {
-                    skillBaseMap[m[1].trim()] = { init: parseInt(m[2]), job:0, interest:0, other:0 };
-                }
+                if(m) skillMap[m[1].trim()] = { init: parseInt(m[2]), job:0, interest:0, other:0 };
             });
         }
 
-        // BASE_SKILLSにあって、まだリストにないものを追加
-        Object.keys(BASE_SKILLS_DEF).forEach(key => {
-            if(!skillBaseMap[key]) {
+        // Fill missing Base Skills
+        Object.keys(BASE_SKILLS_DEF).forEach(k => {
+            if(!skillMap[k]) {
                 let base = 0;
-                const def = BASE_SKILLS_DEF[key];
-                if (typeof def === 'number') base = def;
-                else if (def === 'DEX*2') base = (char.stats?.DEX || 10) * 2;
-                else if (def === 'EDU*5') base = (char.stats?.EDU || 10) * 5;
-                
-                skillBaseMap[key] = { init: base, job: 0, interest: 0, other: 0 };
+                const def = BASE_SKILLS_DEF[k];
+                if(typeof def === 'number') base = def;
+                else if(def==='DEX*2') base = (char.stats?.DEX||10)*2;
+                else if(def==='EDU*5') base = (char.stats?.EDU||10)*5;
+                skillMap[k] = { init: base, job:0, interest:0, other:0 };
             }
         });
 
-        // --- 2. シナリオごとの成長データを収集 ---
-        const scenarioGrowths = scenarios.map(s => {
-            const growths = {};
-            let d = (s.characters.pc?.id === char.id) ? s.characters.pc : 
-                    (s.characters.kpc?.id === char.id) ? s.characters.kpc : null;
-            
+        // Scenario Growths
+        const scenarioCols = scenarios.map(s => {
+            const growth = {};
+            let d = (s.characters.pc?.id === char.id) ? s.characters.pc : (s.characters.kpc?.id === char.id) ? s.characters.kpc : null;
             if(d && d.grow) {
                 d.grow.split('\n').forEach(l => {
                     const m = l.match(/(.+?)\s*[:：]?\s*\+?(\d+)/);
                     if(m) {
                         const name = m[1].trim();
                         const val = parseInt(m[2]);
-                        growths[name] = (growths[name]||0) + val;
+                        growth[name] = (growth[name]||0) + val;
+                        // Add unknown skill
+                        if(!skillMap[name]) skillMap[name] = { init:0, job:0, interest:0, other:0 };
                     }
                 });
             }
-            return { id: s.id, growths };
+            return { id: s.id, title: s.title, date: s.date, gm: s.gm, growth };
         });
 
-        // --- 3. 行データ生成 ---
+        // Build Rows
         const rows = [];
-        Object.keys(skillBaseMap).sort().forEach(name => {
-            const base = skillBaseMap[name];
+        let totalGrowthSum = 0;
+
+        Object.keys(skillMap).sort().forEach(name => {
+            const base = skillMap[name];
             
-            // カテゴリ判定
+            // Cat
             let cat = 'other';
-            for(const [k, v] of Object.entries(SKILL_CATS)) {
-                if(v.some(s => name.includes(s))) { cat = k; break; }
+            let icon = 'star';
+            for(const [k, v] of Object.entries(SKILL_CONFIG)) {
+                if(v.list.some(s => name.includes(s))) { cat = k; icon = v.icon; break; }
             }
 
-            // ベース合計
             const baseTotal = base.init + base.job + base.interest + base.other;
             let current = baseTotal;
+            let hasGrowth = false;
 
-            // 履歴生成
-            const history = scenarioGrowths.map(sg => {
-                const g = sg.growths[name] || 0;
+            const hist = scenarioCols.map(sc => {
+                const g = sc.growth[name] || 0;
                 current += g;
+                if(g > 0) hasGrowth = true;
                 return { val: current, grow: g };
             });
 
-            rows.push({ 
-                name, cat, 
+            if(hasGrowth) totalGrowthSum += (current - baseTotal);
+
+            rows.push({
+                name, cat, icon,
                 init: base.init, job: base.job, interest: base.interest, other: base.other,
-                history, current 
+                history: hist, current, hasGrowth
             });
         });
 
-        // カテゴリ順ソート
+        // Sort: Cat Order -> Name
         const catOrder = ['combat', 'search', 'action', 'nego', 'know', 'other'];
         rows.sort((a,b) => {
             const ciA = catOrder.indexOf(a.cat);
@@ -546,7 +707,7 @@
             return a.name.localeCompare(b.name);
         });
 
-        return rows;
+        return { rows, scenarios: scenarioCols, totalGrowth: totalGrowthSum };
     }
 
     // --- RENDERING ---
@@ -556,122 +717,187 @@
         el('statTotal').textContent = d.total;
         el('statCrit').textContent = d.crit;
         el('statFumb').textContent = d.fumb;
-        const rate = d.total > 0 ? Math.round(((d.succ + d.crit)/d.total)*100) : 0;
-        el('statRate').textContent = rate + "%";
-
-        const list = el('rankList');
-        list.innerHTML = "";
+        
+        const list = el('rankList'); list.innerHTML = '';
         const sorted = Object.entries(stats.skillCounts).sort((a,b) => b[1]-a[1]).slice(0, 10);
-        if(sorted.length === 0) list.innerHTML = '<li style="text-align:center; color:#444;">NO DATA</li>';
-        else sorted.forEach(([n, c]) => list.innerHTML += `<li class="rank-item"><span class="rank-name">${n}</span><span class="rank-count">${c}</span></li>`);
+        if(sorted.length === 0) list.innerHTML = '<li style="text-align:center;color:#555;padding:10px;">NO DATA</li>';
+        else sorted.forEach(([n,c]) => list.innerHTML += `<li class="rank-row"><span class="rank-name">${n}</span><span class="rank-num">${c}</span></li>`);
     }
 
-    function renderSanChart(history) {
+    function renderSanChart(data, scenarios) {
         const ctx = el('sanChart').getContext('2d');
         if(sanChart) sanChart.destroy();
-        const labels = history.map((_, i) => i===0 ? 'Start' : `#${i}`);
-        const data = history.map(h => h.value);
-        const titles = history.map(h => h.label);
-
+        
+        // Labels: Start + Scenarios
+        const labels = ['START', ...scenarios.map(s => s.title.substring(0,6))];
+        
         sanChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [{
                     label: 'SAN', data: data,
-                    borderColor: getComputedStyle(document.documentElement).getPropertyValue('--theme-color').trim(),
+                    borderColor: getComputedStyle(document.documentElement).getPropertyValue('--theme').trim(),
                     backgroundColor: 'rgba(255,255,255,0.05)',
-                    borderWidth: 2, tension: 0.1, pointRadius: 3, fill: true
+                    borderWidth: 2, tension: 0.3, pointRadius: 4, pointHoverRadius: 6, fill: true
                 }]
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
-                plugins: { legend: { display: false }, tooltip: { callbacks: { title: (c) => titles[c[0].dataIndex] } } },
-                scales: { x: { display: false }, y: { grid: { color: '#333' }, ticks: { color: '#666' }, suggestedMin: 0, suggestedMax: 99 } }
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { display: false },
+                    y: { grid: { color: '#333' }, ticks: { color: '#666' }, suggestedMin: 0, suggestedMax: 99 }
+                }
             }
         });
     }
 
     function renderInsanity(history) {
-        const box = el('insanityList');
-        box.innerHTML = "";
-        if(history.length === 0) { box.innerHTML = '<div style="color:#522; text-align:center;">NO RECORD</div>'; return; }
+        const box = el('insanityList'); box.innerHTML = '';
+        if(history.length === 0) { box.innerHTML = '<div style="text-align:center;color:#522;margin-top:20px;">NO RECORD</div>'; return; }
         [...history].reverse().forEach(h => {
-            box.innerHTML += `<div class="insanity-row"><div class="ins-date">${h.date || ''} / ${h.title}</div><div class="ins-title">${h.desc}</div></div>`;
+            box.innerHTML += `
+                <div class="ins-item">
+                    <div class="ins-meta">${h.date||''} / ${h.title}</div>
+                    <div class="ins-text">${h.desc}</div>
+                </div>`;
         });
     }
 
-    function renderMatrix(rows, scenarios) {
+    function renderMatrixTable() {
+        if(!currentMatrixData) return;
+        const { rows, scenarios } = currentMatrixData;
+        
+        // Filter
+        const activeFilter = document.querySelector('.filter-btn.active').dataset.cat;
+        const growthOnly = el('toggleGrowthOnly').checked;
+
         const table = el('matrixTable');
-        const theadTr = table.querySelector('thead tr');
+        const thead = table.querySelector('thead tr');
         const tbody = table.querySelector('tbody');
 
-        // Reset Header
-        while(theadTr.children.length > 5) theadTr.removeChild(theadTr.lastChild);
+        // Headers
+        while(thead.children.length > 5) thead.removeChild(thead.lastChild);
         
         scenarios.forEach(s => {
             const th = document.createElement('th');
+            // Tooltip Event
+            th.onmouseenter = (e) => showTooltip(e, s);
+            th.onmouseleave = hideTooltip;
+            
             let t = s.title;
             if(t.length > 6) t = t.substring(0,6) + '..';
-            th.innerHTML = `<div class="v-text" title="${s.title}">${t}</div>`;
-            theadTr.appendChild(th);
+            th.innerHTML = `<div class="v-header">${t}</div>`;
+            thead.appendChild(th);
         });
+        
         const thTotal = document.createElement('th');
-        thTotal.innerHTML = `<div class="v-text">TOTAL</div>`;
-        theadTr.appendChild(thTotal);
+        thTotal.innerHTML = `<div class="v-header" style="color:var(--theme);">TOTAL</div>`;
+        thead.appendChild(thTotal);
 
         // Body
         tbody.innerHTML = "";
-        let currentCat = "";
+        let prevCat = "";
 
         rows.forEach(row => {
-            // Spacer between categories
-            if(currentCat && currentCat !== row.cat) {
-                const spacer = document.createElement('tr');
-                spacer.className = 'spacer-row';
-                spacer.innerHTML = `<td colspan="100"></td>`;
-                tbody.appendChild(spacer);
+            // Filter Check
+            if(activeFilter !== 'all' && row.cat !== activeFilter) return;
+            if(growthOnly && !row.hasGrowth) return;
+
+            // Spacer
+            if(prevCat && prevCat !== row.cat) {
+                const sp = document.createElement('tr');
+                sp.className = 'spacer-row';
+                sp.innerHTML = `<td colspan="100"></td>`;
+                tbody.appendChild(sp);
             }
-            currentCat = row.cat;
+            prevCat = row.cat;
 
             const tr = document.createElement('tr');
             tr.className = `cat-${row.cat}`;
 
+            // Name + Icon
             const tdName = document.createElement('td');
-            tdName.className = "col-skill skill-name-cell";
-            tdName.textContent = row.name;
+            tdName.className = "col-skill skill-cell-content";
+            tdName.innerHTML = `<span class="material-icons-round skill-icon">${row.icon}</span>${row.name}`;
             tr.appendChild(tdName);
 
-            const addValCell = (val, cls) => {
+            // Bases
+            const addBase = (v, cls) => {
                 const td = document.createElement('td');
-                td.className = cls + (val > 0 ? " has-val" : "");
-                td.textContent = val;
+                td.className = cls + (v > 0 ? " has-val" : "");
+                td.textContent = v;
                 tr.appendChild(td);
-            }
-            addValCell(row.init, "col-base val-cell");
-            addValCell(row.job, "col-job val-cell");
-            addValCell(row.interest, "col-interest val-cell");
-            addValCell(row.other, "col-other val-cell");
+            };
+            addBase(row.init, "col-base val-base");
+            addBase(row.job, "col-job val-base");
+            addBase(row.interest, "col-int val-base");
+            addBase(row.other, "col-oth val-base");
 
-            row.history.forEach(h => {
+            // History
+            row.history.forEach((h, i) => {
                 const td = document.createElement('td');
-                td.className = "growth-val-cell";
+                td.className = "val-growth";
                 td.textContent = h.val;
                 if(h.grow > 0) {
                     td.classList.add('grown');
                     td.title = `+${h.grow}`;
                 }
+                // Hover effect helper
+                td.onmouseenter = () => highlightColumn(i + 6); // 5 fixed cols + 1 index adjustment
+                td.onmouseleave = () => removeHighlight(i + 6);
                 tr.appendChild(td);
             });
 
+            // Total
             const tdTotal = document.createElement('td');
-            tdTotal.className = "growth-val-cell total-col";
+            tdTotal.className = "val-growth total-col";
             tdTotal.textContent = row.current;
             tr.appendChild(tdTotal);
 
             tbody.appendChild(tr);
         });
     }
+
+    // --- UTILS ---
+    function animateCount(id, target) {
+        const el = document.getElementById(id);
+        const start = 0;
+        const duration = 1000;
+        const startTime = performance.now();
+        function update(t) {
+            const p = Math.min((t - startTime) / duration, 1);
+            const val = Math.floor(p * target);
+            el.textContent = val;
+            if(p < 1) requestAnimationFrame(update);
+        }
+        requestAnimationFrame(update);
+    }
+
+    function highlightColumn(idx) {
+        // Simple nth-child highlight
+        const cells = document.querySelectorAll(`#matrixTable td:nth-child(${idx}), #matrixTable th:nth-child(${idx})`);
+        cells.forEach(c => c.classList.add('col-hover'));
+    }
+    function removeHighlight(idx) {
+        const cells = document.querySelectorAll(`.col-hover`);
+        cells.forEach(c => c.classList.remove('col-hover'));
+    }
+
+    const tooltip = el('tooltip');
+    function showTooltip(e, data) {
+        tooltip.innerHTML = `
+            <h4>${data.title}</h4>
+            <p>DATE: ${data.date || '----'}</p>
+            <p>GM: ${data.gm || 'Unknown'}</p>
+        `;
+        tooltip.style.left = (e.clientX + 10) + 'px';
+        tooltip.style.top = (e.clientY + 10) + 'px';
+        tooltip.style.opacity = 1;
+    }
+    function hideTooltip() { tooltip.style.opacity = 0; }
+
 </script>
 </body>
 </html>
