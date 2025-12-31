@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet">
     <link href="../character/edit/header.css" rel="stylesheet">
-    <!-- Chart.js for Graphs -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
@@ -19,13 +18,11 @@
             background-size: 20px 20px;
             color: #ccc; font-family: 'Shippori Mincho', serif; 
             margin: 0; padding: 0; 
-            height: 100vh; 
-            overflow: hidden;
+            height: 100vh; overflow: hidden;
         }
 
         .layout-container {
-            display: grid;
-            grid-template-columns: 300px 1fr 100px;
+            display: grid; grid-template-columns: 300px 1fr 100px;
             height: 100vh; width: 100%; max-width: 1920px;
             margin: 0 auto; position: relative;
         }
@@ -34,15 +31,13 @@
         .sidebar {
             padding: 25px 15px; border-right: 1px solid #222; background: rgba(0,0,0,0.6);
             display: flex; flex-direction: column; gap: 15px;
-            height: 100%; overflow-y: auto; 
-            backdrop-filter: blur(5px);
+            height: 100%; overflow-y: auto; backdrop-filter: blur(5px);
         }
         .sidebar-title {
             font-family: 'Cinzel', serif; font-size: 1.2rem; color: #d4b346;
             border-bottom: 1px double #444; padding-bottom: 10px; text-align: center; letter-spacing: 3px;
             text-shadow: 0 0 5px rgba(212, 179, 70, 0.3); margin-bottom: 5px;
         }
-        
         .btn-create-new {
             background: linear-gradient(90deg, #1a1a1a, #2a2a2a);
             border: 1px solid #d4b346; color: #d4b346;
@@ -50,26 +45,17 @@
             border-radius: 4px; display: flex; align-items: center; justify-content: center; gap: 8px;
             transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
-        .btn-create-new:hover {
-            background: #d4b346; color: #000; box-shadow: 0 0 15px rgba(212, 179, 70, 0.4);
-        }
+        .btn-create-new:hover { background: #d4b346; color: #000; box-shadow: 0 0 15px rgba(212, 179, 70, 0.4); }
 
         .history-list { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
-        
         .history-item {
             background: linear-gradient(135deg, #151515, #0f0f0f);
             border: 1px solid #333; border-left: 3px solid #555;
             border-radius: 2px; padding: 10px 12px;
             cursor: pointer; transition: 0.3s; position: relative; overflow: hidden;
         }
-        .history-item:hover {
-            transform: translateX(3px); background: #1a1a1a;
-            border-left-color: #d4b346; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-        }
-        .history-item.active {
-            border: 1px solid #d4b346; border-left: 4px solid #d4b346;
-            background: linear-gradient(135deg, #252015, #1a1510);
-        }
+        .history-item:hover { transform: translateX(3px); background: #1a1a1a; border-left-color: #d4b346; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+        .history-item.active { border: 1px solid #d4b346; border-left: 4px solid #d4b346; background: linear-gradient(135deg, #252015, #1a1510); }
         .h-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
         .h-title { font-weight: bold; color: #eee; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 190px; }
         .h-count { font-family: 'Cinzel', serif; font-size: 0.75rem; color: #d4b346; background: rgba(212,179,70,0.1); padding: 1px 6px; border-radius: 2px; border: 1px solid rgba(212,179,70,0.3); }
@@ -78,101 +64,43 @@
         .h-date { font-family: 'Cinzel', serif; color: #666; font-size: 0.7rem; }
 
         /* --- CENTER: BOOK --- */
-        .book-area {
-            display: flex; justify-content: center; align-items: center; 
-            height: 100vh; padding: 20px; box-sizing: border-box;
-            perspective: 2000px;
-        }
-        .book-wrapper { 
-            position: relative; 
-            height: 85vh; 
-            aspect-ratio: 1.4 / 1; 
-            max-width: 95%;
-            transform-style: preserve-3d;
-        }
-        .book-cover {
-            width: 100%; height: 100%; background: #0e0e0e; border-radius: 6px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 0 5px #1a1a1a inset;
-            padding: 1.5%; box-sizing: border-box; display: flex;
-        }
-        .book-pages {
-            width: 100%; height: 100%; background: #1e1e1e; display: flex; 
-            border-radius: 4px; overflow: hidden; position: relative;
-            box-shadow: inset 0 0 60px rgba(0,0,0,0.9);
-        }
-        .book-spine {
-            position: absolute; left: 50%; top: 0; bottom: 0; width: 60px; margin-left: -30px;
-            background: linear-gradient(90deg, rgba(0,0,0,0.8), rgba(0,0,0,0.0) 50%, rgba(0,0,0,0.8));
-            pointer-events: none; z-index: 10;
-        }
-        .page { 
-            flex: 1; padding: 4% 6%; position: relative; overflow-y: auto; 
-            background-color: #232323;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-        }
+        .book-area { display: flex; justify-content: center; align-items: center; height: 100vh; padding: 20px; box-sizing: border-box; perspective: 2000px; }
+        .book-wrapper { position: relative; height: 85vh; aspect-ratio: 1.4 / 1; max-width: 95%; transform-style: preserve-3d; }
+        .book-cover { width: 100%; height: 100%; background: #0e0e0e; border-radius: 6px; box-shadow: 0 30px 60px rgba(0,0,0,0.8), 0 0 0 5px #1a1a1a inset; padding: 1.5%; box-sizing: border-box; display: flex; }
+        .book-pages { width: 100%; height: 100%; background: #1e1e1e; display: flex; border-radius: 4px; overflow: hidden; position: relative; box-shadow: inset 0 0 60px rgba(0,0,0,0.9); }
+        .book-spine { position: absolute; left: 50%; top: 0; bottom: 0; width: 60px; margin-left: -30px; background: linear-gradient(90deg, rgba(0,0,0,0.8), rgba(0,0,0,0.0) 50%, rgba(0,0,0,0.8)); pointer-events: none; z-index: 10; }
+        .page { flex: 1; padding: 4% 6%; position: relative; overflow-y: auto; background-color: #232323; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); }
         .page::-webkit-scrollbar { width: 5px; }
         .page::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
 
         /* --- TABS --- */
         .tabs-container { position: absolute; top: 4%; right: -40px; width: 40px; z-index: 5; display: flex; flex-direction: column; gap: 10px; }
-        .tab-btn {
-            width: 40px; height: 100px; background: #222; border: 1px solid #333; border-left: none;
-            border-radius: 0 4px 4px 0; color: #666; cursor: pointer; writing-mode: vertical-rl; 
-            text-align: center; font-family: 'Shippori Mincho', serif; font-weight: bold; letter-spacing: 2px; font-size: 0.85rem;
-            transition: 0.3s; box-shadow: 3px 3px 10px rgba(0,0,0,0.6);
-        }
+        .tab-btn { width: 40px; height: 100px; background: #222; border: 1px solid #333; border-left: none; border-radius: 0 4px 4px 0; color: #666; cursor: pointer; writing-mode: vertical-rl; text-align: center; font-family: 'Shippori Mincho', serif; font-weight: bold; letter-spacing: 2px; font-size: 0.85rem; transition: 0.3s; box-shadow: 3px 3px 10px rgba(0,0,0,0.6); }
         .tab-btn:hover { background: #333; color: #aaa; transform: translateX(3px); }
-        .tab-btn.active { 
-            background: #6d2020; color: #fff; width: 55px;
-            box-shadow: 5px 5px 15px rgba(0,0,0,0.5); transform: translateX(3px); border-top: 1px solid #844;
-        }
+        .tab-btn.active { background: #6d2020; color: #fff; width: 55px; box-shadow: 5px 5px 15px rgba(0,0,0,0.5); transform: translateX(3px); border-top: 1px solid #844; }
         .tab-panel { display: none; animation: fadeIn 0.4s; padding-bottom: 40px; }
         .tab-panel.active { display: block; }
         @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
 
         /* --- UI ELEMENTS --- */
         .header-wrapper { position: relative; width: 100%; height: 28%; min-height: 180px; margin-bottom: 20px; }
-        .report-header-img {
-            width: 100%; height: 100%; background: #0a0a0a; border: 1px dashed #444; 
-            display: flex; align-items: center; justify-content: center; overflow: hidden;
-            border-radius: 2px; cursor: pointer; position: relative; z-index: 1; transition: 0.2s;
-        }
+        .report-header-img { width: 100%; height: 100%; background: #0a0a0a; border: 1px dashed #444; display: flex; align-items: center; justify-content: center; overflow: hidden; border-radius: 2px; cursor: pointer; position: relative; z-index: 1; transition: 0.2s; }
         .report-header-img:hover { border-color: #d4b346; background: #111; }
         .report-header-img img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; display: block; }
         .report-header-img.empty::after { content: 'SESSION SNAPSHOT'; position: absolute; color: #333; font-family: 'Cinzel'; }
         
-        .trailer-overlay {
-            position: absolute; bottom: -10px; right: -10px; width: 35%; height: 50%; 
-            background: #111; border: 2px solid #ddd; transform: rotate(-3deg); z-index: 10;
-            box-shadow: 5px 5px 20px rgba(0,0,0,0.8); cursor: pointer;
-            overflow: hidden; display: flex; align-items: center; justify-content: center;
-        }
+        .trailer-overlay { position: absolute; bottom: -10px; right: -10px; width: 35%; height: 50%; background: #111; border: 2px solid #ddd; transform: rotate(-3deg); z-index: 10; box-shadow: 5px 5px 20px rgba(0,0,0,0.8); cursor: pointer; overflow: hidden; display: flex; align-items: center; justify-content: center; }
         .trailer-overlay img { width: 100%; height: 100%; object-fit: cover; }
         .trailer-overlay.empty::after { content:'TRAILER'; color:#555; font-size:0.6rem; font-family:'Cinzel'; }
 
-        input.scenario-title {
-            width: 100%; background: transparent; border: none; border-bottom: 2px solid #444;
-            font-family: 'Shippori Mincho', serif; font-size: 1.8rem; font-weight: bold; color: #eee;
-            text-align: center; padding: 5px 0; margin-bottom: 5px;
-        }
+        input.scenario-title { width: 100%; background: transparent; border: none; border-bottom: 2px solid #444; font-family: 'Shippori Mincho', serif; font-size: 1.8rem; font-weight: bold; color: #eee; text-align: center; padding: 5px 0; margin-bottom: 5px; }
         .session-count { text-align: center; font-family: 'Cinzel'; color: #d4b346; font-size: 0.9rem; margin-bottom: 25px; }
         .session-count input { background: transparent; border: none; color: inherit; font-family: inherit; font-size: inherit; text-align: center; width: 50px; border-bottom: 1px dashed #444; }
 
         /* Char Pair Area */
-        .char-pair-container {
-            margin-bottom: 30px; position: relative;
-            background: rgba(255,255,255,0.02); border-radius: 8px; padding: 15px 10px 20px;
-            border: 1px solid #333; margin-top: 30px;
-        }
-        .pair-select-wrapper {
-            position: absolute; top: -20px; left: 50%; transform: translateX(-50%);
-            z-index: 10; display: flex; justify-content: center;
-        }
-        .pair-selector-styled {
-            position: relative; background: #111; color: #d4b346; border: 1px solid #d4b346; border-top: none;
-            padding: 5px 25px; font-family: 'Cinzel'; font-size: 0.85rem; min-width: 200px;
-            text-align: center; border-radius: 0 0 4px 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.6);
-        }
+        .char-pair-container { margin-bottom: 30px; position: relative; background: rgba(255,255,255,0.02); border-radius: 8px; padding: 15px 10px 20px; border: 1px solid #333; margin-top: 30px; }
+        .pair-select-wrapper { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); z-index: 10; display: flex; justify-content: center; }
+        .pair-selector-styled { position: relative; background: #111; color: #d4b346; border: 1px solid #d4b346; border-top: none; padding: 5px 25px; font-family: 'Cinzel'; font-size: 0.85rem; min-width: 200px; text-align: center; border-radius: 0 0 4px 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); }
         .pair-selector-styled select { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
         
         .char-pair-area { display: flex; justify-content: space-around; align-items: flex-start; gap: 20px; margin-top: 15px; }
@@ -183,20 +111,18 @@
         input.pl-name { width: 100%; background: transparent; border: none; color: #888; text-align: center; font-size: 0.75rem; }
         .swap-btn { width: 32px; height: 32px; border-radius: 50%; border:1px solid #444; color:#666; display:flex; align-items:center; justify-content:center; cursor:pointer; align-self:center; margin-top:25px; }
 
-        /* Properties */
         .prop-list { display: flex; flex-direction: column; border-top: 1px solid #333; margin-top: 10px; }
         .prop-row { display: grid; grid-template-columns: 120px 1fr; align-items: center; border-bottom: 1px solid #333; padding: 6px 0; }
         .prop-label { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #777; }
         .tag-select { appearance: none; border: none; border-radius: 4px; padding: 4px 10px; font-size: 0.85rem; cursor: pointer; text-align: center; min-width: 80px; }
         .tag-input { background: transparent; border: none; font-size: 0.95rem; color: #ccc; width: 100%; }
-        
         .bg-pink { background: #5a2e38; color: #ffbfbf; }
         .bg-blue { background: #2b3d52; color: #bfd9ff; }
         .bg-green { background: #2e4a36; color: #c2ffbf; }
         .bg-orange { background: #523e2b; color: #ffdfbf; }
         .bg-gray { background: #333; color: #aaa; }
 
-        /* --- Analysis Tab Styles --- */
+        /* --- Analysis Tab Styles (Collapsible) --- */
         .analysis-container { display: flex; flex-direction: column; gap: 20px; height: 100%; }
         .file-upload-box {
             border: 2px dashed #444; padding: 20px; text-align: center;
@@ -219,11 +145,11 @@
         .sum-label { font-size: 0.7rem; color: #888; font-family: 'Cinzel'; }
         .sum-val { font-size: 1.1rem; color: #ddd; font-weight: bold; font-family: 'Cinzel'; }
         
-        .graph-container { position: relative; height: 200px; width: 100%; margin-bottom: 15px; background: rgba(0,0,0,0.2); border-radius: 4px; }
+        .graph-container { position: relative; height: 200px; width: 100%; background: rgba(0,0,0,0.2); border-radius: 4px; }
         
-        /* Analysis Details (Collapsible) */
+        /* Analysis Details & Graph (Collapsible) */
         .analysis-details {
-            background: rgba(255,255,255,0.05); padding: 10px; border-radius: 4px; border: 1px solid #444;
+            background: rgba(255,255,255,0.05); padding: 10px; border-radius: 4px; border: 1px solid #444; margin-top: 10px;
         }
         .analysis-details summary {
             cursor: pointer; color: #d4b346; font-family: 'Cinzel'; font-size: 0.8rem; letter-spacing: 1px;
@@ -233,9 +159,7 @@
         .analysis-details[open] summary::after { content: '-'; }
         .analysis-details[open] { border-color: #d4b346; }
 
-        .skill-table {
-            width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 10px;
-        }
+        .skill-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 10px; }
         .skill-table th { text-align: left; color: #888; border-bottom: 1px solid #555; padding: 4px; font-family: 'Cinzel'; font-weight: normal; }
         .skill-table td { padding: 4px; border-bottom: 1px solid #333; color: #ccc; }
         .skill-val { text-align: right; }
@@ -247,7 +171,6 @@
         .san-compare-area { display: flex; gap: 20px; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px; }
         .san-box { flex: 1; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; border: 1px solid #333; display: flex; flex-direction: column; gap: 5px; }
         .san-header { font-family: 'Cinzel', serif; font-size: 0.8rem; color: #d4b346; display: flex; justify-content: space-between; }
-        
         .chat-area { display: flex; flex-direction: column; gap: 15px; margin-bottom: 25px; }
         .chat-row { display: flex; gap: 15px; align-items: flex-start; }
         .chat-row.kpc { flex-direction: row-reverse; }
@@ -256,28 +179,22 @@
         .speech-bubble::after { content: ''; position: absolute; top: 15px; border: 8px solid transparent; }
         .chat-row.pc .speech-bubble::after { left: -16px; border-right-color: #444; }
         .chat-row.kpc .speech-bubble::after { right: -16px; border-left-color: #444; }
-
         .growth-area { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
         .growth-box { background: rgba(0,0,0,0.2); border-radius: 4px; padding: 10px; min-height: 120px; border: 1px solid #333; }
         .growth-header { font-size: 0.75rem; color: #aaa; font-family: 'Cinzel', serif; margin-bottom: 8px; border-bottom: 1px dashed #444; padding-bottom: 2px; display:flex; justify-content:space-between; }
-        
         .skill-list { display: flex; flex-direction: column; gap: 5px; }
         .skill-row { display: grid; grid-template-columns: 1fr 60px 20px; gap: 5px; align-items: center; }
         .skill-name { background: transparent; border: none; border-bottom: 1px solid #444; color: #ddd; font-size: 0.8rem; padding: 2px; }
         .skill-val  { background: transparent; border: none; border-bottom: 1px solid #444; color: #d4b346; font-size: 0.8rem; padding: 2px; text-align: center; }
         .skill-add-btn { background: #333; border: none; color: #aaa; width: 100%; font-size: 0.7rem; cursor: pointer; padding: 4px; margin-top: 5px; border-radius: 2px; }
         .skill-del-btn { background: transparent; border: none; color: #666; cursor: pointer; font-size: 1rem; line-height: 1; }
-
         .enc-box { margin-bottom: 30px; background: rgba(0,0,0,0.1); border: 1px dashed #444; padding: 10px; }
-        
         .details-container { margin-bottom: 30px; }
         .details-toolbar { display: flex; justify-content: center; gap: 20px; margin-bottom: 10px; }
         .toggle-btn { background: #1a1a1a; border: 1px solid #444; color: #888; padding: 8px 30px; font-size: 0.8rem; cursor: pointer; border-radius: 20px; transition: 0.3s; font-family: 'Cinzel'; }
         .toggle-btn.active { background: #6d2020; color: #fff; border-color: #844; }
         .detail-section { display: none; margin-bottom: 15px; background: rgba(0,0,0,0.3); border: 1px solid #333; padding: 15px; border-radius: 4px; }
         .detail-section.show { display: block; animation: slideDown 0.3s; }
-        @keyframes slideDown { from{opacity:0; transform:translateY(-10px);} to{opacity:1; transform:translateY(0);} }
-
         .sub-toggles { display: flex; gap: 10px; margin-bottom: 15px; justify-content: center; border-bottom: 1px solid #333; padding-bottom: 10px; }
         .sub-btn { background: transparent; border: 1px solid #444; color: #666; padding: 2px 10px; font-size: 0.75rem; cursor: pointer; border-radius: 2px; }
         .sub-btn.active { background: #333; color: #d4b346; border-color: #d4b346; }
@@ -285,36 +202,20 @@
         .detail-content.show { display: block; animation: fadeIn 0.3s; }
         .detail-item-header { font-size: 0.8rem; color: #d4b346; margin-bottom: 5px; border-left: 3px solid #d4b346; padding-left: 8px; font-family: 'Cinzel'; }
         .detail-item-header.seq { color: #ffadad; border-color: #a54a4a; }
-
         .memo-area { display: flex; flex-direction: column; gap: 20px; border-top: 1px solid #333; padding-top: 20px; }
         .section-label { font-size: 0.8rem; color: #bbb; border-left: 3px solid #4a6fa5; padding-left: 8px; font-family: 'Shippori Mincho'; margin-bottom: 5px; }
         .scn-toggle-header { cursor: pointer; background: rgba(255,255,255,0.05); padding: 5px 10px; margin-bottom: 5px; font-size: 0.8rem; color: #ccc; border-left: 3px solid #666; display: flex; justify-content: space-between; align-items: center; }
         .scn-content { display: none; padding: 10px; }
         .scn-content.show { display: block; }
-
-        .private-paper {
-            background: #2a2520; border: 1px solid #443a30; padding: 15px; border-radius: 2px;
-            font-family: 'Shippori Mincho'; color: #ccc; line-height: 1.8;
-            background-image: repeating-linear-gradient(transparent, transparent 31px, #3a322a 32px);
-            min-height: 200px; width: 100%; box-sizing: border-box; resize: vertical; margin-bottom: 20px;
-        }
+        .private-paper { background: #2a2520; border: 1px solid #443a30; padding: 15px; border-radius: 2px; font-family: 'Shippori Mincho'; color: #ccc; line-height: 1.8; background-image: repeating-linear-gradient(transparent, transparent 31px, #3a322a 32px); min-height: 200px; width: 100%; box-sizing: border-box; resize: vertical; margin-bottom: 20px; }
         .private-paper:focus { outline: none; background-color: #2e2924; }
-        
         textarea.paper-area { width: 100%; background: transparent; border: none; color: #ccc; resize: vertical; font-family: 'Shippori Mincho'; line-height: 1.6; font-size: 0.9rem; }
         textarea.paper-area:focus { outline: none; }
         textarea.box-input { background: rgba(0,0,0,0.2); border: 1px solid #333; padding: 8px; min-height: 80px; }
         textarea.bubble-text { min-height: 40px; }
         input.line-input { width: 100%; background: transparent; border: none; border-bottom: 1px solid #444; color: #ddd; font-size: 0.9rem; padding: 4px; box-sizing: border-box; }
         select.insanity-select { width: 100%; background: #151515; border: 1px solid #333; color: #ffadad; padding: 5px; font-size: 0.8rem; margin-bottom: 5px; }
-
-        .sealing-stamp {
-            position: fixed; bottom: 30px; right: 30px; width: 100px; height: 100px;
-            background: radial-gradient(circle at 30% 30%, #ff6b6b, #8b0000 60%, #3a0000);
-            border-radius: 50%; box-shadow: 0 5px 15px rgba(0,0,0,0.8);
-            border: 2px solid rgba(100,0,0,0.5); color: #ecc; cursor: pointer;
-            display: flex; justify-content: center; align-items: center; flex-direction: column;
-            z-index: 9999; font-family: 'Shippori Mincho'; text-shadow: 0 1px 2px rgba(0,0,0,0.8);
-        }
+        .sealing-stamp { position: fixed; bottom: 30px; right: 30px; width: 100px; height: 100px; background: radial-gradient(circle at 30% 30%, #ff6b6b, #8b0000 60%, #3a0000); border-radius: 50%; box-shadow: 0 5px 15px rgba(0,0,0,0.8); border: 2px solid rgba(100,0,0,0.5); color: #ecc; cursor: pointer; display: flex; justify-content: center; align-items: center; flex-direction: column; z-index: 9999; font-family: 'Shippori Mincho'; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
         .sealing-stamp:hover { transform: scale(1.1) rotate(5deg); }
         #loadingIndicator { font-family:'Cinzel'; font-size:0.7rem; color:#555; text-align: center; margin-bottom:5px; }
     </style>
@@ -519,7 +420,7 @@
                                             <div class="ins-radio-group">
                                                 <label><input type="radio" name="durKPC" value="Temp" checked onclick="toggleDate('dateKPC', false)"> 一時的</label>
                                                 <label><input type="radio" name="durKPC" value="Indef" onclick="toggleDate('dateKPC', true)"> 不定</label>
-                                                <label><input type="radio" name="durKPC" value="Perm" onclick="toggleDate('dateKPC', false)"> 永続</label>
+                                                <label><input type="radio" name="durKPC" value="Perm" onclick="toggleDate('dateKPC', false)">永続</label>
                                             </div>
                                             <div id="dateKPC" class="ins-date-row">完治日: <input type="date" id="inpInsDateKPC" class="tag-input" style="width:100px;"></div>
                                         </div>
@@ -555,7 +456,7 @@
                                 <div class="scn-toggle-header" onclick="window.toggleScnContent('scWarn')">注意事項 <span class="material-icons-round">expand_more</span></div><div id="scWarn" class="scn-content"><textarea id="inpWarnings" class="paper-area" style="min-height:60px;"></textarea></div>
                             </div>
 
-                            <!-- ★ TAB ANALYSIS (IMPROVED 3.0) -->
+                            <!-- ★ TAB ANALYSIS (IMPROVED 4.0 - Collapsible & Saved) -->
                             <div id="tab-analysis" class="tab-panel">
                                 <h2 class="section-header">LOG ANALYSIS</h2>
                                 <div class="analysis-container">
@@ -696,7 +597,7 @@
         const insanityData = {"1": "健忘症 / 昏迷", "2": "激しい恐怖症", "3": "幻覚", "4": "奇妙な性的嗜好", "5": "フェティッシュ", "6": "チック・震え", "7": "心因性機能障害", "8": "短時間の心因反応", "9": "一時的偏執症", "10": "強迫観念行動", "Other": ""};
         window.updateInsanityDesc = (val, role) => { const el = document.getElementById(role==='PC'?'inpInsanityDescPC':'inpInsanityDescKPC'); if(el && !el.value) el.value = insanityData[val]||""; };
 
-        /* --- LOG ANALYSIS LOGIC (ENHANCED 3.0) --- */
+        /* --- LOG ANALYSIS LOGIC (ENHANCED 4.0) --- */
         let lastParsedStats = null; // Store stats for re-rendering
 
         window.handleLogUpload = function(input) {
@@ -712,9 +613,7 @@
             const doc = parser.parseFromString(htmlContent, 'text/html');
             const paragraphs = doc.querySelectorAll('p');
             
-            // Stats Structure:
-            // { charName: { dice:0, crit:0, fumb:0, succ:0, fail:0, sanHistory:[{x:idx, y:val}], 
-            //               skillDetails: { skillName: { count:0, crit:0, fumb:0, succ:0, fail:0 } }, currentSan: null } }
+            // Stats Structure
             let charStats = {};
             
             // Helper to get or init stats
@@ -740,7 +639,7 @@
                 // ★ SYSTEM Message Check: "system" name often contains [CharName] in content
                 if (name.match(/system/i)) {
                     // Try to extract name from content: [ CharName ] ...
-                    const nameMatch = content.match(/\[\s*([^\]]+?)\s*\]/); // 修正版: [任意の文字]
+                    const nameMatch = content.match(/\[\s*([^\]]+?)\s*\]/);
                     if (nameMatch) {
                         name = nameMatch[1].trim(); 
                     }
@@ -752,7 +651,6 @@
 
                 // --- SAN Check ---
                 // Support variations: "SAN : 60 → 59", "SAN : 60 -> 59", "SAN : 60 ＞ 59"
-                // Must contain "SAN" and check for number transition
                 if (content.match(/SAN/i)) {
                     const matches = content.match(/(\d+)\s*[→>＞]\s*(\d+)/);
                     if(matches) {
@@ -857,11 +755,15 @@
                     </div>
                 `;
 
-                // Graph Canvas
+                // Graph Canvas (Collapsible)
                 const canvasId = `chart-${idx}`;
                 let graphHtml = "";
                 if(st.sanHistory.length > 0) {
-                    graphHtml = `<div class="graph-container"><canvas id="${canvasId}"></canvas></div>`;
+                    graphHtml = `
+                    <details class="analysis-details" open>
+                        <summary>SAN FLUCTUATION GRAPH</summary>
+                        <div class="graph-container"><canvas id="${canvasId}"></canvas></div>
+                    </details>`;
                 } else {
                     graphHtml = `<div style="font-size:0.7rem; color:#666; text-align:center; margin-bottom:10px;">(SAN変動なし)</div>`;
                 }
@@ -1120,15 +1022,18 @@
             getEl('inpSynopsis').value = s.overview||""; getEl('inpIntroduction').value = s.introduction||""; getEl('inpWarnings').value = s.warnings||"";
             if(s.memos) { 
                 getEl('inpPublicMemo').value = s.memos.public||""; getEl('inpSecretMemoPC').value = s.memos.secretPC||""; getEl('inpSecretMemoKPC').value = s.memos.secretKPC||"";
-                // ★ Analysis Load (Note: We don't save raw HTML log but result text)
-                if(s.memos.analysis) {
+                // ★ Load Saved Analysis Data
+                if(s.analysisData) {
+                    lastParsedStats = s.analysisData;
+                    renderCharacterStats();
+                } else if(s.memos.analysis) {
+                    // Fallback to text memo
                     getEl('inpAnalysisMemo').value = s.memos.analysis;
                 } else {
                     getEl('inpAnalysisMemo').value = "";
+                    document.getElementById('analysisEmpty').style.display = 'block';
+                    document.getElementById('analysisResult').style.display = 'none';
                 }
-                // Log file is not stored in DB, so user must re-upload to view graphs
-                document.getElementById('analysisEmpty').style.display = 'block';
-                document.getElementById('analysisResult').style.display = 'none';
             }
         };
 
@@ -1210,7 +1115,9 @@
                         public: getEl('inpPublicMemo').value, secretPC: getEl('inpSecretMemoPC').value, secretKPC: getEl('inpSecretMemoKPC').value,
                         analysis: getEl('inpAnalysisMemo').value // ★解析結果の保存
                     },
-                    entities: entities 
+                    entities: entities,
+                    // ★ Save parsed analysis data
+                    analysisData: lastParsedStats
                 };
 
                 const sData = createScenarioRecord(inputData, currentUid);
