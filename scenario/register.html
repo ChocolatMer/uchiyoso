@@ -610,9 +610,22 @@
         const insanityData = {"1": "健忘症 / 昏迷", "2": "激しい恐怖症", "3": "幻覚", "4": "奇妙な性的嗜好", "5": "フェティッシュ", "6": "チック・震え", "7": "心因性機能障害", "8": "短時間の心因反応", "9": "一時的偏執症", "10": "強迫観念行動", "Other": ""};
         window.updateInsanityDesc = (val, role) => { const el = document.getElementById(role==='PC'?'inpInsanityDescPC':'inpInsanityDescKPC'); if(el && !el.value) el.value = insanityData[val]||""; };
 
-        /* --- LOG ANALYSIS LOGIC (FINAL FIX) --- */
- /* --- LOG ANALYSIS LOGIC (UPDATED FIX) --- */
-        let lastParsedStats = null; // Store stats for re-rendering
+       /* --- LOG ANALYSIS LOGIC (INSANITY SUPPORT) --- */
+        let lastParsedStats = null; 
+
+        // 6版の狂気表（Short/Temp）のマッピング
+        const insanityMap = {
+            "1": "健忘症 / 昏迷", 
+            "2": "激しい恐怖症", 
+            "3": "幻覚", 
+            "4": "奇妙な性的嗜好", 
+            "5": "フェティッシュ", 
+            "6": "チック・震え", 
+            "7": "心因性機能障害", 
+            "8": "短時間の心因反応", 
+            "9": "一時的偏執症", 
+            "10": "強迫観念行動"
+        };
 
         window.handleLogUpload = function(input) {
             const file = input.files[0];
@@ -627,21 +640,19 @@
             const doc = parser.parseFromString(htmlContent, 'text/html');
             const paragraphs = doc.querySelectorAll('p');
             
-            // Stats Structure
             let charStats = {};
             
-            // Helper to get or init stats
             const getStats = (name) => {
-                // 名前からスペースを除去して正規化（表記ゆれ防止）
                 const cleanName = name.replace(/\s+/g, "");
-                
-                // 既存のキーから検索
                 let key = Object.keys(charStats).find(k => k.replace(/\s+/g, "") === cleanName);
                 if (!key) {
                     key = name;
                     charStats[key] = { 
                         dice:0, crit:0, fumb:0, succ:0, fail:0, 
-                        sanHistory:[], skillDetails:{}, currentSan: null 
+                        sanHistory:[], skillDetails:{}, currentSan: null,
+                        // ▼ 発狂検出用データ
+                        insanityHistory: [], 
+                        insanityState: 0 // 0:通常, 1:内容ロール待ち, 2:期間ロール待ち
                     };
                 }
                 return charStats[key];
@@ -657,36 +668,23 @@
                 let name = "";
                 let content = fullText;
 
-                // --- 1. SAN値チェック (System Message) ---
-                // Format: [main] system : [ Character Name ] SAN : 60 → 59
-                // Format: [main] system : [ Character Name ] SAN : 60 -> 59
+                // --- 1. SAN値チェック & Systemメッセージ ---
                 if (fullText.match(/system/i) && fullText.match(/SAN/i) && fullText.match(/[→>＞]/)) {
-                    // 名前抽出: [ ] に囲まれた文字列を探す
-                    // system : [ Alice ] SAN... のような形式に対応
                     const nameMatch = fullText.match(/\[\s*([^\]]+?)\s*\]\s*SAN/i) || fullText.match(/system.*[:：].*\[\s*([^\]]+?)\s*\]/i);
-                    
                     if (nameMatch) {
                         name = nameMatch[1].trim();
-                        
-                        // 数値抽出: SAN ... 数値 -> 数値
                         const sanMatch = fullText.match(/SAN\s*[:：]?\s*(\d+)\s*[→>＞]\s*(\d+)/i);
                         if (sanMatch) {
                             const st = getStats(name);
                             const newVal = parseInt(sanMatch[2]);
-                            
-                            // グラフ用データの追加
                             st.sanHistory.push({ x: lineIndex, y: newVal });
                             st.currentSan = newVal;
-                            return; // SAN処理ができたらこの行は終了
+                            return; 
                         }
                     }
                 }
 
-                // --- 2. ダイスロール/発言チェック ---
-                // 通常のCCFOLIAログ形式: <span>Name</span> <span>Content</span>
-                // （前略... SAN値チェック処理の後）
-
-                // --- 2. ダイスロール/発言チェック ---
+                // --- 2. プレイヤー発言・ロールの解析 ---
                 const spans = p.querySelectorAll('span');
                 if (spans.length >= 2) {
                     if (!fullText.match(/system/i)) {
@@ -703,35 +701,84 @@
                 }
 
                 if(!name) return;
-
                 const st = getStats(name);
 
-                // ▼▼▼ 修正箇所：ダイスロール判定と集計ロジック ▼▼▼
+                // ▼▼▼ 発狂検出ロジック (State Machine) ▼▼▼
+                
+                // 1D10ロールの検出（発狂表 or 期間）
+                const d10Match = content.match(/1D10\b/i); 
+                // ※誤爆を防ぐため "1D100" ではなく明確に "1D10" であること
+
+                if (d10Match && (st.insanityState === 1 || st.insanityState === 2)) {
+                    // 数値の抽出 (例: 1D10 ... > 5)
+                    const valMatch = content.match(/[>＞]\s*(\d+)/);
+                    if (valMatch) {
+                        const val = parseInt(valMatch[1]);
+                        
+                        if (st.insanityState === 1) {
+                            // 発狂内容の確定
+                            const desc = insanityMap[val] || "その他/不明";
+                            st.insanityHistory.push({
+                                typeRoll: val,
+                                desc: desc,
+                                duration: null,
+                                line: lineIndex
+                            });
+                            st.insanityState = 2; // 次は期間待ちへ
+                        } 
+                        else if (st.insanityState === 2) {
+                            // 期間の確定（直近の履歴を更新）
+                            const lastEntry = st.insanityHistory[st.insanityHistory.length - 1];
+                            if (lastEntry) {
+                                lastEntry.duration = val;
+                            }
+                            st.insanityState = 0; // 状態リセット
+                        }
+                    }
+                }
+                // アイデア成功の検出（発狂フラグを立てる）
+                else if (content.match(/【(アイデア|INT|ＩＮＴ)】/i)) {
+                    // 成功判定 (決定的成功/スペシャル/成功)
+                    if (content.match(/成功|スペシャル|クリティカル/)) {
+                        st.insanityState = 1; // 発狂内容待ちへ
+                    } else {
+                        st.insanityState = 0; // 失敗ならリセット
+                    }
+                }
+                // それ以外のダイスロールが挟まった場合、ステートをリセット（誤爆防止）
+                // ただし、1D10以外のロール（例えばSANチェック）が直前にあっても良いが、
+                // 別の技能ロールなどは文脈が切れたとみなす
+                else if (content.match(/\d+d\d+/i) || content.match(/CCB/i)) {
+                     // ここでは「アイデア→(何か別のロール)→1D10」とならないよう、
+                     // 明らかな別ロールが来たらリセットする
+                     st.insanityState = 0;
+                }
+                // ▲▲▲ 発狂検出ロジック終わり ▲▲▲
+
+
+                // --- 3. 統計集計（前回修正分） ---
                 if (content.match(/\d+d\d+/i) || content.match(/CCB/i) || content.match(/Resist/i)) {
                     st.dice++;
                     
                     let resultType = 'normal';
-                    // 成功度判定
                     if (content.match(/クリティカル|決定的成功/)) { st.crit++; resultType = 'crit'; }
                     else if (content.match(/ファンブル|致命的失敗/)) { st.fumb++; resultType = 'fumb'; }
                     else if (content.match(/成功/)) { st.succ++; resultType = 'succ'; }
                     else if (content.match(/失敗/)) { st.fail++; resultType = 'fail'; }
 
-                    // 技能名の抽出
                     const skillMatch = content.match(/【(.*?)】/);
-                    let skillName = "(その他)"; // デフォルト名
+                    let skillName = "(その他)";
 
                     if (skillMatch) {
                         skillName = skillMatch[1];
                     } else if (content.match(/sanc/i) || content.match(/SAN/i)) {
-                         // カッコがなくてもSAN関連っぽければまとめる（任意）
                         skillName = "SAN値チェック"; 
+                    } else if (content.match(/1D10\b/i) && st.insanityHistory.some(h => Math.abs(h.line - lineIndex) < 5)) {
+                        // 直近で発狂判定があった1D10は「発狂ロール」として分類しておく
+                        skillName = "狂気/発狂ロール";
                     }
 
-                    // 詳細リストへ追加（技能名があってもなくても登録する）
-                    if(!st.skillDetails[skillName]) {
-                        st.skillDetails[skillName] = { count:0, crit:0, fumb:0, succ:0, fail:0 };
-                    }
+                    if(!st.skillDetails[skillName]) st.skillDetails[skillName] = { count:0, crit:0, fumb:0, succ:0, fail:0 };
                     
                     st.skillDetails[skillName].count++;
                     if(resultType === 'crit') st.skillDetails[skillName].crit++;
@@ -739,7 +786,6 @@
                     if(resultType === 'succ') st.skillDetails[skillName].succ++;
                     if(resultType === 'fail') st.skillDetails[skillName].fail++;
                 }
-               
             });
 
             lastParsedStats = charStats;
@@ -749,71 +795,55 @@
         function renderCharacterStats() {
             if(!lastParsedStats) return;
             const charStats = lastParsedStats;
-
             const container = document.getElementById('analysisContent');
             container.innerHTML = "";
             document.getElementById('analysisEmpty').style.display = 'none';
             document.getElementById('analysisResult').style.display = 'block';
 
-            // Identify Target Chars from Select Inputs
+            // Identify Target Chars
             const pcSel = document.getElementById('selPC');
             const kpcSel = document.getElementById('selKPC');
-            
             const clean = (s) => (s || "").replace(/\s+/g, "");
-            
-            const pcNameRaw = pcSel.options[pcSel.selectedIndex].text;
-            const kpcNameRaw = kpcSel.options[kpcSel.selectedIndex].text;
-            const pcName = clean(pcNameRaw);
-            const kpcName = clean(kpcNameRaw);
+            const pcName = clean(pcSel.options[pcSel.selectedIndex].text);
+            const kpcName = clean(kpcSel.options[kpcSel.selectedIndex].text);
 
-            // Sort: PC -> KPC -> Others
             const sortedKeys = Object.keys(charStats).sort((a,b) => {
-                const cleanA = clean(a);
-                const cleanB = clean(b);
-                // 部分一致でPC/KPCを優先表示
+                const cleanA = clean(a); const cleanB = clean(b);
                 const isPC_A = (pcName && cleanA.includes(pcName)) || (cleanA && pcName.includes(cleanA));
                 const isKPC_A = (kpcName && cleanA.includes(kpcName)) || (cleanA && kpcName.includes(cleanA));
                 const isPC_B = (pcName && cleanB.includes(pcName)) || (cleanB && pcName.includes(cleanB));
                 const isKPC_B = (kpcName && cleanB.includes(kpcName)) || (cleanB && kpcName.includes(cleanB));
-
-                const aScore = (isPC_A ? 2 : (isKPC_A ? 1 : 0));
-                const bScore = (isPC_B ? 2 : (isKPC_B ? 1 : 0));
-                return bScore - aScore;
+                return (isPC_B ? 2 : (isKPC_B ? 1 : 0)) - (isPC_A ? 2 : (isKPC_A ? 1 : 0));
             });
 
             sortedKeys.forEach((name, idx) => {
                 const st = charStats[name];
-                // ダイスもSAN変動もないキャラは表示しない
                 if(st.dice === 0 && st.sanHistory.length === 0) return;
 
                 const cleanName = clean(name);
                 const isPC = (pcName && cleanName.includes(pcName)) || (cleanName && pcName.includes(cleanName));
                 const isKPC = (kpcName && cleanName.includes(kpcName)) || (cleanName && kpcName.includes(cleanName));
-                
                 const color = (isPC) ? '#88ccff' : (isKPC ? '#ff8888' : '#aaa');
                 
-                // Create Card
+                // Base Card
                 const card = document.createElement('div');
                 card.className = 'char-analysis-card';
                 card.style.borderColor = color;
 
-                // Title
+                // Header
                 let titleHtml = `<div class="char-analysis-header"><span style="color:${color}">${name}</span>`;
                 if(st.currentSan !== null) titleHtml += `<span style="font-size:0.9rem;">Final SAN: ${st.currentSan}</span>`;
                 titleHtml += `</div>`;
 
-                // Stats Visuals
+                // Visuals (Bar)
+                const totalCheck = st.succ + st.fail + st.crit + st.fumb;
                 let visualsHtml = `
                     <div class="stats-visual-row">
                         <div class="stat-badge-group">
                             <div class="stat-badge"><span class="stat-label-mini">ROLLS</span><span class="stat-val-big">${st.dice}</span></div>
                             <div class="stat-badge" style="border-color:#8bc34a; color:#a5d6a7;"><span class="stat-label-mini">CRIT</span><span class="stat-val-big">${st.crit}</span></div>
                             <div class="stat-badge" style="border-color:#f44336; color:#ef9a9a;"><span class="stat-label-mini">FUMB</span><span class="stat-val-big">${st.fumb}</span></div>
-                        </div>
-                `;
-                
-                // Rate Bar
-                const totalCheck = st.succ + st.fail + st.crit + st.fumb; // 分母を全判定数にする
+                        </div>`;
                 if(totalCheck > 0) {
                     const positive = st.succ + st.crit;
                     const succRate = (positive / totalCheck) * 100;
@@ -822,85 +852,74 @@
                             <div class="rate-segment" style="width:${succRate}%; background:#66bb6a;"></div>
                             <div class="rate-segment" style="width:${100-succRate}%; background:#ef5350;"></div>
                         </div>
-                        <div class="rate-label-box">${Math.round(succRate)}% Success</div>
-                    `;
+                        <div class="rate-label-box">${Math.round(succRate)}% Success</div>`;
                 }
                 visualsHtml += `</div>`;
 
-                // Graph (Collapsible)
+                // Graph
                 const canvasId = `chart-${idx}`;
-                let graphHtml = "";
-                if(st.sanHistory.length > 0) {
-                    graphHtml = `
-                    <details class="analysis-details" open>
-                        <summary>SAN FLUCTUATION GRAPH</summary>
-                        <div class="graph-container"><canvas id="${canvasId}"></canvas></div>
-                    </details>`;
-                } else {
-                    graphHtml = `<div style="font-size:0.7rem; color:#666; text-align:center; margin-bottom:10px;">(SAN変動なし)</div>`;
-                }
+                let graphHtml = st.sanHistory.length > 0 
+                    ? `<details class="analysis-details" open><summary>SAN FLUCTUATION GRAPH</summary><div class="graph-container"><canvas id="${canvasId}"></canvas></div></details>` 
+                    : `<div style="font-size:0.7rem; color:#666; text-align:center;">(SAN変動なし)</div>`;
 
-                // Details Table (Collapsible)
+                // ▼▼▼ INSANITY HISTORY SECTION ▼▼▼
+                let insanityHtml = "";
+                if (st.insanityHistory.length > 0) {
+                    insanityHtml = `
+                        <details class="analysis-details" open>
+                            <summary style="color:#ffadad; border-color:#ff5252;">INSANITY HISTORY</summary>
+                            <div style="padding:10px;">
+                                <table class="skill-table">
+                                    <thead><tr><th style="color:#ff8a80;">ROLL</th><th style="color:#ff8a80;">EFFECT (1D10)</th><th style="color:#ff8a80;">DURATION</th></tr></thead>
+                                    <tbody>`;
+                    st.insanityHistory.forEach(h => {
+                        insanityHtml += `
+                            <tr>
+                                <td style="font-family:'Cinzel'; color:#888;">#${h.typeRoll}</td>
+                                <td style="color:#ffcdd2; font-weight:bold;">${h.desc}</td>
+                                <td style="text-align:right;">${h.duration ? h.duration + ' 時間/R' : '--'}</td>
+                            </tr>`;
+                    });
+                    insanityHtml += `</tbody></table></div></details>`;
+                }
+                // ▲▲▲ END SECTION ▲▲▲
+
+                // Details Table
                 let detailsHtml = "";
                 const skills = Object.entries(st.skillDetails).sort((a,b) => b[1].count - a[1].count);
                 if (skills.length > 0) {
-                    detailsHtml = `
-                        <details class="analysis-details">
-                            <summary>DETAILS</summary>
-                            <div style="margin-top:10px;">
-                                <div style="font-family:'Cinzel'; font-size:0.7rem; color:#888; margin-bottom:5px;">SKILL BREAKDOWN</div>
-                                <table class="skill-table">
-                                    <thead><tr><th>SKILL</th><th>TOTAL</th><th>RESULT</th></tr></thead>
-                                    <tbody>
-                    `;
+                    detailsHtml = `<details class="analysis-details"><summary>DETAILS</summary><div style="margin-top:10px;"><table class="skill-table"><thead><tr><th>SKILL</th><th>TOTAL</th><th>RESULT</th></tr></thead><tbody>`;
                     skills.forEach(([skillName, d]) => {
                         let badges = "";
                         if(d.crit > 0) badges += `<span class="s-badge sb-crit">C:${d.crit}</span>`;
                         if(d.fumb > 0) badges += `<span class="s-badge sb-fumb">F:${d.fumb}</span>`;
-                        // S/F を 成功/失敗 に変更
                         detailsHtml += `<tr><td>${skillName}</td><td class="skill-val">${d.count}</td><td class="skill-val"><div class="skill-badges"><span style="color:#aaa;">成功:${d.succ} / 失敗:${d.fail}</span>${badges}</div></td></tr>`;
                     });
                     detailsHtml += `</tbody></table></div></details>`;
                 }
 
-                card.innerHTML = titleHtml + visualsHtml + graphHtml + detailsHtml;
+                card.innerHTML = titleHtml + visualsHtml + insanityHtml + graphHtml + detailsHtml;
                 container.appendChild(card);
 
-                // Draw Graph
                 if(st.sanHistory.length > 0) {
                     const ctx = document.getElementById(canvasId).getContext('2d');
                     new Chart(ctx, {
                         type: 'line',
                         data: {
                             datasets: [{
-                                label: 'SAN',
-                                data: st.sanHistory,
-                                borderColor: color,
-                                backgroundColor: color,
-                                tension: 0.1,
-                                borderDash: [5, 5],
-                                pointRadius: 3
+                                label: 'SAN', data: st.sanHistory, borderColor: color, backgroundColor: color,
+                                tension: 0.1, borderDash: [5, 5], pointRadius: 3
                             }]
                         },
                         options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            scales: {
-                                x: { type: 'linear', display: false },
-                                y: { 
-                                    beginAtZero: false, 
-                                    suggestedMin: 0, 
-                                    suggestedMax: 100, 
-                                    grid: { color: '#333'}
-                                }
-                            },
+                            responsive: true, maintainAspectRatio: false,
+                            scales: { x: { display: false }, y: { suggestedMin: 0, suggestedMax: 100, grid: { color: '#333'} } },
                             plugins: { legend: { display: false } }
                         }
                     });
                 }
             });
         }
-
     </script>
 
     <!-- App Logic -->
