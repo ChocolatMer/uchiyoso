@@ -1,5 +1,3 @@
---- START OF FILE register.html ---
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -613,7 +611,7 @@
         window.updateInsanityDesc = (val, role) => { const el = document.getElementById(role==='PC'?'inpInsanityDescPC':'inpInsanityDescKPC'); if(el && !el.value) el.value = insanityData[val]||""; };
 
        /* --- LOG ANALYSIS LOGIC (INSANITY SUPPORT) --- */
-        window.lastParsedStats = null; // ★Fix: Make it accessible globally
+        let lastParsedStats = null; 
 
         // 6版の狂気表（Short/Temp）のマッピング
         const insanityMap = {
@@ -651,7 +649,9 @@
                     key = name;
                     charStats[key] = { 
                         dice:0, crit:0, fumb:0, succ:0, fail:0, 
-                        sanHistory:[], skillDetails:{}, currentSan: null,
+                        // ★ 変更点: 配列は単純な数値リストとして扱う
+                        sanHistory:[], 
+                        skillDetails:{}, currentSan: null,
                         insanityHistory: [], 
                         insanityState: 0
                     };
@@ -669,44 +669,31 @@
                 let name = "";
                 let content = fullText;
 
-                // --- 1. SAN値チェック & Systemメッセージ (★Improved Logic) ---
-                if (fullText.match(/system/i) && fullText.match(/SAN/i) && fullText.match(/[→>＞]/)) {
-                    // Try to match specific number pattern first
-                    const sanMatch = fullText.match(/SAN\s*[:：]?\s*(\d+)\s*[→>＞]\s*(\d+)/i);
-                    
-                    if (sanMatch) {
-                        // Find character name: look for brackets before "SAN" to avoid matching "[main]" at start of line
-                        // Example: [main] system : [CharName] SAN : 60 -> 59
-                        // Logic: Find "SAN", then look backward for the nearest [Name]
-                        
-                        const sanIndex = fullText.toUpperCase().indexOf("SAN");
-                        if (sanIndex > 0) {
-                            const preText = fullText.substring(0, sanIndex);
-                            const nameMatches = preText.match(/\[\s*([^\]]+?)\s*\]\s*$/); // Get the last bracket content before SAN
-                            
-                            if (nameMatches) {
-                                name = nameMatches[1].trim();
-                                const newVal = parseInt(sanMatch[2]);
-                                const st = getStats(name);
-                                st.sanHistory.push({ x: lineIndex, y: newVal });
-                                st.currentSan = newVal;
-                                return; // Done with this line
-                            }
-                        }
+                // --- 1. SAN値チェック & Systemメッセージ (FIXED: Plot every roll) ---
+                const sanMoveMatch = fullText.match(/SAN\s*[:：]?\s*(\d+)\s*[→>＞]\s*(\d+)/i);
+
+                if (sanMoveMatch) {
+                    let charNameMatch = fullText.match(/system.*[:：].*\[\s*(.+?)\s*\]/i);
+                    if (!charNameMatch) {
+                        charNameMatch = fullText.match(/\[\s*([^\]]+?)\s*\]\s*SAN/i);
                     }
-                    
-                    // Fallback to old logic if above failed (e.g. weird formatting)
-                    const oldNameMatch = fullText.match(/\[\s*([^\]]+?)\s*\]\s*SAN/i) || fullText.match(/system.*[:：].*\[\s*([^\]]+?)\s*\]/i);
-                    if (oldNameMatch && sanMatch) {
-                        name = oldNameMatch[1].trim();
-                        // Filter out common tab names if they accidentally match
-                        if (name.toLowerCase() !== 'main' && name.toLowerCase() !== 'info') {
-                            const st = getStats(name);
-                            const newVal = parseInt(sanMatch[2]);
-                            st.sanHistory.push({ x: lineIndex, y: newVal });
-                            st.currentSan = newVal;
-                            return;
+
+                    if (charNameMatch) {
+                        const extractedName = charNameMatch[1].trim();
+                        const oldVal = parseInt(sanMoveMatch[1]);
+                        const newVal = parseInt(sanMoveMatch[2]);
+                        
+                        const st = getStats(extractedName);
+                        
+                        // ★ 修正点: 初期値を記録していなければ、まずoldVal（開始値）を入れる
+                        if (st.sanHistory.length === 0) {
+                            st.sanHistory.push(oldVal);
                         }
+                        // その後、変動後の値を記録 (値が変わっていなくても記録する)
+                        st.sanHistory.push(newVal);
+                        
+                        st.currentSan = newVal;
+                        return; 
                     }
                 }
 
@@ -730,33 +717,62 @@
                 const st = getStats(name);
 
                 // ▼▼▼ 発狂検出ロジック (State Machine) ▼▼▼
+                
+                // 1D10ロールの検出（発狂表 or 期間）
                 const d10Match = content.match(/1D10\b/i); 
+                // ※誤爆を防ぐため "1D100" ではなく明確に "1D10" であること
+
                 if (d10Match && (st.insanityState === 1 || st.insanityState === 2)) {
+                    // 数値の抽出 (例: 1D10 ... > 5)
                     const valMatch = content.match(/[>＞]\s*(\d+)/);
                     if (valMatch) {
                         const val = parseInt(valMatch[1]);
+                        
                         if (st.insanityState === 1) {
+                            // 発狂内容の確定
                             const desc = insanityMap[val] || "その他/不明";
-                            st.insanityHistory.push({ typeRoll: val, desc: desc, duration: null, line: lineIndex });
-                            st.insanityState = 2; 
+                            st.insanityHistory.push({
+                                typeRoll: val,
+                                desc: desc,
+                                duration: null,
+                                line: lineIndex
+                            });
+                            st.insanityState = 2; // 次は期間待ちへ
                         } 
                         else if (st.insanityState === 2) {
+                            // 期間の確定（直近の履歴を更新）
                             const lastEntry = st.insanityHistory[st.insanityHistory.length - 1];
-                            if (lastEntry) lastEntry.duration = val;
-                            st.insanityState = 0; 
+                            if (lastEntry) {
+                                lastEntry.duration = val;
+                            }
+                            st.insanityState = 0; // 状態リセット
                         }
                     }
                 }
+                // アイデア成功の検出（発狂フラグを立てる）
                 else if (content.match(/【(アイデア|INT|ＩＮＴ)】/i)) {
-                    if (content.match(/成功|スペシャル|クリティカル/)) { st.insanityState = 1; } else { st.insanityState = 0; }
+                    // 成功判定 (決定的成功/スペシャル/成功)
+                    if (content.match(/成功|スペシャル|クリティカル/)) {
+                        st.insanityState = 1; // 発狂内容待ちへ
+                    } else {
+                        st.insanityState = 0; // 失敗ならリセット
+                    }
                 }
+                // それ以外のダイスロールが挟まった場合、ステートをリセット（誤爆防止）
+                // ただし、1D10以外のロール（例えばSANチェック）が直前にあっても良いが、
+                // 別の技能ロールなどは文脈が切れたとみなす
                 else if (content.match(/\d+d\d+/i) || content.match(/CCB/i)) {
+                     // ここでは「アイデア→(何か別のロール)→1D10」とならないよう、
+                     // 明らかな別ロールが来たらリセットする
                      st.insanityState = 0;
                 }
+                // ▲▲▲ 発狂検出ロジック終わり ▲▲▲
 
-                // --- 3. 統計集計 ---
+
+                // --- 3. 統計集計（前回修正分） ---
                 if (content.match(/\d+d\d+/i) || content.match(/CCB/i) || content.match(/Resist/i)) {
                     st.dice++;
+                    
                     let resultType = 'normal';
                     if (content.match(/クリティカル|決定的成功/)) { st.crit++; resultType = 'crit'; }
                     else if (content.match(/ファンブル|致命的失敗/)) { st.fumb++; resultType = 'fumb'; }
@@ -766,11 +782,17 @@
                     const skillMatch = content.match(/【(.*?)】/);
                     let skillName = "(その他)";
 
-                    if (skillMatch) { skillName = skillMatch[1]; } 
-                    else if (content.match(/sanc/i) || content.match(/SAN/i)) { skillName = "SAN値チェック"; } 
-                    else if (content.match(/1D10\b/i) && st.insanityHistory.some(h => Math.abs(h.line - lineIndex) < 5)) { skillName = "狂気/発狂ロール"; }
+                    if (skillMatch) {
+                        skillName = skillMatch[1];
+                    } else if (content.match(/sanc/i) || content.match(/SAN/i)) {
+                        skillName = "SAN値チェック"; 
+                    } else if (content.match(/1D10\b/i) && st.insanityHistory.some(h => Math.abs(h.line - lineIndex) < 5)) {
+                        // 直近で発狂判定があった1D10は「発狂ロール」として分類しておく
+                        skillName = "狂気/発狂ロール";
+                    }
 
                     if(!st.skillDetails[skillName]) st.skillDetails[skillName] = { count:0, crit:0, fumb:0, succ:0, fail:0 };
+                    
                     st.skillDetails[skillName].count++;
                     if(resultType === 'crit') st.skillDetails[skillName].crit++;
                     if(resultType === 'fumb') st.skillDetails[skillName].fumb++;
@@ -779,13 +801,13 @@
                 }
             });
 
-            window.lastParsedStats = charStats; // ★Fix: Update global variable
+            lastParsedStats = charStats;
             renderCharacterStats();
         }
 
         function renderCharacterStats() {
-            if(!window.lastParsedStats) return; // ★Fix: Use global variable
-            const charStats = window.lastParsedStats;
+            if(!lastParsedStats) return;
+            const charStats = lastParsedStats;
             const container = document.getElementById('analysisContent');
             container.innerHTML = "";
             document.getElementById('analysisEmpty').style.display = 'none';
@@ -853,7 +875,7 @@
                     ? `<details class="analysis-details" open><summary>SAN FLUCTUATION GRAPH</summary><div class="graph-container"><canvas id="${canvasId}"></canvas></div></details>` 
                     : `<div style="font-size:0.7rem; color:#666; text-align:center;">(SAN変動なし)</div>`;
 
-                // Insanity History
+                // ▼▼▼ INSANITY HISTORY SECTION ▼▼▼
                 let insanityHtml = "";
                 if (st.insanityHistory.length > 0) {
                     insanityHtml = `
@@ -873,6 +895,7 @@
                     });
                     insanityHtml += `</tbody></table></div></details>`;
                 }
+                // ▲▲▲ END SECTION ▲▲▲
 
                 // Details Table
                 let detailsHtml = "";
@@ -893,17 +916,29 @@
 
                 if(st.sanHistory.length > 0) {
                     const ctx = document.getElementById(canvasId).getContext('2d');
+                    
+                    // ★ 修正点: X軸のラベルを単純な連番にして横へ並べる
+                    const labels = st.sanHistory.map((_, i) => i === 0 ? 'Start' : `#${i}`);
+                    
                     new Chart(ctx, {
                         type: 'line',
                         data: {
+                            labels: labels, // X軸ラベル
                             datasets: [{
-                                label: 'SAN', data: st.sanHistory, borderColor: color, backgroundColor: color,
-                                tension: 0.1, borderDash: [5, 5], pointRadius: 3
+                                label: 'SAN', 
+                                data: st.sanHistory, // Y軸データ（数値配列）
+                                borderColor: color, 
+                                backgroundColor: color,
+                                tension: 0.1, 
+                                pointRadius: 3
                             }]
                         },
                         options: {
                             responsive: true, maintainAspectRatio: false,
-                            scales: { x: { display: false }, y: { suggestedMin: 0, suggestedMax: 100, grid: { color: '#333'} } },
+                            scales: { 
+                                x: { display: true, grid: { color: '#333' } }, // X軸を表示
+                                y: { suggestedMin: 0, suggestedMax: 100, grid: { color: '#333'} } 
+                            },
                             plugins: { legend: { display: false } }
                         }
                     });
@@ -1023,7 +1058,7 @@
             getEl('skillListPC').innerHTML = ""; getEl('skillListKPC').innerHTML = ""; getEl('encList').innerHTML = "";
             // Reset Analysis
             document.getElementById('analysisEmpty').style.display = 'block'; document.getElementById('analysisResult').style.display = 'none';
-            window.lastParsedStats = null;
+            lastParsedStats = null;
             document.querySelectorAll('.history-item').forEach(e=>e.classList.remove('active'));
             alert("新規作成モードにリセットしました");
         };
@@ -1098,9 +1133,10 @@
                 getEl('inpPublicMemo').value = s.memos.public||""; getEl('inpSecretMemoPC').value = s.memos.secretPC||""; getEl('inpSecretMemoKPC').value = s.memos.secretKPC||"";
                 // ★ Load Saved Analysis Data
                 if(s.analysisData) {
-                    window.lastParsedStats = s.analysisData; // ★Fix: Restore global
+                    lastParsedStats = s.analysisData;
                     renderCharacterStats();
                 } else if(s.memos.analysis) {
+                    // Fallback to text memo
                     getEl('inpAnalysisMemo').value = s.memos.analysis;
                 } else {
                     getEl('inpAnalysisMemo').value = "";
@@ -1129,7 +1165,7 @@
                     applyTheme(role, id); window.updateRoleLabels();
                     
                     // ★ Re-render stats if available
-                    if(window.lastParsedStats) renderCharacterStats();
+                    if(lastParsedStats) renderCharacterStats();
                 }
                 loadHistory();
             });
@@ -1186,11 +1222,11 @@
                     overview: getEl('inpSynopsis').value, introduction: getEl('inpIntroduction').value, warnings: getEl('inpWarnings').value,
                     memos: { 
                         public: getEl('inpPublicMemo').value, secretPC: getEl('inpSecretMemoPC').value, secretKPC: getEl('inpSecretMemoKPC').value,
-                        analysis: getEl('inpAnalysisMemo').value 
+                        analysis: getEl('inpAnalysisMemo').value // ★解析結果の保存
                     },
                     entities: entities,
-                    // ★ Save parsed analysis data (Sanitized) - Fix: Use window.lastParsedStats
-                    analysisData: window.lastParsedStats ? JSON.parse(JSON.stringify(window.lastParsedStats)) : null
+                    // ★ Save parsed analysis data (Sanitized)
+                    analysisData: lastParsedStats ? JSON.parse(JSON.stringify(lastParsedStats)) : null
                 };
 
                 const sData = createScenarioRecord(inputData, currentUid);
