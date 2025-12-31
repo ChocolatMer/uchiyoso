@@ -122,7 +122,7 @@
         .bg-orange { background: #523e2b; color: #ffdfbf; }
         .bg-gray { background: #333; color: #aaa; }
 
-        /* --- Analysis Tab Styles (Collapsible) --- */
+        /* --- Analysis Tab Styles (Final) --- */
         .analysis-container { display: flex; flex-direction: column; gap: 20px; height: 100%; }
         .file-upload-box {
             border: 2px dashed #444; padding: 20px; text-align: center;
@@ -420,7 +420,7 @@
                                             <div class="ins-radio-group">
                                                 <label><input type="radio" name="durKPC" value="Temp" checked onclick="toggleDate('dateKPC', false)"> 一時的</label>
                                                 <label><input type="radio" name="durKPC" value="Indef" onclick="toggleDate('dateKPC', true)"> 不定</label>
-                                                <label><input type="radio" name="durKPC" value="Perm" onclick="toggleDate('dateKPC', false)">永続</label>
+                                                <label><input type="radio" name="durKPC" value="Perm" onclick="toggleDate('dateKPC', false)"> 永続</label>
                                             </div>
                                             <div id="dateKPC" class="ins-date-row">完治日: <input type="date" id="inpInsDateKPC" class="tag-input" style="width:100px;"></div>
                                         </div>
@@ -456,7 +456,7 @@
                                 <div class="scn-toggle-header" onclick="window.toggleScnContent('scWarn')">注意事項 <span class="material-icons-round">expand_more</span></div><div id="scWarn" class="scn-content"><textarea id="inpWarnings" class="paper-area" style="min-height:60px;"></textarea></div>
                             </div>
 
-                            <!-- ★ TAB ANALYSIS (IMPROVED 4.0 - Collapsible & Saved) -->
+                            <!-- ★ TAB ANALYSIS (FIXED) -->
                             <div id="tab-analysis" class="tab-panel">
                                 <h2 class="section-header">LOG ANALYSIS</h2>
                                 <div class="analysis-container">
@@ -597,7 +597,7 @@
         const insanityData = {"1": "健忘症 / 昏迷", "2": "激しい恐怖症", "3": "幻覚", "4": "奇妙な性的嗜好", "5": "フェティッシュ", "6": "チック・震え", "7": "心因性機能障害", "8": "短時間の心因反応", "9": "一時的偏執症", "10": "強迫観念行動", "Other": ""};
         window.updateInsanityDesc = (val, role) => { const el = document.getElementById(role==='PC'?'inpInsanityDescPC':'inpInsanityDescKPC'); if(el && !el.value) el.value = insanityData[val]||""; };
 
-        /* --- LOG ANALYSIS LOGIC (ENHANCED 4.0) --- */
+        /* --- LOG ANALYSIS LOGIC (FIXED) --- */
         let lastParsedStats = null; // Store stats for re-rendering
 
         window.handleLogUpload = function(input) {
@@ -613,10 +613,7 @@
             const doc = parser.parseFromString(htmlContent, 'text/html');
             const paragraphs = doc.querySelectorAll('p');
             
-            // Stats Structure
             let charStats = {};
-            
-            // Helper to get or init stats
             const getStats = (name) => {
                 if(!charStats[name]) charStats[name] = { 
                     dice:0, crit:0, fumb:0, succ:0, fail:0, 
@@ -629,19 +626,35 @@
 
             paragraphs.forEach(p => {
                 lineIndex++;
-                const spans = p.querySelectorAll('span');
-                if (spans.length < 2) return;
-                
-                let name = spans[1].innerText.replace(/[:：]/g, '').trim();
-                let content = "";
-                for(let i=2; i<spans.length; i++) content += spans[i].innerText;
+                // Get FULL TEXT content to ignore span structure issues
+                const fullText = p.innerText.trim();
+                if(!fullText) return;
 
-                // ★ SYSTEM Message Check: "system" name often contains [CharName] in content
-                if (name.match(/system/i)) {
-                    // Try to extract name from content: [ CharName ] ...
-                    const nameMatch = content.match(/\[\s*([^\]]+?)\s*\]/);
+                // 1. Try to find standard chat format: [Tab] Name : Content
+                // or just Name : Content
+                let name = "";
+                let content = "";
+
+                // Heuristic parsing based on ' : ' or ' : ' (fullwidth)
+                // However, System messages are special.
+                
+                // ★ CHECK FOR SYSTEM SAN MESSAGE FIRST (Prioritize text scan)
+                // Pattern: [main] system : [ Name ] SAN : 60 -> 59
+                // Or just: system : [ Name ] SAN : 60 -> 59
+                if (fullText.includes("system") && fullText.includes("SAN")) {
+                    // Extract name inside brackets
+                    const nameMatch = fullText.match(/\[\s*([^\]]+?)\s*\]/);
                     if (nameMatch) {
-                        name = nameMatch[1].trim(); 
+                        name = nameMatch[1].trim();
+                        content = fullText; // Treat whole line as content
+                    }
+                } 
+                else {
+                    // Standard message parsing
+                    const spans = p.querySelectorAll('span');
+                    if (spans.length >= 2) {
+                        name = spans[1].innerText.replace(/[:：]/g, '').trim();
+                        for(let i=2; i<spans.length; i++) content += spans[i].innerText;
                     }
                 }
 
@@ -650,8 +663,7 @@
                 const st = getStats(name);
 
                 // --- SAN Check ---
-                // Support variations: "SAN : 60 → 59", "SAN : 60 -> 59", "SAN : 60 ＞ 59"
-                if (content.match(/SAN/i)) {
+                if (content.match(/SAN/i) && content.match(/[→>＞]/)) {
                     const matches = content.match(/(\d+)\s*[→>＞]\s*(\d+)/);
                     if(matches) {
                         const newVal = parseInt(matches[2]);
