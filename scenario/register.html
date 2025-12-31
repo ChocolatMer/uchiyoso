@@ -221,9 +221,27 @@
         
         .graph-container { position: relative; height: 200px; width: 100%; margin-bottom: 15px; background: rgba(0,0,0,0.2); border-radius: 4px; }
         
-        .skill-rank-box { font-size: 0.85rem; color: #bbb; border-top: 1px dashed #444; padding-top: 10px; }
-        .rank-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
-        .rank-bar { display: inline-block; height: 4px; background: #444; border-radius: 2px; }
+        /* Details & Skill Table */
+        .analysis-details {
+            background: rgba(255,255,255,0.05); padding: 10px; border-radius: 4px; border: 1px solid #444;
+        }
+        .analysis-details summary {
+            cursor: pointer; color: #d4b346; font-family: 'Cinzel'; font-size: 0.8rem; letter-spacing: 1px;
+            outline: none; list-style: none; display: flex; justify-content: space-between; align-items: center;
+        }
+        .analysis-details summary::after { content: '+'; font-size: 1.2rem; }
+        .analysis-details[open] summary::after { content: '-'; }
+        .analysis-details[open] { border-color: #d4b346; }
+
+        .skill-table {
+            width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-top: 10px;
+        }
+        .skill-table th { text-align: left; color: #888; border-bottom: 1px solid #555; padding: 4px; font-family: 'Cinzel'; font-weight: normal; }
+        .skill-table td { padding: 4px; border-bottom: 1px solid #333; color: #ccc; }
+        .skill-val { text-align: right; }
+        .badge { display: inline-block; padding: 1px 5px; border-radius: 2px; font-size: 0.7rem; margin-left: 5px; font-family: 'Cinzel'; }
+        .badge-crit { color: #8bc34a; border: 1px solid #8bc34a; }
+        .badge-fumb { color: #f44336; border: 1px solid #f44336; }
 
         /* Other Styles */
         .san-compare-area { display: flex; gap: 20px; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 15px; }
@@ -537,7 +555,7 @@
                                 <div class="scn-toggle-header" onclick="window.toggleScnContent('scWarn')">注意事項 <span class="material-icons-round">expand_more</span></div><div id="scWarn" class="scn-content"><textarea id="inpWarnings" class="paper-area" style="min-height:60px;"></textarea></div>
                             </div>
 
-                            <!-- ★ TAB ANALYSIS (IMPROVED) -->
+                            <!-- ★ TAB ANALYSIS (IMPROVED 2.0) -->
                             <div id="tab-analysis" class="tab-panel">
                                 <h2 class="section-header">LOG ANALYSIS</h2>
                                 <div class="analysis-container">
@@ -678,7 +696,7 @@
         const insanityData = {"1": "健忘症 / 昏迷", "2": "激しい恐怖症", "3": "幻覚", "4": "奇妙な性的嗜好", "5": "フェティッシュ", "6": "チック・震え", "7": "心因性機能障害", "8": "短時間の心因反応", "9": "一時的偏執症", "10": "強迫観念行動", "Other": ""};
         window.updateInsanityDesc = (val, role) => { const el = document.getElementById(role==='PC'?'inpInsanityDescPC':'inpInsanityDescKPC'); if(el && !el.value) el.value = insanityData[val]||""; };
 
-        /* --- LOG ANALYSIS LOGIC (UPDATED) --- */
+        /* --- LOG ANALYSIS LOGIC (ENHANCED 2.0) --- */
         let lastParsedStats = null; // Store stats for re-rendering
 
         window.handleLogUpload = function(input) {
@@ -694,13 +712,17 @@
             const doc = parser.parseFromString(htmlContent, 'text/html');
             const paragraphs = doc.querySelectorAll('p');
             
-            // Map character names to stats
-            // { charName: { dice:0, crit:0, fumb:0, succ:0, fail:0, sanHistory:[{t:idx, v:val}], skills:{} } }
+            // Stats Structure:
+            // { charName: { dice:0, crit:0, fumb:0, succ:0, fail:0, sanHistory:[{x:idx, y:val}], 
+            //               skillDetails: { skillName: { count:0, crit:0, fumb:0, succ:0, fail:0 } }, currentSan: null } }
             let charStats = {};
             
             // Helper to get or init stats
             const getStats = (name) => {
-                if(!charStats[name]) charStats[name] = { dice:0, crit:0, fumb:0, succ:0, fail:0, sanHistory:[], skills:{}, currentSan: null };
+                if(!charStats[name]) charStats[name] = { 
+                    dice:0, crit:0, fumb:0, succ:0, fail:0, 
+                    sanHistory:[], skillDetails:{}, currentSan: null 
+                };
                 return charStats[name];
             };
 
@@ -716,7 +738,7 @@
                 for(let i=2; i<spans.length; i++) content += spans[i].innerText;
 
                 // ★ SYSTEM Message Check: "system" name often contains [CharName] in content
-                if (name === 'system' || name === 'System') {
+                if (name.match(/system/i)) {
                     // Try to extract name from content: [ CharName ] ...
                     const nameMatch = content.match(/^\[\s*(.+?)\s*\]/);
                     if (nameMatch) {
@@ -730,10 +752,7 @@
 
                 // --- SAN Check ---
                 // Support variations: "SAN : 60 → 59", "SAN : 60 -> 59", "SAN : 60 ＞ 59"
-                // Must contain "SAN" and arrow-like char
                 if (content.match(/SAN/i) && content.match(/[→>＞]/)) {
-                    // Match pattern: number arrow number
-                    // Also handles [ 鱸 柊 ] prefix removal implicitly if needed
                     const matches = content.match(/(\d+)\s*[→>＞]\s*(\d+)/);
                     if(matches) {
                         const newVal = parseInt(matches[2]);
@@ -745,15 +764,23 @@
                 // --- Dice Roll ---
                 if (content.match(/\d+d\d+/i) || content.match(/CCB/i)) {
                     st.dice++;
-                    if (content.includes("クリティカル") || content.includes("決定的成功")) st.crit++;
-                    if (content.includes("ファンブル") || content.includes("致命的失敗")) st.fumb++;
-                    if (content.includes("成功")) st.succ++;
-                    if (content.includes("失敗")) st.fail++;
+                    
+                    let resultType = 'normal';
+                    if (content.includes("クリティカル") || content.includes("決定的成功")) { st.crit++; resultType = 'crit'; }
+                    else if (content.includes("ファンブル") || content.includes("致命的失敗")) { st.fumb++; resultType = 'fumb'; }
+                    else if (content.includes("成功")) { st.succ++; resultType = 'succ'; }
+                    else if (content.includes("失敗")) { st.fail++; resultType = 'fail'; }
 
                     const skillMatch = content.match(/【(.*?)】/);
                     if (skillMatch) {
                         const skill = skillMatch[1];
-                        st.skills[skill] = (st.skills[skill] || 0) + 1;
+                        if(!st.skillDetails[skill]) st.skillDetails[skill] = { count:0, crit:0, fumb:0, succ:0, fail:0 };
+                        
+                        st.skillDetails[skill].count++;
+                        if(resultType === 'crit') st.skillDetails[skill].crit++;
+                        if(resultType === 'fumb') st.skillDetails[skill].fumb++;
+                        if(resultType === 'succ') st.skillDetails[skill].succ++;
+                        if(resultType === 'fail') st.skillDetails[skill].fail++;
                     }
                 }
             });
@@ -775,7 +802,6 @@
             const pcSel = document.getElementById('selPC');
             const kpcSel = document.getElementById('selKPC');
             
-            // Helper to clean names for comparison (remove spaces)
             const clean = (s) => (s || "").replace(/\s+/g, "");
             
             const pcNameRaw = pcSel.options[pcSel.selectedIndex].text;
@@ -783,15 +809,14 @@
             const pcName = clean(pcNameRaw);
             const kpcName = clean(kpcNameRaw);
 
-            // Loop through PC, KPC first, then others
+            // Sort: PC -> KPC -> Others
             const sortedKeys = Object.keys(charStats).sort((a,b) => {
                 const cleanA = clean(a);
                 const cleanB = clean(b);
-                // Exact match or partial match priority
-                const isPC_A = cleanA === pcName || cleanA.includes(pcName) || pcName.includes(cleanA);
-                const isKPC_A = cleanA === kpcName || cleanA.includes(kpcName) || kpcName.includes(cleanA);
-                const isPC_B = cleanB === pcName || cleanB.includes(pcName) || pcName.includes(cleanB);
-                const isKPC_B = cleanB === kpcName || cleanB.includes(kpcName) || kpcName.includes(cleanB);
+                const isPC_A = cleanA.includes(pcName) || pcName.includes(cleanA);
+                const isKPC_A = cleanA.includes(kpcName) || kpcName.includes(cleanA);
+                const isPC_B = cleanB.includes(pcName) || pcName.includes(cleanB);
+                const isKPC_B = cleanB.includes(kpcName) || kpcName.includes(cleanB);
 
                 const aScore = (isPC_A ? 2 : (isKPC_A ? 1 : 0));
                 const bScore = (isPC_B ? 2 : (isKPC_B ? 1 : 0));
@@ -803,8 +828,8 @@
                 if(st.dice === 0 && st.sanHistory.length === 0) return; // Skip empty logs
 
                 const cleanName = clean(name);
-                const isPC = cleanName === pcName || cleanName.includes(pcName) || pcName.includes(cleanName);
-                const isKPC = cleanName === kpcName || cleanName.includes(kpcName) || kpcName.includes(cleanName);
+                const isPC = cleanName.includes(pcName) || pcName.includes(cleanName);
+                const isKPC = cleanName.includes(kpcName) || kpcName.includes(cleanName);
                 
                 const color = (isPC) ? '#88ccff' : (isKPC ? '#ff8888' : '#aaa');
                 
@@ -840,26 +865,42 @@
                     graphHtml = `<div style="font-size:0.7rem; color:#666; text-align:center; margin-bottom:10px;">(SAN変動なし)</div>`;
                 }
 
-                // Skill Ranking
-                const topSkills = Object.entries(st.skills).sort((a,b)=>b[1]-a[1]).slice(0, 5);
-                let skillHtml = "";
-                if(topSkills.length > 0) {
-                    skillHtml = `<div class="skill-rank-box"><div style="margin-bottom:5px; font-family:'Cinzel'; font-size:0.7rem;">TOP SKILLS</div>`;
-                    const maxCount = topSkills[0][1];
-                    topSkills.forEach(s => {
-                        const width = Math.max((s[1] / maxCount) * 100, 5);
-                        skillHtml += `
-                            <div class="rank-row">
-                                <span style="flex:1;">${s[0]}</span>
-                                <span style="width:30px; text-align:right;">${s[1]}</span>
-                            </div>
-                            <div class="rank-bar" style="width:${width}%; background:${color}"></div>
+                // Details Section (Collapsible)
+                let detailsHtml = "";
+                const skills = Object.entries(st.skillDetails).sort((a,b) => b[1].count - a[1].count);
+                
+                if (skills.length > 0) {
+                    detailsHtml = `
+                        <details class="analysis-details">
+                            <summary>DETAILS</summary>
+                            <div style="margin-top:10px;">
+                                <div style="font-family:'Cinzel'; font-size:0.7rem; color:#888; margin-bottom:5px;">SKILL BREAKDOWN</div>
+                                <table class="skill-table">
+                                    <thead><tr><th>SKILL</th><th>TOTAL</th><th>DETAIL</th></tr></thead>
+                                    <tbody>
+                    `;
+                    
+                    skills.forEach(([skillName, d]) => {
+                        let badges = "";
+                        if(d.crit > 0) badges += `<span class="badge badge-crit">C:${d.crit}</span>`;
+                        if(d.fumb > 0) badges += `<span class="badge badge-fumb">F:${d.fumb}</span>`;
+                        
+                        detailsHtml += `
+                            <tr>
+                                <td>${skillName}</td>
+                                <td class="skill-val">${d.count}</td>
+                                <td style="text-align:right;">
+                                    <span style="font-size:0.7rem; color:#aaa;">S:${d.succ}/F:${d.fail}</span>
+                                    ${badges}
+                                </td>
+                            </tr>
                         `;
                     });
-                    skillHtml += `</div>`;
+                    
+                    detailsHtml += `</tbody></table></div></details>`;
                 }
 
-                card.innerHTML = titleHtml + summaryHtml + graphHtml + skillHtml;
+                card.innerHTML = titleHtml + summaryHtml + graphHtml + detailsHtml;
                 container.appendChild(card);
 
                 // Draw Graph
@@ -1078,7 +1119,7 @@
             getEl('inpSynopsis').value = s.overview||""; getEl('inpIntroduction').value = s.introduction||""; getEl('inpWarnings').value = s.warnings||"";
             if(s.memos) { 
                 getEl('inpPublicMemo').value = s.memos.public||""; getEl('inpSecretMemoPC').value = s.memos.secretPC||""; getEl('inpSecretMemoKPC').value = s.memos.secretKPC||"";
-                // ★ Analysis Load (Note: We don't save raw HTML log but result text)
+                // ★ Analysis Load
                 if(s.memos.analysis) {
                     getEl('inpAnalysisMemo').value = s.memos.analysis;
                 } else {
