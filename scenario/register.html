@@ -679,6 +679,8 @@
         window.updateInsanityDesc = (val, role) => { const el = document.getElementById(role==='PC'?'inpInsanityDescPC':'inpInsanityDescKPC'); if(el && !el.value) el.value = insanityData[val]||""; };
 
         /* --- LOG ANALYSIS LOGIC (UPDATED) --- */
+        let lastParsedStats = null; // Store stats for re-rendering
+
         window.handleLogUpload = function(input) {
             const file = input.files[0];
             if (!file) return;
@@ -695,11 +697,6 @@
             // Map character names to stats
             // { charName: { dice:0, crit:0, fumb:0, succ:0, fail:0, sanHistory:[{t:idx, v:val}], skills:{} } }
             let charStats = {};
-
-            const pcSel = document.getElementById('selPC');
-            const kpcSel = document.getElementById('selKPC');
-            const pcName = pcSel.options[pcSel.selectedIndex].text;
-            const kpcName = kpcSel.options[kpcSel.selectedIndex].text;
             
             // Helper to get or init stats
             const getStats = (name) => {
@@ -718,18 +715,26 @@
                 let content = "";
                 for(let i=2; i<spans.length; i++) content += spans[i].innerText;
 
-                // Simple check if this name is relevant (PC or KPC) or new
-                // Filter out system messages if name is empty
+                // ★ SYSTEM Message Check: "system" name often contains [CharName] in content
+                if (name === 'system' || name === 'System') {
+                    // Try to extract name from content: [ CharName ] ...
+                    const nameMatch = content.match(/^\[\s*(.+?)\s*\]/);
+                    if (nameMatch) {
+                        name = nameMatch[1].trim(); 
+                    }
+                }
+
                 if(!name) return;
 
                 const st = getStats(name);
 
                 // --- SAN Check ---
-                // "sanc" or "SAN" and arrow "->" "→"
-                // e.g. 1d100<=50 ... 50 -> 45
-                if (content.match(/SAN/i) && content.match(/[→>]/)) {
-                    // Extract new value at end of string usually
-                    const matches = content.match(/(\d+)\s*[→>]\s*(\d+)/);
+                // Support variations: "SAN : 60 → 59", "SAN : 60 -> 59", "SAN : 60 ＞ 59"
+                // Must contain "SAN" and arrow-like char
+                if (content.match(/SAN/i) && content.match(/[→>＞]/)) {
+                    // Match pattern: number arrow number
+                    // Also handles [ 鱸 柊 ] prefix removal implicitly if needed
+                    const matches = content.match(/(\d+)\s*[→>＞]\s*(\d+)/);
                     if(matches) {
                         const newVal = parseInt(matches[2]);
                         st.sanHistory.push({ x: lineIndex, y: newVal });
@@ -753,33 +758,55 @@
                 }
             });
 
-            // Filter out characters with very little activity (likely noise or NPCs if desired, but here we show all found)
-            // Or prioritize PC/KPC
-            renderCharacterStats(charStats, pcName, kpcName);
+            lastParsedStats = charStats;
+            renderCharacterStats();
         }
 
-        function renderCharacterStats(charStats, pcName, kpcName) {
+        function renderCharacterStats() {
+            if(!lastParsedStats) return;
+            const charStats = lastParsedStats;
+
             const container = document.getElementById('analysisContent');
             container.innerHTML = "";
             document.getElementById('analysisEmpty').style.display = 'none';
             document.getElementById('analysisResult').style.display = 'block';
 
-            // Identify Target Chars
-            const targets = [pcName, kpcName];
+            // Identify Target Chars from Select Inputs
+            const pcSel = document.getElementById('selPC');
+            const kpcSel = document.getElementById('selKPC');
             
+            // Helper to clean names for comparison (remove spaces)
+            const clean = (s) => (s || "").replace(/\s+/g, "");
+            
+            const pcNameRaw = pcSel.options[pcSel.selectedIndex].text;
+            const kpcNameRaw = kpcSel.options[kpcSel.selectedIndex].text;
+            const pcName = clean(pcNameRaw);
+            const kpcName = clean(kpcNameRaw);
+
             // Loop through PC, KPC first, then others
             const sortedKeys = Object.keys(charStats).sort((a,b) => {
-                const aScore = (a === pcName ? 2 : (a === kpcName ? 1 : 0));
-                const bScore = (b === pcName ? 2 : (b === kpcName ? 1 : 0));
+                const cleanA = clean(a);
+                const cleanB = clean(b);
+                // Exact match or partial match priority
+                const isPC_A = cleanA === pcName || cleanA.includes(pcName) || pcName.includes(cleanA);
+                const isKPC_A = cleanA === kpcName || cleanA.includes(kpcName) || kpcName.includes(cleanA);
+                const isPC_B = cleanB === pcName || cleanB.includes(pcName) || pcName.includes(cleanB);
+                const isKPC_B = cleanB === kpcName || cleanB.includes(kpcName) || kpcName.includes(cleanB);
+
+                const aScore = (isPC_A ? 2 : (isKPC_A ? 1 : 0));
+                const bScore = (isPC_B ? 2 : (isKPC_B ? 1 : 0));
                 return bScore - aScore;
             });
 
             sortedKeys.forEach((name, idx) => {
                 const st = charStats[name];
-                if(st.dice === 0 && st.sanHistory.length === 0) return; // Skip empty
+                if(st.dice === 0 && st.sanHistory.length === 0) return; // Skip empty logs
 
-                const isTarget = targets.includes(name);
-                const color = (name === pcName) ? '#88ccff' : (name === kpcName ? '#ff8888' : '#aaa');
+                const cleanName = clean(name);
+                const isPC = cleanName === pcName || cleanName.includes(pcName) || pcName.includes(cleanName);
+                const isKPC = cleanName === kpcName || cleanName.includes(kpcName) || kpcName.includes(cleanName);
+                
+                const color = (isPC) ? '#88ccff' : (isKPC ? '#ff8888' : '#aaa');
                 
                 // Create Card
                 const card = document.createElement('div');
@@ -835,7 +862,7 @@
                 card.innerHTML = titleHtml + summaryHtml + graphHtml + skillHtml;
                 container.appendChild(card);
 
-                // Draw Graph if exists
+                // Draw Graph
                 if(st.sanHistory.length > 0) {
                     const ctx = document.getElementById(canvasId).getContext('2d');
                     new Chart(ctx, {
@@ -855,7 +882,7 @@
                             responsive: true,
                             maintainAspectRatio: false,
                             scales: {
-                                x: { type: 'linear', display: false }, // Time axis hidden
+                                x: { type: 'linear', display: false },
                                 y: { beginAtZero: false, suggestedMin: 0, suggestedMax: 100, grid: { color: '#333'} }
                             },
                             plugins: { legend: { display: false } }
@@ -978,6 +1005,7 @@
             getEl('skillListPC').innerHTML = ""; getEl('skillListKPC').innerHTML = ""; getEl('encList').innerHTML = "";
             // Reset Analysis
             document.getElementById('analysisEmpty').style.display = 'block'; document.getElementById('analysisResult').style.display = 'none';
+            lastParsedStats = null;
             document.querySelectorAll('.history-item').forEach(e=>e.classList.remove('active'));
             alert("新規作成モードにリセットしました");
         };
@@ -1050,16 +1078,15 @@
             getEl('inpSynopsis').value = s.overview||""; getEl('inpIntroduction').value = s.introduction||""; getEl('inpWarnings').value = s.warnings||"";
             if(s.memos) { 
                 getEl('inpPublicMemo').value = s.memos.public||""; getEl('inpSecretMemoPC').value = s.memos.secretPC||""; getEl('inpSecretMemoKPC').value = s.memos.secretKPC||"";
-                // ★ Analysis Load
+                // ★ Analysis Load (Note: We don't save raw HTML log but result text)
                 if(s.memos.analysis) {
                     getEl('inpAnalysisMemo').value = s.memos.analysis;
-                    document.getElementById('analysisEmpty').style.display = 'none';
-                    document.getElementById('analysisResult').style.display = 'block';
                 } else {
                     getEl('inpAnalysisMemo').value = "";
-                    document.getElementById('analysisEmpty').style.display = 'block';
-                    document.getElementById('analysisResult').style.display = 'none';
                 }
+                // Log file is not stored in DB, so user must re-upload to view graphs
+                document.getElementById('analysisEmpty').style.display = 'block';
+                document.getElementById('analysisResult').style.display = 'none';
             }
         };
 
@@ -1079,7 +1106,10 @@
                     getEl(plId).value = char.plName || "";
                     let san = "??"; if(char.vitals?.san) san = char.vitals.san; else if(char.stats?.POW) san = char.stats.POW*5; 
                     if(sanId) getEl(sanId).textContent = san;
-                    applyTheme(role, id); window.updateRoleLabels(); 
+                    applyTheme(role, id); window.updateRoleLabels();
+                    
+                    // ★ Re-render stats if available
+                    if(lastParsedStats) renderCharacterStats();
                 }
                 loadHistory();
             });
