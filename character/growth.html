@@ -22,7 +22,7 @@
             --text-main: #f0f0f0;
             --text-muted: #888;
             
-            /* Category Colors (より鮮やかに調整) */
+            /* Category Colors */
             --c-combat: #ff5252;
             --c-search: #40e0d0;
             --c-action: #ffd700;
@@ -31,9 +31,9 @@
             --c-other:  #b0bec5;
 
             /* Dimensions */
-            --w-skill: 140px; /* 文字サイズUPに合わせて少し拡張 */
-            --w-base: 36px;
-            --w-scen: 34px;   /* 成長列の幅を確保 */
+            --w-skill: 150px; /* スキル名幅 */
+            --w-base: 34px;   /* 初期値などの幅 */
+            --w-scen: 34px;   /* シナリオ列の幅 */
             
             /* Glass Effect */
             --glass-bg: rgba(20, 20, 20, 0.65);
@@ -48,41 +48,42 @@
             font-family: 'Shippori Mincho', serif; 
             margin: 0; padding: 0; 
             height: 100vh; overflow: hidden;
-            font-size: 0.85rem; /* サイズアップ */
+            font-size: 0.85rem;
             letter-spacing: 0.03em;
         }
 
-        /* Dynamic Background */
+        /* Dynamic Background - 立ち絵をより見やすく調整 */
         #bgLayer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-size: cover; background-position: center;
-            opacity: 0.25; /* 背景画像をもう少し見せる */
-            filter: blur(15px) saturate(0.8); z-index: -1;
-            transition: background-image 1s ease;
+            opacity: 0.4; /* 透明度アップ */
+            filter: blur(8px) saturate(0.9); /* ぼかし軽減 */
+            z-index: -1;
+            transition: background-image 1s ease, opacity 0.5s;
         }
         #bgOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 90%);
+            background: linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 100%);
             z-index: -1;
         }
 
         /* Layout */
         .layout {
             display: grid;
-            grid-template-columns: 280px 1fr; /* サイドバーも少し広く */
+            grid-template-columns: 280px 1fr;
             grid-template-rows: auto 1fr;
             height: 100vh; width: 100%;
-            backdrop-filter: blur(5px);
         }
 
         /* --- 3. SIDEBAR --- */
         .sidebar {
             grid-row: 1 / 3;
-            background: rgba(10, 10, 10, 0.85);
+            background: rgba(10, 10, 10, 0.8);
             border-right: 1px solid rgba(255,255,255,0.1);
-            display: flex; flex-direction: column; gap: 20px; padding: 20px;
+            display: flex; flex-direction: column; gap: 15px; padding: 15px;
             overflow-y: auto; z-index: 20;
-            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+            box-shadow: 5px 0 20px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
         }
         .sidebar::-webkit-scrollbar { width: 4px; }
         .sidebar::-webkit-scrollbar-thumb { background: #555; border-radius: 2px; }
@@ -101,13 +102,13 @@
             text-align: center;
             background: rgba(255, 255, 255, 0.02);
             border: var(--glass-border);
-            border-radius: 8px; padding: 15px;
+            border-radius: 8px; padding: 10px;
             transition: 0.3s;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            margin-bottom: 5px;
         }
         
         .char-icon-wrapper {
-            position: relative; width: 90px; height: 90px; margin: 0 auto 12px;
+            position: relative; width: 80px; height: 80px; margin: 0 auto 10px;
         }
         .char-img {
             width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
@@ -118,125 +119,131 @@
         
         .char-select {
             width: 100%; background: #1a1a1a; color: #fff;
-            border: 1px solid #444; padding: 8px; border-radius: 4px;
+            border: 1px solid #444; padding: 6px; border-radius: 4px;
             font-family: 'Shippori Mincho'; cursor: pointer; font-size: 0.8rem;
-            transition: 0.2s;
         }
-        .char-select:focus { outline: none; border-color: var(--theme); background: #222; }
+        .char-select:focus { outline: none; border-color: var(--theme); }
 
         /* Stats Panel */
         .stats-panel {
-            background: rgba(0, 0, 0, 0.3); border-radius: 6px; padding: 12px;
+            background: rgba(0, 0, 0, 0.3); border-radius: 6px; padding: 10px;
             border: var(--glass-border);
         }
         .panel-head {
             font-family: 'Cinzel'; font-size: 0.8rem; color: #aaa;
-            border-bottom: 1px dashed #555; margin-bottom: 10px; padding-bottom: 4px;
+            border-bottom: 1px dashed #555; margin-bottom: 8px; padding-bottom: 4px;
             display: flex; justify-content: space-between; align-items: center;
-            letter-spacing: 1px;
         }
         
-        .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+        .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 10px; }
         .kpi-item { 
-            text-align: center; background: rgba(255,255,255,0.03); padding: 8px 4px; border-radius: 4px;
+            text-align: center; background: rgba(255,255,255,0.03); padding: 6px 4px; border-radius: 4px;
             border: 1px solid rgba(255,255,255,0.05);
         }
-        .kpi-label { font-size: 0.6rem; color: #999; font-family: 'Cinzel'; display: block; margin-bottom: 2px; }
-        .kpi-val { font-size: 1.2rem; color: var(--theme); font-weight: bold; font-family: 'Cinzel'; text-shadow: 0 0 8px rgba(212, 179, 70, 0.3); }
+        .kpi-label { font-size: 0.6rem; color: #999; font-family: 'Cinzel'; display: block; }
+        .kpi-val { font-size: 1.1rem; color: var(--theme); font-weight: bold; font-family: 'Cinzel'; }
 
-        /* Skill Ranking */
-        .rank-list { list-style: none; padding: 0; margin: 0; font-size: 0.8rem; max-height: 250px; overflow-y: auto; }
+        /* Dice Stats Grid */
+        .dice-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 5px;
+            font-size: 0.75rem; color: #ccc;
+        }
+        .dice-row { display: flex; justify-content: space-between; padding: 2px 4px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .dice-val { font-family: 'Cinzel'; font-weight: bold; }
+        .dice-rate { grid-column: 1 / 3; background: rgba(var(--theme), 0.1); text-align: center; padding: 4px; margin-top: 4px; border-radius: 4px; color: var(--theme); font-weight: bold; font-family: 'Cinzel'; }
+
+        /* Skill Ranking - 高さ拡張 */
+        .rank-list { 
+            list-style: none; padding: 0; margin: 0; font-size: 0.8rem; 
+            max-height: 400px; /* 十分な高さを確保 */
+            overflow-y: auto; 
+        }
         .rank-list::-webkit-scrollbar { width: 2px; }
         .rank-row {
-            display: flex; justify-content: space-between; padding: 6px 4px;
+            display: flex; justify-content: space-between; padding: 5px 4px;
             border-bottom: 1px solid rgba(255,255,255,0.05);
-            transition: 0.2s;
         }
-        .rank-row:hover { background: rgba(255,255,255,0.05); }
-        .rank-name { color: #ddd; }
-        .rank-num { color: var(--theme); font-family: 'Cinzel'; font-weight: bold; }
+        .rank-name { color: #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+        .rank-num { color: var(--theme); font-family: 'Cinzel'; margin-left: 8px; }
 
-        /* --- 4. TOP AREA (Graph & Filter) --- */
+        /* --- 4. TOP AREA --- */
         .top-area {
             grid-column: 2 / 3; grid-row: 1 / 2;
-            padding: 20px;
+            padding: 15px 20px;
             display: grid; grid-template-columns: 2fr 1fr; gap: 20px;
-            background: rgba(0,0,0,0.15);
+            background: rgba(0,0,0,0.2);
             border-bottom: 1px solid var(--border);
             height: 200px;
+            backdrop-filter: blur(5px);
         }
 
         .chart-box { 
             position: relative; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.3); border-radius: 4px; border: var(--glass-border);
+            background: rgba(0,0,0,0.4); border-radius: 4px; border: var(--glass-border);
             padding: 10px;
         }
         .chart-title {
-            position: absolute; top: -10px; left: 10px; 
-            font-family: 'Cinzel'; font-size: 0.75rem; color: #ccc;
+            position: absolute; top: -8px; left: 10px; 
+            font-family: 'Cinzel'; font-size: 0.7rem; color: #ccc;
             background: #111; padding: 2px 8px; border: 1px solid #444; border-radius: 2px;
-            z-index: 5;
         }
 
-        /* Insanity Log */
         .insanity-container {
             display: flex; flex-direction: column; height: 100%;
             background: rgba(20, 0, 0, 0.4); border: 1px solid rgba(150, 60, 60, 0.4);
             border-radius: 4px; overflow: hidden;
-            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
         }
         .ins-header {
-            background: rgba(50, 0, 0, 0.6); padding: 6px 12px;
+            background: rgba(60, 10, 10, 0.7); padding: 6px 12px;
             font-family: 'Cinzel'; font-size: 0.8rem; color: #ff8888;
             border-bottom: 1px solid rgba(120, 50, 50, 0.5);
             display: flex; align-items: center; gap: 6px;
         }
         .ins-list { overflow-y: auto; padding: 6px 12px; flex: 1; }
-        .ins-list::-webkit-scrollbar { width: 4px; }
-        .ins-list::-webkit-scrollbar-thumb { background: #733; border-radius: 2px; }
         .ins-item {
             font-size: 0.8rem; padding: 6px 0; border-bottom: 1px dashed rgba(150, 80, 80, 0.3);
             animation: fadeIn 0.5s ease;
         }
-        .ins-meta { font-size: 0.65rem; color: #c88; font-family: 'Cinzel'; margin-bottom: 2px; }
-        .ins-text { color: #fdd; text-shadow: 0 0 8px rgba(255, 50, 50, 0.3); line-height: 1.4; }
+        .ins-meta { font-size: 0.65rem; color: #c88; font-family: 'Cinzel'; }
+        .ins-text { color: #fdd; text-shadow: 0 0 5px rgba(255, 50, 50, 0.3); }
 
-        /* --- 5. MAIN AREA (Toolbar & Matrix) --- */
+        /* --- 5. MAIN AREA --- */
         .main-area {
             grid-column: 2 / 3; grid-row: 2 / 3;
             display: flex; flex-direction: column;
-            overflow: hidden; background: rgba(0,0,0,0.2);
+            overflow: hidden; background: rgba(0,0,0,0.1);
         }
 
         /* Toolbar */
         .matrix-toolbar {
             padding: 10px 20px; display: flex; align-items: center; justify-content: space-between;
             background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border);
-            backdrop-filter: blur(5px);
         }
         
         .filter-group { display: flex; gap: 6px; }
         .filter-btn {
             background: rgba(0,0,0,0.3); border: 1px solid #555; color: #aaa;
-            padding: 4px 14px; border-radius: 20px; cursor: pointer;
-            font-size: 0.8rem; transition: 0.3s; font-family: 'Noto Sans JP';
+            padding: 4px 12px; border-radius: 14px; cursor: pointer;
+            font-size: 0.75rem; transition: 0.3s; font-family: 'Noto Sans JP';
         }
-        .filter-btn:hover { border-color: #888; color: #fff; transform: translateY(-1px); }
+        .filter-btn:hover { border-color: #888; color: #fff; }
         .filter-btn.active { 
             background: var(--theme); color: #000; border-color: var(--theme); 
             font-weight: bold; box-shadow: 0 0 10px rgba(212, 179, 70, 0.4);
         }
         
         /* Category specific active styles */
-        .filter-btn.cat-combat.active { background: var(--c-combat); border-color: var(--c-combat); box-shadow: 0 0 10px rgba(255, 82, 82, 0.4); }
-        .filter-btn.cat-search.active { background: var(--c-search); border-color: var(--c-search); box-shadow: 0 0 10px rgba(64, 224, 208, 0.4); }
-        .filter-btn.cat-action.active { background: var(--c-action); border-color: var(--c-action); box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
-        .filter-btn.cat-nego.active   { background: var(--c-nego);   border-color: var(--c-nego);   box-shadow: 0 0 10px rgba(255, 159, 67, 0.4); }
-        .filter-btn.cat-know.active   { background: var(--c-know);   border-color: var(--c-know);   box-shadow: 0 0 10px rgba(206, 147, 216, 0.4); }
+        .filter-btn.cat-combat.active { background: var(--c-combat); border-color: var(--c-combat); box-shadow: 0 0 8px var(--c-combat); }
+        .filter-btn.cat-search.active { background: var(--c-search); border-color: var(--c-search); box-shadow: 0 0 8px var(--c-search); }
+        .filter-btn.cat-action.active { background: var(--c-action); border-color: var(--c-action); box-shadow: 0 0 8px var(--c-action); }
+        .filter-btn.cat-nego.active   { background: var(--c-nego);   border-color: var(--c-nego);   box-shadow: 0 0 8px var(--c-nego); }
+        .filter-btn.cat-know.active   { background: var(--c-know);   border-color: var(--c-know);   box-shadow: 0 0 8px var(--c-know); }
 
+        /* Toggles */
+        .toggle-area { display: flex; gap: 15px; }
         .toggle-wrapper { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #ccc; cursor: pointer; }
         .toggle-switch {
-            width: 36px; height: 18px; background: #333; border-radius: 10px;
+            width: 34px; height: 18px; background: #333; border-radius: 10px;
             position: relative; transition: 0.3s; border: 1px solid #555;
         }
         .toggle-switch::after {
@@ -244,77 +251,69 @@
             background: #aaa; border-radius: 50%; transition: 0.3s;
         }
         input[type="checkbox"]:checked + .toggle-switch { background: var(--theme); border-color: var(--theme); }
-        input[type="checkbox"]:checked + .toggle-switch::after { left: 19px; background: #fff; }
+        input[type="checkbox"]:checked + .toggle-switch::after { left: 17px; background: #fff; }
 
-        /* Matrix Table Scroll */
+        /* Table */
         .matrix-scroll {
             flex: 1; overflow: auto; width: 100%;
             scrollbar-width: thin; scrollbar-color: #666 #111;
         }
-        .matrix-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
-        .matrix-scroll::-webkit-scrollbar-corner { background: #111; }
-        .matrix-scroll::-webkit-scrollbar-thumb { background: #555; border: 2px solid #111; border-radius: 6px; }
-        .matrix-scroll::-webkit-scrollbar-track { background: #0f0f0f; }
-
         table.growth-matrix {
             border-collapse: separate; border-spacing: 0;
-            width: max-content;
-            font-size: 0.8rem;
+            width: max-content; font-size: 0.8rem;
         }
 
-        /* --- STICKY HEADERS & COLUMNS --- */
-        
-        /* Header */
+        /* Headers */
         thead th {
             position: sticky; top: 0; z-index: 10;
-            background: rgba(15, 15, 15, 0.95); /* 少し透け感を残す */
-            color: #bbb;
-            border-bottom: 1px solid #444; border-right: 1px solid #333;
+            background: rgba(15, 15, 15, 0.95);
+            color: #bbb; border-bottom: 1px solid #444; border-right: 1px solid #333;
             padding: 0; height: 130px; vertical-align: bottom;
             transition: 0.2s;
-            backdrop-filter: blur(5px);
         }
-        thead th:hover { background: #222; color: #fff; }
 
-        /* Fixed Columns (Left) */
+        /* Fixed Left Columns */
         th.col-skill, td.col-skill {
             position: sticky; left: 0; z-index: 12;
             background: #111; border-right: 1px solid #444; width: var(--w-skill);
-            box-shadow: 2px 0 5px rgba(0,0,0,0.5); /* 影をつけて浮き上がらせる */
+            box-shadow: 2px 0 5px rgba(0,0,0,0.5);
         }
-        
-        /* Base Stats Columns */
+        /* Base Stats - 読みやすいように水平ヘッダーに修正 */
         th.col-base, td.col-base { position: sticky; left: var(--w-skill); z-index: 11; width: var(--w-base); border-right: 1px solid #333; background: #141414; }
         th.col-job,  td.col-job  { position: sticky; left: calc(var(--w-skill) + var(--w-base)); z-index: 11; width: var(--w-base); border-right: 1px solid #333; background: #141414; }
         th.col-int,  td.col-int  { position: sticky; left: calc(var(--w-skill) + var(--w-base)*2); z-index: 11; width: var(--w-base); border-right: 1px solid #333; background: #141414; }
         th.col-oth,  td.col-oth  { position: sticky; left: calc(var(--w-skill) + var(--w-base)*3); z-index: 11; width: var(--w-base); border-right: 2px solid #555; background: #141414; }
 
-        thead th[class*="col-"] { z-index: 15; background: #1a1a1a; border-bottom: 2px solid #666; color: #888; font-size: 0.65rem; font-family:'Cinzel'; vertical-align: middle; }
-        thead th.col-skill { color: var(--theme); font-size: 0.8rem; font-weight: bold; text-shadow: 0 0 5px rgba(212, 179, 70, 0.3); }
+        thead th.col-skill { color: var(--theme); font-size: 0.85rem; font-weight: bold; vertical-align: middle; text-align: left; padding-left: 10px; z-index: 15; background: #1a1a1a; }
+        
+        /* 水平ヘッダー用（初期・職業・興味など） */
+        thead th.h-header-cell {
+            vertical-align: middle; text-align: center; 
+            font-size: 0.7rem; font-family: 'Shippori Mincho'; color: #888;
+            height: auto; padding: 10px 0; border-bottom: 2px solid #555; background: #1a1a1a; z-index: 15;
+        }
 
-        /* --- CELLS STYLING --- */
+        /* Vertical Header Text (For Scenarios) */
+        .v-header {
+            writing-mode: vertical-rl; /* 縦書き（右から左） */
+            white-space: nowrap; text-align: left; padding: 10px 4px;
+            max-height: 120px; margin: 0 auto; font-size: 0.75rem; color: #ccc;
+            cursor: help; letter-spacing: 1px; font-weight: 500;
+        }
+
+        /* Cells */
         .skill-cell-content {
-            display: flex; align-items: center; height: 34px; padding: 0 10px; /* パディング増 */
+            display: flex; align-items: center; height: 32px; padding: 0 10px;
             border-left: 4px solid transparent; font-weight: 500; color: #e0e0e0;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            transition: 0.2s;
         }
-        
-        /* 
-           アイコン修正：固定幅・中央揃え・色付き 
-           ここでカテゴリごとの色をアイコンに反映させ、視覚的な楽しさを追加
-        */
         .skill-icon { 
-            font-size: 1rem; 
-            margin-right: 8px; 
-            width: 20px; 
-            text-align: center;
-            display: inline-block;
-            flex-shrink: 0;
+            font-size: 1rem; margin-right: 8px; width: 20px; text-align: center;
+            display: inline-block; flex-shrink: 0;
             text-shadow: 0 0 8px rgba(255,255,255,0.2);
         }
 
-        /* カテゴリごとの配色設定（ボーダー＆アイコン＆微細な背景色） */
+        /* Category Colors */
         .cat-combat .skill-cell-content { border-left-color: var(--c-combat); }
         .cat-combat .skill-icon { color: var(--c-combat); }
         .cat-combat:hover td { background: rgba(255, 82, 82, 0.08) !important; }
@@ -338,28 +337,21 @@
         .cat-other .skill-cell-content  { border-left-color: var(--c-other); color: #ccc; }
         .cat-other .skill-icon  { color: var(--c-other); }
 
-        /* Base Values */
         td.val-base { text-align: center; color: #555; font-family: 'Cinzel'; border-bottom: 1px solid #222; font-size: 0.75rem; }
         td.val-base.has-val { color: #eee; font-weight: bold; }
 
-        /* Scenario Columns */
         td.val-growth {
             min-width: var(--w-scen); width: var(--w-scen); 
             text-align: center; color: #555; font-family: 'Cinzel';
             border-bottom: 1px solid #222; border-right: 1px solid #222;
             padding: 0; font-size: 0.75rem;
-            transition: 0.1s;
         }
-        
-        /* 成長セル：より輝かせる */
         .grown { 
             color: #fff !important; font-weight: bold; 
             background: rgba(212, 179, 70, 0.2) !important;
             box-shadow: inset 0 0 8px rgba(212, 179, 70, 0.3);
-            text-shadow: 0 0 5px var(--theme); /* 光彩追加 */
+            text-shadow: 0 0 5px var(--theme);
         }
-        
-        /* Total Column */
         .total-col {
             color: var(--theme); font-weight: bold; 
             border-left: 2px solid #444; background: rgba(0,0,0,0.4); 
@@ -367,20 +359,10 @@
             text-shadow: 0 0 5px rgba(0,0,0,0.5);
         }
 
-        /* Hover & Stripe */
-        tbody tr:nth-child(even) td { background: rgba(255,255,255,0.01); } /* ゼブラストライプ */
-        tbody tr:hover td { transition: 0s; } /* ホバー時は即座に反応 */
+        tbody tr:nth-child(even) td { background: rgba(255,255,255,0.01); }
         .col-hover { background: rgba(255,255,255,0.06) !important; }
 
-        /* Vertical Header Text */
-        .v-header {
-            writing-mode: vertical-rl; transform: rotate(180deg);
-            white-space: nowrap; text-align: left; padding: 10px 4px;
-            max-height: 120px; margin: 0 auto; font-size: 0.75rem; color: #ccc;
-            cursor: help; letter-spacing: 1px; font-weight: 500;
-        }
-
-        .spacer-row td { height: 12px; background: rgba(0,0,0,0.5); border: none; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
+        .spacer-row td { height: 12px; background: rgba(0,0,0,0.5); border: none; }
 
         /* TOOLTIP */
         #tooltip {
@@ -390,17 +372,11 @@
             transition: opacity 0.15s; color: #eee; font-size: 0.85rem;
             min-width: 200px; max-width: 300px; backdrop-filter: blur(5px);
         }
-        #tooltip h4 { margin: 0 0 8px 0; color: var(--theme); font-family: 'Shippori Mincho'; border-bottom: 1px solid #444; padding-bottom: 6px; font-size: 0.95rem; letter-spacing: 1px; }
+        #tooltip h4 { margin: 0 0 8px 0; color: var(--theme); font-family: 'Shippori Mincho'; border-bottom: 1px solid #444; padding-bottom: 6px; font-size: 0.95rem; }
         #tooltip .tt-row { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 0.8rem; }
-        #tooltip .tt-label { color: #888; font-family: 'Cinzel'; }
         #tooltip .tt-val { font-weight: bold; font-family: 'Cinzel'; }
         #tooltip .growth-list { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #444; color: #bbb; font-size: 0.75rem; line-height: 1.5; }
-        #tooltip .growth-item { display: inline-block; margin-right: 6px; color: #eee; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.1); }
-        #tooltip .growth-val { color: var(--theme); font-family: 'Cinzel'; margin-left: 3px; font-weight: bold; }
-
-        /* ANIMATION */
-        @keyframes fadeIn { from{opacity:0; transform:translateY(5px);} to{opacity:1; transform:translateY(0);} }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
+        #tooltip .growth-item { display: inline-block; margin-right: 6px; color: #eee; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px; }
 
         #loadingOverlay {
             position: fixed; top:0; left:0; width:100%; height:100%;
@@ -410,6 +386,8 @@
         }
         .hidden { display: none !important; }
 
+        @keyframes fadeIn { from{opacity:0; transform:translateY(5px);} to{opacity:1; transform:translateY(0);} }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -459,15 +437,15 @@
                 </div>
             </div>
             
+            <!-- DICE STATS (Expanded) -->
             <div class="panel-head" style="margin-top:15px;"><span>DICE STATS</span><span class="material-icons-round" style="font-size:1.1rem; color:#888;">casino</span></div>
-            <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:5px; padding:0 4px;">
-                <span style="color:#aaa;">TOTAL ROLL</span><span style="color:#fff; font-family:'Cinzel'; font-weight:bold;" id="statTotal">0</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:5px; padding:0 4px;">
-                <span style="color:#aaa;">CRITICAL</span><span style="color:#66bb6a; font-family:'Cinzel'; font-weight:bold;" id="statCrit">0</span>
-            </div>
-            <div style="display:flex; justify-content:space-between; font-size:0.8rem; padding:0 4px;">
-                <span style="color:#aaa;">FUMBLE</span><span style="color:#ff5252; font-family:'Cinzel'; font-weight:bold;" id="statFumb">0</span>
+            <div class="dice-grid">
+                <div class="dice-row"><span style="color:#aaa;">TOTAL</span><span class="dice-val" style="color:#fff;" id="statTotal">0</span></div>
+                <div class="dice-row"><span style="color:#aaa;">SUCCESS</span><span class="dice-val" style="color:#66bb6a;" id="statSucc">0</span></div>
+                <div class="dice-row"><span style="color:#aaa;">FAILURE</span><span class="dice-val" style="color:#aaa;" id="statFail">0</span></div>
+                <div class="dice-row"><span style="color:#aaa;">CRITICAL</span><span class="dice-val" style="color:#a5d6a7;" id="statCrit">0</span></div>
+                <div class="dice-row"><span style="color:#aaa;">FUMBLE</span><span class="dice-val" style="color:#ff5252;" id="statFumb">0</span></div>
+                <div class="dice-rate">RATE: <span id="statRate">0</span>%</div>
             </div>
         </div>
 
@@ -515,11 +493,18 @@
                 <button class="filter-btn" data-cat="other">他</button>
             </div>
             
-            <label class="toggle-wrapper">
-                <input type="checkbox" id="toggleGrowthOnly" style="display:none;">
-                <div class="toggle-switch"></div>
-                <span>成長のみ表示</span>
-            </label>
+            <div class="toggle-area">
+                <label class="toggle-wrapper">
+                    <input type="checkbox" id="toggleHideInit" style="display:none;">
+                    <div class="toggle-switch"></div>
+                    <span>初期値のみ非表示</span>
+                </label>
+                <label class="toggle-wrapper">
+                    <input type="checkbox" id="toggleGrowthOnly" style="display:none;">
+                    <div class="toggle-switch"></div>
+                    <span>成長のみ表示</span>
+                </label>
+            </div>
         </div>
 
         <!-- Table -->
@@ -528,10 +513,11 @@
                 <thead>
                     <tr>
                         <th class="col-skill">SKILL</th>
-                        <th class="col-base"><div class="v-header">初期</div></th>
-                        <th class="col-job"><div class="v-header">職業</div></th>
-                        <th class="col-int"><div class="v-header">興味</div></th>
-                        <th class="col-oth"><div class="v-header">他</div></th>
+                        <!-- 読みやすくしたヘッダー -->
+                        <th class="col-base h-header-cell">初期</th>
+                        <th class="col-job h-header-cell">職業</th>
+                        <th class="col-int h-header-cell">興味</th>
+                        <th class="col-oth h-header-cell">他</th>
                         <!-- Scenarios appended here -->
                         <th><div class="v-header" style="color:var(--theme); font-weight:bold;">TOTAL</div></th>
                     </tr>
@@ -592,6 +578,7 @@
         });
 
         el('toggleGrowthOnly').addEventListener('change', renderMatrixTable);
+        el('toggleHideInit').addEventListener('change', renderMatrixTable);
     };
 
     function renderCharSelect() {
@@ -618,12 +605,15 @@
         document.documentElement.style.setProperty('--theme', themeColor);
         el('charIcon').src = char.icon || `../images/icon/${char.name}.png`;
         el('charIcon').style.borderColor = themeColor;
-        el('charIcon').style.boxShadow = `0 0 15px ${themeColor}66`; // Icon glow
+        el('charIcon').style.boxShadow = `0 0 15px ${themeColor}66`;
         el('plName').textContent = "PL: " + (char.plName || "Unknown");
         
         const bgLayer = el('bgLayer');
-        if(char.image) bgLayer.style.backgroundImage = `url(${char.image})`;
-        else bgLayer.style.backgroundImage = 'none';
+        if(char.image) {
+            bgLayer.style.backgroundImage = `url(${char.image})`;
+        } else {
+            bgLayer.style.backgroundImage = 'none';
+        }
 
         // 2. Data Fetch
         const scenarios = await getScenariosForCharacter(charId);
@@ -652,7 +642,7 @@
     }
 
     function processStats(char, scenarios) {
-        let dice = { total:0, crit:0, fumb:0, succ:0 };
+        let dice = { total:0, crit:0, fumb:0, succ:0, fail:0 };
         let skillCounts = {};
         let sanHistory = [char.vitals?.san || char.stats?.POW*5 || 50]; 
         let insanityHistory = [];
@@ -664,8 +654,13 @@
             // Log Analysis
             if (s.analysisData && s.analysisData[char.name]) {
                 const ana = s.analysisData[char.name];
-                dice.total += ana.dice||0; dice.crit += ana.crit||0;
-                dice.fumb += ana.fumb||0;  dice.succ += ana.succ||0;
+                dice.total += ana.dice||0; 
+                dice.crit += ana.crit||0;
+                dice.fumb += ana.fumb||0;  
+                dice.succ += ana.succ||0;
+                // If fail isn't explicitly provided, calculate it or default 0 (some tools don't provide fail count)
+                if(typeof ana.fail !== 'undefined') dice.fail += ana.fail;
+                
                 if(ana.skillDetails) {
                     Object.entries(ana.skillDetails).forEach(([k,v]) => {
                         skillCounts[k] = (skillCounts[k]||0) + v.count;
@@ -687,11 +682,16 @@
             if(d.ins && d.ins.type) insanityHistory.push({date:s.date, title:s.title, desc:d.ins.desc});
         });
 
+        // If 'fail' wasn't accumulated properly (old data), estimate: Total - Succ - Crit - Fumb
+        if(dice.fail === 0 && dice.total > 0) {
+            dice.fail = dice.total - dice.succ - dice.crit - dice.fumb;
+            if(dice.fail < 0) dice.fail = 0;
+        }
+
         return { dice, skillCounts, sanHistory, insanityHistory };
     }
 
     function processMatrix(char, scenarios) {
-        // --- 1. Base Skills ---
         const skillMap = {}; 
         if (char.skills && typeof char.skills === 'object') {
             Object.values(char.skills).flat().forEach(s => {
@@ -708,7 +708,6 @@
             });
         }
 
-        // Fill missing
         Object.keys(BASE_SKILLS_DEF).forEach(k => {
             if(!skillMap[k]) {
                 let base = 0;
@@ -720,7 +719,6 @@
             }
         });
 
-        // --- 2. Scenario Growth ---
         const scenarioCols = scenarios.map(s => {
             const growth = {};
             let d = (s.characters.pc?.id === char.id) ? s.characters.pc : (s.characters.kpc?.id === char.id) ? s.characters.kpc : null;
@@ -748,7 +746,6 @@
             return { id: s.id, title: s.title, date: s.date, growth, growthList, stats };
         });
 
-        // --- 3. Rows ---
         const rows = [];
         let totalGrowthSum = 0;
 
@@ -764,24 +761,25 @@
             const baseTotal = base.init + base.job + base.interest + base.other;
             let current = baseTotal;
             let hasGrowth = false;
+            let historySum = 0;
 
             const hist = scenarioCols.map(sc => {
                 const g = sc.growth[name] || 0;
                 current += g;
+                historySum += g;
                 if(g > 0) hasGrowth = true;
                 return { val: current, grow: g };
             });
 
-            if(hasGrowth) totalGrowthSum += (current - baseTotal);
+            if(hasGrowth) totalGrowthSum += historySum;
 
             rows.push({
                 name, cat, icon,
                 init: base.init, job: base.job, interest: base.interest, other: base.other,
-                history: hist, current, hasGrowth
+                history: hist, current, hasGrowth, historySum
             });
         });
 
-        // Sort
         const catOrder = ['combat', 'search', 'action', 'nego', 'know', 'other'];
         rows.sort((a,b) => {
             const ciA = catOrder.indexOf(a.cat);
@@ -798,11 +796,21 @@
     function renderStats(stats) {
         const d = stats.dice;
         el('statTotal').textContent = d.total;
+        el('statSucc').textContent = d.succ;
+        el('statFail').textContent = d.fail;
         el('statCrit').textContent = d.crit;
         el('statFumb').textContent = d.fumb;
         
+        // Success Rate: (Succ + Crit) / Total
+        let rate = 0;
+        if(d.total > 0) {
+            rate = ((d.succ + d.crit) / d.total * 100).toFixed(1);
+        }
+        el('statRate').textContent = rate;
+        
         const list = el('rankList'); list.innerHTML = '';
-        const sorted = Object.entries(stats.skillCounts).sort((a,b) => b[1]-a[1]).slice(0, 10);
+        // Increase limit to 50
+        const sorted = Object.entries(stats.skillCounts).sort((a,b) => b[1]-a[1]).slice(0, 50);
         if(sorted.length === 0) list.innerHTML = '<li style="text-align:center;color:#555;padding:10px;">NO DATA</li>';
         else sorted.forEach(([n,c]) => list.innerHTML += `<li class="rank-row"><span class="rank-name">${n}</span><span class="rank-num">${c}</span></li>`);
     }
@@ -823,7 +831,7 @@
                     borderColor: theme,
                     backgroundColor: (ctx) => {
                         const grad = ctx.chart.ctx.createLinearGradient(0,0,0,200);
-                        grad.addColorStop(0, theme+'44'); // Transparent Theme Color
+                        grad.addColorStop(0, theme+'44'); 
                         grad.addColorStop(1, 'rgba(0,0,0,0)');
                         return grad;
                     },
@@ -844,7 +852,7 @@
 
     function renderInsanity(history) {
         const box = el('insanityList'); box.innerHTML = '';
-        if(history.length === 0) { box.innerHTML = '<div style="text-align:center;color:#522;margin-top:20px;">NO RECORD</div>'; return; }
+        if(history.length === 0) { box.innerHTML = '<div style="text-align:center;color:#522;margin-top:20px;font-family:\'Cinzel\';">NO RECORD</div>'; return; }
         [...history].reverse().forEach(h => {
             box.innerHTML += `
                 <div class="ins-item">
@@ -860,6 +868,7 @@
         
         const activeFilter = document.querySelector('.filter-btn.active').dataset.cat;
         const growthOnly = el('toggleGrowthOnly').checked;
+        const hideInit = el('toggleHideInit').checked;
 
         const table = el('matrixTable');
         const thead = table.querySelector('thead tr');
@@ -879,15 +888,25 @@
         });
         
         const thTotal = document.createElement('th');
-        thTotal.innerHTML = `<div class="v-header" style="color:var(--theme);">TOTAL</div>`;
+        thTotal.innerHTML = `<div class="v-header" style="color:var(--theme); font-weight:bold;">TOTAL</div>`;
         thead.appendChild(thTotal);
 
         tbody.innerHTML = "";
         let prevCat = "";
 
         rows.forEach(row => {
+            // Filter: Category
             if(activeFilter !== 'all' && row.cat !== activeFilter) return;
+            
+            // Filter: Growth Only (history must exist)
             if(growthOnly && !row.hasGrowth) return;
+
+            // Filter: Hide Initial (Must have some points added OR history)
+            // If row.job=0, row.int=0, row.oth=0 AND row.hasGrowth=false, it means it's pure initial.
+            if(hideInit) {
+                const pointsAdded = (row.job + row.interest + row.other + row.historySum) > 0;
+                if(!pointsAdded) return;
+            }
 
             if(prevCat && prevCat !== row.cat) {
                 const sp = document.createElement('tr');
@@ -968,7 +987,7 @@
                 <div class="tt-row"><span class="tt-label">SUCCESS</span><span class="tt-val" style="color:#66bb6a">${data.stats.succ}</span></div>
                 <div class="tt-row"><span class="tt-label">FAILURE</span><span class="tt-val" style="color:#aaa">${data.stats.fail}</span></div>
                 <div class="tt-row"><span class="tt-label">CRITICAL</span><span class="tt-val" style="color:#a5d6a7">${data.stats.crit}</span></div>
-                <div class="tt-row"><span class="tt-label">FUMBLE</span><span class="tt-val" style="color:#ef9a9a">${data.stats.fumb}</span></div>
+                <div class="tt-row"><span class="tt-label">FUMBLE</span><span class="tt-val" style="color:#ff5252">${data.stats.fumb}</span></div>
             `;
         } else {
             statsHtml = `<div style="text-align:center; color:#555; font-size:0.7rem;">NO DICE DATA</div>`;
