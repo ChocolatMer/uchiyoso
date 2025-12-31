@@ -17,6 +17,9 @@ export function createScenarioRecord(input, userId) {
         // 詳細メタデータ
         meta: input.meta || {},
 
+        // ★追加: 解析データの生データ（グラフ描画用）
+        analysisData: input.analysisData || null,
+
         // 検索用メンバーID
         members: input.members || [],
 
