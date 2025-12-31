@@ -288,15 +288,6 @@
         const LOCAL_IMG_BASE = "./images/character/";
         const LOCAL_ICON_BASE = "./images/icon/";
         const PHOTO_BASE = "./images/photo/";
-        
-        // ★ローカル画像を優先確認するかどうかの設定
-        // falseにすると、FirestoreのURLを即座に使用し、ローカル確認による404エラーと待ち時間を完全に無くせます。
-        // ローカルに画像を置いて上書きしたい場合のみ true にしてください。
-        const TRY_LOCAL_IMAGES = true; 
-
-        // ★使用可能な背景画像のリスト（実際に存在するファイル番号だけ書いてください）
-        const AVAILABLE_WALLPAPERS = [1]; 
-
         const DEFAULT_THEME = "#00ffcc";
         
         let currentUser = null;
@@ -436,41 +427,25 @@
             window.closeAllModals();
         };
 
-        // ★背景グリッドの生成（修正版：存在するファイルのみ生成）
         const bgGrid = document.getElementById('bg-grid');
-        AVAILABLE_WALLPAPERS.forEach(i => {
+        for (let i = 1; i <= 5; i++) {
             const div = document.createElement('div');
             div.className = 'bg-option';
             div.style.backgroundImage = `url('${PHOTO_BASE}${i}.png')`;
             div.onclick = () => window.setBgMode('photo', i);
             bgGrid.appendChild(div);
-        });
+        }
 
-        // ★画像のパス解決（修正版：名前の正規化とスキップ処理）
         function resolveImage(charName, cloudUrl, basePath = LOCAL_IMG_BASE) {
             return new Promise((resolve) => {
-                if (!charName) { 
-                    resolve(cloudUrl || "https://via.placeholder.com/800x1200?text=NO+IMAGE"); 
-                    return; 
-                }
-
-                // 1. もしローカル画像確認が無効なら、即座にクラウドURL(またはダミー)を返す
-                if (!TRY_LOCAL_IMAGES) {
-                    resolve(cloudUrl || `https://via.placeholder.com/800x1200?text=${encodeURIComponent(charName)}`);
-                    return;
-                }
-
-                // 2. 名前の正規化（前後の空白削除 & 連続する空白を1つに）
-                const safeName = charName.trim().replace(/\s+/g, ' ');
-                const localPath = `${basePath}${safeName}.png`;
-
+                if (!charName) { resolve(cloudUrl || "https://via.placeholder.com/800x1200?text=NO+IMAGE"); return; }
+                const localPath = `${basePath}${charName}.png`;
                 const img = new Image();
                 img.onload = () => resolve(localPath);
                 img.onerror = () => {
                     const size = (basePath === LOCAL_ICON_BASE) ? "200x200" : "800x1200";
-                    resolve(cloudUrl || `https://via.placeholder.com/${size}?text=${encodeURIComponent(safeName)}`);
+                    resolve(cloudUrl || `https://via.placeholder.com/${size}?text=${encodeURIComponent(charName)}`);
                 };
-                // 3. 読み込み開始（ここでの404はブラウザの仕様上コンソールに出ますが、正規化により減ります）
                 img.src = localPath;
             });
         }
@@ -479,10 +454,6 @@
             const container = document.getElementById('char-list');
             container.innerHTML = '';
             const targetIndex = (editingSlot === 1) ? currentIndex1 : currentIndex2;
-            
-            // フラグメントを使用してDOM操作回数を減らす（高速化）
-            const fragment = document.createDocumentFragment();
-
             charDataList.forEach((char, i) => {
                 const div = document.createElement('div');
                 div.className = 'char-select-item';
@@ -491,10 +462,7 @@
                 const img = document.createElement('img');
                 img.className = 'char-select-thumb';
                 img.alt = char.name;
-                // 初期表示は透明GIF
                 img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"; 
-                
-                // アイコンの非同期読み込み
                 resolveImage(char.name, char.icon || char.image, LOCAL_ICON_BASE).then(src => { img.src = src; });
 
                 const nameSpan = document.createElement('span');
@@ -509,9 +477,8 @@
                     document.querySelectorAll('.char-select-item').forEach(el => el.classList.remove('selected'));
                     div.classList.add('selected');
                 };
-                fragment.appendChild(div);
+                container.appendChild(div);
             });
-            container.appendChild(fragment);
         }
 
         window.selectEditSlot = (slot) => {
@@ -528,12 +495,16 @@
         function getDuoConversation(char1, char2) {
             if (!char1 || !char2) return null;
 
+            // 名前とIDの両方を取得して比較用にする
             const name1 = char1.name ? char1.name.trim() : "";
-            const id1 = char1.id; 
+            const id1 = char1.id; // Firestoreから読み込み時に付与されているID
+            
             const name2 = char2.name ? char2.name.trim() : "";
             const id2 = char2.id;
 
+            // ■ パターン1: 左側(char1)のデータから「相手(char2)」を探す
             if (char1.duo_conversations && Array.isArray(char1.duo_conversations)) {
+                // partnerが「相手の名前」または「相手のID」と一致するものを探す
                 const pair = char1.duo_conversations.find(p => {
                     if (!p.partner) return false;
                     const pVal = p.partner.trim();
@@ -541,11 +512,13 @@
                 });
                 
                 if (pair && pair.scripts && pair.scripts.length > 0) {
+                    console.log(`[DUO MATCH] ${char1.name} -> ${char2.name}`);
                     const script = pair.scripts[Math.floor(Math.random() * pair.scripts.length)];
                     return { text1: script.a, text2: script.b };
                 }
             }
 
+            // ■ パターン2: 右側(char2)のデータから「相手(char1)」を探す
             if (char2.duo_conversations && Array.isArray(char2.duo_conversations)) {
                 const pair = char2.duo_conversations.find(p => {
                     if (!p.partner) return false;
@@ -554,7 +527,9 @@
                 });
                 
                 if (pair && pair.scripts && pair.scripts.length > 0) {
+                    console.log(`[DUO MATCH (REV)] ${char2.name} -> ${char1.name}`);
                     const script = pair.scripts[Math.floor(Math.random() * pair.scripts.length)];
+                    // データ持ち主が右(char2)なので、a=自分(右), b=相手(左)
                     return { text1: script.b, text2: script.a };
                 }
             }
@@ -572,7 +547,6 @@
         const textContainer2 = document.getElementById('text-2');
         const rootStyles = document.documentElement.style;
 
-        // ★表示更新関数（修正版：並列読み込みによる高速化）
         async function updateDisplay() {
             if (!charDataList.length) return;
             if (currentIndex1 >= charDataList.length) currentIndex1 = 0;
@@ -580,28 +554,21 @@
             
             const char1 = charDataList[currentIndex1];
             const char2 = charDataList[currentIndex2]; 
-            
-            // モーダルが開いている時だけリストを更新する（無駄な処理を削減）
-            if(document.getElementById('char-modal').classList.contains('open')) renderCharList();
+            if(document.getElementById('char-modal').classList.contains('open')) await renderCharList();
 
-            // アニメーションリセット
             imgEl1.classList.remove('visible');
             if (isDuo) imgEl2.classList.remove('visible');
             bubble1.classList.remove('show');
             bubble2.classList.remove('show');
 
-            // ★Promise.allで画像を同時に解決しにいく（これが待ち時間を減らす鍵です）
-            const promise1 = resolveImage(char1.name, char1.image);
-            const promise2 = isDuo ? resolveImage(char2.name, char2.image) : Promise.resolve(null);
+            const src1 = await resolveImage(char1.name, char1.image);
+            let src2 = null;
+            if (isDuo) src2 = await resolveImage(char2.name, char2.image);
 
-            const [src1, src2] = await Promise.all([promise1, promise2]);
-
-            // テーマカラー設定
             const theme = char1.color || char1.inpThemeColor || DEFAULT_THEME;
             rootStyles.setProperty('--accent-color', theme);
             if (!document.body.classList.contains('mode-white')) targetColor.set(theme);
 
-            // テキスト準備
             let text1 = "", text2 = "";
             if (isDuo) {
                 const convSet = getDuoConversation(char1, char2);
@@ -619,14 +586,8 @@
             if(text1) text1 = text1.replace(/<br>/g, "\n");
             if(text2) text2 = text2.replace(/<br>/g, "\n");
 
-            // 画像セット
             imgEl1.src = src1;
-            // キャッシュ済みの場合はonloadが発火しないことがあるため、completeをチェック
-            if (imgEl1.complete) {
-                 imgEl1.classList.add('visible');
-            } else {
-                 imgEl1.onload = () => imgEl1.classList.add('visible');
-            }
+            imgEl1.onload = () => imgEl1.classList.add('visible');
 
             nameLabel1.textContent = char1.name.toUpperCase();
             setTimeout(() => {
@@ -634,14 +595,9 @@
                 startTypewriter(text1, textContainer1, 1);
             }, 600);
 
-            if (isDuo && src2) {
+            if (isDuo) {
                 imgEl2.src = src2;
-                if (imgEl2.complete) {
-                    imgEl2.classList.add('visible');
-                } else {
-                    imgEl2.onload = () => imgEl2.classList.add('visible');
-                }
-
+                imgEl2.onload = () => imgEl2.classList.add('visible');
                 nameLabel2.textContent = char2.name.toUpperCase();
                 setTimeout(() => {
                     bubble2.classList.add('show');
@@ -658,10 +614,6 @@
             container.textContent = "";
             let timerVar = (id === 1) ? typeWriterTimeout1 : typeWriterTimeout2;
             if (timerVar) clearTimeout(timerVar);
-            
-            // テキストがない場合のガード
-            if (!text) return;
-
             let i = 0;
             function type() {
                 if (i < text.length) {
@@ -715,6 +667,7 @@
             el.classList.add('active');
         }
 
+        // ★ローディング制御関数
         function updateLoaderLog(text) {
             const el = document.getElementById('loader-log-text');
             if(el) el.textContent = text;
@@ -760,6 +713,7 @@
         initNews().then(reportData => {
             let reportIndex = 0;
             
+            // ローディング中のテキスト演出
             const logTimer = setInterval(() => {
                 if(reportData && reportData.length > 0) {
                     updateLoaderLog(reportData[reportIndex % reportData.length]);
@@ -791,10 +745,9 @@
                         currentIndex1 = Math.floor(Math.random() * charDataList.length);
                         currentIndex2 = (currentIndex1 + 1) % charDataList.length;
                         
+                        // 画像読み込み待機
                         const firstChar = charDataList[currentIndex1];
                         updateLoaderLog(`INITIALIZING VISUAL: ${firstChar.name}...`);
-                        
-                        // 画像のプリロード
                         const imgUrl = await resolveImage(firstChar.name, firstChar.image);
                         await new Promise((resolve) => {
                             const img = new Image();
