@@ -122,7 +122,7 @@
         .bg-orange { background: #523e2b; color: #ffdfbf; }
         .bg-gray { background: #333; color: #aaa; }
 
-        /* --- Analysis Tab Styles --- */
+        /* --- Analysis Tab Styles (Collapsible & Clear UI) --- */
         .analysis-container { display: flex; flex-direction: column; gap: 20px; height: 100%; }
         .file-upload-box {
             border: 2px dashed #444; padding: 20px; text-align: center;
@@ -151,12 +151,12 @@
         .stat-label-mini { font-size: 0.6rem; color: #888; display: block; margin-bottom: 2px; }
         .stat-val-big { font-size: 1rem; font-weight: bold; color: #ddd; }
         
-        /* Rate Bar */
+        /* Success Rate Bar */
         .rate-bar-container { flex: 1; height: 10px; background: #333; border-radius: 5px; overflow: hidden; display: flex; }
         .rate-segment { height: 100%; }
         .rate-label-box { font-size: 0.75rem; color: #aaa; margin-left: 10px; font-family: 'Cinzel'; }
 
-        /* Graph & Details */
+        /* Graph & Details Collapsible */
         .analysis-details {
             background: rgba(255,255,255,0.02); border: 1px solid #333; border-radius: 4px; margin-top: 10px;
         }
@@ -469,7 +469,7 @@
                                 <div class="scn-toggle-header" onclick="window.toggleScnContent('scWarn')">注意事項 <span class="material-icons-round">expand_more</span></div><div id="scWarn" class="scn-content"><textarea id="inpWarnings" class="paper-area" style="min-height:60px;"></textarea></div>
                             </div>
 
-                            <!-- ★ TAB ANALYSIS (FINAL FIX) -->
+                            <!-- ★ TAB ANALYSIS (FINAL) -->
                             <div id="tab-analysis" class="tab-panel">
                                 <h2 class="section-header">LOG ANALYSIS</h2>
                                 <div class="analysis-container">
@@ -622,7 +622,6 @@
         };
 
         function parseLog(htmlContent) {
-            // Using DOMParser is safer but we supplement with robust regex on text content
             const parser = new DOMParser();
             const doc = parser.parseFromString(htmlContent, 'text/html');
             const paragraphs = doc.querySelectorAll('p');
@@ -630,6 +629,7 @@
             // Stats Structure
             let charStats = {};
             
+            // Helper to get or init stats
             const getStats = (name) => {
                 if(!charStats[name]) charStats[name] = { 
                     dice:0, crit:0, fumb:0, succ:0, fail:0, 
@@ -642,43 +642,37 @@
 
             paragraphs.forEach(p => {
                 lineIndex++;
-                const text = p.innerText.trim();
-                if(!text) return;
+                const spans = p.querySelectorAll('span');
+                const fullText = p.innerText.trim();
+                if(!fullText) return;
 
                 let name = "";
                 let content = "";
 
                 // ★ SYSTEM Message Check (Targeting format: [main] system : [ Name ] SAN : 60 → 59)
                 // Use regex that captures text inside brackets after "system"
-                const systemMatch = text.match(/system.*:.*\[\s*([^\]]+?)\s*\].*/i);
+                const systemMatch = fullText.match(/system.*:.*\[\s*(.+?)\s*\].*/i);
                 
                 if (systemMatch) {
                     name = systemMatch[1].trim(); 
-                    content = text; // Treat whole line as content for system messages
+                    content = fullText; // Treat whole line as content for system messages
                 } 
                 else {
                     // Standard message parsing (Name : Content)
-                    const spans = p.querySelectorAll('span');
                     if (spans.length >= 2) {
                         name = spans[1].innerText.replace(/[:：]/g, '').trim();
                         for(let i=2; i<spans.length; i++) content += spans[i].innerText;
-                    } else {
-                        // Fallback split
-                        const parts = text.split(/[:：]/);
-                        if(parts.length > 1) {
-                            name = parts[0].trim();
-                            content = parts.slice(1).join(':').trim();
-                        }
                     }
                 }
 
-                if(!name || name.toLowerCase() === 'system' && !systemMatch) return; 
+                if(!name) return;
 
                 const st = getStats(name);
 
                 // --- SAN Check ---
-                // Regex for "SAN : 60 -> 59" etc.
-                if (content.match(/SAN/i)) {
+                // Support variations: "SAN : 60 → 59", "SAN : 60 -> 59", "SAN : 60 ＞ 59"
+                // Check if content has "SAN" and a number transition arrow
+                if (content.match(/SAN/i) && content.match(/[→>＞]/)) {
                     // Extract numbers around the arrow
                     const matches = content.match(/(\d+)\s*[→>＞]\s*(\d+)/);
                     if(matches) {
@@ -725,6 +719,7 @@
             document.getElementById('analysisEmpty').style.display = 'none';
             document.getElementById('analysisResult').style.display = 'block';
 
+            // Identify Target Chars from Select Inputs
             const pcSel = document.getElementById('selPC');
             const kpcSel = document.getElementById('selKPC');
             
@@ -735,6 +730,7 @@
             const pcName = clean(pcNameRaw);
             const kpcName = clean(kpcNameRaw);
 
+            // Sort: PC -> KPC -> Others
             const sortedKeys = Object.keys(charStats).sort((a,b) => {
                 const cleanA = clean(a);
                 const cleanB = clean(b);
@@ -750,7 +746,7 @@
 
             sortedKeys.forEach((name, idx) => {
                 const st = charStats[name];
-                if(st.dice === 0 && st.sanHistory.length === 0) return; 
+                if(st.dice === 0 && st.sanHistory.length === 0) return; // Skip empty logs
 
                 const cleanName = clean(name);
                 const isPC = cleanName.includes(pcName) || pcName.includes(cleanName);
@@ -758,14 +754,17 @@
                 
                 const color = (isPC) ? '#88ccff' : (isKPC ? '#ff8888' : '#aaa');
                 
+                // Create Card
                 const card = document.createElement('div');
                 card.className = 'char-analysis-card';
                 card.style.borderColor = color;
 
+                // Title
                 let titleHtml = `<div class="char-analysis-header"><span style="color:${color}">${name}</span>`;
                 if(st.currentSan !== null) titleHtml += `<span style="font-size:0.9rem;">Final SAN: ${st.currentSan}</span>`;
                 titleHtml += `</div>`;
 
+                // Stats Visuals
                 let visualsHtml = `
                     <div class="stats-visual-row">
                         <div class="stat-badge-group">
@@ -775,6 +774,7 @@
                         </div>
                 `;
                 
+                // Rate Bar
                 const totalCheck = st.succ + st.fail;
                 if(totalCheck > 0) {
                     const succRate = (st.succ / totalCheck) * 100;
@@ -788,6 +788,7 @@
                 }
                 visualsHtml += `</div>`;
 
+                // Graph (Collapsible)
                 const canvasId = `chart-${idx}`;
                 let graphHtml = "";
                 if(st.sanHistory.length > 0) {
@@ -800,6 +801,7 @@
                     graphHtml = `<div style="font-size:0.7rem; color:#666; text-align:center; margin-bottom:10px;">(SAN変動なし)</div>`;
                 }
 
+                // Details Table (Collapsible)
                 let detailsHtml = "";
                 const skills = Object.entries(st.skillDetails).sort((a,b) => b[1].count - a[1].count);
                 if (skills.length > 0) {
@@ -816,8 +818,7 @@
                         let badges = "";
                         if(d.crit > 0) badges += `<span class="s-badge sb-crit">C:${d.crit}</span>`;
                         if(d.fumb > 0) badges += `<span class="s-badge sb-fumb">F:${d.fumb}</span>`;
-                        // Change S/F to Kanji
-                        detailsHtml += `<tr><td>${skillName}</td><td class="skill-val">${d.count}</td><td class="skill-val"><div class="skill-badges"><span style="color:#aaa; font-size:0.7rem;">成功:${d.succ}/失敗:${d.fail}</span>${badges}</div></td></tr>`;
+                        detailsHtml += `<tr><td>${skillName}</td><td class="skill-val">${d.count}</td><td class="skill-val"><div class="skill-badges"><span style="color:#aaa;">S:${d.succ}/F:${d.fail}</span>${badges}</div></td></tr>`;
                     });
                     detailsHtml += `</tbody></table></div></details>`;
                 }
@@ -825,6 +826,7 @@
                 card.innerHTML = titleHtml + visualsHtml + graphHtml + detailsHtml;
                 container.appendChild(card);
 
+                // Draw Graph
                 if(st.sanHistory.length > 0) {
                     const ctx = document.getElementById(canvasId).getContext('2d');
                     new Chart(ctx, {
