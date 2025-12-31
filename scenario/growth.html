@@ -8,6 +8,9 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- data.jsの読み込み (相対パスは環境に合わせて調整してください) -->
+    <script src="../character/data/data.js"></script>
 
     <style>
         /* --- CORE STYLES --- */
@@ -83,17 +86,7 @@
         }
         .sec-title { font-family: 'Cinzel'; font-size: 1.1rem; color: #eee; }
 
-        /* 1. TOP CHARTS AREA */
-        .top-charts {
-            display: grid; grid-template-columns: 2fr 1fr; gap: 20px; height: 250px;
-        }
-        .chart-box {
-            background: rgba(0,0,0,0.4); border: 1px solid #333; border-radius: 4px;
-            padding: 10px; position: relative; display: flex; flex-direction: column;
-        }
-        .chart-label { position: absolute; top: 10px; left: 15px; font-size: 0.7rem; color: #666; font-family: 'Cinzel'; }
-
-        /* 2. MATRIX TABLE AREA (New Request) */
+        /* MATRIX TABLE AREA */
         .matrix-container {
             flex: 1; min-height: 400px;
             background: #111; border: 1px solid #333; border-radius: 4px;
@@ -101,7 +94,6 @@
         }
         .matrix-scroll {
             overflow: auto; flex: 1;
-            /* Scrollbar styling for table */
             scrollbar-width: thin; scrollbar-color: #444 #111;
         }
         .matrix-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -110,46 +102,49 @@
 
         table.growth-table {
             border-collapse: collapse; width: 100%; font-size: 0.85rem;
-            white-space: nowrap; /* Keep rows horizontal */
+            white-space: nowrap; 
         }
         
-        /* Table Headers */
+        /* Headers */
         .growth-table th {
             background: #1a1a1a; color: #aaa; font-weight: normal;
-            border: 1px solid #333; padding: 8px 5px;
+            border: 1px solid #333; padding: 5px;
             font-family: 'Shippori Mincho'; position: sticky; top: 0; z-index: 5;
         }
-        /* First Column (Skill Name) - Sticky Left */
+        
+        /* Column: Skill Name (Sticky Left) */
         .growth-table th.col-skill, .growth-table td.col-skill {
             position: sticky; left: 0; z-index: 6;
             background: #222; border-right: 2px solid #444;
-            min-width: 120px; text-align: left; padding-left: 10px;
+            min-width: 140px; text-align: left; padding-left: 10px;
             font-weight: bold; color: #d4b346;
         }
         .growth-table th.col-skill { z-index: 7; background: #2a2a2a; color: #eee; }
 
-        /* Total Column */
-        .growth-table th.col-total, .growth-table td.col-total {
-            background: #1e1e1e; border-left: 2px solid #444;
-            color: #eee; font-weight: bold; text-align: center; width: 50px;
+        /* Column: Initial (Base) */
+        .growth-table th.col-init, .growth-table td.col-init {
+            background: #1e1e1e; border-right: 1px double #444;
+            color: #888; text-align: center; width: 60px; font-family: 'Cinzel';
         }
 
         /* Cells */
         .growth-table td {
             border: 1px solid #333; padding: 6px 10px; text-align: center;
-            color: #ccc;
+            color: #888;
         }
-        /* Stripes */
         .growth-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
-        .growth-table tr:hover td { background: rgba(212, 179, 70, 0.1); }
+        .growth-table tr:hover td { background: rgba(212, 179, 70, 0.05); }
 
-        /* Empty cell styling */
-        .growth-table td.empty { color: #333; }
-
-        /* Vertical Text for Scenarios headers if needed */
+        /* Highlight Growth */
+        .growth-table td.grown {
+            color: #eee; font-weight: bold;
+            background: rgba(212, 179, 70, 0.15);
+        }
+        /* Vertical Text for Headers */
         .v-text {
             writing-mode: vertical-rl; transform: rotate(180deg);
-            max-height: 150px; padding: 5px 2px; margin: 0 auto;
+            max-height: 120px; padding: 5px 2px; margin: 0 auto;
+            text-align: left; line-height: 1.2;
         }
 
     </style>
@@ -181,18 +176,10 @@
                 <span class="kpi-label">TOTAL GROWTH</span>
                 <span class="kpi-val" id="kpiTotalGrowth">0</span>
             </div>
-            <div class="kpi-card">
-                <span class="kpi-label">INSANITY</span>
-                <span class="kpi-val" id="kpiInsanity" style="color:#ff6b6b;">0</span>
-            </div>
-            <div class="kpi-card">
-                <span class="kpi-label">SAN START/NOW</span>
-                <span class="kpi-val" id="kpiSanRange" style="font-size:0.8rem;">-- / --</span>
-            </div>
         </div>
         
         <div style="font-size:0.75rem; color:#555; margin-top:auto; text-align:center;">
-            Data sourced from<br>Chronicle Logs
+            Values include<br>Initial + Growth
         </div>
     </div>
 
@@ -203,34 +190,19 @@
             <span id="loadingText">WAITING FOR LOGIN...</span>
         </div>
 
-        <!-- 1. GRAPHS (Overview) -->
-        <div class="top-charts">
-            <div class="chart-box">
-                <span class="chart-label">SANITY FLUCTUATION</span>
-                <canvas id="sanChart"></canvas>
-            </div>
-            <div class="chart-box">
-                <span class="chart-label">TOP 5 GROWTH SKILLS</span>
-                <canvas id="skillChart"></canvas>
-            </div>
-        </div>
-
-        <!-- 2. GROWTH MATRIX (The Request) -->
         <div style="display:flex; flex-direction:column; flex:1; min-height:0;">
             <div class="section-header">
                 <span class="material-icons-round" style="color:#d4b346;">grid_on</span>
-                <span class="sec-title">GROWTH MATRIX</span>
-                <span style="font-size:0.7rem; color:#666; margin-left:10px;">( 横スクロールで履歴を確認できます )</span>
+                <span class="sec-title">SKILL GROWTH HISTORY</span>
             </div>
             
             <div class="matrix-container">
                 <div class="matrix-scroll">
                     <table class="growth-table" id="matrixTable">
-                        <!-- JS GENERATED CONTENT -->
                         <thead>
                             <tr>
-                                <th class="col-skill">SKILL NAME</th>
-                                <th class="col-total">合計</th>
+                                <th class="col-skill">技能名</th>
+                                <th class="col-init">初期値</th>
                                 <!-- Scenarios will be added here -->
                             </tr>
                         </thead>
@@ -253,12 +225,13 @@
 <script type="module">
     import { loadFromCloud, monitorAuth, getScenariosForCharacter } from "../character/firestore.js";
 
-    // --- State ---
+    // data.js で定義された BASE_SKILLS が読み込まれているか確認
+    // 読み込まれていなければ空オブジェクトでフォールバック
+    const BASE_SKILLS_DEF = (typeof window.BASE_SKILLS !== 'undefined') ? window.BASE_SKILLS : {};
+
     let allChars = {};
-    let chartInstances = { san: null, skill: null };
     const el = (id) => document.getElementById(id);
 
-    // --- Initialization ---
     window.onload = () => {
         monitorAuth(async (user) => {
             el('authStatus').textContent = "Logged in: " + user.displayName;
@@ -284,7 +257,6 @@
     function renderCharSelect() {
         const sel = el('charSelect');
         sel.innerHTML = '<option value="">-- SELECT CHARACTER --</option>';
-        
         const list = Object.values(allChars).sort((a,b) => (a.name||"").localeCompare(b.name||""));
         list.forEach(c => {
             const opt = document.createElement('option');
@@ -299,244 +271,187 @@
         });
     }
 
-    // --- Main Data Loading & Processing ---
     async function loadCharacterMatrix(charId) {
         el('loadingOverlay').style.display = 'flex';
-        el('loadingText').textContent = "AGGREGATING SCENARIOS...";
+        el('loadingText').textContent = "AGGREGATING...";
 
         const char = allChars[charId];
-        // Basic Profile
         el('charIcon').src = char.icon || `../images/icon/${char.name}.png`;
         el('plName').textContent = "PL: " + (char.plName || "Unknown");
 
-        // Fetch Scenarios
+        // 1. シナリオ取得・ソート
         const scenarios = await getScenariosForCharacter(charId);
         const sortedScenarios = scenarios.sort((a,b) => new Date(a.date||0) - new Date(b.date||0));
 
-        // Process Data for Matrix & Charts
-        const data = processGrowthData(sortedScenarios, charId);
+        // 2. データの解析・構築
+        const matrixData = buildMatrixData(char, sortedScenarios);
 
-        // Render
-        renderKPI(data, sortedScenarios.length);
-        renderCharts(data, sortedScenarios);
-        renderMatrixTable(data, sortedScenarios);
+        // 3. 描画
+        renderKPI(matrixData, sortedScenarios.length);
+        renderMatrixTable(matrixData, sortedScenarios);
 
         el('loadingOverlay').style.display = 'none';
     }
 
     /**
-     * Parse scenario data to extract skill growth per scenario
+     * データ構築ロジック
+     * - 初期値 (BASE + 職業/興味P) を算出
+     * - シナリオごとの成長を加算し、時系列の値を生成
      */
-    function processGrowthData(scenarios, charId) {
-        // Unique Set of all skills grown
-        const skillSet = new Set();
-        // Map: ScenarioID -> { SkillName: Value }
-        const growthMap = {};
-        // SAN history
-        const sanHistory = []; // { title, value }
-        let totalGrowth = 0;
-        let insCount = 0;
+    function buildMatrixData(char, scenarios) {
+        // --- 1. 初期技能値の特定 ---
+        // char.skillList (テキスト) をパースして、ユーザーが設定した初期値を取得
+        // 例: "目星: 70", "図書館:50" など
+        const userInitials = {};
+        if (char.skillList) {
+            const lines = char.skillList.split(/[\n\s,、]+/); // 改行やスペースで区切る
+            lines.forEach(line => {
+                // "技能名:数値" または "技能名 数値" を許容
+                const m = line.match(/^(.+?)[:：\s]*(\d+)$/);
+                if (m) {
+                    const name = m[1].trim();
+                    const val = parseInt(m[2]);
+                    if (!isNaN(val)) userInitials[name] = val;
+                }
+            });
+        }
 
+        // 全技能リスト（表示対象）の作成
+        // (BASE_SKILLSにあるもの + ユーザーが持っているもの + 成長したもの)
+        const relevantSkills = new Set();
+        Object.keys(userInitials).forEach(k => relevantSkills.add(k));
+
+        // --- 2. 成長データの収集 ---
+        const scenarioGrowths = []; // [ { scenarioId, growths: { "目星": 5 } } ]
+        
         scenarios.forEach(s => {
             let d = null;
-            if (s.characters.pc && s.characters.pc.id === charId) d = s.characters.pc;
-            else if (s.characters.kpc && s.characters.kpc.id === charId) d = s.characters.kpc;
+            if (s.characters.pc && s.characters.pc.id === char.id) d = s.characters.pc;
+            else if (s.characters.kpc && s.characters.kpc.id === char.id) d = s.characters.kpc;
             
-            if (!d) return;
-
-            // 1. Skill Growth Parsing
-            const scenarioGrowth = {};
-            if (d.grow) {
-                // Splits by newline, parses "SkillName +10" or "SkillName 10"
+            const growths = {};
+            if (d && d.grow) {
                 const lines = d.grow.split('\n');
-                lines.forEach(line => {
-                    const m = line.match(/(.+?)\s*[:：]?\s*\+?(\d+)/);
+                lines.forEach(l => {
+                    const m = l.match(/(.+?)\s*[:：]?\s*\+?(\d+)/);
                     if (m) {
                         const name = m[1].trim();
                         const val = parseInt(m[2]);
                         if (name && !isNaN(val)) {
-                            skillSet.add(name);
-                            // If skill appears twice in one log, sum it up
-                            scenarioGrowth[name] = (scenarioGrowth[name] || 0) + val;
-                            totalGrowth += val;
+                            growths[name] = (growths[name] || 0) + val;
+                            relevantSkills.add(name);
                         }
                     }
                 });
             }
-            growthMap[s.id] = scenarioGrowth;
-
-            // 2. SAN Value Parsing
-            let sanVal = null;
-            if (d.san) {
-                const arrowM = d.san.match(/.*[→>＞]\s*(\d+)/);
-                if (arrowM) sanVal = parseInt(arrowM[1]);
-                else if (!isNaN(parseInt(d.san))) sanVal = parseInt(d.san);
-            }
-            if (sanVal !== null) sanHistory.push({ title: s.title, value: sanVal });
-
-            // 3. Insanity Count
-            if (d.ins && d.ins.type) insCount++;
+            scenarioGrowths.push({ id: s.id, title: s.title, growths });
         });
 
-        return {
-            skills: Array.from(skillSet).sort(), // Alphabetical sort for table
-            growthMap: growthMap,
-            sanHistory: sanHistory,
-            totalGrowth: totalGrowth,
-            insCount: insCount
-        };
-    }
+        // --- 3. マトリクス構築 ---
+        // 行ごとのデータを生成
+        // rows = [ { name: "目星", initial: 25, values: [25, 30, 30, 35...] } ]
+        const rows = [];
+        let grandTotalGrowth = 0;
 
-    // --- Rendering ---
-
-    function renderKPI(data, scnCount) {
-        el('kpiScenarios').textContent = scnCount;
-        el('kpiTotalGrowth').textContent = "+" + data.totalGrowth;
-        el('kpiInsanity').textContent = data.insCount;
-        
-        let start = "?";
-        let now = "?";
-        if (data.sanHistory.length > 0) {
-            start = data.sanHistory[0].value; // First recorded
-            now = data.sanHistory[data.sanHistory.length - 1].value; // Last recorded
-        }
-        el('kpiSanRange').textContent = `${start} → ${now}`;
-    }
-
-    function renderCharts(data, scenarios) {
-        // SAN Chart
-        const ctxSan = el('sanChart').getContext('2d');
-        if (chartInstances.san) chartInstances.san.destroy();
-        
-        // Simple labels 1..N
-        const labels = data.sanHistory.map((_, i) => `#${i+1}`);
-        const sanVals = data.sanHistory.map(d => d.value);
-        const titles = data.sanHistory.map(d => d.title);
-
-        chartInstances.san = new Chart(ctxSan, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'SAN', data: sanVals,
-                    borderColor: '#d4b346', backgroundColor: 'rgba(212, 179, 70, 0.1)',
-                    borderWidth: 2, tension: 0.1, pointRadius: 3, fill: true
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: { callbacks: { title: (ctx) => titles[ctx[0].dataIndex] } }
-                },
-                scales: {
-                    x: { grid: { color: '#333' }, ticks: { display: false } },
-                    y: { grid: { color: '#333' }, ticks: { color: '#666' }, suggestedMin: 0, suggestedMax: 99 }
+        Array.from(relevantSkills).sort().forEach(skillName => {
+            // 初期値の計算
+            let baseVal = 0;
+            
+            // ユーザー指定があればそれを優先 (これが職業+興味P込みの値とみなす)
+            if (userInitials[skillName] !== undefined) {
+                baseVal = userInitials[skillName];
+            } else {
+                // 指定がなければ data.js の定義から計算
+                const def = BASE_SKILLS_DEF[skillName];
+                if (def !== undefined) {
+                    if (typeof def === 'number') baseVal = def;
+                    else if (def === 'DEX*2') baseVal = (char.stats.DEX || 0) * 2;
+                    else if (def === 'EDU*5') baseVal = (char.stats.EDU || 0) * 5;
                 }
             }
-        });
 
-        // Top Skills Chart
-        const ctxSkill = el('skillChart').getContext('2d');
-        if (chartInstances.skill) chartInstances.skill.destroy();
+            // シナリオごとの推移を計算
+            const values = []; // { val: currentVal, grown: +amount or 0 }
+            let currentVal = baseVal;
 
-        // Calculate totals for graph
-        const skillTotals = {};
-        data.skills.forEach(skill => {
-            let sum = 0;
-            scenarios.forEach(s => {
-                const sData = data.growthMap[s.id];
-                if(sData && sData[skill]) sum += sData[skill];
+            scenarioGrowths.forEach(sg => {
+                const growthAmount = sg.growths[skillName] || 0;
+                currentVal += growthAmount;
+                grandTotalGrowth += growthAmount;
+                values.push({
+                    val: currentVal,
+                    grown: growthAmount
+                });
             });
-            skillTotals[skill] = sum;
+
+            // 表示する価値があるか判定
+            // (初期値が0で一度も成長していない技能は除外するなど調整可能だが、
+            //  今回は relevantSkills に入っている＝何らかの定義があるものとして全て表示)
+            rows.push({
+                name: skillName,
+                initial: baseVal,
+                history: values
+            });
         });
 
-        const sorted = Object.entries(skillTotals).sort((a,b) => b[1] - a[1]).slice(0, 5);
-
-        chartInstances.skill = new Chart(ctxSkill, {
-            type: 'bar',
-            data: {
-                labels: sorted.map(s => s[0]),
-                datasets: [{
-                    label: 'Growth', data: sorted.map(s => s[1]),
-                    backgroundColor: '#4a6fa5', borderColor: '#2b3d52', borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                indexAxis: 'y',
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { color: '#333' }, ticks: { color: '#666' } },
-                    y: { grid: { display: false }, ticks: { color: '#ccc', font: { family: "'Shippori Mincho'" } } }
-                }
-            }
-        });
+        return { rows, totalGrowth: grandTotalGrowth };
     }
 
-    // --- ★ MATRIX TABLE GENERATION ---
+    function renderKPI(data, count) {
+        el('kpiScenarios').textContent = count;
+        el('kpiTotalGrowth').textContent = "+" + data.totalGrowth;
+    }
+
     function renderMatrixTable(data, scenarios) {
         const table = el('matrixTable');
         const thead = table.querySelector('thead tr');
         const tbody = table.querySelector('tbody');
 
-        // Reset
-        thead.innerHTML = '<th class="col-skill">SKILL NAME</th><th class="col-total">合計</th>';
-        tbody.innerHTML = '';
-
-        // 1. Build Header (Scenarios)
+        // Reset Header
+        thead.innerHTML = '<th class="col-skill">SKILL NAME</th><th class="col-init">INIT</th>';
+        
+        // Header Scenarios
         scenarios.forEach(s => {
             const th = document.createElement('th');
-            // Vertical text div wrapper
-            th.innerHTML = `<div class="v-text" title="${s.title}">${s.title.substring(0, 10)}...</div>`;
+            // タイトルを縦書き表示
+            th.innerHTML = `<div class="v-text" title="${s.title}">${s.title}</div>`;
             thead.appendChild(th);
         });
 
-        // 2. Build Rows (Skills)
-        if (data.skills.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="100" style="text-align:center; padding:20px;">NO GROWTH DATA</td></tr>';
+        // Reset Body
+        tbody.innerHTML = '';
+
+        if (data.rows.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="${scenarios.length + 2}" style="padding:20px;">NO DATA</td></tr>`;
             return;
         }
 
-        data.skills.forEach(skillName => {
+        // Data Rows
+        data.rows.forEach(row => {
             const tr = document.createElement('tr');
-            
-            // Skill Name Cell
+
+            // 技能名
             const tdName = document.createElement('td');
             tdName.className = 'col-skill';
-            tdName.textContent = skillName;
+            tdName.textContent = row.name;
             tr.appendChild(tdName);
 
-            // Calculate Total for this skill
-            let rowTotal = 0;
-            const cells = [];
+            // 初期値
+            const tdInit = document.createElement('td');
+            tdInit.className = 'col-init';
+            tdInit.textContent = row.initial;
+            tr.appendChild(tdInit);
 
-            scenarios.forEach(s => {
-                const sGrowth = data.growthMap[s.id];
-                const val = (sGrowth && sGrowth[skillName]) ? sGrowth[skillName] : 0;
-                rowTotal += val;
-                
-                // Value Cell
-                const tdVal = document.createElement('td');
-                if (val > 0) {
-                    tdVal.textContent = `+${val}`;
-                    tdVal.style.color = '#d4b346';
-                    tdVal.style.fontWeight = 'bold';
-                } else {
-                    tdVal.textContent = ''; // Empty for readability
-                    tdVal.className = 'empty';
+            // 履歴
+            row.history.forEach(h => {
+                const td = document.createElement('td');
+                td.textContent = h.val;
+                if (h.grown > 0) {
+                    td.classList.add('grown');
+                    td.title = `+${h.grown} 成長`;
                 }
-                cells.push(tdVal);
+                tr.appendChild(td);
             });
-
-            // Total Cell (Inserted after name)
-            const tdTotal = document.createElement('td');
-            tdTotal.className = 'col-total';
-            tdTotal.textContent = rowTotal;
-            tr.appendChild(tdTotal);
-
-            // Append all scenario cells
-            cells.forEach(c => tr.appendChild(c));
 
             tbody.appendChild(tr);
         });
