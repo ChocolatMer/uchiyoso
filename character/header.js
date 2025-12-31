@@ -88,6 +88,11 @@ export function initHeader() {
                     const data = await loadFromCloud();
                     window.renderCharacterList(data);
                 }
+                
+                // ★追加: 詳細・編集ページなどで、ログイン後に実行したい関数があれば呼ぶ
+                if(typeof window.onLoginSuccess === 'function') {
+                    window.onLoginSuccess(user);
+                }
             }
         },
         () => {
