@@ -112,7 +112,6 @@
         /* --- MATRIX TABLE --- */
         .matrix-scroll {
             width: 100%; height: 100%; overflow: auto;
-            /* Scrollbar styling */
             scrollbar-width: thin; scrollbar-color: #555 #111;
         }
         .matrix-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -121,45 +120,69 @@
 
         table.growth-matrix {
             border-collapse: separate; border-spacing: 0;
-            width: max-content; /* Fit content exactly */
+            width: max-content;
             font-size: 0.8rem;
             background: #0e0e0e;
         }
 
         /* Headers */
         .growth-matrix thead th {
-            position: sticky; top: 0; z-index: 10;
+            position: sticky; top: 0; z-index: 15;
             background: #111; color: #aaa; 
             border-bottom: 1px solid #444; border-right: 1px solid #222;
             padding: 4px; font-weight: normal; font-family: 'Cinzel', sans-serif;
             height: 100px; vertical-align: bottom;
         }
 
-        /* Sticky Columns (SKILL & INIT) */
-        .growth-matrix th.sticky-col, .growth-matrix td.sticky-col {
+        /* Sticky Columns Configuration */
+        /* Col 1: Skill Name */
+        .growth-matrix .col-skill {
             position: sticky; left: 0; z-index: 11;
-            background: #161616; border-right: 1px solid #444;
+            background: #161616; border-right: 1px solid #444; width: 140px;
         }
-        .growth-matrix th.sticky-col-2, .growth-matrix td.sticky-col-2 {
-            position: sticky; left: 140px; z-index: 11; /* Width of Col 1 */
-            background: #1a1a1a; border-right: 2px solid #555;
+        /* Col 2: Init */
+        .growth-matrix .col-base {
+            position: sticky; left: 140px; z-index: 11;
+            background: #1a1a1a; border-right: 1px solid #333; width: 40px;
         }
-        /* Header specifics */
-        .growth-matrix thead th.sticky-col { z-index: 12; background: #222; color: #fff; border-bottom: 2px solid #555; }
-        .growth-matrix thead th.sticky-col-2 { z-index: 12; background: #222; color: #d4b346; border-bottom: 2px solid #555; }
+        /* Col 3: Job */
+        .growth-matrix .col-job {
+            position: sticky; left: 180px; z-index: 11;
+            background: #1a1a1a; border-right: 1px solid #333; width: 40px;
+        }
+        /* Col 4: Interest */
+        .growth-matrix .col-interest {
+            position: sticky; left: 220px; z-index: 11;
+            background: #1a1a1a; border-right: 1px solid #333; width: 40px;
+        }
+        /* Col 5: Other */
+        .growth-matrix .col-other {
+            position: sticky; left: 260px; z-index: 11;
+            background: #1a1a1a; border-right: 2px solid #555; width: 40px;
+        }
+
+        /* Header Sticky High Z-Index */
+        .growth-matrix thead th.col-skill { z-index: 20; background: #222; color: #fff; border-bottom: 2px solid #555; }
+        .growth-matrix thead th.col-base,
+        .growth-matrix thead th.col-job,
+        .growth-matrix thead th.col-interest,
+        .growth-matrix thead th.col-other {
+            z-index: 20; background: #222; color: #888; border-bottom: 2px solid #555; font-size: 0.65rem;
+        }
 
         /* Cells */
         .skill-name-cell {
-            width: 140px; max-width: 140px; /* Limit width */
             text-align: left; padding: 4px 8px;
             border-left: 3px solid transparent; font-weight: normal; color: #ccc;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
             border-bottom: 1px solid #222;
         }
-        .init-val-cell {
-            width: 40px; text-align: center; color: #d4b346; font-weight: bold;
-            font-family: 'Cinzel'; border-bottom: 1px solid #222;
+        .val-cell {
+            text-align: center; color: #666;
+            font-family: 'Cinzel'; border-bottom: 1px solid #222; font-size: 0.75rem;
         }
+        .val-cell.has-val { color: #eee; }
+
         .growth-val-cell {
             min-width: 30px; text-align: center; border-bottom: 1px solid #222; border-right: 1px solid #222;
             color: #444;
@@ -174,7 +197,7 @@
         .cat-other  .skill-name-cell { border-left-color: var(--cat-other); }
 
         /* Row Stripes */
-        .growth-matrix tbody tr:nth-child(even) td:not(.sticky-col):not(.sticky-col-2) { background: rgba(255,255,255,0.02); }
+        .growth-matrix tbody tr:nth-child(even) td:not([class*="col-"]) { background: rgba(255,255,255,0.02); }
         .growth-matrix tbody tr:hover td { background: rgba(255,255,255,0.05); color: #fff; }
 
         /* Highlight Growth */
@@ -184,6 +207,11 @@
         /* Highlight Total */
         .growth-val-cell.total-col {
             color: #d4b346; font-weight: bold; border-left: 1px solid #444;
+        }
+
+        /* Spacer Row */
+        .spacer-row td {
+            height: 15px; background: #000; border: none;
         }
 
         /* Vertical Header Text */
@@ -265,10 +293,13 @@
             <table class="growth-matrix" id="matrixTable">
                 <thead>
                     <tr>
-                        <th class="sticky-col">SKILL</th>
-                        <th class="sticky-col-2">INIT</th>
+                        <th class="col-skill">SKILL</th>
+                        <th class="col-base"><span class="v-text">初期</span></th>
+                        <th class="col-job"><span class="v-text">職業</span></th>
+                        <th class="col-interest"><span class="v-text">興味</span></th>
+                        <th class="col-other"><span class="v-text">その他</span></th>
                         <!-- Scenarios appended here -->
-                        <th>TOTAL</th>
+                        <th><span class="v-text">TOTAL</span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -285,7 +316,7 @@
 <script type="module">
     import { loadFromCloud, monitorAuth, getScenariosForCharacter } from "./firestore.js";
 
-    // data.js の BASE_SKILLS を安全に取得 (フォールバック定義)
+    // data.js の BASE_SKILLS を安全に取得
     const BASE_SKILLS_DEF = (typeof window.BASE_SKILLS !== 'undefined') ? window.BASE_SKILLS : {
         "目星": 25, "聞き耳": 25, "図書館": 25, "回避": "DEX*2", "こぶし（パンチ）": 50,
         "応急手当": 30, "隠れる": 10, "忍び歩き": 10, "追跡": 10, "登攀": 40
@@ -420,32 +451,45 @@
 
     function processMatrix(char, scenarios) {
         // --- 1. キャラクター保存データから技能一覧と初期値を抽出 ---
-        // char.skills に構造化されたデータがあればそれを使用
-        // (edit.htmlで保存されたデータ: skills.combat[{name, init, job, interest, growth...}])
-        
-        const skillBaseMap = {}; // { 技能名: {init, job, interest, etc.} }
+        // { 技能名: { init, job, interest, other } }
+        const skillBaseMap = {};
 
         if (char.skills && typeof char.skills === 'object') {
             Object.values(char.skills).flat().forEach(s => {
                 if(s.name) {
-                    // 初期値 = 初期 + 職業 + 興味 + (edit画面での成長分があれば除くか含めるかはお好みだが、"シナリオ成長"とは分けるため、ここでは一旦含める)
-                    // ただし、シナリオ成長はこの後の処理で加算するため、ここでは「開始時点のベース」として扱う
-                    const base = (parseInt(s.init)||0) + (parseInt(s.job)||0) + (parseInt(s.interest)||0) + (parseInt(s.growth)||0); 
-                    skillBaseMap[s.name] = base;
+                    skillBaseMap[s.name] = {
+                        init: parseInt(s.init) || 0,
+                        job: parseInt(s.job) || 0,
+                        interest: parseInt(s.interest) || 0,
+                        other: parseInt(s.growth) || 0 // 保存データの"growth"は"その他"扱い
+                    };
                 }
             });
         } 
-        // 構造データがない場合 (古いテキスト形式 skillList)
         else if (char.skillList) {
             const lines = char.skillList.split(/[\n\s,、]+/);
             lines.forEach(l => {
                 const m = l.match(/^(.+?)[:：\s]*(\d+)$/);
-                if(m) skillBaseMap[m[1].trim()] = parseInt(m[2]);
+                if(m) {
+                    skillBaseMap[m[1].trim()] = { init: parseInt(m[2]), job:0, interest:0, other:0 };
+                }
             });
         }
 
+        // BASE_SKILLSにあって、まだリストにないものを追加
+        Object.keys(BASE_SKILLS_DEF).forEach(key => {
+            if(!skillBaseMap[key]) {
+                let base = 0;
+                const def = BASE_SKILLS_DEF[key];
+                if (typeof def === 'number') base = def;
+                else if (def === 'DEX*2') base = (char.stats?.DEX || 10) * 2;
+                else if (def === 'EDU*5') base = (char.stats?.EDU || 10) * 5;
+                
+                skillBaseMap[key] = { init: base, job: 0, interest: 0, other: 0 };
+            }
+        });
+
         // --- 2. シナリオごとの成長データを収集 ---
-        // (前回と同じロジック)
         const scenarioGrowths = scenarios.map(s => {
             const growths = {};
             let d = (s.characters.pc?.id === char.id) ? s.characters.pc : 
@@ -458,10 +502,6 @@
                         const name = m[1].trim();
                         const val = parseInt(m[2]);
                         growths[name] = (growths[name]||0) + val;
-                        // もしキャラシにない技能が成長していたら追加
-                        if (skillBaseMap[name] === undefined) {
-                            skillBaseMap[name] = 0; // 初期値不明なら0スタート
-                        }
                     }
                 });
             }
@@ -471,8 +511,7 @@
         // --- 3. 行データ生成 ---
         const rows = [];
         Object.keys(skillBaseMap).sort().forEach(name => {
-            // 初期値 (キャラシの値)
-            let baseVal = skillBaseMap[name];
+            const base = skillBaseMap[name];
             
             // カテゴリ判定
             let cat = 'other';
@@ -480,15 +519,22 @@
                 if(v.some(s => name.includes(s))) { cat = k; break; }
             }
 
+            // ベース合計
+            const baseTotal = base.init + base.job + base.interest + base.other;
+            let current = baseTotal;
+
             // 履歴生成
-            let current = baseVal;
             const history = scenarioGrowths.map(sg => {
                 const g = sg.growths[name] || 0;
                 current += g;
                 return { val: current, grow: g };
             });
 
-            rows.push({ name, cat, init: baseVal, history, current });
+            rows.push({ 
+                name, cat, 
+                init: base.init, job: base.job, interest: base.interest, other: base.other,
+                history, current 
+            });
         });
 
         // カテゴリ順ソート
@@ -561,7 +607,8 @@
         const tbody = table.querySelector('tbody');
 
         // Reset Header
-        while(theadTr.children.length > 2) theadTr.removeChild(theadTr.lastChild);
+        while(theadTr.children.length > 5) theadTr.removeChild(theadTr.lastChild);
+        
         scenarios.forEach(s => {
             const th = document.createElement('th');
             let t = s.title;
@@ -575,19 +622,36 @@
 
         // Body
         tbody.innerHTML = "";
+        let currentCat = "";
+
         rows.forEach(row => {
+            // Spacer between categories
+            if(currentCat && currentCat !== row.cat) {
+                const spacer = document.createElement('tr');
+                spacer.className = 'spacer-row';
+                spacer.innerHTML = `<td colspan="100"></td>`;
+                tbody.appendChild(spacer);
+            }
+            currentCat = row.cat;
+
             const tr = document.createElement('tr');
             tr.className = `cat-${row.cat}`;
 
             const tdName = document.createElement('td');
-            tdName.className = "sticky-col skill-name-cell";
+            tdName.className = "col-skill skill-name-cell";
             tdName.textContent = row.name;
             tr.appendChild(tdName);
 
-            const tdInit = document.createElement('td');
-            tdInit.className = "sticky-col-2 init-val-cell";
-            tdInit.textContent = row.init;
-            tr.appendChild(tdInit);
+            const addValCell = (val, cls) => {
+                const td = document.createElement('td');
+                td.className = cls + (val > 0 ? " has-val" : "");
+                td.textContent = val;
+                tr.appendChild(td);
+            }
+            addValCell(row.init, "col-base val-cell");
+            addValCell(row.job, "col-job val-cell");
+            addValCell(row.interest, "col-interest val-cell");
+            addValCell(row.other, "col-other val-cell");
 
             row.history.forEach(h => {
                 const td = document.createElement('td');
