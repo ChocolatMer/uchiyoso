@@ -39,7 +39,31 @@
             border-image: linear-gradient(to bottom, #443311, #110000, #443311) 1;
         }
 
-        /* --- CURTAINS (Quality Restored) --- */
+        /* --- NEW ANIMATION: FILM GRAIN & DUST --- */
+        .film-grain {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 400; pointer-events: none; opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        .dust-container {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 450; overflow: hidden;
+        }
+        .dust {
+            position: absolute; border-radius: 50%;
+            background: rgba(255, 255, 230, 0.6);
+            box-shadow: 0 0 5px rgba(255, 255, 230, 0.4);
+            animation: floatDust 20s infinite linear;
+        }
+        @keyframes floatDust {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            20% { opacity: 0.8; }
+            80% { opacity: 0.5; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* --- CURTAINS (Protected Design) --- */
         .curtain-container {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 1000; pointer-events: none;
@@ -54,7 +78,7 @@
             position: relative;
             transition: transform 4s cubic-bezier(0.25, 1, 0.5, 1);
         }
-        /* ドレープの質感（影）を追加 */
+        /* ドレープの質感（影） */
         .curtain::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: repeating-linear-gradient(90deg, 
@@ -79,10 +103,10 @@
         .scroll-container {
             position: absolute; bottom: -100%; 
             left: 50%; transform: translateX(-50%);
-            width: 100%; max-width: 900px; /* 幅を調整して中央揃えを確実に */
+            width: 100%; max-width: 900px;
             text-align: center;
             z-index: 100; padding-bottom: 300px;
-            display: flex; flex-direction: column; align-items: center; /* 子要素を中央揃え */
+            display: flex; flex-direction: column; align-items: center;
         }
 
         .scenario-block {
@@ -122,17 +146,24 @@
         .sc-image-box.visible { transform: scale(1); opacity: 1; }
         .sc-image { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.9); }
 
-        /* STORY TEXT */
+        /* STORY TEXT (Updated Alignment) */
         .text-section { 
-            width: 70%; margin: 0 auto 50px auto; 
-            color: #ccc; line-height: 2; font-size: 1rem; 
-            white-space: pre-wrap; text-align: center;
+            width: 75%; margin: 0 auto 50px auto; 
+            color: #ccc; line-height: 2.2; font-size: 1rem; 
+            white-space: pre-wrap; 
+            text-align: left; /* 左揃えにして読みやすく */
         }
-        .story-intro { font-style: italic; color: #aaa; margin-bottom: 30px; font-family: 'Shippori Mincho'; }
+        .story-intro { 
+            font-style: italic; color: #aaa; margin-bottom: 30px; 
+            font-family: 'Shippori Mincho'; text-align: center; /* 導入は中央揃え */
+        }
         
         .section-label {
-            display: inline-block; border-bottom: 1px solid var(--gold-base); 
-            color: var(--gold-base); font-family: 'Cinzel'; font-size: 0.9rem; margin-bottom: 15px; letter-spacing: 2px;
+            display: block; text-align: center; /* ラベルは中央 */
+            border-bottom: 1px solid var(--gold-base); 
+            color: var(--gold-base); font-family: 'Cinzel'; font-size: 0.9rem; 
+            margin: 0 auto 20px auto; width: fit-content;
+            letter-spacing: 2px;
         }
 
         /* --- CAST LAYOUT --- */
@@ -213,7 +244,7 @@
         .char-visual {
             position: relative; width: 100%; display: flex; justify-content: center;
             opacity: 0; transform: scale(0.95); 
-            transition: opacity 2s ease, transform 2s ease; /* ゆったりと表示 */
+            transition: opacity 2s ease, transform 2s ease;
         }
         .spotlight-bg {
             position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%);
@@ -259,6 +290,9 @@
 
     <!-- STAGE -->
     <div class="stage-frame"></div>
+    <div class="film-grain"></div>
+    <div class="dust-container" id="dustContainer"></div>
+
     <div class="curtain-container" id="curtain">
         <div class="curtain left"></div>
         <div class="curtain right"></div>
@@ -317,6 +351,23 @@
         let allScenarios = [];
         let selectedScenarios = [];
 
+        // --- Dust Animation Init ---
+        function createDust() { 
+            const container = document.getElementById('dustContainer'); 
+            for(let i=0; i<30; i++){ 
+                const dust = document.createElement('div'); 
+                dust.className='dust'; 
+                dust.style.left=Math.random()*100+'vw'; 
+                dust.style.top=Math.random()*100+'vh'; 
+                dust.style.width=Math.random()*3+'px';
+                dust.style.height=dust.style.width;
+                dust.style.animationDuration=(Math.random()*20+15)+'s'; 
+                dust.style.animationDelay=-(Math.random()*40)+'s'; 
+                container.appendChild(dust); 
+            }
+        }
+        createDust();
+
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 await loadData();
@@ -367,13 +418,10 @@
                 if(!kpName && s.type === "2PL") kpName = "UNKNOWN KP"; 
                 const is2PL = (s.type === "2PL" || s.type === "4PL");
                 
-                // --- 重複テキスト除去 ---
-                let cleanOverview = s.overview || "";
-                if(cleanOverview.includes("[遭遇した神話生物]")) {
-                    cleanOverview = cleanOverview.split("[遭遇した神話生物]")[0].trim();
-                } else if(cleanOverview.includes("[遭遇]")) {
-                    cleanOverview = cleanOverview.split("[遭遇]")[0].trim();
-                }
+                // ★修正: register.htmlが修正されたため、複雑なカット処理は不要になりました
+                // あらすじと神話生物をシンプルに表示します
+                let overview = s.overview || "";
+                let entities = s.entities || ""; // 独立データがある場合
 
                 html += `
                     <div class="scenario-block" id="scene-${i}" data-index="${i}">
@@ -392,10 +440,13 @@
                             <img src="${s.images.trailer}" class="sc-image">
                         </div>` : ''}
 
-                        <!-- 3. STORY (Mythos Removed) -->
+                        <!-- 3. STORY (Left Aligned for readability) -->
                         <div class="text-section reveal-text">
                             ${s.introduction ? `<div class="story-intro">“ ${s.introduction} ”</div>` : ''}
-                            ${cleanOverview ? `<div class="section-label">STORY</div><div>${cleanOverview}</div>` : ''}
+                            
+                            ${overview ? `<div class="section-label">STORY</div><div>${overview}</div>` : ''}
+                            
+                            ${entities ? `<div style="margin-top:20px; text-align:center; color:#a44; font-size:0.8rem;">[遭遇] ${entities.replace(/\n/g, ' / ')}</div>` : ''}
                         </div>
 
                         <!-- 4. KP NAME (Only if 2PL/GM exists) -->
@@ -441,7 +492,6 @@
             container.innerHTML = html;
 
             // --- SPEED ADJUSTMENT ---
-            // 係数を増やして速度を低下 (60s + 1シーンあたり50秒)
             const duration = 60 + (selectedScenarios.length * 50);
             container.style.animation = `scrollUp ${duration}s linear forwards`;
 
@@ -465,7 +515,6 @@
                 const markers = document.querySelectorAll('.scenario-marker');
                 markers.forEach(m => {
                     const rect = m.getBoundingClientRect();
-                    // キャラクター表示タイミング（画面上部近く）
                     if(rect.top < window.innerHeight * 0.9 && rect.bottom > 0) {
                         const idx = m.parentElement.dataset.index;
                         if(currentSceneIdx !== idx) {
