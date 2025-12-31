@@ -32,7 +32,7 @@
             /* Dimensions */
             --w-skill: 120px;
             --w-base: 32px;
-            --w-scen: 22px;
+            --w-scen: 34px; /* 幅を少し広げました */
         }
 
         /* --- 2. BASE STYLES --- */
@@ -43,7 +43,7 @@
             font-family: 'Shippori Mincho', serif; 
             margin: 0; padding: 0; 
             height: 100vh; overflow: hidden;
-            font-size: 0.8rem; /* Base font size reduced */
+            font-size: 0.8rem;
         }
 
         /* Dynamic Background */
@@ -128,6 +128,11 @@
         .kpi-label { font-size: 0.55rem; color: #888; font-family: 'Cinzel'; display: block; }
         .kpi-val { font-size: 1rem; color: var(--theme); font-weight: bold; font-family: 'Cinzel'; }
 
+        /* Dice Stats Row */
+        .dice-row { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 3px; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 1px; }
+        .dice-label { color: #aaa; font-family: 'Cinzel'; }
+        .dice-val { font-weight: bold; font-family: 'Cinzel'; }
+
         /* Skill Ranking */
         .rank-list { list-style: none; padding: 0; margin: 0; font-size: 0.75rem; max-height: 200px; overflow-y: auto; }
         .rank-list::-webkit-scrollbar { width: 2px; }
@@ -145,7 +150,7 @@
             display: grid; grid-template-columns: 2fr 1fr; gap: 20px;
             background: rgba(0,0,0,0.2);
             border-bottom: 1px solid var(--border);
-            height: 180px; /* Fixed height for compactness */
+            height: 180px; 
         }
 
         .chart-box { position: relative; width: 100%; height: 100%; }
@@ -200,7 +205,6 @@
             background: var(--theme); color: #000; border-color: var(--theme); 
             font-weight: bold;
         }
-        /* Category specific active styles */
         .filter-btn.cat-combat.active { background: var(--c-combat); border-color: var(--c-combat); }
         .filter-btn.cat-search.active { background: var(--c-search); border-color: var(--c-search); }
         .filter-btn.cat-action.active { background: var(--c-action); border-color: var(--c-action); }
@@ -224,38 +228,35 @@
             flex: 1; overflow: auto; width: 100%;
             scrollbar-width: thin; scrollbar-color: #555 #111;
         }
-        .matrix-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+        .matrix-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
         .matrix-scroll::-webkit-scrollbar-corner { background: #111; }
-        .matrix-scroll::-webkit-scrollbar-thumb { background: #555; border: 2px solid #111; border-radius: 4px; }
+        .matrix-scroll::-webkit-scrollbar-thumb { background: #555; border: 2px solid #111; border-radius: 5px; }
         .matrix-scroll::-webkit-scrollbar-track { background: #111; }
 
         table.growth-matrix {
             border-collapse: separate; border-spacing: 0;
-            width: max-content;
-            font-size: 0.75rem; /* Very compact font */
+            width: max-content; min-width: 100%;
+            font-size: 0.8rem;
         }
 
         /* --- STICKY HEADERS & COLUMNS --- */
         
-        /* 1. Scenarios Header (Top) */
         thead th {
             position: sticky; top: 0; z-index: 10;
             background: #111; color: #aaa;
-            border-bottom: 1px solid #444; border-right: 1px solid #222;
+            border-bottom: 1px solid #444; border-right: 1px solid #333;
             padding: 0; height: 120px; vertical-align: bottom;
             transition: 0.2s;
         }
         thead th:hover { background: #222; }
 
-        /* 2. Fixed Columns (Left) */
-        /* Skill Name */
+        /* 1. Skill Name Column */
         th.col-skill, td.col-skill {
             position: sticky; left: 0; z-index: 12;
             background: #161616; border-right: 1px solid #444; width: var(--w-skill);
         }
         
-        /* Base Stats Columns (4 columns) */
-        /* Positions calculated based on widths */
+        /* 2. Base Stats Columns */
         th.col-base, td.col-base { position: sticky; left: var(--w-skill); z-index: 11; width: var(--w-base); border-right: 1px solid #333; background: #1a1a1a; }
         th.col-job,  td.col-job  { position: sticky; left: calc(var(--w-skill) + var(--w-base)); z-index: 11; width: var(--w-base); border-right: 1px solid #333; background: #1a1a1a; }
         th.col-int,  td.col-int  { position: sticky; left: calc(var(--w-skill) + var(--w-base)*2); z-index: 11; width: var(--w-base); border-right: 1px solid #333; background: #1a1a1a; }
@@ -268,6 +269,8 @@
         /* --- CELLS STYLING --- */
         .skill-cell-content {
             display: flex; align-items: center; height: 28px; padding: 0 6px;
+            /* ★ 左揃えを明示的に指定 */
+            justify-content: flex-start;
             border-left: 3px solid transparent; font-weight: 500; color: #ccc;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
@@ -285,7 +288,7 @@
         td.val-base { text-align: center; color: #666; font-family: 'Cinzel'; border-bottom: 1px solid #222; font-size: 0.7rem; }
         td.val-base.has-val { color: #eee; }
 
-        /* Scenario Columns - SUPER COMPACT */
+        /* Scenario Columns - Adjusted Width */
         td.val-growth {
             min-width: var(--w-scen); width: var(--w-scen); 
             text-align: center; color: #444; font-family: 'Cinzel';
@@ -398,14 +401,20 @@
             </div>
             
             <div class="panel-head" style="margin-top:10px;"><span>DICE STATS</span><span class="material-icons-round" style="font-size:1rem;">casino</span></div>
-            <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:4px;">
-                <span style="color:#aaa;">TOTAL ROLL</span><span style="color:#fff; font-family:'Cinzel';" id="statTotal">0</span>
+            <div class="dice-row">
+                <span class="dice-label">TOTAL ROLL</span><span class="dice-val" style="color:#fff;" id="statTotal">0</span>
             </div>
-            <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:4px;">
-                <span style="color:#aaa;">CRITICAL</span><span style="color:#66bb6a; font-family:'Cinzel';" id="statCrit">0</span>
+            <div class="dice-row">
+                <span class="dice-label">SUCCESS</span><span class="dice-val" style="color:#66bb6a;" id="statSucc">0</span>
             </div>
-            <div style="display:flex; justify-content:space-between; font-size:0.75rem;">
-                <span style="color:#aaa;">FUMBLE</span><span style="color:#ff6b6b; font-family:'Cinzel';" id="statFumb">0</span>
+            <div class="dice-row">
+                <span class="dice-label">FAILURE</span><span class="dice-val" style="color:#aaa;" id="statFail">0</span>
+            </div>
+            <div class="dice-row">
+                <span class="dice-label">CRITICAL</span><span class="dice-val" style="color:#a5d6a7;" id="statCrit">0</span>
+            </div>
+            <div class="dice-row">
+                <span class="dice-label">FUMBLE</span><span class="dice-val" style="color:#ff6b6b;" id="statFumb">0</span>
             </div>
         </div>
 
@@ -469,7 +478,7 @@
                         <th class="col-base"><div class="v-header">初期</div></th>
                         <th class="col-job"><div class="v-header">職業</div></th>
                         <th class="col-int"><div class="v-header">興味</div></th>
-                        <th class="col-oth"><div class="v-header">その他</div></th>
+                        <th class="col-oth"><div class="v-header">他</div></th>
                         <!-- Scenarios appended here -->
                         <th><div class="v-header" style="color:var(--theme);">TOTAL</div></th>
                     </tr>
@@ -519,6 +528,7 @@
             el('loadingText').textContent = "PLEASE LOGIN";
         });
 
+        // Event Listeners
         el('charSelect').addEventListener('change', (e) => { if(e.target.value) loadCharacter(e.target.value); });
         
         document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -579,7 +589,7 @@
         renderStats(stats);
         renderSanChart(stats.sanHistory, sortedScenarios);
         renderInsanity(stats.insanityHistory);
-        renderMatrixTable();
+        renderMatrixTable(); // Uses currentMatrixData
 
         // Animation
         animateCount('kpiScenarios', sortedScenarios.length);
@@ -589,7 +599,7 @@
     }
 
     function processStats(char, scenarios) {
-        let dice = { total:0, crit:0, fumb:0, succ:0 };
+        let dice = { total:0, crit:0, fumb:0, succ:0, fail:0 };
         let skillCounts = {};
         let sanHistory = [char.vitals?.san || char.stats?.POW*5 || 50]; 
         let insanityHistory = [];
@@ -603,6 +613,7 @@
                 const ana = s.analysisData[char.name];
                 dice.total += ana.dice||0; dice.crit += ana.crit||0;
                 dice.fumb += ana.fumb||0;  dice.succ += ana.succ||0;
+                dice.fail += ana.fail||0;
                 if(ana.skillDetails) {
                     Object.entries(ana.skillDetails).forEach(([k,v]) => {
                         skillCounts[k] = (skillCounts[k]||0) + v.count;
@@ -628,21 +639,18 @@
     }
 
     function processMatrix(char, scenarios) {
-        // --- 1. キャラクター保存データから初期値類を抽出 ---
-        // other = 「その他」として使用。growth(初期入力成長)は無視。
-        const skillMap = {}; // { Name: {init, job, int, other} }
+        // Init Values from Char Data
+        const skillMap = {}; // { Name: {init, job, int, oth} }
 
         if (char.skills && typeof char.skills === 'object') {
             Object.values(char.skills).flat().forEach(s => {
                 if(s.name) skillMap[s.name] = { 
                     init: parseInt(s.init)||0, job: parseInt(s.job)||0, 
-                    interest: parseInt(s.interest)||0, 
-                    // ★ growth (初期入力の成長) は無視し、other (その他) のみを採用
-                    other: (s.other ? parseInt(s.other) : 0)
+                    interest: parseInt(s.interest)||0, other: parseInt(s.growth)||0 
                 };
             });
         } else if (char.skillList) {
-            // Text Fallback (旧形式) - 初期値として扱う
+            // Text Fallback
             char.skillList.split(/[\n\s,、]+/).forEach(l => {
                 const m = l.match(/^(.+?)[:：\s]*(\d+)$/);
                 if(m) skillMap[m[1].trim()] = { init: parseInt(m[2]), job:0, interest:0, other:0 };
@@ -661,12 +669,10 @@
             }
         });
 
-        // --- 2. シナリオごとの成長 ---
+        // Scenario Growths
         const scenarioCols = scenarios.map(s => {
             const growth = {};
             let d = (s.characters.pc?.id === char.id) ? s.characters.pc : (s.characters.kpc?.id === char.id) ? s.characters.kpc : null;
-            let growthList = [];
-            
             if(d && d.grow) {
                 d.grow.split('\n').forEach(l => {
                     const m = l.match(/(.+?)\s*[:：]?\s*\+?(\d+)/);
@@ -674,25 +680,15 @@
                         const name = m[1].trim();
                         const val = parseInt(m[2]);
                         growth[name] = (growth[name]||0) + val;
-                        growthList.push(`${name} +${val}`);
-                        
                         // Add unknown skill
                         if(!skillMap[name]) skillMap[name] = { init:0, job:0, interest:0, other:0 };
                     }
                 });
             }
-            
-            // Dice Stats for Tooltip
-            let stats = null;
-            if(s.analysisData && s.analysisData[char.name]) {
-                const ana = s.analysisData[char.name];
-                stats = { succ: ana.succ, fail: ana.fail, crit: ana.crit, fumb: ana.fumb };
-            }
-
-            return { id: s.id, title: s.title, date: s.date, growth, growthList, stats };
+            return { id: s.id, title: s.title, date: s.date, gm: s.gm, growth };
         });
 
-        // --- 3. 行データ生成 ---
+        // Build Rows
         const rows = [];
         let totalGrowthSum = 0;
 
@@ -745,6 +741,8 @@
         el('statTotal').textContent = d.total;
         el('statCrit').textContent = d.crit;
         el('statFumb').textContent = d.fumb;
+        el('statSucc').textContent = d.succ;
+        el('statFail').textContent = d.fail;
         
         const list = el('rankList'); list.innerHTML = '';
         const sorted = Object.entries(stats.skillCounts).sort((a,b) => b[1]-a[1]).slice(0, 10);
@@ -797,6 +795,7 @@
         if(!currentMatrixData) return;
         const { rows, scenarios } = currentMatrixData;
         
+        // Filter
         const activeFilter = document.querySelector('.filter-btn.active').dataset.cat;
         const growthOnly = el('toggleGrowthOnly').checked;
 
@@ -804,7 +803,7 @@
         const thead = table.querySelector('thead tr');
         const tbody = table.querySelector('tbody');
 
-        // Reset Headers
+        // Headers
         while(thead.children.length > 5) thead.removeChild(thead.lastChild);
         
         scenarios.forEach(s => {
@@ -828,6 +827,7 @@
         let prevCat = "";
 
         rows.forEach(row => {
+            // Filter Check
             if(activeFilter !== 'all' && row.cat !== activeFilter) return;
             if(growthOnly && !row.hasGrowth) return;
 
@@ -843,7 +843,7 @@
             const tr = document.createElement('tr');
             tr.className = `cat-${row.cat}`;
 
-            // Name
+            // Name + Icon
             const tdName = document.createElement('td');
             tdName.className = "col-skill skill-cell-content";
             tdName.innerHTML = `<span class="material-icons-round skill-icon">${row.icon}</span>${row.name}`;
@@ -870,8 +870,8 @@
                     td.classList.add('grown');
                     td.title = `+${h.grow}`;
                 }
-                // Hover highlight (adjusted index for 5 fixed cols)
-                td.onmouseenter = () => highlightColumn(i + 6); 
+                // Hover effect helper
+                td.onmouseenter = () => highlightColumn(i + 6); // 5 fixed cols + 1 index adjustment
                 td.onmouseleave = () => removeHighlight(i + 6);
                 tr.appendChild(td);
             });
@@ -889,11 +889,13 @@
     // --- UTILS ---
     function animateCount(id, target) {
         const el = document.getElementById(id);
+        const start = 0;
         const duration = 1000;
         const startTime = performance.now();
         function update(t) {
             const p = Math.min((t - startTime) / duration, 1);
-            el.textContent = Math.floor(p * target);
+            const val = Math.floor(p * target);
+            el.textContent = val;
             if(p < 1) requestAnimationFrame(update);
         }
         requestAnimationFrame(update);
