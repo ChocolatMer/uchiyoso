@@ -873,11 +873,11 @@
                                     <thead><tr><th style="color:#ff8a80;">ROLL</th><th style="color:#ff8a80;">EFFECT (1D10)</th><th style="color:#ff8a80;">DURATION</th></tr></thead>
                                     <tbody>`;
                     st.insanityHistory.forEach(h => {
-                        insanityHtml += `
+                         insanityHtml += `
                             <tr>
                                 <td style="font-family:'Cinzel'; color:#888;">#${h.typeRoll}</td>
                                 <td style="color:#ffcdd2; font-weight:bold;">${h.desc}</td>
-                                <td style="text-align:right;">${h.duration ? h.duration + ' 時間/R' : '--'}</td>
+                                <td style="text-align:right;">${h.duration ? h.duration + ' 分' : '--'}</td>
                             </tr>`;
                     });
                     insanityHtml += `</tbody></table></div></details>`;
