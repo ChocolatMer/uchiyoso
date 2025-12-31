@@ -668,21 +668,19 @@
                 let name = "";
                 let content = fullText;
 
-                // --- 1. SAN値チェック & Systemメッセージ (Fix for specific user format) ---
-                if (fullText.match(/SAN/i) && fullText.match(/[→>＞]/) && fullText.match(/system/i)) {
-                    // Match format: [main] system : [ Name ] SAN : 60 → 59
-                    // Regex breakdown: system -> colon -> brackets(Name) -> SAN -> colon? -> OldVal -> Arrow -> NewVal
-                    const sanLogMatch = fullText.match(/system.*[:：].*\[\s*(.+?)\s*\]\s*SAN.*[:：]?\s*(\d+)\s*[→>＞]\s*(\d+)/i);
-                    
-                    if (sanLogMatch) {
-                        name = sanLogMatch[1].trim();
-                        // const oldVal = parseInt(sanLogMatch[2]);
-                        const newVal = parseInt(sanLogMatch[3]);
-                        
-                        const st = getStats(name);
-                        st.sanHistory.push({ x: lineIndex, y: newVal });
-                        st.currentSan = newVal;
-                        return; // Successfully parsed SAN line, skip other checks
+                // --- 1. SAN値チェック & Systemメッセージ ---
+                if (fullText.match(/system/i) && fullText.match(/SAN/i) && fullText.match(/[→>＞]/)) {
+                    const nameMatch = fullText.match(/\[\s*([^\]]+?)\s*\]\s*SAN/i) || fullText.match(/system.*[:：].*\[\s*([^\]]+?)\s*\]/i);
+                    if (nameMatch) {
+                        name = nameMatch[1].trim();
+                        const sanMatch = fullText.match(/SAN\s*[:：]?\s*(\d+)\s*[→>＞]\s*(\d+)/i);
+                        if (sanMatch) {
+                            const st = getStats(name);
+                            const newVal = parseInt(sanMatch[2]);
+                            st.sanHistory.push({ x: lineIndex, y: newVal });
+                            st.currentSan = newVal;
+                            return; 
+                        }
                     }
                 }
 
