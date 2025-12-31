@@ -9,13 +9,28 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <!-- data.jsの読み込み (相対パスは環境に合わせて調整してください) -->
-    <script src="../character/data/data.js"></script>
+    <!-- ★パス修正: growth.html から見た data.js の位置 -->
+    <script src="./data/data.js"></script>
 
     <style>
         /* --- CORE STYLES --- */
+        :root {
+            --theme-color: #d4b346; /* デフォルトカラー */
+            --bg-color: #080808;
+            --panel-bg: #111;
+            --border-color: #333;
+            
+            /* Skill Category Colors */
+            --col-combat: #ff6b6b; /* 戦闘 */
+            --col-search: #4ecdc4; /* 探索 */
+            --col-action: #ffe66d; /* 行動 */
+            --col-nego: #ff9f43;   /* 交渉 */
+            --col-know: #a29bfe;   /* 知識 */
+            --col-other: #aaa;     /* その他 */
+        }
+
         body { 
-            background-color: #080808; 
+            background-color: var(--bg-color); 
             background-image: radial-gradient(#1a1a1a 1px, transparent 1px);
             background-size: 20px 20px;
             color: #ccc; 
@@ -31,38 +46,44 @@
 
         /* --- SIDEBAR --- */
         .sidebar {
-            background: rgba(0,0,0,0.85); border-right: 1px solid #333;
+            background: rgba(0,0,0,0.85); border-right: 1px solid var(--border-color);
             padding: 20px; display: flex; flex-direction: column; gap: 20px;
             backdrop-filter: blur(5px); z-index: 10;
         }
         .app-title {
-            font-family: 'Cinzel', serif; font-size: 1.2rem; color: #d4b346;
+            font-family: 'Cinzel', serif; font-size: 1.2rem; color: var(--theme-color);
             text-align: center; border-bottom: 1px double #555; padding-bottom: 15px;
-            letter-spacing: 3px; text-shadow: 0 0 10px rgba(212, 179, 70, 0.3);
+            letter-spacing: 3px; text-shadow: 0 0 10px rgba(255,255,255,0.1);
         }
         
         .char-select-area {
-            background: #111; padding: 15px; border-radius: 4px; border: 1px solid #333;
-            text-align: center;
+            background: var(--panel-bg); padding: 15px; border-radius: 4px; border: 1px solid var(--border-color);
+            text-align: center; position: relative; overflow: hidden;
         }
+        /* テーマカラーのアクセントバー */
+        .char-select-area::top {
+            content:''; position: absolute; top:0; left:0; width:100%; height:3px;
+            background: var(--theme-color);
+        }
+
         .char-icon {
-            width: 100px; height: 100px; border-radius: 50%; border: 2px solid #d4b346;
+            width: 100px; height: 100px; border-radius: 50%; 
+            border: 3px solid var(--theme-color);
             object-fit: cover; margin-bottom: 10px; background: #000;
+            transition: border-color 0.5s;
         }
         .char-select {
             background: #000; border: 1px solid #444; color: #eee; padding: 5px;
             width: 100%; font-family: 'Shippori Mincho'; font-size: 0.9rem;
         }
 
-        .kpi-box {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-        }
+        .kpi-box { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
         .kpi-card {
-            background: rgba(255,255,255,0.03); border: 1px solid #333; padding: 8px 5px;
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 8px 5px;
             text-align: center; border-radius: 2px;
         }
         .kpi-label { font-family: 'Cinzel'; font-size: 0.6rem; color: #888; display: block; }
-        .kpi-val { font-size: 1rem; color: #d4b346; font-weight: bold; }
+        .kpi-val { font-size: 1rem; color: var(--theme-color); font-weight: bold; transition: color 0.5s; }
 
         /* --- MAIN CONTENT --- */
         .main-content {
@@ -76,20 +97,21 @@
         #loadingOverlay {
             position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9);
             display:flex; justify-content:center; align-items:center; z-index:99;
-            font-family:'Cinzel'; color:#d4b346; letter-spacing:2px; flex-direction: column; gap: 10px;
+            font-family:'Cinzel'; color:var(--theme-color); letter-spacing:2px; flex-direction: column; gap: 10px;
         }
 
         /* SECTION HEADERS */
         .section-header {
-            display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
-            border-left: 3px solid #d4b346; padding-left: 10px;
+            display: flex; align-items: center; gap: 10px; margin-bottom: 5px;
+            border-left: 4px solid var(--theme-color); padding-left: 10px;
+            transition: border-color 0.5s;
         }
         .sec-title { font-family: 'Cinzel'; font-size: 1.1rem; color: #eee; }
 
         /* MATRIX TABLE AREA */
         .matrix-container {
             flex: 1; min-height: 400px;
-            background: #111; border: 1px solid #333; border-radius: 4px;
+            background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 4px;
             overflow: hidden; display: flex; flex-direction: column;
         }
         .matrix-scroll {
@@ -115,37 +137,55 @@
         /* Column: Skill Name (Sticky Left) */
         .growth-table th.col-skill, .growth-table td.col-skill {
             position: sticky; left: 0; z-index: 6;
-            background: #222; border-right: 2px solid #444;
-            min-width: 140px; text-align: left; padding-left: 10px;
-            font-weight: bold; color: #d4b346;
+            background: #181818; border-right: 1px solid #444;
+            min-width: 130px; text-align: left; padding-left: 10px;
+            font-weight: bold; color: #eee;
+            border-left: 4px solid transparent; /* Category Color Bar */
         }
-        .growth-table th.col-skill { z-index: 7; background: #2a2a2a; color: #eee; }
+        .growth-table th.col-skill { z-index: 7; background: #222; color: var(--theme-color); border-left: none; }
+
+        /* Category Colors */
+        td.cat-combat { border-left-color: var(--col-combat) !important; }
+        td.cat-search { border-left-color: var(--col-search) !important; }
+        td.cat-action { border-left-color: var(--col-action) !important; }
+        td.cat-nego   { border-left-color: var(--col-nego)   !important; }
+        td.cat-know   { border-left-color: var(--col-know)   !important; }
+        td.cat-other  { border-left-color: var(--col-other)  !important; }
 
         /* Column: Initial (Base) */
         .growth-table th.col-init, .growth-table td.col-init {
-            background: #1e1e1e; border-right: 1px double #444;
-            color: #888; text-align: center; width: 60px; font-family: 'Cinzel';
+            background: #1e1e1e; border-right: 2px solid #444;
+            color: #888; text-align: center; width: 50px; font-family: 'Cinzel';
         }
 
         /* Cells */
         .growth-table td {
             border: 1px solid #333; padding: 6px 10px; text-align: center;
-            color: #888;
+            color: #666; /* Default Dim */
         }
-        .growth-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
-        .growth-table tr:hover td { background: rgba(212, 179, 70, 0.05); }
+        .growth-table tr:nth-child(even) td:not(.col-skill):not(.col-init) { background: rgba(255,255,255,0.01); }
+        .growth-table tr:hover td { background: rgba(255,255,255,0.03); }
 
         /* Highlight Growth */
         .growth-table td.grown {
-            color: #eee; font-weight: bold;
-            background: rgba(212, 179, 70, 0.15);
+            color: #fff; font-weight: bold;
+            background: rgba(212, 179, 70, 0.15) !important;
+            box-shadow: inset 0 0 5px rgba(212, 179, 70, 0.2);
         }
+        
         /* Vertical Text for Headers */
         .v-text {
             writing-mode: vertical-rl; transform: rotate(180deg);
-            max-height: 120px; padding: 5px 2px; margin: 0 auto;
-            text-align: left; line-height: 1.2;
+            max-height: 140px; padding: 5px 2px; margin: 0 auto;
+            text-align: left; line-height: 1.2; font-size: 0.8rem;
         }
+
+        /* Legend */
+        .legend-bar {
+            display: flex; gap: 15px; font-size: 0.7rem; color: #888; margin-top: 5px;
+        }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
 
     </style>
 </head>
@@ -179,7 +219,7 @@
         </div>
         
         <div style="font-size:0.75rem; color:#555; margin-top:auto; text-align:center;">
-            Values include<br>Initial + Growth
+            Rows include Initial Values<br>+ Scenario Growth
         </div>
     </div>
 
@@ -192,17 +232,25 @@
 
         <div style="display:flex; flex-direction:column; flex:1; min-height:0;">
             <div class="section-header">
-                <span class="material-icons-round" style="color:#d4b346;">grid_on</span>
+                <span class="material-icons-round" style="color:var(--theme-color);">grid_on</span>
                 <span class="sec-title">SKILL GROWTH HISTORY</span>
             </div>
             
-            <div class="matrix-container">
+            <div class="legend-bar">
+                <div class="legend-item"><span class="legend-dot" style="background:var(--col-combat);"></span>戦闘</div>
+                <div class="legend-item"><span class="legend-dot" style="background:var(--col-search);"></span>探索</div>
+                <div class="legend-item"><span class="legend-dot" style="background:var(--col-action);"></span>行動</div>
+                <div class="legend-item"><span class="legend-dot" style="background:var(--col-nego);"></span>交渉</div>
+                <div class="legend-item"><span class="legend-dot" style="background:var(--col-know);"></span>知識</div>
+            </div>
+
+            <div class="matrix-container" style="margin-top:10px;">
                 <div class="matrix-scroll">
                     <table class="growth-table" id="matrixTable">
                         <thead>
                             <tr>
                                 <th class="col-skill">技能名</th>
-                                <th class="col-init">初期値</th>
+                                <th class="col-init">INIT</th>
                                 <!-- Scenarios will be added here -->
                             </tr>
                         </thead>
@@ -223,15 +271,25 @@
 
 <!-- LOGIC -->
 <script type="module">
-    import { loadFromCloud, monitorAuth, getScenariosForCharacter } from "../character/firestore.js";
+    // ★パス修正: firestore.js は同じ階層にある想定
+    import { loadFromCloud, monitorAuth, getScenariosForCharacter } from "./firestore.js";
 
-    // data.js で定義された BASE_SKILLS が読み込まれているか確認
-    // 読み込まれていなければ空オブジェクトでフォールバック
+    // data.js の BASE_SKILLS を安全に取得
     const BASE_SKILLS_DEF = (typeof window.BASE_SKILLS !== 'undefined') ? window.BASE_SKILLS : {};
+
+    // スキルカテゴリー定義 (CoC 6th基準 + α)
+    const SKILL_CATS = {
+        combat: ["回避", "キック", "組み付き", "こぶし", "パンチ", "頭突き", "投擲", "マーシャルアーツ", "拳銃", "サブマシンガン", "ショットガン", "マシンガン", "ライフル", "日本刀", "ナイフ"],
+        search: ["応急手当", "鍵開け", "隠す", "隠れる", "聞き耳", "忍び歩き", "写真術", "精神分析", "追跡", "登攀", "図書館", "目星"],
+        action: ["運転", "機械修理", "重機械操作", "乗馬", "水泳", "製作", "操縦", "跳躍", "電気修理", "ナビゲート", "変装"],
+        nego:   ["言いくるめ", "信用", "説得", "値切り", "母国語"],
+        know:   ["医学", "オカルト", "化学", "クトゥルフ神話", "芸術", "経理", "考古学", "コンピューター", "心理学", "人類学", "生物学", "地質学", "電子工学", "天文学", "博物学", "物理学", "法律", "薬学", "歴史"]
+    };
 
     let allChars = {};
     const el = (id) => document.getElementById(id);
 
+    // --- Init ---
     window.onload = () => {
         monitorAuth(async (user) => {
             el('authStatus').textContent = "Logged in: " + user.displayName;
@@ -250,7 +308,7 @@
             el('loadingOverlay').style.display = 'none';
         } catch (e) {
             console.error(e);
-            el('loadingText').textContent = "ERROR LOADING DATA";
+            el('loadingText').textContent = "ERROR: " + e.message;
         }
     }
 
@@ -276,14 +334,24 @@
         el('loadingText').textContent = "AGGREGATING...";
 
         const char = allChars[charId];
-        el('charIcon').src = char.icon || `../images/icon/${char.name}.png`;
+        
+        // --- テーマカラー適用 ---
+        const themeColor = char.color || '#d4b346';
+        document.documentElement.style.setProperty('--theme-color', themeColor);
+
+        // --- 画像処理 (高画質読み込み対応) ---
+        // data.jsにIMG_CONFIGがあれば使用するが、簡易的にURLチェック
+        let iconSrc = `../images/icon/${char.name}.png`; 
+        if(char.icon && char.icon.startsWith('http')) iconSrc = char.icon;
+        el('charIcon').src = iconSrc;
+        
         el('plName').textContent = "PL: " + (char.plName || "Unknown");
 
         // 1. シナリオ取得・ソート
         const scenarios = await getScenariosForCharacter(charId);
         const sortedScenarios = scenarios.sort((a,b) => new Date(a.date||0) - new Date(b.date||0));
 
-        // 2. データの解析・構築
+        // 2. データ解析
         const matrixData = buildMatrixData(char, sortedScenarios);
 
         // 3. 描画
@@ -295,18 +363,18 @@
 
     /**
      * データ構築ロジック
-     * - 初期値 (BASE + 職業/興味P) を算出
-     * - シナリオごとの成長を加算し、時系列の値を生成
      */
     function buildMatrixData(char, scenarios) {
         // --- 1. 初期技能値の特定 ---
-        // char.skillList (テキスト) をパースして、ユーザーが設定した初期値を取得
-        // 例: "目星: 70", "図書館:50" など
         const userInitials = {};
+        
+        // キャラクターデータの `skillList` (テキスト) を解析
+        // 形式: "目星:70" "聞き耳 50" など
         if (char.skillList) {
-            const lines = char.skillList.split(/[\n\s,、]+/); // 改行やスペースで区切る
+            const lines = char.skillList.split(/[\n\s,、]+/); 
             lines.forEach(line => {
-                // "技能名:数値" または "技能名 数値" を許容
+                // (技能名)(区切り文字)(数値) のパターン
+                // 例: "目星70", "目星:70", "マーシャルアーツ: 50"
                 const m = line.match(/^(.+?)[:：\s]*(\d+)$/);
                 if (m) {
                     const name = m[1].trim();
@@ -316,13 +384,12 @@
             });
         }
 
-        // 全技能リスト（表示対象）の作成
-        // (BASE_SKILLSにあるもの + ユーザーが持っているもの + 成長したもの)
+        // 表示すべき技能名のリスト
         const relevantSkills = new Set();
         Object.keys(userInitials).forEach(k => relevantSkills.add(k));
 
         // --- 2. 成長データの収集 ---
-        const scenarioGrowths = []; // [ { scenarioId, growths: { "目星": 5 } } ]
+        const scenarioGrowths = []; 
         
         scenarios.forEach(s => {
             let d = null;
@@ -347,21 +414,16 @@
             scenarioGrowths.push({ id: s.id, title: s.title, growths });
         });
 
-        // --- 3. マトリクス構築 ---
-        // 行ごとのデータを生成
-        // rows = [ { name: "目星", initial: 25, values: [25, 30, 30, 35...] } ]
+        // --- 3. 行データ生成 ---
         const rows = [];
         let grandTotalGrowth = 0;
 
         Array.from(relevantSkills).sort().forEach(skillName => {
-            // 初期値の計算
+            // 初期値計算
             let baseVal = 0;
-            
-            // ユーザー指定があればそれを優先 (これが職業+興味P込みの値とみなす)
             if (userInitials[skillName] !== undefined) {
                 baseVal = userInitials[skillName];
             } else {
-                // 指定がなければ data.js の定義から計算
                 const def = BASE_SKILLS_DEF[skillName];
                 if (def !== undefined) {
                     if (typeof def === 'number') baseVal = def;
@@ -370,8 +432,17 @@
                 }
             }
 
-            // シナリオごとの推移を計算
-            const values = []; // { val: currentVal, grown: +amount or 0 }
+            // カテゴリ判定
+            let category = 'other';
+            for (const [cat, skills] of Object.entries(SKILL_CATS)) {
+                if (skills.some(s => skillName.includes(s))) {
+                    category = cat;
+                    break;
+                }
+            }
+
+            // 履歴計算
+            const values = []; 
             let currentVal = baseVal;
 
             scenarioGrowths.forEach(sg => {
@@ -384,11 +455,9 @@
                 });
             });
 
-            // 表示する価値があるか判定
-            // (初期値が0で一度も成長していない技能は除外するなど調整可能だが、
-            //  今回は relevantSkills に入っている＝何らかの定義があるものとして全て表示)
             rows.push({
                 name: skillName,
+                category: category,
                 initial: baseVal,
                 history: values
             });
@@ -410,11 +479,13 @@
         // Reset Header
         thead.innerHTML = '<th class="col-skill">SKILL NAME</th><th class="col-init">INIT</th>';
         
-        // Header Scenarios
+        // Add Scenarios to Header
         scenarios.forEach(s => {
             const th = document.createElement('th');
-            // タイトルを縦書き表示
-            th.innerHTML = `<div class="v-text" title="${s.title}">${s.title}</div>`;
+            // タイトルを短くカットして表示
+            let t = s.title;
+            if(t.length > 8) t = t.substring(0,8) + '..';
+            th.innerHTML = `<div class="v-text" title="${s.title}">${t}</div>`;
             thead.appendChild(th);
         });
 
@@ -422,33 +493,34 @@
         tbody.innerHTML = '';
 
         if (data.rows.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="${scenarios.length + 2}" style="padding:20px;">NO DATA</td></tr>`;
+            const colspan = scenarios.length + 2;
+            tbody.innerHTML = `<tr><td colspan="${colspan}" style="padding:30px; color:#555;">NO DATA</td></tr>`;
             return;
         }
 
-        // Data Rows
+        // Create Rows
         data.rows.forEach(row => {
             const tr = document.createElement('tr');
 
-            // 技能名
+            // Name
             const tdName = document.createElement('td');
-            tdName.className = 'col-skill';
+            tdName.className = `col-skill cat-${row.category}`;
             tdName.textContent = row.name;
             tr.appendChild(tdName);
 
-            // 初期値
+            // Init
             const tdInit = document.createElement('td');
             tdInit.className = 'col-init';
             tdInit.textContent = row.initial;
             tr.appendChild(tdInit);
 
-            // 履歴
+            // History
             row.history.forEach(h => {
                 const td = document.createElement('td');
                 td.textContent = h.val;
                 if (h.grown > 0) {
                     td.classList.add('grown');
-                    td.title = `+${h.grown} 成長`;
+                    td.title = `+${h.grown}`;
                 }
                 tr.appendChild(td);
             });
