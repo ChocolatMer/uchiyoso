@@ -29,10 +29,10 @@
             --c-know:   #a29bfe;
             --c-other:  #a5b1c2;
 
-            /* Dimensions - Adjusted */
-            --w-skill: 130px; /* Slightly wider for better name fit */
+            /* Dimensions - 幅を少し広げました */
+            --w-skill: 120px;
             --w-base: 32px;
-            --w-scen: 28px;   /* "Just a little bit" wider than 22px */
+            --w-scen: 30px; /* 22px -> 30px (+0.5文字分程度) */
         }
 
         /* --- 2. BASE STYLES --- */
@@ -128,11 +128,6 @@
         .kpi-label { font-size: 0.55rem; color: #888; font-family: 'Cinzel'; display: block; }
         .kpi-val { font-size: 1rem; color: var(--theme); font-weight: bold; font-family: 'Cinzel'; }
 
-        /* Dice Stats Row */
-        .dice-row { display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 3px; border-bottom: 1px solid rgba(255,255,255,0.03); padding-bottom: 1px; }
-        .dice-label { color: #aaa; font-family: 'Cinzel'; }
-        .dice-val { font-weight: bold; font-family: 'Cinzel'; }
-
         /* Skill Ranking */
         .rank-list { list-style: none; padding: 0; margin: 0; font-size: 0.75rem; max-height: 200px; overflow-y: auto; }
         .rank-list::-webkit-scrollbar { width: 2px; }
@@ -150,7 +145,7 @@
             display: grid; grid-template-columns: 2fr 1fr; gap: 20px;
             background: rgba(0,0,0,0.2);
             border-bottom: 1px solid var(--border);
-            height: 180px; 
+            height: 180px;
         }
 
         .chart-box { position: relative; width: 100%; height: 100%; }
@@ -229,15 +224,15 @@
             flex: 1; overflow: auto; width: 100%;
             scrollbar-width: thin; scrollbar-color: #555 #111;
         }
-        .matrix-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+        .matrix-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
         .matrix-scroll::-webkit-scrollbar-corner { background: #111; }
-        .matrix-scroll::-webkit-scrollbar-thumb { background: #555; border: 2px solid #111; border-radius: 5px; }
+        .matrix-scroll::-webkit-scrollbar-thumb { background: #555; border: 2px solid #111; border-radius: 4px; }
         .matrix-scroll::-webkit-scrollbar-track { background: #111; }
 
         table.growth-matrix {
             border-collapse: separate; border-spacing: 0;
-            width: max-content; min-width: 100%;
-            font-size: 0.8rem;
+            width: max-content;
+            font-size: 0.75rem;
         }
 
         /* --- STICKY HEADERS & COLUMNS --- */
@@ -245,56 +240,60 @@
         thead th {
             position: sticky; top: 0; z-index: 10;
             background: #111; color: #aaa;
-            border-bottom: 1px solid #444; border-right: 1px solid #333;
+            border-bottom: 1px solid #444; border-right: 1px solid #222;
             padding: 0; height: 120px; vertical-align: bottom;
             transition: 0.2s;
         }
         thead th:hover { background: #222; }
 
-        /* 1. Skill Name Column */
+        /* Fixed Columns (Left) */
         th.col-skill, td.col-skill {
             position: sticky; left: 0; z-index: 12;
             background: #161616; border-right: 1px solid #444; width: var(--w-skill);
         }
         
-        /* 2. Base Stats Columns */
+        /* Base Stats Columns (4 columns) */
         th.col-base, td.col-base { position: sticky; left: var(--w-skill); z-index: 11; width: var(--w-base); border-right: 1px solid #333; background: #1a1a1a; }
         th.col-job,  td.col-job  { position: sticky; left: calc(var(--w-skill) + var(--w-base)); z-index: 11; width: var(--w-base); border-right: 1px solid #333; background: #1a1a1a; }
         th.col-int,  td.col-int  { position: sticky; left: calc(var(--w-skill) + var(--w-base)*2); z-index: 11; width: var(--w-base); border-right: 1px solid #333; background: #1a1a1a; }
         th.col-oth,  td.col-oth  { position: sticky; left: calc(var(--w-skill) + var(--w-base)*3); z-index: 11; width: var(--w-base); border-right: 2px solid #555; background: #1a1a1a; }
 
-        /* Header Styles */
         thead th[class*="col-"] { z-index: 15; background: #222; border-bottom: 2px solid #555; color: #888; font-size: 0.6rem; font-family:'Cinzel'; vertical-align: middle; }
-        /* Skill Name Header */
-        thead th.col-skill { 
-            color: var(--theme); font-size: 0.75rem; 
-            text-align: left; padding-left: 8px; /* Alignment fix */
-        }
+        thead th.col-skill { color: var(--theme); font-size: 0.75rem; }
 
         /* --- CELLS STYLING --- */
-        
-        /* Inner container for absolute left alignment */
-        .skill-cell-inner {
-            display: flex; align-items: center; justify-content: flex-start;
-            height: 28px; padding: 0 6px; width: 100%;
+        .skill-cell-content {
+            display: flex; align-items: center; height: 28px; padding: 0 6px;
             border-left: 3px solid transparent; font-weight: 500; color: #ccc;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        .skill-icon { font-size: 0.85rem; margin-right: 6px; opacity: 0.7; flex-shrink: 0; }
+        
+        /* 
+           修正点: アイコンに固定幅と中央揃えを追加。
+           これにより 'swords' のような長い単語でも 'chat' のような短い単語でも
+           テキストの開始位置が揃い、ズレ（右寄り現象）が解消されます。
+        */
+        .skill-icon { 
+            font-size: 0.85rem; 
+            margin-right: 4px; 
+            opacity: 0.7;
+            width: 16px; /* 固定幅を追加 */
+            text-align: center; /* アイコンを中央に */
+            display: inline-block;
+            flex-shrink: 0;
+        }
 
-        /* Category Left Borders */
-        .cat-combat .skill-cell-inner { border-left-color: var(--c-combat); color: #ffdada; }
-        .cat-search .skill-cell-inner { border-left-color: var(--c-search); color: #daffff; }
-        .cat-action .skill-cell-inner { border-left-color: var(--c-action); color: #ffffda; }
-        .cat-nego   .skill-cell-inner { border-left-color: var(--c-nego);   color: #ffeeda; }
-        .cat-know   .skill-cell-inner { border-left-color: var(--c-know);   color: #eaddff; }
-        .cat-other  .skill-cell-inner { border-left-color: var(--c-other);  color: #ddd; }
+        .cat-combat .skill-cell-content { border-left-color: var(--c-combat); color: #ffdada; }
+        .cat-search .skill-cell-content { border-left-color: var(--c-search); color: #daffff; }
+        .cat-action .skill-cell-content { border-left-color: var(--c-action); color: #ffffda; }
+        .cat-nego   .skill-cell-content { border-left-color: var(--c-nego);   color: #ffeeda; }
+        .cat-know   .skill-cell-content { border-left-color: var(--c-know);   color: #eaddff; }
+        .cat-other  .skill-cell-content { border-left-color: var(--c-other);  color: #ddd; }
 
-        /* Values */
         td.val-base { text-align: center; color: #666; font-family: 'Cinzel'; border-bottom: 1px solid #222; font-size: 0.7rem; }
         td.val-base.has-val { color: #eee; }
 
-        /* Scenario Columns - 28px */
+        /* Scenario Columns - WIDTH INCREASED */
         td.val-growth {
             min-width: var(--w-scen); width: var(--w-scen); 
             text-align: center; color: #444; font-family: 'Cinzel';
@@ -303,22 +302,18 @@
             transition: 0.1s;
         }
         
-        /* Growth Effect */
         .grown { 
             color: #fff !important; font-weight: bold; 
             background: rgba(212, 179, 70, 0.25) !important;
             box-shadow: inset 0 0 6px rgba(212, 179, 70, 0.4);
         }
-        /* Total Column */
         .total-col {
             color: var(--theme); font-weight: bold; border-left: 2px solid #444; background: rgba(0,0,0,0.3); min-width: 40px;
         }
 
-        /* Hover Highlights */
         tbody tr:hover td { background: rgba(255,255,255,0.04); }
         .col-hover { background: rgba(255,255,255,0.04) !important; }
 
-        /* Vertical Header Text */
         .v-header {
             writing-mode: vertical-rl; transform: rotate(180deg);
             white-space: nowrap; text-align: left; padding: 8px 2px;
@@ -326,7 +321,6 @@
             cursor: help; letter-spacing: 1px;
         }
 
-        /* Spacer Row */
         .spacer-row td { height: 8px; background: rgba(0,0,0,0.4); border: none; }
 
         /* TOOLTIP */
@@ -356,7 +350,6 @@
             color: var(--theme); font-family: 'Cinzel'; backdrop-filter: blur(5px);
         }
         .hidden { display: none !important; }
-
     </style>
 </head>
 <body>
