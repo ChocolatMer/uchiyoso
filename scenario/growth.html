@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INVESTIGATOR GROWTH DASHBOARD</title>
+    <title>INVESTIGATOR GROWTH MATRIX</title>
     
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        /* --- CORE STYLES (Dark & Gold Theme) --- */
+        /* --- CORE STYLES --- */
         body { 
             background-color: #080808; 
             background-image: radial-gradient(#1a1a1a 1px, transparent 1px);
@@ -22,14 +22,14 @@
         }
 
         .layout {
-            display: grid; grid-template-columns: 300px 1fr;
+            display: grid; grid-template-columns: 280px 1fr;
             height: 100vh; width: 100%; max-width: 1920px; margin: 0 auto;
         }
 
         /* --- SIDEBAR --- */
         .sidebar {
             background: rgba(0,0,0,0.85); border-right: 1px solid #333;
-            padding: 20px; display: flex; flex-direction: column; gap: 25px;
+            padding: 20px; display: flex; flex-direction: column; gap: 20px;
             backdrop-filter: blur(5px); z-index: 10;
         }
         .app-title {
@@ -38,31 +38,32 @@
             letter-spacing: 3px; text-shadow: 0 0 10px rgba(212, 179, 70, 0.3);
         }
         
-        .char-profile {
-            text-align: center; background: #111; padding: 20px; border-radius: 4px; border: 1px solid #333;
+        .char-select-area {
+            background: #111; padding: 15px; border-radius: 4px; border: 1px solid #333;
+            text-align: center;
         }
         .char-icon {
-            width: 120px; height: 120px; border-radius: 50%; border: 3px solid #d4b346;
-            object-fit: cover; margin-bottom: 15px; background: #000;
-            box-shadow: 0 0 15px rgba(212, 179, 70, 0.2);
+            width: 100px; height: 100px; border-radius: 50%; border: 2px solid #d4b346;
+            object-fit: cover; margin-bottom: 10px; background: #000;
         }
         .char-select {
             background: #000; border: 1px solid #444; color: #eee; padding: 5px;
-            width: 100%; font-family: 'Shippori Mincho'; margin-bottom: 5px;
+            width: 100%; font-family: 'Shippori Mincho'; font-size: 0.9rem;
         }
 
-        .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .kpi-box {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+        }
         .kpi-card {
-            background: rgba(255,255,255,0.03); border: 1px solid #333; padding: 10px 5px;
+            background: rgba(255,255,255,0.03); border: 1px solid #333; padding: 8px 5px;
             text-align: center; border-radius: 2px;
         }
-        .kpi-label { font-family: 'Cinzel'; font-size: 0.65rem; color: #888; display: block; margin-bottom: 2px; }
-        .kpi-val { font-size: 1.1rem; color: #d4b346; font-weight: bold; }
-        .kpi-val.danger { color: #ff6b6b; }
+        .kpi-label { font-family: 'Cinzel'; font-size: 0.6rem; color: #888; display: block; }
+        .kpi-val { font-size: 1rem; color: #d4b346; font-weight: bold; }
 
         /* --- MAIN CONTENT --- */
         .main-content {
-            padding: 30px 40px; overflow-y: auto; display: flex; flex-direction: column; gap: 30px;
+            padding: 20px 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px;
             position: relative;
         }
         .main-content::-webkit-scrollbar { width: 8px; }
@@ -72,69 +73,84 @@
         #loadingOverlay {
             position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9);
             display:flex; justify-content:center; align-items:center; z-index:99;
-            font-family:'Cinzel'; color:#d4b346; letter-spacing:2px;
+            font-family:'Cinzel'; color:#d4b346; letter-spacing:2px; flex-direction: column; gap: 10px;
         }
 
-        /* SECTION HEADER */
-        .section-title {
-            font-family: 'Cinzel'; font-size: 1.1rem; color: #888; border-left: 3px solid #d4b346;
-            padding-left: 10px; margin-bottom: 15px; display: flex; align-items: center; gap: 10px;
+        /* SECTION HEADERS */
+        .section-header {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+            border-left: 3px solid #d4b346; padding-left: 10px;
         }
+        .sec-title { font-family: 'Cinzel'; font-size: 1.1rem; color: #eee; }
 
-        /* GRAPHS */
-        .charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; height: 320px; }
-        .chart-container {
+        /* 1. TOP CHARTS AREA */
+        .top-charts {
+            display: grid; grid-template-columns: 2fr 1fr; gap: 20px; height: 250px;
+        }
+        .chart-box {
             background: rgba(0,0,0,0.4); border: 1px solid #333; border-radius: 4px;
-            padding: 15px; position: relative;
+            padding: 10px; position: relative; display: flex; flex-direction: column;
         }
+        .chart-label { position: absolute; top: 10px; left: 15px; font-size: 0.7rem; color: #666; font-family: 'Cinzel'; }
 
-        /* COLLECTIONS (AF, INSANITY) */
-        .collections-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .col-box {
-            background: rgba(20, 20, 20, 0.6); border: 1px solid #333; padding: 15px;
-            height: 250px; overflow-y: auto; border-radius: 4px;
+        /* 2. MATRIX TABLE AREA (New Request) */
+        .matrix-container {
+            flex: 1; min-height: 400px;
+            background: #111; border: 1px solid #333; border-radius: 4px;
+            overflow: hidden; display: flex; flex-direction: column;
         }
-        .item-row {
-            border-bottom: 1px solid #333; padding: 8px 0; font-size: 0.9rem;
-            display: grid; grid-template-columns: 1fr auto; gap: 10px;
+        .matrix-scroll {
+            overflow: auto; flex: 1;
+            /* Scrollbar styling for table */
+            scrollbar-width: thin; scrollbar-color: #444 #111;
         }
-        .item-name { color: #eee; font-weight: bold; }
-        .item-source { font-size: 0.75rem; color: #666; text-align: right; }
-        .item-desc { font-size: 0.8rem; color: #aaa; margin-top: 3px; line-height: 1.4; }
+        .matrix-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+        .matrix-scroll::-webkit-scrollbar-thumb { background: #444; }
+        .matrix-scroll::-webkit-scrollbar-track { background: #111; }
+
+        table.growth-table {
+            border-collapse: collapse; width: 100%; font-size: 0.85rem;
+            white-space: nowrap; /* Keep rows horizontal */
+        }
         
-        .badge-ins {
-            display: inline-block; padding: 2px 6px; border-radius: 2px; 
-            font-size: 0.7rem; font-family: 'Cinzel'; margin-right: 5px;
+        /* Table Headers */
+        .growth-table th {
+            background: #1a1a1a; color: #aaa; font-weight: normal;
+            border: 1px solid #333; padding: 8px 5px;
+            font-family: 'Shippori Mincho'; position: sticky; top: 0; z-index: 5;
         }
-        .ins-temp { border: 1px solid #888; color: #ccc; }
-        .ins-indef { border: 1px solid #d4b346; color: #d4b346; background: rgba(212, 179, 70, 0.1); }
-        .ins-perm { border: 1px solid #ff6b6b; color: #ff6b6b; background: rgba(255, 107, 107, 0.1); }
+        /* First Column (Skill Name) - Sticky Left */
+        .growth-table th.col-skill, .growth-table td.col-skill {
+            position: sticky; left: 0; z-index: 6;
+            background: #222; border-right: 2px solid #444;
+            min-width: 120px; text-align: left; padding-left: 10px;
+            font-weight: bold; color: #d4b346;
+        }
+        .growth-table th.col-skill { z-index: 7; background: #2a2a2a; color: #eee; }
 
-        /* SKILL TABLE */
-        .skill-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px;
+        /* Total Column */
+        .growth-table th.col-total, .growth-table td.col-total {
+            background: #1e1e1e; border-left: 2px solid #444;
+            color: #eee; font-weight: bold; text-align: center; width: 50px;
         }
-        .skill-card {
-            background: #111; border: 1px solid #333; padding: 8px 12px; border-radius: 2px;
-            display: flex; justify-content: space-between; align-items: center;
-        }
-        .skill-n { font-size: 0.85rem; color: #ccc; }
-        .skill-v { font-family: 'Cinzel'; font-weight: bold; color: #d4b346; }
 
-        /* SCENARIO LIST */
-        .scenario-list { display: flex; flex-direction: column; gap: 5px; }
-        .scn-row {
-            display: grid; grid-template-columns: 100px 1fr 80px 150px;
-            background: rgba(255,255,255,0.02); border-bottom: 1px solid #333;
-            padding: 8px 10px; align-items: center; transition: 0.2s; font-size: 0.9rem;
+        /* Cells */
+        .growth-table td {
+            border: 1px solid #333; padding: 6px 10px; text-align: center;
+            color: #ccc;
         }
-        .scn-row:hover { background: rgba(255,255,255,0.05); }
-        .scn-date { font-family: 'Cinzel'; color: #666; font-size: 0.8rem; }
-        .scn-title { color: #eee; font-weight: bold; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .scn-res { font-family: 'Cinzel'; text-align: center; }
-        .res-alive { color: #66bb6a; }
-        .res-lost { color: #ff6b6b; }
-        .scn-growth { color: #aaa; font-size: 0.8rem; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        /* Stripes */
+        .growth-table tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+        .growth-table tr:hover td { background: rgba(212, 179, 70, 0.1); }
+
+        /* Empty cell styling */
+        .growth-table td.empty { color: #333; }
+
+        /* Vertical Text for Scenarios headers if needed */
+        .v-text {
+            writing-mode: vertical-rl; transform: rotate(180deg);
+            max-height: 150px; padding: 5px 2px; margin: 0 auto;
+        }
 
     </style>
 </head>
@@ -144,11 +160,11 @@
     <!-- SIDEBAR -->
     <div class="sidebar">
         <div>
-            <div class="app-title">INVESTIGATOR<br>GROWTH DASHBOARD</div>
+            <div class="app-title">INVESTIGATOR<br>GROWTH MATRIX</div>
             <div id="authStatus" style="text-align:center; font-size:0.7rem; color:#555; margin-bottom:10px;">Checking Auth...</div>
         </div>
 
-        <div class="char-profile">
+        <div class="char-select-area">
             <img id="charIcon" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" class="char-icon">
             <select id="charSelect" class="char-select">
                 <option value="">-- SELECT CHARACTER --</option>
@@ -156,109 +172,112 @@
             <div id="plName" style="font-size:0.8rem; color:#888; font-family:'Cinzel'; margin-top:5px;">PL NAME</div>
         </div>
 
-        <div class="kpi-grid">
+        <div class="kpi-box">
+            <div class="kpi-card">
+                <span class="kpi-label">SCENARIOS</span>
+                <span class="kpi-val" id="kpiScenarios">0</span>
+            </div>
             <div class="kpi-card">
                 <span class="kpi-label">TOTAL GROWTH</span>
                 <span class="kpi-val" id="kpiTotalGrowth">0</span>
             </div>
             <div class="kpi-card">
-                <span class="kpi-label">SCENARIOS</span>
-                <span class="kpi-val" id="kpiScenarioCount">0</span>
+                <span class="kpi-label">INSANITY</span>
+                <span class="kpi-val" id="kpiInsanity" style="color:#ff6b6b;">0</span>
             </div>
             <div class="kpi-card">
-                <span class="kpi-label">INSANITY TOTAL</span>
-                <span class="kpi-val danger" id="kpiInsanityCount">0</span>
+                <span class="kpi-label">SAN START/NOW</span>
+                <span class="kpi-val" id="kpiSanRange" style="font-size:0.8rem;">-- / --</span>
             </div>
-            <div class="kpi-card">
-                <span class="kpi-label">CURRENT SAN</span>
-                <span class="kpi-val" id="kpiCurrentSan">--</span>
-            </div>
+        </div>
+        
+        <div style="font-size:0.75rem; color:#555; margin-top:auto; text-align:center;">
+            Data sourced from<br>Chronicle Logs
         </div>
     </div>
 
     <!-- MAIN CONTENT -->
     <div class="main-content">
-        <div id="loadingOverlay">LOADING DATA...</div>
+        <div id="loadingOverlay">
+            <span class="material-icons-round" style="font-size:3rem; animation:spin 1s linear infinite;">autorenew</span>
+            <span id="loadingText">WAITING FOR LOGIN...</span>
+        </div>
 
-        <!-- 1. GRAPHS -->
-        <div class="charts-row">
-            <div class="chart-container">
-                <div style="position:absolute; top:10px; left:15px; font-family:'Cinzel'; font-size:0.8rem; color:#666;">SANITY HISTORY</div>
+        <!-- 1. GRAPHS (Overview) -->
+        <div class="top-charts">
+            <div class="chart-box">
+                <span class="chart-label">SANITY FLUCTUATION</span>
                 <canvas id="sanChart"></canvas>
             </div>
-            <div class="chart-container">
-                <div style="position:absolute; top:10px; left:15px; font-family:'Cinzel'; font-size:0.8rem; color:#666;">TOP GROWTH SKILLS</div>
+            <div class="chart-box">
+                <span class="chart-label">TOP 5 GROWTH SKILLS</span>
                 <canvas id="skillChart"></canvas>
             </div>
         </div>
 
-        <!-- 2. TOTAL GROWTH SKILLS -->
-        <div>
-            <div class="section-title"><span class="material-icons-round">trending_up</span> ACCUMULATED SKILL GROWTH</div>
-            <div id="totalSkillGrid" class="skill-grid">
-                <!-- JS Generated -->
+        <!-- 2. GROWTH MATRIX (The Request) -->
+        <div style="display:flex; flex-direction:column; flex:1; min-height:0;">
+            <div class="section-header">
+                <span class="material-icons-round" style="color:#d4b346;">grid_on</span>
+                <span class="sec-title">GROWTH MATRIX</span>
+                <span style="font-size:0.7rem; color:#666; margin-left:10px;">( 横スクロールで履歴を確認できます )</span>
             </div>
-        </div>
-
-        <!-- 3. DETAILS (AF & INSANITY) -->
-        <div class="collections-row">
-            <div>
-                <div class="section-title"><span class="material-icons-round">auto_awesome</span> ARTIFACTS & SEQUELAE</div>
-                <div id="listArtifacts" class="col-box">
-                    <div style="text-align:center; color:#444; font-size:0.8rem; margin-top:20px;">NO DATA</div>
+            
+            <div class="matrix-container">
+                <div class="matrix-scroll">
+                    <table class="growth-table" id="matrixTable">
+                        <!-- JS GENERATED CONTENT -->
+                        <thead>
+                            <tr>
+                                <th class="col-skill">SKILL NAME</th>
+                                <th class="col-total">合計</th>
+                                <!-- Scenarios will be added here -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data rows will be added here -->
+                        </tbody>
+                    </table>
                 </div>
-            </div>
-            <div>
-                <div class="section-title"><span class="material-icons-round">psychology</span> INSANITY HISTORY</div>
-                <div id="listInsanity" class="col-box">
-                    <div style="text-align:center; color:#444; font-size:0.8rem; margin-top:20px;">NO DATA</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 4. SCENARIO LIST -->
-        <div>
-            <div class="section-title"><span class="material-icons-round">history_edu</span> CAMPAIGN LOG</div>
-            <div style="display:grid; grid-template-columns: 100px 1fr 80px 150px; padding:0 10px 5px; font-family:'Cinzel'; color:#666; font-size:0.75rem; border-bottom:1px solid #333;">
-                <span>DATE</span><span>TITLE</span><span style="text-align:center;">RESULT</span><span style="text-align:right;">GROWTH</span>
-            </div>
-            <div id="scenarioList" class="scenario-list">
-                <!-- JS Generated -->
             </div>
         </div>
 
     </div>
 </div>
 
-<!-- SCRIPT -->
+<style>
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+</style>
+
+<!-- LOGIC -->
 <script type="module">
     import { loadFromCloud, monitorAuth, getScenariosForCharacter } from "../character/firestore.js";
-    
+
     // --- State ---
     let allChars = {};
     let chartInstances = { san: null, skill: null };
     const el = (id) => document.getElementById(id);
 
-    // --- Init ---
+    // --- Initialization ---
     window.onload = () => {
         monitorAuth(async (user) => {
             el('authStatus').textContent = "Logged in: " + user.displayName;
+            el('loadingText').textContent = "LOADING CHARACTERS...";
             await initData();
         }, () => {
             el('authStatus').textContent = "Not Logged In";
-            el('loadingOverlay').textContent = "PLEASE LOGIN";
+            el('loadingText').textContent = "PLEASE LOGIN";
         });
     };
 
     async function initData() {
         try {
-            el('loadingOverlay').style.display = 'flex';
             allChars = await loadFromCloud();
             renderCharSelect();
             el('loadingOverlay').style.display = 'none';
         } catch (e) {
             console.error(e);
-            el('loadingOverlay').textContent = "ERROR LOADING DATA";
+            el('loadingText').textContent = "ERROR LOADING DATA";
         }
     }
 
@@ -276,200 +295,171 @@
 
         sel.addEventListener('change', async (e) => {
             const charId = e.target.value;
-            if (charId) await loadCharacterStats(charId);
+            if (charId) await loadCharacterMatrix(charId);
         });
     }
 
-    // --- Main Logic ---
-    async function loadCharacterStats(charId) {
+    // --- Main Data Loading & Processing ---
+    async function loadCharacterMatrix(charId) {
         el('loadingOverlay').style.display = 'flex';
-        
-        // 1. Basic Profile
+        el('loadingText').textContent = "AGGREGATING SCENARIOS...";
+
         const char = allChars[charId];
-        el('charIcon').src = char.icon || `../images/icon/${char.name}.png`; // Adjust path as needed
+        // Basic Profile
+        el('charIcon').src = char.icon || `../images/icon/${char.name}.png`;
         el('plName').textContent = "PL: " + (char.plName || "Unknown");
 
-        // 2. Fetch Scenarios
+        // Fetch Scenarios
         const scenarios = await getScenariosForCharacter(charId);
-        
-        // 3. Process Data
-        const stats = processScenarios(scenarios, charId);
-        
-        // 4. Render Everything
-        renderKPI(stats, scenarios.length, char);
-        renderCharts(stats);
-        renderLists(stats);
-        renderScenarioList(scenarios, charId);
+        const sortedScenarios = scenarios.sort((a,b) => new Date(a.date||0) - new Date(b.date||0));
+
+        // Process Data for Matrix & Charts
+        const data = processGrowthData(sortedScenarios, charId);
+
+        // Render
+        renderKPI(data, sortedScenarios.length);
+        renderCharts(data, sortedScenarios);
+        renderMatrixTable(data, sortedScenarios);
 
         el('loadingOverlay').style.display = 'none';
     }
 
     /**
-     * Parse raw scenario data into aggregated stats
+     * Parse scenario data to extract skill growth per scenario
      */
-    function processScenarios(scenarios, charId) {
-        const stats = {
-            totalGrowth: 0,
-            skills: {}, // { skillName: totalValue }
-            sanHistory: [], // { label, value }
-            insanity: [], // { title, type, desc }
-            artifacts: [], // { title, name, desc }
-            sequelae: [] // { title, name, desc }
-        };
+    function processGrowthData(scenarios, charId) {
+        // Unique Set of all skills grown
+        const skillSet = new Set();
+        // Map: ScenarioID -> { SkillName: Value }
+        const growthMap = {};
+        // SAN history
+        const sanHistory = []; // { title, value }
+        let totalGrowth = 0;
+        let insCount = 0;
 
-        // Initialize SAN with some default if possible, or wait for first log
-        // (Graph logic handles empty start)
-
-        // Process chronological order (Oldest first)
-        const sorted = [...scenarios].sort((a,b) => new Date(a.date||0) - new Date(b.date||0));
-
-        sorted.forEach(s => {
-            // Determine Role (PC or KPC)
-            let myData = null;
-            if (s.characters.pc && s.characters.pc.id === charId) myData = s.characters.pc;
-            else if (s.characters.kpc && s.characters.kpc.id === charId) myData = s.characters.kpc;
+        scenarios.forEach(s => {
+            let d = null;
+            if (s.characters.pc && s.characters.pc.id === charId) d = s.characters.pc;
+            else if (s.characters.kpc && s.characters.kpc.id === charId) d = s.characters.kpc;
             
-            if (!myData) return;
+            if (!d) return;
 
-            const title = s.title;
-
-            // --- 1. Skill Growth ---
-            if (myData.grow) {
-                const lines = myData.grow.split('\n');
-                lines.forEach(l => {
-                    // Regex to find "SkillName +10" or "SkillName 10"
-                    const m = l.match(/(.+?)\s*[:：]?\s*\+?(\d+)/);
+            // 1. Skill Growth Parsing
+            const scenarioGrowth = {};
+            if (d.grow) {
+                // Splits by newline, parses "SkillName +10" or "SkillName 10"
+                const lines = d.grow.split('\n');
+                lines.forEach(line => {
+                    const m = line.match(/(.+?)\s*[:：]?\s*\+?(\d+)/);
                     if (m) {
-                        const skillName = m[1].trim();
+                        const name = m[1].trim();
                         const val = parseInt(m[2]);
-                        if (!isNaN(val)) {
-                            stats.skills[skillName] = (stats.skills[skillName] || 0) + val;
-                            stats.totalGrowth += val;
+                        if (name && !isNaN(val)) {
+                            skillSet.add(name);
+                            // If skill appears twice in one log, sum it up
+                            scenarioGrowth[name] = (scenarioGrowth[name] || 0) + val;
+                            totalGrowth += val;
                         }
                     }
                 });
             }
+            growthMap[s.id] = scenarioGrowth;
 
-            // --- 2. SAN History ---
-            // Try to parse SAN movement string "50 -> 45" or raw value
-            let endSan = null;
-            if (myData.san) {
-                // Check "A -> B" format
-                const arrowMatch = myData.san.match(/.*[→>＞]\s*(\d+)/);
-                if (arrowMatch) {
-                    endSan = parseInt(arrowMatch[1]);
-                } else {
-                    // Just a number?
-                    const num = parseInt(myData.san);
-                    if (!isNaN(num)) endSan = num;
-                }
+            // 2. SAN Value Parsing
+            let sanVal = null;
+            if (d.san) {
+                const arrowM = d.san.match(/.*[→>＞]\s*(\d+)/);
+                if (arrowM) sanVal = parseInt(arrowM[1]);
+                else if (!isNaN(parseInt(d.san))) sanVal = parseInt(d.san);
             }
-            if (endSan !== null) {
-                stats.sanHistory.push({ label: title, value: endSan });
-            }
+            if (sanVal !== null) sanHistory.push({ title: s.title, value: sanVal });
 
-            // --- 3. Details ---
-            if (myData.ins && myData.ins.type) {
-                stats.insanity.push({ 
-                    title: title, 
-                    type: myData.ins.type, 
-                    desc: myData.ins.desc 
-                });
-            }
-            if (myData.art && myData.art.name) {
-                stats.artifacts.push({
-                    title: title,
-                    name: myData.art.name,
-                    desc: myData.art.desc
-                });
-            }
-            if (myData.seq && myData.seq.name) {
-                stats.sequelae.push({
-                    title: title,
-                    name: myData.seq.name,
-                    desc: myData.seq.desc
-                });
-            }
+            // 3. Insanity Count
+            if (d.ins && d.ins.type) insCount++;
         });
 
-        return stats;
+        return {
+            skills: Array.from(skillSet).sort(), // Alphabetical sort for table
+            growthMap: growthMap,
+            sanHistory: sanHistory,
+            totalGrowth: totalGrowth,
+            insCount: insCount
+        };
     }
 
-    // --- Rendering Functions ---
+    // --- Rendering ---
 
-    function renderKPI(stats, count, char) {
-        el('kpiTotalGrowth').textContent = "+" + stats.totalGrowth;
-        el('kpiScenarioCount').textContent = count;
-        el('kpiInsanityCount').textContent = stats.insanity.length;
+    function renderKPI(data, scnCount) {
+        el('kpiScenarios').textContent = scnCount;
+        el('kpiTotalGrowth').textContent = "+" + data.totalGrowth;
+        el('kpiInsanity').textContent = data.insCount;
         
-        // Use last history val or char current san
-        let currentSan = "--";
-        if (stats.sanHistory.length > 0) currentSan = stats.sanHistory[stats.sanHistory.length-1].value;
-        else if (char.vitals && char.vitals.san) currentSan = char.vitals.san;
-        
-        el('kpiCurrentSan').textContent = currentSan;
+        let start = "?";
+        let now = "?";
+        if (data.sanHistory.length > 0) {
+            start = data.sanHistory[0].value; // First recorded
+            now = data.sanHistory[data.sanHistory.length - 1].value; // Last recorded
+        }
+        el('kpiSanRange').textContent = `${start} → ${now}`;
     }
 
-    function renderCharts(stats) {
-        // 1. SAN Chart
+    function renderCharts(data, scenarios) {
+        // SAN Chart
         const ctxSan = el('sanChart').getContext('2d');
         if (chartInstances.san) chartInstances.san.destroy();
-
-        // Create labels #1, #2... instead of long titles to save space, show title on tooltip
-        const labels = stats.sanHistory.map((_, i) => `#${i+1}`);
-        const titles = stats.sanHistory.map(h => h.label);
-        const dataSan = stats.sanHistory.map(h => h.value);
+        
+        // Simple labels 1..N
+        const labels = data.sanHistory.map((_, i) => `#${i+1}`);
+        const sanVals = data.sanHistory.map(d => d.value);
+        const titles = data.sanHistory.map(d => d.title);
 
         chartInstances.san = new Chart(ctxSan, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'SAN',
-                    data: dataSan,
-                    borderColor: '#d4b346',
-                    backgroundColor: 'rgba(212, 179, 70, 0.1)',
-                    borderWidth: 2,
-                    tension: 0.1,
-                    pointRadius: 4,
-                    fill: true
+                    label: 'SAN', data: sanVals,
+                    borderColor: '#d4b346', backgroundColor: 'rgba(212, 179, 70, 0.1)',
+                    borderWidth: 2, tension: 0.1, pointRadius: 3, fill: true
                 }]
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
                 plugins: {
                     legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            title: (ctx) => titles[ctx[0].dataIndex] // Show Scenario Title
-                        }
-                    }
+                    tooltip: { callbacks: { title: (ctx) => titles[ctx[0].dataIndex] } }
                 },
                 scales: {
-                    x: { grid: { color: '#333' }, ticks: { color: '#666' } },
+                    x: { grid: { color: '#333' }, ticks: { display: false } },
                     y: { grid: { color: '#333' }, ticks: { color: '#666' }, suggestedMin: 0, suggestedMax: 99 }
                 }
             }
         });
 
-        // 2. Skill Chart (Top 5)
+        // Top Skills Chart
         const ctxSkill = el('skillChart').getContext('2d');
         if (chartInstances.skill) chartInstances.skill.destroy();
 
-        const sortedSkills = Object.entries(stats.skills)
-            .sort((a,b) => b[1] - a[1])
-            .slice(0, 5);
+        // Calculate totals for graph
+        const skillTotals = {};
+        data.skills.forEach(skill => {
+            let sum = 0;
+            scenarios.forEach(s => {
+                const sData = data.growthMap[s.id];
+                if(sData && sData[skill]) sum += sData[skill];
+            });
+            skillTotals[skill] = sum;
+        });
+
+        const sorted = Object.entries(skillTotals).sort((a,b) => b[1] - a[1]).slice(0, 5);
 
         chartInstances.skill = new Chart(ctxSkill, {
             type: 'bar',
             data: {
-                labels: sortedSkills.map(s => s[0]),
+                labels: sorted.map(s => s[0]),
                 datasets: [{
-                    label: 'Growth',
-                    data: sortedSkills.map(s => s[1]),
-                    backgroundColor: '#4a6fa5',
-                    borderColor: '#2b3d52',
-                    borderWidth: 1
+                    label: 'Growth', data: sorted.map(s => s[1]),
+                    backgroundColor: '#4a6fa5', borderColor: '#2b3d52', borderWidth: 1
                 }]
             },
             options: {
@@ -484,90 +474,71 @@
         });
     }
 
-    function renderLists(stats) {
-        // Total Skills Grid
-        const grid = el('totalSkillGrid');
-        grid.innerHTML = "";
-        const allSkills = Object.entries(stats.skills).sort((a,b) => b[1] - a[1]);
-        if(allSkills.length === 0) grid.innerHTML = `<span style="color:#444; font-size:0.8rem;">NO GROWTH DATA</span>`;
-        
-        allSkills.forEach(([name, val]) => {
-            grid.innerHTML += `<div class="skill-card"><span class="skill-n">${name}</span><span class="skill-v">+${val}</span></div>`;
+    // --- ★ MATRIX TABLE GENERATION ---
+    function renderMatrixTable(data, scenarios) {
+        const table = el('matrixTable');
+        const thead = table.querySelector('thead tr');
+        const tbody = table.querySelector('tbody');
+
+        // Reset
+        thead.innerHTML = '<th class="col-skill">SKILL NAME</th><th class="col-total">合計</th>';
+        tbody.innerHTML = '';
+
+        // 1. Build Header (Scenarios)
+        scenarios.forEach(s => {
+            const th = document.createElement('th');
+            // Vertical text div wrapper
+            th.innerHTML = `<div class="v-text" title="${s.title}">${s.title.substring(0, 10)}...</div>`;
+            thead.appendChild(th);
         });
 
-        // Artifacts / Sequelae
-        const afList = el('listArtifacts');
-        afList.innerHTML = "";
-        const combined = [
-            ...stats.artifacts.map(a => ({...a, tag:'AF', color:'#d4b346'})),
-            ...stats.sequelae.map(s => ({...s, tag:'SEQ', color:'#ffadad'}))
-        ];
-        
-        if (combined.length === 0) afList.innerHTML = `<div style="text-align:center; color:#444; font-size:0.8rem; margin-top:20px;">NO DATA</div>`;
-        
-        combined.forEach(item => {
-            afList.innerHTML += `
-                <div class="item-row">
-                    <div>
-                        <div class="item-name"><span style="color:${item.color}; font-family:'Cinzel'; margin-right:5px;">[${item.tag}]</span>${item.name}</div>
-                        <div class="item-desc">${item.desc}</div>
-                    </div>
-                    <div class="item-source">${item.title}</div>
-                </div>`;
-        });
-
-        // Insanity
-        const insList = el('listInsanity');
-        insList.innerHTML = "";
-        if (stats.insanity.length === 0) insList.innerHTML = `<div style="text-align:center; color:#444; font-size:0.8rem; margin-top:20px;">NO DATA</div>`;
-        
-        stats.insanity.forEach(ins => {
-            let badgeClass = "ins-temp";
-            let typeName = "Temp";
-            if(ins.type === 'Indef') { badgeClass = "ins-indef"; typeName = "Indef"; }
-            if(ins.type === 'Perm') { badgeClass = "ins-perm"; typeName = "Perm"; }
-
-            insList.innerHTML += `
-                <div class="item-row">
-                    <div>
-                        <div class="item-name"><span class="badge-ins ${badgeClass}">${typeName}</span>${ins.desc}</div>
-                    </div>
-                    <div class="item-source">${ins.title}</div>
-                </div>`;
-        });
-    }
-
-    function renderScenarioList(scenarios, charId) {
-        const list = el('scenarioList');
-        list.innerHTML = "";
-        // Show Newest First
-        const sorted = [...scenarios].sort((a,b) => new Date(b.date||0) - new Date(a.date||0));
-
-        if (sorted.length === 0) {
-            list.innerHTML = `<div style="padding:20px; text-align:center; color:#444;">NO LOGS FOUND</div>`;
+        // 2. Build Rows (Skills)
+        if (data.skills.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="100" style="text-align:center; padding:20px;">NO GROWTH DATA</td></tr>';
             return;
         }
 
-        sorted.forEach(s => {
-            let d = null;
-            if (s.characters.pc && s.characters.pc.id === charId) d = s.characters.pc;
-            else if (s.characters.kpc && s.characters.kpc.id === charId) d = s.characters.kpc;
+        data.skills.forEach(skillName => {
+            const tr = document.createElement('tr');
             
-            if (!d) return;
+            // Skill Name Cell
+            const tdName = document.createElement('td');
+            tdName.className = 'col-skill';
+            tdName.textContent = skillName;
+            tr.appendChild(tdName);
 
-            const resClass = d.res === 'Lost' ? 'res-lost' : 'res-alive';
-            const resText = d.res === 'Alive' ? 'Alive' : (d.res === 'Lost' ? 'LOST' : d.res);
-            
-            // Clean up growth text for summary
-            const growthSummary = d.grow ? d.grow.replace(/\n/g, ', ') : '-';
+            // Calculate Total for this skill
+            let rowTotal = 0;
+            const cells = [];
 
-            list.innerHTML += `
-                <div class="scn-row">
-                    <span class="scn-date">${s.date || '----'}</span>
-                    <span class="scn-title" title="${s.title}">${s.title}</span>
-                    <span class="scn-res ${resClass}">${resText}</span>
-                    <span class="scn-growth" title="${growthSummary}">${growthSummary}</span>
-                </div>`;
+            scenarios.forEach(s => {
+                const sGrowth = data.growthMap[s.id];
+                const val = (sGrowth && sGrowth[skillName]) ? sGrowth[skillName] : 0;
+                rowTotal += val;
+                
+                // Value Cell
+                const tdVal = document.createElement('td');
+                if (val > 0) {
+                    tdVal.textContent = `+${val}`;
+                    tdVal.style.color = '#d4b346';
+                    tdVal.style.fontWeight = 'bold';
+                } else {
+                    tdVal.textContent = ''; // Empty for readability
+                    tdVal.className = 'empty';
+                }
+                cells.push(tdVal);
+            });
+
+            // Total Cell (Inserted after name)
+            const tdTotal = document.createElement('td');
+            tdTotal.className = 'col-total';
+            tdTotal.textContent = rowTotal;
+            tr.appendChild(tdTotal);
+
+            // Append all scenario cells
+            cells.forEach(c => tr.appendChild(c));
+
+            tbody.appendChild(tr);
         });
     }
 
