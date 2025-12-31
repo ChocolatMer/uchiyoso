@@ -611,6 +611,7 @@
         window.updateInsanityDesc = (val, role) => { const el = document.getElementById(role==='PC'?'inpInsanityDescPC':'inpInsanityDescKPC'); if(el && !el.value) el.value = insanityData[val]||""; };
 
         /* --- LOG ANALYSIS LOGIC (FINAL FIX) --- */
+ /* --- LOG ANALYSIS LOGIC (UPDATED FIX) --- */
         let lastParsedStats = null; // Store stats for re-rendering
 
         window.handleLogUpload = function(input) {
@@ -631,37 +632,74 @@
             
             // Helper to get or init stats
             const getStats = (name) => {
-                if(!charStats[name]) charStats[name] = { 
-                    dice:0, crit:0, fumb:0, succ:0, fail:0, 
-                    sanHistory:[], skillDetails:{}, currentSan: null 
-                };
-                return charStats[name];
+                // 名前からスペースを除去して正規化（表記ゆれ防止）
+                const cleanName = name.replace(/\s+/g, "");
+                
+                // 既存のキーから検索
+                let key = Object.keys(charStats).find(k => k.replace(/\s+/g, "") === cleanName);
+                if (!key) {
+                    key = name;
+                    charStats[key] = { 
+                        dice:0, crit:0, fumb:0, succ:0, fail:0, 
+                        sanHistory:[], skillDetails:{}, currentSan: null 
+                    };
+                }
+                return charStats[key];
             };
 
             let lineIndex = 0;
 
             paragraphs.forEach(p => {
                 lineIndex++;
-                const spans = p.querySelectorAll('span');
                 const fullText = p.innerText.trim();
                 if(!fullText) return;
 
                 let name = "";
-                let content = "";
+                let content = fullText;
 
-                // ★ SYSTEM Message Check (Targeting format: [main] system : [ Name ] SAN : 60 → 59)
-                // Use regex that captures text inside brackets after "system"
-                const systemMatch = fullText.match(/system.*:.*\[\s*(.+?)\s*\].*/i);
-                
-                if (systemMatch) {
-                    name = systemMatch[1].trim(); 
-                    content = fullText; // Treat whole line as content for system messages
-                } 
-                else {
-                    // Standard message parsing (Name : Content)
-                    if (spans.length >= 2) {
+                // --- 1. SAN値チェック (System Message) ---
+                // Format: [main] system : [ Character Name ] SAN : 60 → 59
+                // Format: [main] system : [ Character Name ] SAN : 60 -> 59
+                if (fullText.match(/system/i) && fullText.match(/SAN/i) && fullText.match(/[→>＞]/)) {
+                    // 名前抽出: [ ] に囲まれた文字列を探す
+                    // system : [ Alice ] SAN... のような形式に対応
+                    const nameMatch = fullText.match(/\[\s*([^\]]+?)\s*\]\s*SAN/i) || fullText.match(/system.*[:：].*\[\s*([^\]]+?)\s*\]/i);
+                    
+                    if (nameMatch) {
+                        name = nameMatch[1].trim();
+                        
+                        // 数値抽出: SAN ... 数値 -> 数値
+                        const sanMatch = fullText.match(/SAN\s*[:：]?\s*(\d+)\s*[→>＞]\s*(\d+)/i);
+                        if (sanMatch) {
+                            const st = getStats(name);
+                            const newVal = parseInt(sanMatch[2]);
+                            
+                            // グラフ用データの追加
+                            st.sanHistory.push({ x: lineIndex, y: newVal });
+                            st.currentSan = newVal;
+                            return; // SAN処理ができたらこの行は終了
+                        }
+                    }
+                }
+
+                // --- 2. ダイスロール/発言チェック ---
+                // 通常のCCFOLIAログ形式: <span>Name</span> <span>Content</span>
+                const spans = p.querySelectorAll('span');
+                if (spans.length >= 2) {
+                    // spanタグがある場合はそこから名前を取得（system以外）
+                    // systemログは除外（上で処理しているか、対象外のため）
+                    if (!fullText.match(/system/i)) {
                         name = spans[1].innerText.replace(/[:：]/g, '').trim();
+                        content = "";
                         for(let i=2; i<spans.length; i++) content += spans[i].innerText;
+                    }
+                } else {
+                    // spanがない場合（テキストのみの場合）、system以外の可能性は低いが
+                    // 念のため正規表現で名前を探す "Name : Content"
+                    const textMatch = fullText.match(/^(.+?)\s*[:：]\s*(.+)$/);
+                    if (textMatch && !fullText.match(/system/i)) {
+                        name = textMatch[1].trim();
+                        content = textMatch[2];
                     }
                 }
 
@@ -669,29 +707,18 @@
 
                 const st = getStats(name);
 
-                // --- SAN Check ---
-                // Support variations: "SAN : 60 → 59", "SAN : 60 -> 59", "SAN : 60 ＞ 59"
-                // Check if content has "SAN" and a number transition arrow
-                if (content.match(/SAN/i) && content.match(/[→>＞]/)) {
-                    // Extract numbers around the arrow
-                    const matches = content.match(/(\d+)\s*[→>＞]\s*(\d+)/);
-                    if(matches) {
-                        const newVal = parseInt(matches[2]);
-                        st.sanHistory.push({ x: lineIndex, y: newVal });
-                        st.currentSan = newVal;
-                    }
-                }
-
-                // --- Dice Roll ---
-                if (content.match(/\d+d\d+/i) || content.match(/CCB/i)) {
+                // ダイスロール判定
+                if (content.match(/\d+d\d+/i) || content.match(/CCB/i) || content.match(/Resist/i)) {
                     st.dice++;
                     
                     let resultType = 'normal';
-                    if (content.includes("クリティカル") || content.includes("決定的成功")) { st.crit++; resultType = 'crit'; }
-                    else if (content.includes("ファンブル") || content.includes("致命的失敗")) { st.fumb++; resultType = 'fumb'; }
-                    else if (content.includes("成功")) { st.succ++; resultType = 'succ'; }
-                    else if (content.includes("失敗")) { st.fail++; resultType = 'fail'; }
+                    // クリティカル・ファンブル・成功・失敗の判定
+                    if (content.match(/クリティカル|決定的成功/)) { st.crit++; resultType = 'crit'; }
+                    else if (content.match(/ファンブル|致命的失敗/)) { st.fumb++; resultType = 'fumb'; }
+                    else if (content.match(/成功/)) { st.succ++; resultType = 'succ'; }
+                    else if (content.match(/失敗/)) { st.fail++; resultType = 'fail'; }
 
+                    // 技能名の抽出 【技能名】
                     const skillMatch = content.match(/【(.*?)】/);
                     if (skillMatch) {
                         const skill = skillMatch[1];
@@ -734,10 +761,11 @@
             const sortedKeys = Object.keys(charStats).sort((a,b) => {
                 const cleanA = clean(a);
                 const cleanB = clean(b);
-                const isPC_A = cleanA.includes(pcName) || pcName.includes(cleanA);
-                const isKPC_A = cleanA.includes(kpcName) || kpcName.includes(cleanA);
-                const isPC_B = cleanB.includes(pcName) || pcName.includes(cleanB);
-                const isKPC_B = cleanB.includes(kpcName) || kpcName.includes(cleanB);
+                // 部分一致でPC/KPCを優先表示
+                const isPC_A = (pcName && cleanA.includes(pcName)) || (cleanA && pcName.includes(cleanA));
+                const isKPC_A = (kpcName && cleanA.includes(kpcName)) || (cleanA && kpcName.includes(cleanA));
+                const isPC_B = (pcName && cleanB.includes(pcName)) || (cleanB && pcName.includes(cleanB));
+                const isKPC_B = (kpcName && cleanB.includes(kpcName)) || (cleanB && kpcName.includes(cleanB));
 
                 const aScore = (isPC_A ? 2 : (isKPC_A ? 1 : 0));
                 const bScore = (isPC_B ? 2 : (isKPC_B ? 1 : 0));
@@ -746,11 +774,12 @@
 
             sortedKeys.forEach((name, idx) => {
                 const st = charStats[name];
-                if(st.dice === 0 && st.sanHistory.length === 0) return; // Skip empty logs
+                // ダイスもSAN変動もないキャラは表示しない
+                if(st.dice === 0 && st.sanHistory.length === 0) return;
 
                 const cleanName = clean(name);
-                const isPC = cleanName.includes(pcName) || pcName.includes(cleanName);
-                const isKPC = cleanName.includes(kpcName) || kpcName.includes(cleanName);
+                const isPC = (pcName && cleanName.includes(pcName)) || (cleanName && pcName.includes(cleanName));
+                const isKPC = (kpcName && cleanName.includes(kpcName)) || (cleanName && kpcName.includes(cleanName));
                 
                 const color = (isPC) ? '#88ccff' : (isKPC ? '#ff8888' : '#aaa');
                 
@@ -775,9 +804,10 @@
                 `;
                 
                 // Rate Bar
-                const totalCheck = st.succ + st.fail;
+                const totalCheck = st.succ + st.fail + st.crit + st.fumb; // 分母を全判定数にする
                 if(totalCheck > 0) {
-                    const succRate = (st.succ / totalCheck) * 100;
+                    const positive = st.succ + st.crit;
+                    const succRate = (positive / totalCheck) * 100;
                     visualsHtml += `
                         <div class="rate-bar-container">
                             <div class="rate-segment" style="width:${succRate}%; background:#66bb6a;"></div>
@@ -811,14 +841,15 @@
                             <div style="margin-top:10px;">
                                 <div style="font-family:'Cinzel'; font-size:0.7rem; color:#888; margin-bottom:5px;">SKILL BREAKDOWN</div>
                                 <table class="skill-table">
-                                    <thead><tr><th>SKILL</th><th>TOTAL</th><th>DETAIL</th></tr></thead>
+                                    <thead><tr><th>SKILL</th><th>TOTAL</th><th>RESULT</th></tr></thead>
                                     <tbody>
                     `;
                     skills.forEach(([skillName, d]) => {
                         let badges = "";
                         if(d.crit > 0) badges += `<span class="s-badge sb-crit">C:${d.crit}</span>`;
                         if(d.fumb > 0) badges += `<span class="s-badge sb-fumb">F:${d.fumb}</span>`;
-                        detailsHtml += `<tr><td>${skillName}</td><td class="skill-val">${d.count}</td><td class="skill-val"><div class="skill-badges"><span style="color:#aaa;">S:${d.succ}/F:${d.fail}</span>${badges}</div></td></tr>`;
+                        // S/F を 成功/失敗 に変更
+                        detailsHtml += `<tr><td>${skillName}</td><td class="skill-val">${d.count}</td><td class="skill-val"><div class="skill-badges"><span style="color:#aaa;">成功:${d.succ} / 失敗:${d.fail}</span>${badges}</div></td></tr>`;
                     });
                     detailsHtml += `</tbody></table></div></details>`;
                 }
@@ -847,7 +878,12 @@
                             maintainAspectRatio: false,
                             scales: {
                                 x: { type: 'linear', display: false },
-                                y: { beginAtZero: false, suggestedMin: 0, suggestedMax: 100, grid: { color: '#333'} }
+                                y: { 
+                                    beginAtZero: false, 
+                                    suggestedMin: 0, 
+                                    suggestedMax: 100, 
+                                    grid: { color: '#333'}
+                                }
                             },
                             plugins: { legend: { display: false } }
                         }
