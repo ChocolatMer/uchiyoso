@@ -29,10 +29,10 @@
             --c-know:   #a29bfe;
             --c-other:  #a5b1c2;
 
-            /* Dimensions */
-            --w-skill: 120px;
+            /* Dimensions - Adjusted */
+            --w-skill: 130px; /* Slightly wider for better name fit */
             --w-base: 32px;
-            --w-scen: 34px; /* 幅を少し広げました */
+            --w-scen: 28px;   /* "Just a little bit" wider than 22px */
         }
 
         /* --- 2. BASE STYLES --- */
@@ -205,6 +205,7 @@
             background: var(--theme); color: #000; border-color: var(--theme); 
             font-weight: bold;
         }
+        /* Category specific active styles */
         .filter-btn.cat-combat.active { background: var(--c-combat); border-color: var(--c-combat); }
         .filter-btn.cat-search.active { background: var(--c-search); border-color: var(--c-search); }
         .filter-btn.cat-action.active { background: var(--c-action); border-color: var(--c-action); }
@@ -262,33 +263,38 @@
         th.col-int,  td.col-int  { position: sticky; left: calc(var(--w-skill) + var(--w-base)*2); z-index: 11; width: var(--w-base); border-right: 1px solid #333; background: #1a1a1a; }
         th.col-oth,  td.col-oth  { position: sticky; left: calc(var(--w-skill) + var(--w-base)*3); z-index: 11; width: var(--w-base); border-right: 2px solid #555; background: #1a1a1a; }
 
-        /* Header Corner Z-Index Fix */
+        /* Header Styles */
         thead th[class*="col-"] { z-index: 15; background: #222; border-bottom: 2px solid #555; color: #888; font-size: 0.6rem; font-family:'Cinzel'; vertical-align: middle; }
-        thead th.col-skill { color: var(--theme); font-size: 0.75rem; }
+        /* Skill Name Header */
+        thead th.col-skill { 
+            color: var(--theme); font-size: 0.75rem; 
+            text-align: left; padding-left: 8px; /* Alignment fix */
+        }
 
         /* --- CELLS STYLING --- */
-        .skill-cell-content {
-            display: flex; align-items: center; height: 28px; padding: 0 6px;
-            /* ★ 左揃えを明示的に指定 */
-            justify-content: flex-start;
+        
+        /* Inner container for absolute left alignment */
+        .skill-cell-inner {
+            display: flex; align-items: center; justify-content: flex-start;
+            height: 28px; padding: 0 6px; width: 100%;
             border-left: 3px solid transparent; font-weight: 500; color: #ccc;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        .skill-icon { font-size: 0.85rem; margin-right: 4px; opacity: 0.7; }
+        .skill-icon { font-size: 0.85rem; margin-right: 6px; opacity: 0.7; flex-shrink: 0; }
 
         /* Category Left Borders */
-        .cat-combat .skill-cell-content { border-left-color: var(--c-combat); color: #ffdada; }
-        .cat-search .skill-cell-content { border-left-color: var(--c-search); color: #daffff; }
-        .cat-action .skill-cell-content { border-left-color: var(--c-action); color: #ffffda; }
-        .cat-nego   .skill-cell-content { border-left-color: var(--c-nego);   color: #ffeeda; }
-        .cat-know   .skill-cell-content { border-left-color: var(--c-know);   color: #eaddff; }
-        .cat-other  .skill-cell-content { border-left-color: var(--c-other);  color: #ddd; }
+        .cat-combat .skill-cell-inner { border-left-color: var(--c-combat); color: #ffdada; }
+        .cat-search .skill-cell-inner { border-left-color: var(--c-search); color: #daffff; }
+        .cat-action .skill-cell-inner { border-left-color: var(--c-action); color: #ffffda; }
+        .cat-nego   .skill-cell-inner { border-left-color: var(--c-nego);   color: #ffeeda; }
+        .cat-know   .skill-cell-inner { border-left-color: var(--c-know);   color: #eaddff; }
+        .cat-other  .skill-cell-inner { border-left-color: var(--c-other);  color: #ddd; }
 
         /* Values */
         td.val-base { text-align: center; color: #666; font-family: 'Cinzel'; border-bottom: 1px solid #222; font-size: 0.7rem; }
         td.val-base.has-val { color: #eee; }
 
-        /* Scenario Columns - Adjusted Width */
+        /* Scenario Columns - 28px */
         td.val-growth {
             min-width: var(--w-scen); width: var(--w-scen); 
             text-align: center; color: #444; font-family: 'Cinzel';
@@ -478,7 +484,7 @@
                         <th class="col-base"><div class="v-header">初期</div></th>
                         <th class="col-job"><div class="v-header">職業</div></th>
                         <th class="col-int"><div class="v-header">興味</div></th>
-                        <th class="col-oth"><div class="v-header">他</div></th>
+                        <th class="col-oth"><div class="v-header">その他</div></th>
                         <!-- Scenarios appended here -->
                         <th><div class="v-header" style="color:var(--theme);">TOTAL</div></th>
                     </tr>
@@ -589,7 +595,7 @@
         renderStats(stats);
         renderSanChart(stats.sanHistory, sortedScenarios);
         renderInsanity(stats.insanityHistory);
-        renderMatrixTable(); // Uses currentMatrixData
+        renderMatrixTable();
 
         // Animation
         animateCount('kpiScenarios', sortedScenarios.length);
@@ -646,7 +652,8 @@
             Object.values(char.skills).flat().forEach(s => {
                 if(s.name) skillMap[s.name] = { 
                     init: parseInt(s.init)||0, job: parseInt(s.job)||0, 
-                    interest: parseInt(s.interest)||0, other: parseInt(s.growth)||0 
+                    interest: parseInt(s.interest)||0, 
+                    other: (s.other ? parseInt(s.other) : 0)
                 };
             });
         } else if (char.skillList) {
@@ -673,6 +680,8 @@
         const scenarioCols = scenarios.map(s => {
             const growth = {};
             let d = (s.characters.pc?.id === char.id) ? s.characters.pc : (s.characters.kpc?.id === char.id) ? s.characters.kpc : null;
+            let growthList = [];
+            
             if(d && d.grow) {
                 d.grow.split('\n').forEach(l => {
                     const m = l.match(/(.+?)\s*[:：]?\s*\+?(\d+)/);
@@ -680,12 +689,22 @@
                         const name = m[1].trim();
                         const val = parseInt(m[2]);
                         growth[name] = (growth[name]||0) + val;
+                        growthList.push(`${name} +${val}`);
+                        
                         // Add unknown skill
                         if(!skillMap[name]) skillMap[name] = { init:0, job:0, interest:0, other:0 };
                     }
                 });
             }
-            return { id: s.id, title: s.title, date: s.date, gm: s.gm, growth };
+            
+            // Dice Stats for Tooltip
+            let stats = null;
+            if(s.analysisData && s.analysisData[char.name]) {
+                const ana = s.analysisData[char.name];
+                stats = { succ: ana.succ, fail: ana.fail, crit: ana.crit, fumb: ana.fumb };
+            }
+
+            return { id: s.id, title: s.title, date: s.date, gm: s.gm, growth, growthList, stats };
         });
 
         // Build Rows
@@ -845,8 +864,8 @@
 
             // Name + Icon
             const tdName = document.createElement('td');
-            tdName.className = "col-skill skill-cell-content";
-            tdName.innerHTML = `<span class="material-icons-round skill-icon">${row.icon}</span>${row.name}`;
+            tdName.className = "col-skill";
+            tdName.innerHTML = `<div class="skill-cell-inner"><span class="material-icons-round skill-icon">${row.icon}</span>${row.name}</div>`;
             tr.appendChild(tdName);
 
             // Bases
@@ -870,8 +889,8 @@
                     td.classList.add('grown');
                     td.title = `+${h.grow}`;
                 }
-                // Hover effect helper
-                td.onmouseenter = () => highlightColumn(i + 6); // 5 fixed cols + 1 index adjustment
+                // Hover highlight (adjusted index for 5 fixed cols)
+                td.onmouseenter = () => highlightColumn(i + 6); 
                 td.onmouseleave = () => removeHighlight(i + 6);
                 tr.appendChild(td);
             });
