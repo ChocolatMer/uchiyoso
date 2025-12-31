@@ -384,7 +384,8 @@
                     const job = parseInt(row.querySelector('.s-job').value)||0;
                     const int = parseInt(row.querySelector('.s-interest').value)||0;
                     const gro = parseInt(row.querySelector('.s-growth').value)||0;
-                    row.querySelector('.s-total').value = init + job + int + gro;
+                    const oth = parseInt(row.querySelector('.s-other').value)||0;
+                    row.querySelector('.s-total').value = init + job + int + gro + oth;
                 });
             });
         }
@@ -403,6 +404,7 @@
                 <td><input type="number" class="s-job" value="0"></td>
                 <td><input type="number" class="s-interest" value="0"></td>
                 <td><input type="number" class="s-growth" value="0"></td>
+                <td><input type="number" class="s-other" value="0" style="color:#aaf;"></td>
                 <td style="padding-left:10px;"><input type="text" class="s-desc skill-desc-input" placeholder="設定や理由など...">
                 <button onclick="this.closest('tr').remove()" style="float:right; background:transparent; border:none; color:#522; cursor:pointer;">×</button></td>
             `;
@@ -421,6 +423,7 @@
             const job = row.querySelector('.s-job').value;
             const interest = row.querySelector('.s-interest').value;
             const growth = row.querySelector('.s-growth').value;
+            const other = row.querySelector('.s-other').value;
             const desc = row.querySelector('.s-desc').value;
 
             const targetTable = document.querySelector(`#skill-cat-${targetCat} tbody`);
@@ -448,6 +451,7 @@
                     <td><input type="number" class="s-job" value="${job}"></td>
                     <td><input type="number" class="s-interest" value="${interest}"></td>
                     <td><input type="number" class="s-growth" value="${growth}"></td>
+                    <td><input type="number" class="s-other" value="${other}" style="color:#aaf;"></td>
                     <td style="padding-left:10px;"><input type="text" class="s-desc skill-desc-input" value="${desc}" placeholder="設定や理由など..."></td>
                 `;
                 targetTable.appendChild(tr);
@@ -504,6 +508,7 @@
                         job: parseInt(row.querySelector('.s-job').value)||0,
                         interest: parseInt(row.querySelector('.s-interest').value)||0,
                         growth: parseInt(row.querySelector('.s-growth').value)||0,
+                        other: parseInt(row.querySelector('.s-other').value)||0,
                         desc: row.querySelector('.s-desc').value
                     });
                 });
@@ -716,10 +721,12 @@
                 const box = document.createElement('div');
                 box.className = 'skill-category';
                 box.id = `skill-cat-${c.id}`;
+                // ヘッダーに「その他」を追加
                 let html = `<h4>${c.label} <button type="button" class="btn-add-skill" onclick="addSkillRow('${c.id}')">+ 追加</button></h4>
-                <table class="skill-table"><thead><tr><th style="width:120px; text-align:left;">技能名</th><th style="width:40px;">合計</th><th style="width:40px;">初期</th><th style="width:40px;">職業</th><th style="width:40px;">興味</th><th style="width:40px;">成長</th><th style="text-align:left; padding-left:10px;">技能詳細 (Flavor Text)</th></tr></thead><tbody>`;
+                <table class="skill-table"><thead><tr><th style="width:120px; text-align:left;">技能名</th><th style="width:40px;">合計</th><th style="width:40px;">初期</th><th style="width:40px;">職業</th><th style="width:40px;">興味</th><th style="width:40px;">成長</th><th style="width:40px;">その他</th><th style="text-align:left; padding-left:10px;">技能詳細 (Flavor Text)</th></tr></thead><tbody>`;
                 list.forEach(s => {
-                    html += `<tr class="skill-entry"><td class="s-name" style="font-weight:bold;"><span class="s-name-text">${s.name}</span><div style="margin-top:2px;"><select class="skill-cat-select" onchange="moveCategory(this)"><option value="">カテゴリ移動...</option><option value="combat">戦闘</option><option value="explore">探索</option><option value="action">行動</option><option value="negotiate">交渉</option><option value="knowledge">知識</option><option value="original">その他</option></select></div></td><td><input type="number" class="s-total" value="${s.total}" readonly tabindex="-1"></td><td><input type="number" class="s-init" value="${s.init}" readonly tabindex="-1" style="color:#888;"></td><td><input type="number" class="s-job" value="${s.job}"></td><td><input type="number" class="s-interest" value="${s.interest}"></td><td><input type="number" class="s-growth" value="${s.growth}"></td><td style="padding-left:10px;"><input type="text" class="s-desc skill-desc-input" value="${s.desc || ''}" placeholder="設定や理由など..."></td></tr>`;
+                    // 行データに「その他」を追加
+                    html += `<tr class="skill-entry"><td class="s-name" style="font-weight:bold;"><span class="s-name-text">${s.name}</span><div style="margin-top:2px;"><select class="skill-cat-select" onchange="moveCategory(this)"><option value="">カテゴリ移動...</option><option value="combat">戦闘</option><option value="explore">探索</option><option value="action">行動</option><option value="negotiate">交渉</option><option value="knowledge">知識</option><option value="original">その他</option></select></div></td><td><input type="number" class="s-total" value="${s.total}" readonly tabindex="-1"></td><td><input type="number" class="s-init" value="${s.init}" readonly tabindex="-1" style="color:#888;"></td><td><input type="number" class="s-job" value="${s.job}"></td><td><input type="number" class="s-interest" value="${s.interest}"></td><td><input type="number" class="s-growth" value="${s.growth}"></td><td><input type="number" class="s-other" value="${s.other || 0}" style="color:#aaf;"></td><td style="padding-left:10px;"><input type="text" class="s-desc skill-desc-input" value="${s.desc || ''}" placeholder="設定や理由など..."></td></tr>`;
                 });
                 html += `</tbody></table>`;
                 box.innerHTML = html; area.appendChild(box);
