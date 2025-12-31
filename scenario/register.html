@@ -684,18 +684,17 @@
 
                 // --- 2. ダイスロール/発言チェック ---
                 // 通常のCCFOLIAログ形式: <span>Name</span> <span>Content</span>
+                // （前略... SAN値チェック処理の後）
+
+                // --- 2. ダイスロール/発言チェック ---
                 const spans = p.querySelectorAll('span');
                 if (spans.length >= 2) {
-                    // spanタグがある場合はそこから名前を取得（system以外）
-                    // systemログは除外（上で処理しているか、対象外のため）
                     if (!fullText.match(/system/i)) {
                         name = spans[1].innerText.replace(/[:：]/g, '').trim();
                         content = "";
                         for(let i=2; i<spans.length; i++) content += spans[i].innerText;
                     }
                 } else {
-                    // spanがない場合（テキストのみの場合）、system以外の可能性は低いが
-                    // 念のため正規表現で名前を探す "Name : Content"
                     const textMatch = fullText.match(/^(.+?)\s*[:：]\s*(.+)$/);
                     if (textMatch && !fullText.match(/system/i)) {
                         name = textMatch[1].trim();
@@ -707,30 +706,40 @@
 
                 const st = getStats(name);
 
-                // ダイスロール判定
+                // ▼▼▼ 修正箇所：ダイスロール判定と集計ロジック ▼▼▼
                 if (content.match(/\d+d\d+/i) || content.match(/CCB/i) || content.match(/Resist/i)) {
                     st.dice++;
                     
                     let resultType = 'normal';
-                    // クリティカル・ファンブル・成功・失敗の判定
+                    // 成功度判定
                     if (content.match(/クリティカル|決定的成功/)) { st.crit++; resultType = 'crit'; }
                     else if (content.match(/ファンブル|致命的失敗/)) { st.fumb++; resultType = 'fumb'; }
                     else if (content.match(/成功/)) { st.succ++; resultType = 'succ'; }
                     else if (content.match(/失敗/)) { st.fail++; resultType = 'fail'; }
 
-                    // 技能名の抽出 【技能名】
+                    // 技能名の抽出
                     const skillMatch = content.match(/【(.*?)】/);
+                    let skillName = "(その他)"; // デフォルト名
+
                     if (skillMatch) {
-                        const skill = skillMatch[1];
-                        if(!st.skillDetails[skill]) st.skillDetails[skill] = { count:0, crit:0, fumb:0, succ:0, fail:0 };
-                        
-                        st.skillDetails[skill].count++;
-                        if(resultType === 'crit') st.skillDetails[skill].crit++;
-                        if(resultType === 'fumb') st.skillDetails[skill].fumb++;
-                        if(resultType === 'succ') st.skillDetails[skill].succ++;
-                        if(resultType === 'fail') st.skillDetails[skill].fail++;
+                        skillName = skillMatch[1];
+                    } else if (content.match(/sanc/i) || content.match(/SAN/i)) {
+                         // カッコがなくてもSAN関連っぽければまとめる（任意）
+                        skillName = "SAN値チェック"; 
                     }
+
+                    // 詳細リストへ追加（技能名があってもなくても登録する）
+                    if(!st.skillDetails[skillName]) {
+                        st.skillDetails[skillName] = { count:0, crit:0, fumb:0, succ:0, fail:0 };
+                    }
+                    
+                    st.skillDetails[skillName].count++;
+                    if(resultType === 'crit') st.skillDetails[skillName].crit++;
+                    if(resultType === 'fumb') st.skillDetails[skillName].fumb++;
+                    if(resultType === 'succ') st.skillDetails[skillName].succ++;
+                    if(resultType === 'fail') st.skillDetails[skillName].fail++;
                 }
+               
             });
 
             lastParsedStats = charStats;
