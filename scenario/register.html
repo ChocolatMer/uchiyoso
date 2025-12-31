@@ -196,7 +196,7 @@
         .bg-orange { background: #523e2b; color: #ffdfbf; }
         .bg-gray { background: #333; color: #aaa; }
 
-        /* --- Analysis Tab Styles (Improved) --- */
+        /* --- Analysis Tab Styles --- */
         .analysis-container { display: flex; flex-direction: column; gap: 20px; height: 100%; }
         .file-upload-box {
             border: 2px dashed #444; padding: 20px; text-align: center;
@@ -221,7 +221,7 @@
         
         .graph-container { position: relative; height: 200px; width: 100%; margin-bottom: 15px; background: rgba(0,0,0,0.2); border-radius: 4px; }
         
-        /* Details & Skill Table */
+        /* Analysis Details (Collapsible) */
         .analysis-details {
             background: rgba(255,255,255,0.05); padding: 10px; border-radius: 4px; border: 1px solid #444;
         }
@@ -555,7 +555,7 @@
                                 <div class="scn-toggle-header" onclick="window.toggleScnContent('scWarn')">注意事項 <span class="material-icons-round">expand_more</span></div><div id="scWarn" class="scn-content"><textarea id="inpWarnings" class="paper-area" style="min-height:60px;"></textarea></div>
                             </div>
 
-                            <!-- ★ TAB ANALYSIS (IMPROVED 2.0) -->
+                            <!-- ★ TAB ANALYSIS (IMPROVED 3.0) -->
                             <div id="tab-analysis" class="tab-panel">
                                 <h2 class="section-header">LOG ANALYSIS</h2>
                                 <div class="analysis-container">
@@ -696,7 +696,7 @@
         const insanityData = {"1": "健忘症 / 昏迷", "2": "激しい恐怖症", "3": "幻覚", "4": "奇妙な性的嗜好", "5": "フェティッシュ", "6": "チック・震え", "7": "心因性機能障害", "8": "短時間の心因反応", "9": "一時的偏執症", "10": "強迫観念行動", "Other": ""};
         window.updateInsanityDesc = (val, role) => { const el = document.getElementById(role==='PC'?'inpInsanityDescPC':'inpInsanityDescKPC'); if(el && !el.value) el.value = insanityData[val]||""; };
 
-        /* --- LOG ANALYSIS LOGIC (ENHANCED 2.0) --- */
+        /* --- LOG ANALYSIS LOGIC (ENHANCED 3.0) --- */
         let lastParsedStats = null; // Store stats for re-rendering
 
         window.handleLogUpload = function(input) {
@@ -740,7 +740,7 @@
                 // ★ SYSTEM Message Check: "system" name often contains [CharName] in content
                 if (name.match(/system/i)) {
                     // Try to extract name from content: [ CharName ] ...
-                    const nameMatch = content.match(/^\[\s*(.+?)\s*\]/);
+                    const nameMatch = content.match(/\[\s*([^\]]+?)\s*\]/); // 修正版: [任意の文字]
                     if (nameMatch) {
                         name = nameMatch[1].trim(); 
                     }
@@ -752,7 +752,8 @@
 
                 // --- SAN Check ---
                 // Support variations: "SAN : 60 → 59", "SAN : 60 -> 59", "SAN : 60 ＞ 59"
-                if (content.match(/SAN/i) && content.match(/[→>＞]/)) {
+                // Must contain "SAN" and check for number transition
+                if (content.match(/SAN/i)) {
                     const matches = content.match(/(\d+)\s*[→>＞]\s*(\d+)/);
                     if(matches) {
                         const newVal = parseInt(matches[2]);
@@ -1119,7 +1120,7 @@
             getEl('inpSynopsis').value = s.overview||""; getEl('inpIntroduction').value = s.introduction||""; getEl('inpWarnings').value = s.warnings||"";
             if(s.memos) { 
                 getEl('inpPublicMemo').value = s.memos.public||""; getEl('inpSecretMemoPC').value = s.memos.secretPC||""; getEl('inpSecretMemoKPC').value = s.memos.secretKPC||"";
-                // ★ Analysis Load
+                // ★ Analysis Load (Note: We don't save raw HTML log but result text)
                 if(s.memos.analysis) {
                     getEl('inpAnalysisMemo').value = s.memos.analysis;
                 } else {
