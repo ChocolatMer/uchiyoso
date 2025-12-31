@@ -1,3 +1,5 @@
+// js/data/scenario.js
+
 /**
  * HTMLフォームの入力値から、保存用のシナリオデータ構造を作成する
  */
@@ -17,9 +19,6 @@ export function createScenarioRecord(input, userId) {
         // 詳細メタデータ
         meta: input.meta || {},
 
-        // ★追加: 解析データの生データ（グラフ描画用）
-        analysisData: input.analysisData || null,
-
         // 検索用メンバーID
         members: input.members || [],
 
@@ -29,8 +28,12 @@ export function createScenarioRecord(input, userId) {
             kpc: input.kpcData || {}
         },
 
-        // ★修正点: 神話生物を独立したフィールドとして保存
+        // ★神話生物
         entities: input.entities || "",
+
+        // ★追加: ログ解析データの生データ（グラフ描画用）
+        // これがないと、保存ボタンを押した瞬間に解析結果が捨てられてしまいます
+        analysisData: input.analysisData || null,
 
         // テキスト・画像・URL
         overview: input.overview,
@@ -85,7 +88,7 @@ export function syncScenarioToCharacter(charData, sData, sId, roleKey) {
         if (!content) return;
         const current = newChar[fieldKey] || "";
         const entry = `[${header}] ${content}`;
-        if (!current.includes(entry)) { // 単純な重複チェック
+        if (!current.includes(entry)) {
             newChar[fieldKey] = current + (current ? "\n\n" : "") + entry;
         }
     };
@@ -96,11 +99,9 @@ export function syncScenarioToCharacter(charData, sData, sId, roleKey) {
     if (myResult.art && myResult.art.name) {
         appendText('spells', `AF:${sData.title}`, `${myResult.art.name}: ${myResult.art.desc}`);
     }
-    // 後遺症
     if (myResult.seq && myResult.seq.name) {
         appendText('memo', `後遺症:${sData.title}`, `${myResult.seq.name}: ${myResult.seq.desc}`);
     }
-    // ★遭遇神話生物もキャラシにメモとして残したい場合はここで追記可能
     if (sData.entities) appendText('spells', `遭遇:${sData.title}`, sData.entities);
 
     return newChar;
