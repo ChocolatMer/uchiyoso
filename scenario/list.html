@@ -331,6 +331,12 @@
                 <div class="info-label" style="border-bottom:1px solid #5a3e2b; margin-bottom:10px;">OVERVIEW</div>
                 <div id="modalOverview" class="detail-text"></div>
 
+                <!-- 神話生物表示欄 (モーダル内のみ) -->
+                <div id="modalEntitiesBox" style="display:none; margin-bottom:20px;">
+                    <div class="info-label" style="border-bottom:1px solid #a44; color:#a44; margin-bottom:10px;">MYTHOS ENTITIES</div>
+                    <div id="modalEntities" class="detail-text" style="color:#844; font-size:0.85rem;"></div>
+                </div>
+
                 <div class="info-label" style="border-bottom:1px solid #5a3e2b; margin-bottom:10px;">MEMO</div>
                 <div id="modalMemo" class="detail-text" style="color:#555;"></div>
             </div>
@@ -359,7 +365,6 @@
         let allScenarios = [];
         const NO_IMG = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
-        // パーティクル生成
         function createDust() { 
             const container = document.getElementById('dustContainer'); 
             for(let i=0; i<40; i++){ 
@@ -385,7 +390,6 @@
 
         async function loadData() {
             try {
-                // キャラクター情報取得
                 const charSnap = await getDocs(collection(db, "rooms", "couple_shared_data", "characters"));
                 charSnap.forEach(doc => {
                     const d = doc.data();
@@ -393,7 +397,6 @@
                     allChars[d.id] = d;
                 });
 
-                // シナリオ情報取得 (日付順)
                 const q = query(collection(db, "scenarios"), orderBy("date", "desc"));
                 const scnSnap = await getDocs(q);
                 scnSnap.forEach(doc => {
@@ -416,7 +419,6 @@
                 return;
             }
 
-            // --- グループ化ロジック (コンビごと) ---
             const groups = new Map();
             const soloKey = "SOLO_ETC";
 
@@ -427,13 +429,11 @@
                 let memberNames = "";
 
                 if (mems.length === 2) {
-                    // ペア判定
                     const id1 = mems[0];
                     const id2 = mems[1];
                     const sortedIds = [id1, id2].sort().join('_');
                     key = sortedIds;
 
-                    // コンビ名解決
                     const c1 = allChars[id1];
                     const c2 = allChars[id2];
                     let gName = null;
@@ -460,7 +460,6 @@
                 groups.get(key).scenarios.push(s);
             });
 
-            // --- 棚の生成 ---
             groups.forEach((group, key) => {
                 const shelfSection = document.createElement('div');
                 shelfSection.className = 'shelf-section';
@@ -495,7 +494,6 @@
             const book = document.createElement('div');
             book.className = 'book';
             
-            // システムによって色を変える
             let color = 'black';
             const sys = (s.system || "").toLowerCase();
             if(sys.includes('coc6')) color = 'maroon';
@@ -504,36 +502,29 @@
             else if(s.type === 'タイマン') color = 'brown';
             book.setAttribute('data-color', color);
 
-            // ★修正: 所要時間（テキスト）から数値を抜き出して厚みを決める
-            let hours = 5; // デフォルト時間
+            let hours = 5;
             if (s.meta && s.meta.duration) {
-                // 文字列から最初の数字を取り出す ("3~4時間" -> 3)
                 const num = s.meta.duration.match(/\d+/);
                 if (num) {
                     hours = parseInt(num[0]);
                 }
             }
-            
-            // 厚みの計算 (基本25px + 1時間あたり3px) 
-            // 最小25px, 最大80pxくらいに制限
             let thickness = 25 + (hours * 3);
             thickness = Math.min(Math.max(thickness, 25), 80);
 
             book.style.width = thickness + 'px';
-            
-            // ランダムな傾きで自然に見せる
             const rot = (Math.random() * 4 - 2).toFixed(1);
             book.style.transform = `rotateZ(${rot}deg)`;
 
             book.innerHTML = `<div class="spine"><span class="spine-title">${s.title}</span></div>`;
             
-            // イベント
             book.onmouseenter = () => updateOverview(s);
             book.onclick = () => openBookModal(s);
 
             return book;
         }
 
+        // 左サイドパネルの更新（あらすじのみを表示、神話生物や結果は除外）
         function updateOverview(s) {
             const imgEl = document.getElementById('overviewImage');
             const noImg = document.getElementById('noImage');
@@ -549,10 +540,12 @@
 
             document.getElementById('overviewTitle').textContent = s.title;
             document.getElementById('overviewMeta').textContent = `${s.date || 'Unknown'} | ${s.system || 'System'}`;
+            
+            // あらすじのみを素直に表示（自動カットしない）
             document.getElementById('overviewText').textContent = s.overview || "";
         }
 
-        // --- Window global functions for Modal ---
+        // モーダルを開く（全情報を表示）
         window.openBookModal = (s) => {
             document.getElementById('modalTitle').textContent = s.title;
             document.getElementById('modalImage').src = s.images?.trailer || NO_IMG;
@@ -564,16 +557,25 @@
             if(s.characters?.pc?.res) res = s.characters.pc.res;
             document.getElementById('modalResult').textContent = res;
 
+            // あらすじ
             document.getElementById('modalOverview').textContent = s.overview || "(あらすじなし)";
+
+            // 神話生物表示エリア (モーダル内のみ、s.entitiesがある場合のみ)
+            const entBox = document.getElementById('modalEntitiesBox');
+            const entText = document.getElementById('modalEntities');
+            if(s.entities) {
+                entText.textContent = s.entities;
+                entBox.style.display = 'block';
+            } else {
+                entBox.style.display = 'none';
+            }
             
-            // メモ結合
             let memo = "";
             if(s.characters?.pc?.quote) memo += `[PC] "${s.characters.pc.quote}"\n`;
             if(s.characters?.kpc?.quote) memo += `[KPC] "${s.characters.kpc.quote}"\n`;
             if(s.memos?.public) memo += `\n${s.memos.public}\n`;
             document.getElementById('modalMemo').textContent = memo;
 
-            // アイコン表示
             const iconContainer = document.getElementById('modalIcons');
             iconContainer.innerHTML = "";
             (s.members || []).forEach(uid => {
