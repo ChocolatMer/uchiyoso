@@ -7,7 +7,7 @@
     
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;700&family=Noto+Sans+JP:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Shippori+Mincho:wght@400;600;800&family=Noto+Sans+JP:wght@300;400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <!-- Data Script -->
@@ -17,22 +17,27 @@
         /* --- 1. CORE VARIABLES --- */
         :root {
             --theme: #d4b346;
-            --bg-dark: #0a0a0a;
-            --border: rgba(255, 255, 255, 0.12);
-            --text-main: #e0e0e0;
+            --bg-dark: #050505;
+            --border: rgba(255, 255, 255, 0.15);
+            --text-main: #f0f0f0;
+            --text-muted: #888;
             
-            /* Category Colors */
-            --c-combat: #ff6b6b;
-            --c-search: #4ecdc4;
-            --c-action: #ffe66d;
+            /* Category Colors (より鮮やかに調整) */
+            --c-combat: #ff5252;
+            --c-search: #40e0d0;
+            --c-action: #ffd700;
             --c-nego:   #ff9f43;
-            --c-know:   #a29bfe;
-            --c-other:  #a5b1c2;
+            --c-know:   #ce93d8;
+            --c-other:  #b0bec5;
 
-            /* Dimensions - 幅を少し広げました */
-            --w-skill: 120px;
-            --w-base: 32px;
-            --w-scen: 30px; /* 22px -> 30px (+0.5文字分程度) */
+            /* Dimensions */
+            --w-skill: 140px; /* 文字サイズUPに合わせて少し拡張 */
+            --w-base: 36px;
+            --w-scen: 34px;   /* 成長列の幅を確保 */
+            
+            /* Glass Effect */
+            --glass-bg: rgba(20, 20, 20, 0.65);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.08);
         }
 
         /* --- 2. BASE STYLES --- */
@@ -43,301 +48,355 @@
             font-family: 'Shippori Mincho', serif; 
             margin: 0; padding: 0; 
             height: 100vh; overflow: hidden;
-            font-size: 0.8rem;
+            font-size: 0.85rem; /* サイズアップ */
+            letter-spacing: 0.03em;
         }
 
         /* Dynamic Background */
         #bgLayer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-size: cover; background-position: center;
-            opacity: 0.15; filter: blur(20px) saturate(0.5); z-index: -1;
+            opacity: 0.25; /* 背景画像をもう少し見せる */
+            filter: blur(15px) saturate(0.8); z-index: -1;
             transition: background-image 1s ease;
         }
         #bgOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at center, rgba(0,0,0,0.4), #000);
+            background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.8) 90%);
             z-index: -1;
         }
 
         /* Layout */
         .layout {
             display: grid;
-            grid-template-columns: 260px 1fr;
+            grid-template-columns: 280px 1fr; /* サイドバーも少し広く */
             grid-template-rows: auto 1fr;
             height: 100vh; width: 100%;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(5px);
         }
 
         /* --- 3. SIDEBAR --- */
         .sidebar {
             grid-row: 1 / 3;
-            background: rgba(10, 10, 10, 0.9);
-            border-right: 1px solid var(--border);
-            display: flex; flex-direction: column; gap: 15px; padding: 15px;
+            background: rgba(10, 10, 10, 0.85);
+            border-right: 1px solid rgba(255,255,255,0.1);
+            display: flex; flex-direction: column; gap: 20px; padding: 20px;
             overflow-y: auto; z-index: 20;
-            box-shadow: 5px 0 20px rgba(0,0,0,0.5);
+            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
         }
         .sidebar::-webkit-scrollbar { width: 4px; }
-        .sidebar::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #555; border-radius: 2px; }
 
         .app-title {
-            font-family: 'Cinzel'; font-size: 1.2rem; color: var(--theme);
-            text-align: center; text-shadow: 0 0 10px rgba(212, 179, 70, 0.4);
-            letter-spacing: 2px; margin-bottom: 5px;
-            border-bottom: 1px solid var(--border); padding-bottom: 10px;
+            font-family: 'Cinzel'; font-size: 1.4rem; color: var(--theme);
+            text-align: center; 
+            text-shadow: 0 0 15px rgba(212, 179, 70, 0.5);
+            letter-spacing: 3px; margin-bottom: 5px;
+            border-bottom: 1px solid var(--border); padding-bottom: 15px;
+            font-weight: 700;
         }
 
         /* Character Profile */
         .char-card {
             text-align: center;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border);
-            border-radius: 6px; padding: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border: var(--glass-border);
+            border-radius: 8px; padding: 15px;
             transition: 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
         
         .char-icon-wrapper {
-            position: relative; width: 80px; height: 80px; margin: 0 auto 8px;
+            position: relative; width: 90px; height: 90px; margin: 0 auto 12px;
         }
         .char-img {
             width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
             border: 2px solid var(--theme); background: #000;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
             transition: 0.5s;
         }
         
         .char-select {
-            width: 100%; background: #111; color: #eee;
-            border: 1px solid #444; padding: 4px; border-radius: 4px;
-            font-family: 'Shippori Mincho'; cursor: pointer; font-size: 0.75rem;
+            width: 100%; background: #1a1a1a; color: #fff;
+            border: 1px solid #444; padding: 8px; border-radius: 4px;
+            font-family: 'Shippori Mincho'; cursor: pointer; font-size: 0.8rem;
+            transition: 0.2s;
         }
-        .char-select:focus { outline: none; border-color: var(--theme); }
+        .char-select:focus { outline: none; border-color: var(--theme); background: #222; }
 
         /* Stats Panel */
         .stats-panel {
-            background: rgba(0, 0, 0, 0.4); border-radius: 4px; padding: 10px;
-            border: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.3); border-radius: 6px; padding: 12px;
+            border: var(--glass-border);
         }
         .panel-head {
-            font-family: 'Cinzel'; font-size: 0.75rem; color: #888;
-            border-bottom: 1px dashed #444; margin-bottom: 6px; padding-bottom: 2px;
+            font-family: 'Cinzel'; font-size: 0.8rem; color: #aaa;
+            border-bottom: 1px dashed #555; margin-bottom: 10px; padding-bottom: 4px;
             display: flex; justify-content: space-between; align-items: center;
+            letter-spacing: 1px;
         }
         
-        .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 10px; }
-        .kpi-item { text-align: center; background: rgba(255,255,255,0.02); padding: 4px; border-radius: 3px; }
-        .kpi-label { font-size: 0.55rem; color: #888; font-family: 'Cinzel'; display: block; }
-        .kpi-val { font-size: 1rem; color: var(--theme); font-weight: bold; font-family: 'Cinzel'; }
+        .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+        .kpi-item { 
+            text-align: center; background: rgba(255,255,255,0.03); padding: 8px 4px; border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .kpi-label { font-size: 0.6rem; color: #999; font-family: 'Cinzel'; display: block; margin-bottom: 2px; }
+        .kpi-val { font-size: 1.2rem; color: var(--theme); font-weight: bold; font-family: 'Cinzel'; text-shadow: 0 0 8px rgba(212, 179, 70, 0.3); }
 
         /* Skill Ranking */
-        .rank-list { list-style: none; padding: 0; margin: 0; font-size: 0.75rem; max-height: 200px; overflow-y: auto; }
+        .rank-list { list-style: none; padding: 0; margin: 0; font-size: 0.8rem; max-height: 250px; overflow-y: auto; }
         .rank-list::-webkit-scrollbar { width: 2px; }
         .rank-row {
-            display: flex; justify-content: space-between; padding: 3px 0;
+            display: flex; justify-content: space-between; padding: 6px 4px;
             border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: 0.2s;
         }
-        .rank-name { color: #ccc; }
-        .rank-num { color: var(--theme); font-family: 'Cinzel'; }
+        .rank-row:hover { background: rgba(255,255,255,0.05); }
+        .rank-name { color: #ddd; }
+        .rank-num { color: var(--theme); font-family: 'Cinzel'; font-weight: bold; }
 
         /* --- 4. TOP AREA (Graph & Filter) --- */
         .top-area {
             grid-column: 2 / 3; grid-row: 1 / 2;
-            padding: 15px 20px;
+            padding: 20px;
             display: grid; grid-template-columns: 2fr 1fr; gap: 20px;
-            background: rgba(0,0,0,0.2);
+            background: rgba(0,0,0,0.15);
             border-bottom: 1px solid var(--border);
-            height: 180px;
+            height: 200px;
         }
 
-        .chart-box { position: relative; width: 100%; height: 100%; }
+        .chart-box { 
+            position: relative; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.3); border-radius: 4px; border: var(--glass-border);
+            padding: 10px;
+        }
         .chart-title {
-            position: absolute; top: 0; left: 0; 
-            font-family: 'Cinzel'; font-size: 0.7rem; color: #666;
-            background: rgba(0,0,0,0.6); padding: 2px 5px; border-radius: 2px;
+            position: absolute; top: -10px; left: 10px; 
+            font-family: 'Cinzel'; font-size: 0.75rem; color: #ccc;
+            background: #111; padding: 2px 8px; border: 1px solid #444; border-radius: 2px;
+            z-index: 5;
         }
 
         /* Insanity Log */
         .insanity-container {
             display: flex; flex-direction: column; height: 100%;
-            background: rgba(20, 0, 0, 0.3); border: 1px solid rgba(100, 50, 50, 0.5);
+            background: rgba(20, 0, 0, 0.4); border: 1px solid rgba(150, 60, 60, 0.4);
             border-radius: 4px; overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
         }
         .ins-header {
-            background: rgba(50, 0, 0, 0.4); padding: 4px 8px;
-            font-family: 'Cinzel'; font-size: 0.75rem; color: #ff8888;
-            border-bottom: 1px solid rgba(100, 50, 50, 0.5);
+            background: rgba(50, 0, 0, 0.6); padding: 6px 12px;
+            font-family: 'Cinzel'; font-size: 0.8rem; color: #ff8888;
+            border-bottom: 1px solid rgba(120, 50, 50, 0.5);
+            display: flex; align-items: center; gap: 6px;
         }
-        .ins-list { overflow-y: auto; padding: 4px 8px; flex: 1; }
-        .ins-list::-webkit-scrollbar { width: 3px; }
-        .ins-list::-webkit-scrollbar-thumb { background: #522; }
+        .ins-list { overflow-y: auto; padding: 6px 12px; flex: 1; }
+        .ins-list::-webkit-scrollbar { width: 4px; }
+        .ins-list::-webkit-scrollbar-thumb { background: #733; border-radius: 2px; }
         .ins-item {
-            font-size: 0.75rem; padding: 4px 0; border-bottom: 1px dashed rgba(100, 50, 50, 0.3);
+            font-size: 0.8rem; padding: 6px 0; border-bottom: 1px dashed rgba(150, 80, 80, 0.3);
             animation: fadeIn 0.5s ease;
         }
-        .ins-meta { font-size: 0.65rem; color: #a66; font-family: 'Cinzel'; }
-        .ins-text { color: #ecc; text-shadow: 0 0 5px rgba(255, 0, 0, 0.2); }
+        .ins-meta { font-size: 0.65rem; color: #c88; font-family: 'Cinzel'; margin-bottom: 2px; }
+        .ins-text { color: #fdd; text-shadow: 0 0 8px rgba(255, 50, 50, 0.3); line-height: 1.4; }
 
         /* --- 5. MAIN AREA (Toolbar & Matrix) --- */
         .main-area {
             grid-column: 2 / 3; grid-row: 2 / 3;
             display: flex; flex-direction: column;
-            overflow: hidden; background: rgba(0,0,0,0.4);
+            overflow: hidden; background: rgba(0,0,0,0.2);
         }
 
         /* Toolbar */
         .matrix-toolbar {
-            padding: 8px 20px; display: flex; align-items: center; justify-content: space-between;
-            background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--border);
+            padding: 10px 20px; display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(5px);
         }
         
-        .filter-group { display: flex; gap: 4px; }
+        .filter-group { display: flex; gap: 6px; }
         .filter-btn {
-            background: transparent; border: 1px solid #444; color: #888;
-            padding: 2px 10px; border-radius: 12px; cursor: pointer;
-            font-size: 0.75rem; transition: 0.2s; font-family: 'Noto Sans JP';
+            background: rgba(0,0,0,0.3); border: 1px solid #555; color: #aaa;
+            padding: 4px 14px; border-radius: 20px; cursor: pointer;
+            font-size: 0.8rem; transition: 0.3s; font-family: 'Noto Sans JP';
         }
-        .filter-btn:hover { border-color: #666; color: #ccc; }
+        .filter-btn:hover { border-color: #888; color: #fff; transform: translateY(-1px); }
         .filter-btn.active { 
             background: var(--theme); color: #000; border-color: var(--theme); 
-            font-weight: bold;
+            font-weight: bold; box-shadow: 0 0 10px rgba(212, 179, 70, 0.4);
         }
+        
         /* Category specific active styles */
-        .filter-btn.cat-combat.active { background: var(--c-combat); border-color: var(--c-combat); }
-        .filter-btn.cat-search.active { background: var(--c-search); border-color: var(--c-search); }
-        .filter-btn.cat-action.active { background: var(--c-action); border-color: var(--c-action); }
-        .filter-btn.cat-nego.active   { background: var(--c-nego);   border-color: var(--c-nego); }
-        .filter-btn.cat-know.active   { background: var(--c-know);   border-color: var(--c-know); }
+        .filter-btn.cat-combat.active { background: var(--c-combat); border-color: var(--c-combat); box-shadow: 0 0 10px rgba(255, 82, 82, 0.4); }
+        .filter-btn.cat-search.active { background: var(--c-search); border-color: var(--c-search); box-shadow: 0 0 10px rgba(64, 224, 208, 0.4); }
+        .filter-btn.cat-action.active { background: var(--c-action); border-color: var(--c-action); box-shadow: 0 0 10px rgba(255, 215, 0, 0.4); }
+        .filter-btn.cat-nego.active   { background: var(--c-nego);   border-color: var(--c-nego);   box-shadow: 0 0 10px rgba(255, 159, 67, 0.4); }
+        .filter-btn.cat-know.active   { background: var(--c-know);   border-color: var(--c-know);   box-shadow: 0 0 10px rgba(206, 147, 216, 0.4); }
 
-        .toggle-wrapper { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: #aaa; cursor: pointer; }
+        .toggle-wrapper { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #ccc; cursor: pointer; }
         .toggle-switch {
-            width: 30px; height: 16px; background: #333; border-radius: 8px;
-            position: relative; transition: 0.3s;
+            width: 36px; height: 18px; background: #333; border-radius: 10px;
+            position: relative; transition: 0.3s; border: 1px solid #555;
         }
         .toggle-switch::after {
-            content:''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px;
-            background: #888; border-radius: 50%; transition: 0.3s;
+            content:''; position: absolute; top: 1px; left: 1px; width: 14px; height: 14px;
+            background: #aaa; border-radius: 50%; transition: 0.3s;
         }
-        input[type="checkbox"]:checked + .toggle-switch { background: var(--theme); }
-        input[type="checkbox"]:checked + .toggle-switch::after { left: 16px; background: #fff; }
+        input[type="checkbox"]:checked + .toggle-switch { background: var(--theme); border-color: var(--theme); }
+        input[type="checkbox"]:checked + .toggle-switch::after { left: 19px; background: #fff; }
 
         /* Matrix Table Scroll */
         .matrix-scroll {
             flex: 1; overflow: auto; width: 100%;
-            scrollbar-width: thin; scrollbar-color: #555 #111;
+            scrollbar-width: thin; scrollbar-color: #666 #111;
         }
-        .matrix-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+        .matrix-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
         .matrix-scroll::-webkit-scrollbar-corner { background: #111; }
-        .matrix-scroll::-webkit-scrollbar-thumb { background: #555; border: 2px solid #111; border-radius: 4px; }
-        .matrix-scroll::-webkit-scrollbar-track { background: #111; }
+        .matrix-scroll::-webkit-scrollbar-thumb { background: #555; border: 2px solid #111; border-radius: 6px; }
+        .matrix-scroll::-webkit-scrollbar-track { background: #0f0f0f; }
 
         table.growth-matrix {
             border-collapse: separate; border-spacing: 0;
             width: max-content;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
         }
 
         /* --- STICKY HEADERS & COLUMNS --- */
         
+        /* Header */
         thead th {
             position: sticky; top: 0; z-index: 10;
-            background: #111; color: #aaa;
-            border-bottom: 1px solid #444; border-right: 1px solid #222;
-            padding: 0; height: 120px; vertical-align: bottom;
+            background: rgba(15, 15, 15, 0.95); /* 少し透け感を残す */
+            color: #bbb;
+            border-bottom: 1px solid #444; border-right: 1px solid #333;
+            padding: 0; height: 130px; vertical-align: bottom;
             transition: 0.2s;
+            backdrop-filter: blur(5px);
         }
-        thead th:hover { background: #222; }
+        thead th:hover { background: #222; color: #fff; }
 
         /* Fixed Columns (Left) */
         th.col-skill, td.col-skill {
             position: sticky; left: 0; z-index: 12;
-            background: #161616; border-right: 1px solid #444; width: var(--w-skill);
+            background: #111; border-right: 1px solid #444; width: var(--w-skill);
+            box-shadow: 2px 0 5px rgba(0,0,0,0.5); /* 影をつけて浮き上がらせる */
         }
         
-        /* Base Stats Columns (4 columns) */
-        th.col-base, td.col-base { position: sticky; left: var(--w-skill); z-index: 11; width: var(--w-base); border-right: 1px solid #333; background: #1a1a1a; }
-        th.col-job,  td.col-job  { position: sticky; left: calc(var(--w-skill) + var(--w-base)); z-index: 11; width: var(--w-base); border-right: 1px solid #333; background: #1a1a1a; }
-        th.col-int,  td.col-int  { position: sticky; left: calc(var(--w-skill) + var(--w-base)*2); z-index: 11; width: var(--w-base); border-right: 1px solid #333; background: #1a1a1a; }
-        th.col-oth,  td.col-oth  { position: sticky; left: calc(var(--w-skill) + var(--w-base)*3); z-index: 11; width: var(--w-base); border-right: 2px solid #555; background: #1a1a1a; }
+        /* Base Stats Columns */
+        th.col-base, td.col-base { position: sticky; left: var(--w-skill); z-index: 11; width: var(--w-base); border-right: 1px solid #333; background: #141414; }
+        th.col-job,  td.col-job  { position: sticky; left: calc(var(--w-skill) + var(--w-base)); z-index: 11; width: var(--w-base); border-right: 1px solid #333; background: #141414; }
+        th.col-int,  td.col-int  { position: sticky; left: calc(var(--w-skill) + var(--w-base)*2); z-index: 11; width: var(--w-base); border-right: 1px solid #333; background: #141414; }
+        th.col-oth,  td.col-oth  { position: sticky; left: calc(var(--w-skill) + var(--w-base)*3); z-index: 11; width: var(--w-base); border-right: 2px solid #555; background: #141414; }
 
-        thead th[class*="col-"] { z-index: 15; background: #222; border-bottom: 2px solid #555; color: #888; font-size: 0.6rem; font-family:'Cinzel'; vertical-align: middle; }
-        thead th.col-skill { color: var(--theme); font-size: 0.75rem; }
+        thead th[class*="col-"] { z-index: 15; background: #1a1a1a; border-bottom: 2px solid #666; color: #888; font-size: 0.65rem; font-family:'Cinzel'; vertical-align: middle; }
+        thead th.col-skill { color: var(--theme); font-size: 0.8rem; font-weight: bold; text-shadow: 0 0 5px rgba(212, 179, 70, 0.3); }
 
         /* --- CELLS STYLING --- */
         .skill-cell-content {
-            display: flex; align-items: center; height: 28px; padding: 0 6px;
-            border-left: 3px solid transparent; font-weight: 500; color: #ccc;
+            display: flex; align-items: center; height: 34px; padding: 0 10px; /* パディング増 */
+            border-left: 4px solid transparent; font-weight: 500; color: #e0e0e0;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            transition: 0.2s;
         }
         
         /* 
-           修正点: アイコンに固定幅と中央揃えを追加。
-           これにより 'swords' のような長い単語でも 'chat' のような短い単語でも
-           テキストの開始位置が揃い、ズレ（右寄り現象）が解消されます。
+           アイコン修正：固定幅・中央揃え・色付き 
+           ここでカテゴリごとの色をアイコンに反映させ、視覚的な楽しさを追加
         */
         .skill-icon { 
-            font-size: 0.85rem; 
-            margin-right: 4px; 
-            opacity: 0.7;
-            width: 16px; /* 固定幅を追加 */
-            text-align: center; /* アイコンを中央に */
+            font-size: 1rem; 
+            margin-right: 8px; 
+            width: 20px; 
+            text-align: center;
             display: inline-block;
             flex-shrink: 0;
+            text-shadow: 0 0 8px rgba(255,255,255,0.2);
         }
 
-        .cat-combat .skill-cell-content { border-left-color: var(--c-combat); color: #ffdada; }
-        .cat-search .skill-cell-content { border-left-color: var(--c-search); color: #daffff; }
-        .cat-action .skill-cell-content { border-left-color: var(--c-action); color: #ffffda; }
-        .cat-nego   .skill-cell-content { border-left-color: var(--c-nego);   color: #ffeeda; }
-        .cat-know   .skill-cell-content { border-left-color: var(--c-know);   color: #eaddff; }
-        .cat-other  .skill-cell-content { border-left-color: var(--c-other);  color: #ddd; }
+        /* カテゴリごとの配色設定（ボーダー＆アイコン＆微細な背景色） */
+        .cat-combat .skill-cell-content { border-left-color: var(--c-combat); }
+        .cat-combat .skill-icon { color: var(--c-combat); }
+        .cat-combat:hover td { background: rgba(255, 82, 82, 0.08) !important; }
 
-        td.val-base { text-align: center; color: #666; font-family: 'Cinzel'; border-bottom: 1px solid #222; font-size: 0.7rem; }
-        td.val-base.has-val { color: #eee; }
+        .cat-search .skill-cell-content { border-left-color: var(--c-search); }
+        .cat-search .skill-icon { color: var(--c-search); }
+        .cat-search:hover td { background: rgba(64, 224, 208, 0.08) !important; }
 
-        /* Scenario Columns - WIDTH INCREASED */
+        .cat-action .skill-cell-content { border-left-color: var(--c-action); }
+        .cat-action .skill-icon { color: var(--c-action); }
+        .cat-action:hover td { background: rgba(255, 215, 0, 0.08) !important; }
+
+        .cat-nego .skill-cell-content   { border-left-color: var(--c-nego); }
+        .cat-nego .skill-icon   { color: var(--c-nego); }
+        .cat-nego:hover td   { background: rgba(255, 159, 67, 0.08) !important; }
+
+        .cat-know .skill-cell-content   { border-left-color: var(--c-know); }
+        .cat-know .skill-icon   { color: var(--c-know); }
+        .cat-know:hover td   { background: rgba(206, 147, 216, 0.08) !important; }
+
+        .cat-other .skill-cell-content  { border-left-color: var(--c-other); color: #ccc; }
+        .cat-other .skill-icon  { color: var(--c-other); }
+
+        /* Base Values */
+        td.val-base { text-align: center; color: #555; font-family: 'Cinzel'; border-bottom: 1px solid #222; font-size: 0.75rem; }
+        td.val-base.has-val { color: #eee; font-weight: bold; }
+
+        /* Scenario Columns */
         td.val-growth {
             min-width: var(--w-scen); width: var(--w-scen); 
-            text-align: center; color: #444; font-family: 'Cinzel';
+            text-align: center; color: #555; font-family: 'Cinzel';
             border-bottom: 1px solid #222; border-right: 1px solid #222;
-            padding: 0; font-size: 0.7rem;
+            padding: 0; font-size: 0.75rem;
             transition: 0.1s;
         }
         
+        /* 成長セル：より輝かせる */
         .grown { 
             color: #fff !important; font-weight: bold; 
-            background: rgba(212, 179, 70, 0.25) !important;
-            box-shadow: inset 0 0 6px rgba(212, 179, 70, 0.4);
+            background: rgba(212, 179, 70, 0.2) !important;
+            box-shadow: inset 0 0 8px rgba(212, 179, 70, 0.3);
+            text-shadow: 0 0 5px var(--theme); /* 光彩追加 */
         }
+        
+        /* Total Column */
         .total-col {
-            color: var(--theme); font-weight: bold; border-left: 2px solid #444; background: rgba(0,0,0,0.3); min-width: 40px;
+            color: var(--theme); font-weight: bold; 
+            border-left: 2px solid #444; background: rgba(0,0,0,0.4); 
+            min-width: 45px; font-size: 0.9rem;
+            text-shadow: 0 0 5px rgba(0,0,0,0.5);
         }
 
-        tbody tr:hover td { background: rgba(255,255,255,0.04); }
-        .col-hover { background: rgba(255,255,255,0.04) !important; }
+        /* Hover & Stripe */
+        tbody tr:nth-child(even) td { background: rgba(255,255,255,0.01); } /* ゼブラストライプ */
+        tbody tr:hover td { transition: 0s; } /* ホバー時は即座に反応 */
+        .col-hover { background: rgba(255,255,255,0.06) !important; }
 
+        /* Vertical Header Text */
         .v-header {
             writing-mode: vertical-rl; transform: rotate(180deg);
-            white-space: nowrap; text-align: left; padding: 8px 2px;
-            max-height: 110px; margin: 0 auto; font-size: 0.7rem; color: #ccc;
-            cursor: help; letter-spacing: 1px;
+            white-space: nowrap; text-align: left; padding: 10px 4px;
+            max-height: 120px; margin: 0 auto; font-size: 0.75rem; color: #ccc;
+            cursor: help; letter-spacing: 1px; font-weight: 500;
         }
 
-        .spacer-row td { height: 8px; background: rgba(0,0,0,0.4); border: none; }
+        .spacer-row td { height: 12px; background: rgba(0,0,0,0.5); border: none; box-shadow: inset 0 2px 5px rgba(0,0,0,0.5); }
 
         /* TOOLTIP */
         #tooltip {
             position: fixed; pointer-events: none; opacity: 0; z-index: 1000;
-            background: rgba(15, 15, 15, 0.98); border: 1px solid var(--theme);
-            padding: 10px; border-radius: 4px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            transition: opacity 0.15s; color: #eee; font-size: 0.8rem;
-            min-width: 180px; max-width: 280px;
+            background: rgba(10, 10, 10, 0.95); border: 1px solid var(--theme);
+            padding: 12px; border-radius: 6px; box-shadow: 0 10px 40px rgba(0,0,0,0.9);
+            transition: opacity 0.15s; color: #eee; font-size: 0.85rem;
+            min-width: 200px; max-width: 300px; backdrop-filter: blur(5px);
         }
-        #tooltip h4 { margin: 0 0 6px 0; color: var(--theme); font-family: 'Shippori Mincho'; border-bottom: 1px solid #444; padding-bottom: 4px; font-size: 0.85rem; }
-        #tooltip .tt-row { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 0.75rem; }
+        #tooltip h4 { margin: 0 0 8px 0; color: var(--theme); font-family: 'Shippori Mincho'; border-bottom: 1px solid #444; padding-bottom: 6px; font-size: 0.95rem; letter-spacing: 1px; }
+        #tooltip .tt-row { display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 0.8rem; }
         #tooltip .tt-label { color: #888; font-family: 'Cinzel'; }
-        #tooltip .tt-val { font-weight: bold; }
-        #tooltip .growth-list { margin-top: 6px; padding-top: 6px; border-top: 1px dashed #444; color: #aaa; font-size: 0.7rem; line-height: 1.4; }
-        #tooltip .growth-item { display: inline-block; margin-right: 6px; color: #ddd; background: rgba(255,255,255,0.1); padding: 1px 4px; border-radius: 2px; }
-        #tooltip .growth-val { color: var(--theme); font-family: 'Cinzel'; margin-left: 2px; }
+        #tooltip .tt-val { font-weight: bold; font-family: 'Cinzel'; }
+        #tooltip .growth-list { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #444; color: #bbb; font-size: 0.75rem; line-height: 1.5; }
+        #tooltip .growth-item { display: inline-block; margin-right: 6px; color: #eee; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.1); }
+        #tooltip .growth-val { color: var(--theme); font-family: 'Cinzel'; margin-left: 3px; font-weight: bold; }
 
         /* ANIMATION */
         @keyframes fadeIn { from{opacity:0; transform:translateY(5px);} to{opacity:1; transform:translateY(0);} }
@@ -347,9 +406,10 @@
             position: fixed; top:0; left:0; width:100%; height:100%;
             background: rgba(0,0,0,0.9); z-index: 9999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: var(--theme); font-family: 'Cinzel'; backdrop-filter: blur(5px);
+            color: var(--theme); font-family: 'Cinzel'; backdrop-filter: blur(10px);
         }
         .hidden { display: none !important; }
+
     </style>
 </head>
 <body>
@@ -360,8 +420,8 @@
 
 <!-- LOADING -->
 <div id="loadingOverlay">
-    <span class="material-icons-round" style="font-size:3rem; animation:spin 1s linear infinite; margin-bottom:15px;">autorenew</span>
-    <span id="loadingText">INITIALIZING...</span>
+    <span class="material-icons-round" style="font-size:3rem; animation:spin 1s linear infinite; margin-bottom:15px; text-shadow:0 0 10px var(--theme);">autorenew</span>
+    <span id="loadingText" style="letter-spacing:2px;">INITIALIZING...</span>
 </div>
 
 <!-- TOOLTIP -->
@@ -381,13 +441,13 @@
                 <select id="charSelect" class="char-select">
                     <option value="">-- SELECT --</option>
                 </select>
-                <div id="plName" style="color:#888; font-size:0.7rem; margin-top:8px; font-family:'Cinzel'; letter-spacing:1px;">PLAYER NAME</div>
+                <div id="plName" style="color:#888; font-size:0.75rem; margin-top:8px; font-family:'Cinzel'; letter-spacing:1px;">PLAYER NAME</div>
             </div>
         </div>
 
         <!-- Stats -->
         <div class="stats-panel">
-            <div class="panel-head"><span>GROWTH KPI</span><span class="material-icons-round" style="font-size:1rem;">query_stats</span></div>
+            <div class="panel-head"><span>GROWTH KPI</span><span class="material-icons-round" style="font-size:1.1rem; color:#888;">query_stats</span></div>
             <div class="kpi-grid">
                 <div class="kpi-item">
                     <span class="kpi-label">SCENARIOS</span>
@@ -399,27 +459,21 @@
                 </div>
             </div>
             
-            <div class="panel-head" style="margin-top:10px;"><span>DICE STATS</span><span class="material-icons-round" style="font-size:1rem;">casino</span></div>
-            <div class="dice-row">
-                <span class="dice-label">TOTAL ROLL</span><span class="dice-val" style="color:#fff;" id="statTotal">0</span>
+            <div class="panel-head" style="margin-top:15px;"><span>DICE STATS</span><span class="material-icons-round" style="font-size:1.1rem; color:#888;">casino</span></div>
+            <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:5px; padding:0 4px;">
+                <span style="color:#aaa;">TOTAL ROLL</span><span style="color:#fff; font-family:'Cinzel'; font-weight:bold;" id="statTotal">0</span>
             </div>
-            <div class="dice-row">
-                <span class="dice-label">SUCCESS</span><span class="dice-val" style="color:#66bb6a;" id="statSucc">0</span>
+            <div style="display:flex; justify-content:space-between; font-size:0.8rem; margin-bottom:5px; padding:0 4px;">
+                <span style="color:#aaa;">CRITICAL</span><span style="color:#66bb6a; font-family:'Cinzel'; font-weight:bold;" id="statCrit">0</span>
             </div>
-            <div class="dice-row">
-                <span class="dice-label">FAILURE</span><span class="dice-val" style="color:#aaa;" id="statFail">0</span>
-            </div>
-            <div class="dice-row">
-                <span class="dice-label">CRITICAL</span><span class="dice-val" style="color:#a5d6a7;" id="statCrit">0</span>
-            </div>
-            <div class="dice-row">
-                <span class="dice-label">FUMBLE</span><span class="dice-val" style="color:#ff6b6b;" id="statFumb">0</span>
+            <div style="display:flex; justify-content:space-between; font-size:0.8rem; padding:0 4px;">
+                <span style="color:#aaa;">FUMBLE</span><span style="color:#ff5252; font-family:'Cinzel'; font-weight:bold;" id="statFumb">0</span>
             </div>
         </div>
 
         <!-- Ranking -->
         <div class="stats-panel" style="flex:1; display:flex; flex-direction:column; overflow:hidden;">
-            <div class="panel-head"><span>TOP SKILLS</span><span class="material-icons-round" style="font-size:1rem;">trending_up</span></div>
+            <div class="panel-head"><span>TOP SKILLS</span><span class="material-icons-round" style="font-size:1.1rem; color:#888;">trending_up</span></div>
             <ul id="rankList" class="rank-list">
                 <li style="text-align:center; color:#555; padding:10px;">NO DATA</li>
             </ul>
@@ -438,10 +492,10 @@
         <!-- Insanity -->
         <div class="insanity-container">
             <div class="ins-header">
-                <span class="material-icons-round" style="font-size:0.9rem; vertical-align:middle;">psychology</span> INSANITY RECORD
+                <span class="material-icons-round" style="font-size:1rem;">psychology</span> INSANITY RECORD
             </div>
             <div id="insanityList" class="ins-list">
-                <div style="text-align:center; color:#522; margin-top:20px;">NO RECORD</div>
+                <div style="text-align:center; color:#522; margin-top:30px; font-family:'Cinzel';">NO RECORD</div>
             </div>
         </div>
     </div>
@@ -477,9 +531,9 @@
                         <th class="col-base"><div class="v-header">初期</div></th>
                         <th class="col-job"><div class="v-header">職業</div></th>
                         <th class="col-int"><div class="v-header">興味</div></th>
-                        <th class="col-oth"><div class="v-header">その他</div></th>
+                        <th class="col-oth"><div class="v-header">他</div></th>
                         <!-- Scenarios appended here -->
-                        <th><div class="v-header" style="color:var(--theme);">TOTAL</div></th>
+                        <th><div class="v-header" style="color:var(--theme); font-weight:bold;">TOTAL</div></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -527,7 +581,6 @@
             el('loadingText').textContent = "PLEASE LOGIN";
         });
 
-        // Event Listeners
         el('charSelect').addEventListener('change', (e) => { if(e.target.value) loadCharacter(e.target.value); });
         
         document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -565,6 +618,7 @@
         document.documentElement.style.setProperty('--theme', themeColor);
         el('charIcon').src = char.icon || `../images/icon/${char.name}.png`;
         el('charIcon').style.borderColor = themeColor;
+        el('charIcon').style.boxShadow = `0 0 15px ${themeColor}66`; // Icon glow
         el('plName').textContent = "PL: " + (char.plName || "Unknown");
         
         const bgLayer = el('bgLayer');
@@ -598,7 +652,7 @@
     }
 
     function processStats(char, scenarios) {
-        let dice = { total:0, crit:0, fumb:0, succ:0, fail:0 };
+        let dice = { total:0, crit:0, fumb:0, succ:0 };
         let skillCounts = {};
         let sanHistory = [char.vitals?.san || char.stats?.POW*5 || 50]; 
         let insanityHistory = [];
@@ -612,7 +666,6 @@
                 const ana = s.analysisData[char.name];
                 dice.total += ana.dice||0; dice.crit += ana.crit||0;
                 dice.fumb += ana.fumb||0;  dice.succ += ana.succ||0;
-                dice.fail += ana.fail||0;
                 if(ana.skillDetails) {
                     Object.entries(ana.skillDetails).forEach(([k,v]) => {
                         skillCounts[k] = (skillCounts[k]||0) + v.count;
@@ -638,9 +691,8 @@
     }
 
     function processMatrix(char, scenarios) {
-        // Init Values from Char Data
-        const skillMap = {}; // { Name: {init, job, int, oth} }
-
+        // --- 1. Base Skills ---
+        const skillMap = {}; 
         if (char.skills && typeof char.skills === 'object') {
             Object.values(char.skills).flat().forEach(s => {
                 if(s.name) skillMap[s.name] = { 
@@ -650,14 +702,13 @@
                 };
             });
         } else if (char.skillList) {
-            // Text Fallback
             char.skillList.split(/[\n\s,、]+/).forEach(l => {
                 const m = l.match(/^(.+?)[:：\s]*(\d+)$/);
                 if(m) skillMap[m[1].trim()] = { init: parseInt(m[2]), job:0, interest:0, other:0 };
             });
         }
 
-        // Fill missing Base Skills
+        // Fill missing
         Object.keys(BASE_SKILLS_DEF).forEach(k => {
             if(!skillMap[k]) {
                 let base = 0;
@@ -669,7 +720,7 @@
             }
         });
 
-        // Scenario Growths
+        // --- 2. Scenario Growth ---
         const scenarioCols = scenarios.map(s => {
             const growth = {};
             let d = (s.characters.pc?.id === char.id) ? s.characters.pc : (s.characters.kpc?.id === char.id) ? s.characters.kpc : null;
@@ -683,31 +734,27 @@
                         const val = parseInt(m[2]);
                         growth[name] = (growth[name]||0) + val;
                         growthList.push(`${name} +${val}`);
-                        
-                        // Add unknown skill
                         if(!skillMap[name]) skillMap[name] = { init:0, job:0, interest:0, other:0 };
                     }
                 });
             }
             
-            // Dice Stats for Tooltip
             let stats = null;
             if(s.analysisData && s.analysisData[char.name]) {
                 const ana = s.analysisData[char.name];
                 stats = { succ: ana.succ, fail: ana.fail, crit: ana.crit, fumb: ana.fumb };
             }
 
-            return { id: s.id, title: s.title, date: s.date, gm: s.gm, growth, growthList, stats };
+            return { id: s.id, title: s.title, date: s.date, growth, growthList, stats };
         });
 
-        // Build Rows
+        // --- 3. Rows ---
         const rows = [];
         let totalGrowthSum = 0;
 
         Object.keys(skillMap).sort().forEach(name => {
             const base = skillMap[name];
             
-            // Cat
             let cat = 'other';
             let icon = 'star';
             for(const [k, v] of Object.entries(SKILL_CONFIG)) {
@@ -734,7 +781,7 @@
             });
         });
 
-        // Sort: Cat Order -> Name
+        // Sort
         const catOrder = ['combat', 'search', 'action', 'nego', 'know', 'other'];
         rows.sort((a,b) => {
             const ciA = catOrder.indexOf(a.cat);
@@ -753,8 +800,6 @@
         el('statTotal').textContent = d.total;
         el('statCrit').textContent = d.crit;
         el('statFumb').textContent = d.fumb;
-        el('statSucc').textContent = d.succ;
-        el('statFail').textContent = d.fail;
         
         const list = el('rankList'); list.innerHTML = '';
         const sorted = Object.entries(stats.skillCounts).sort((a,b) => b[1]-a[1]).slice(0, 10);
@@ -766,8 +811,8 @@
         const ctx = el('sanChart').getContext('2d');
         if(sanChart) sanChart.destroy();
         
-        // Labels: Start + Scenarios
-        const labels = ['START', ...scenarios.map(s => s.title.substring(0,6))];
+        const labels = ['START', ...scenarios.map(s => s.title.length>6 ? s.title.substring(0,5)+'..' : s.title)];
+        const theme = getComputedStyle(document.documentElement).getPropertyValue('--theme').trim();
         
         sanChart = new Chart(ctx, {
             type: 'line',
@@ -775,16 +820,22 @@
                 labels: labels,
                 datasets: [{
                     label: 'SAN', data: data,
-                    borderColor: getComputedStyle(document.documentElement).getPropertyValue('--theme').trim(),
-                    backgroundColor: 'rgba(255,255,255,0.05)',
-                    borderWidth: 2, tension: 0.3, pointRadius: 4, pointHoverRadius: 6, fill: true
+                    borderColor: theme,
+                    backgroundColor: (ctx) => {
+                        const grad = ctx.chart.ctx.createLinearGradient(0,0,0,200);
+                        grad.addColorStop(0, theme+'44'); // Transparent Theme Color
+                        grad.addColorStop(1, 'rgba(0,0,0,0)');
+                        return grad;
+                    },
+                    borderWidth: 2, tension: 0.3, pointRadius: 4, pointHoverRadius: 6, fill: true,
+                    pointBackgroundColor: '#000', pointBorderColor: theme
                 }]
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    x: { display: false },
+                    x: { ticks: { color: '#666', font: {size:10, family:'Cinzel'} }, grid: { display:false } },
                     y: { grid: { color: '#333' }, ticks: { color: '#666' }, suggestedMin: 0, suggestedMax: 99 }
                 }
             }
@@ -807,7 +858,6 @@
         if(!currentMatrixData) return;
         const { rows, scenarios } = currentMatrixData;
         
-        // Filter
         const activeFilter = document.querySelector('.filter-btn.active').dataset.cat;
         const growthOnly = el('toggleGrowthOnly').checked;
 
@@ -815,17 +865,15 @@
         const thead = table.querySelector('thead tr');
         const tbody = table.querySelector('tbody');
 
-        // Headers
         while(thead.children.length > 5) thead.removeChild(thead.lastChild);
         
         scenarios.forEach(s => {
             const th = document.createElement('th');
-            // Tooltip Event
             th.onmouseenter = (e) => showTooltip(e, s);
             th.onmouseleave = hideTooltip;
             
             let t = s.title;
-            if(t.length > 10) t = t.substring(0,9) + '..'; // Shorten but readable
+            if(t.length > 10) t = t.substring(0,9) + '..'; 
             th.innerHTML = `<div class="v-header">${t}</div>`;
             thead.appendChild(th);
         });
@@ -834,16 +882,13 @@
         thTotal.innerHTML = `<div class="v-header" style="color:var(--theme);">TOTAL</div>`;
         thead.appendChild(thTotal);
 
-        // Body
         tbody.innerHTML = "";
         let prevCat = "";
 
         rows.forEach(row => {
-            // Filter Check
             if(activeFilter !== 'all' && row.cat !== activeFilter) return;
             if(growthOnly && !row.hasGrowth) return;
 
-            // Spacer
             if(prevCat && prevCat !== row.cat) {
                 const sp = document.createElement('tr');
                 sp.className = 'spacer-row';
@@ -855,13 +900,11 @@
             const tr = document.createElement('tr');
             tr.className = `cat-${row.cat}`;
 
-            // Name + Icon
             const tdName = document.createElement('td');
-            tdName.className = "col-skill";
-            tdName.innerHTML = `<div class="skill-cell-inner"><span class="material-icons-round skill-icon">${row.icon}</span>${row.name}</div>`;
+            tdName.className = "col-skill skill-cell-content";
+            tdName.innerHTML = `<span class="material-icons-round skill-icon">${row.icon}</span>${row.name}`;
             tr.appendChild(tdName);
 
-            // Bases
             const addBase = (v, cls) => {
                 const td = document.createElement('td');
                 td.className = cls + (v > 0 ? " has-val" : "");
@@ -873,7 +916,6 @@
             addBase(row.interest, "col-int val-base");
             addBase(row.other, "col-oth val-base");
 
-            // History
             row.history.forEach((h, i) => {
                 const td = document.createElement('td');
                 td.className = "val-growth";
@@ -882,13 +924,11 @@
                     td.classList.add('grown');
                     td.title = `+${h.grow}`;
                 }
-                // Hover highlight (adjusted index for 5 fixed cols)
                 td.onmouseenter = () => highlightColumn(i + 6); 
                 td.onmouseleave = () => removeHighlight(i + 6);
                 tr.appendChild(td);
             });
 
-            // Total
             const tdTotal = document.createElement('td');
             tdTotal.className = "val-growth total-col";
             tdTotal.textContent = row.current;
@@ -901,13 +941,11 @@
     // --- UTILS ---
     function animateCount(id, target) {
         const el = document.getElementById(id);
-        const start = 0;
         const duration = 1000;
         const startTime = performance.now();
         function update(t) {
             const p = Math.min((t - startTime) / duration, 1);
-            const val = Math.floor(p * target);
-            el.textContent = val;
+            el.textContent = Math.floor(p * target);
             if(p < 1) requestAnimationFrame(update);
         }
         requestAnimationFrame(update);
@@ -947,15 +985,16 @@
 
         tooltip.innerHTML = `
             <h4>${data.title}</h4>
-            <div style="font-family:'Cinzel'; font-size:0.7rem; color:#888; margin-bottom:5px;">${data.date||'Unknown Date'}</div>
+            <div style="font-family:'Cinzel'; font-size:0.75rem; color:#888; margin-bottom:8px;">${data.date||'Unknown Date'}</div>
             ${statsHtml}
             ${growthHtml}
         `;
         
         const rect = tooltip.getBoundingClientRect();
-        let left = e.clientX + 15;
-        let top = e.clientY + 15;
-        if(left + rect.width > window.innerWidth) left = e.clientX - rect.width - 15;
+        let left = e.clientX + 20;
+        let top = e.clientY + 20;
+        if(left + rect.width > window.innerWidth) left = e.clientX - rect.width - 20;
+        if(top + rect.height > window.innerHeight) top = e.clientY - rect.height - 20;
         
         tooltip.style.left = left + 'px';
         tooltip.style.top = top + 'px';
