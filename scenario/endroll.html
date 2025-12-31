@@ -102,7 +102,7 @@
         .scroll-container {
             position: absolute; bottom: -100%; 
             left: 50%; transform: translateX(-50%);
-            width: 100%; max-width: 850px; /* 立ち絵と被らないよう少し狭める */
+            width: 100%; max-width: 850px;
             text-align: center;
             z-index: 100; padding-bottom: 300px;
             display: flex; flex-direction: column; align-items: center;
@@ -162,18 +162,14 @@
         }
 
         /* --- CAST LAYOUT --- */
-        .cast-container {
-            margin: 80px auto; width: 100%;
-        }
+        .cast-container { margin: 80px auto; width: 100%; }
         .kp-info-area { margin-bottom: 40px; font-family: 'Cinzel'; color: #888; letter-spacing: 2px; text-align: center; }
 
         .cast-grid {
             display: flex; justify-content: center; align-items: flex-start;
             gap: 60px; width: 100%; flex-wrap: wrap;
         }
-        .cast-card {
-            width: 300px; text-align: center; position: relative;
-        }
+        .cast-card { width: 300px; text-align: center; position: relative; }
         
         .role-badge {
             display: inline-block; background: #222; color: var(--gold-base);
@@ -220,10 +216,8 @@
 
         /* --- SIDE CHARACTERS --- */
         .side-container {
-            position: fixed; /* 画面に固定 */
-            top: 0; height: 100%; width: 25%;
-            z-index: 50; /* 背景より前、コンテンツより後ろ */
-            display: flex; flex-direction: column; justify-content: center;
+            position: fixed; top: 0; height: 100%; width: 25%;
+            z-index: 50; display: flex; flex-direction: column; justify-content: center;
             pointer-events: none;
         }
         .side-left { left: 2%; align-items: center; }
@@ -257,7 +251,7 @@
             100% { transform: translate(-50%, -100%); }
         }
 
-        /* Setup Screen */
+        /* --- SETUP SCREEN (PROGRAM) --- */
         .setup-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #080808; z-index: 2000;
@@ -265,12 +259,78 @@
             transition: opacity 1s;
         }
         .setup-screen.hidden { opacity: 0; pointer-events: none; }
-        .setup-btn {
-            background: transparent; color: var(--gold-base); border: 1px solid var(--gold-base);
-            padding: 15px 40px; font-family: 'Cinzel'; font-size: 1.2rem; cursor: pointer;
-            transition: 0.3s; letter-spacing: 3px; margin-top: 20px;
+
+        .playbill {
+            width: 600px; max-width: 90%; height: 85vh;
+            background: #111; border: 4px double var(--gold-base);
+            padding: 30px; display: flex; flex-direction: column;
+            box-shadow: 0 0 50px rgba(0,0,0,0.9);
         }
-        .setup-btn:hover { background: var(--gold-base); color: #000; box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); }
+        .playbill-title {
+            font-family: 'Cinzel'; font-size: 2.5rem; color: var(--gold-base);
+            text-align: center; margin-bottom: 20px; text-shadow: 0 0 10px var(--gold-base);
+        }
+
+        .filter-bar {
+            display: flex; gap: 10px; margin-bottom: 20px; justify-content: center;
+        }
+        .filter-btn {
+            background: transparent; border: 1px solid #555; color: #888;
+            padding: 8px 15px; cursor: pointer; font-family: 'Cinzel';
+            transition: 0.3s;
+        }
+        .filter-btn:hover, .filter-btn.active {
+            border-color: var(--gold-base); color: var(--gold-base);
+            background: rgba(212, 175, 55, 0.1);
+        }
+
+        .program-list {
+            flex-grow: 1; overflow-y: auto;
+            border: 1px solid #333; padding: 10px;
+            font-family: 'Shippori Mincho'; color: #ccc;
+        }
+        .program-list::-webkit-scrollbar { width: 5px; }
+        .program-list::-webkit-scrollbar-thumb { background: #444; }
+
+        .group-header {
+            font-family: 'Cinzel'; color: var(--gold-shine); border-bottom: 1px dashed #555;
+            margin: 20px 0 10px 0; padding-bottom: 5px; font-size: 0.9rem;
+        }
+        .scene-row {
+            display: flex; align-items: center; padding: 8px;
+            cursor: pointer; border-bottom: 1px solid #222;
+        }
+        .scene-row:hover { background: rgba(255,255,255,0.05); }
+        .scene-chk { margin-right: 15px; accent-color: var(--gold-base); transform: scale(1.2); }
+        .scene-name { flex-grow: 1; }
+        .scene-date-sm { font-size: 0.8rem; color: #666; font-family: 'Cinzel'; }
+
+        .setup-actions {
+            margin-top: 20px; text-align: center;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .action-link { color: #666; cursor: pointer; font-size: 0.8rem; text-decoration: underline; }
+        
+        .start-btn {
+            background: var(--gold-base); color: #000; border: none;
+            padding: 12px 40px; font-family: 'Cinzel'; font-size: 1.1rem;
+            cursor: pointer; font-weight: bold; letter-spacing: 2px;
+            transition: 0.3s;
+        }
+        .start-btn:hover { background: #fff; box-shadow: 0 0 20px rgba(255,255,255,0.5); }
+
+        /* --- CONTROLS --- */
+        .controls {
+            position: fixed; bottom: 20px; right: 20px; z-index: 2000;
+            display: flex; gap: 10px;
+        }
+        .ctrl-btn {
+            background: #222; color: #fff; border: 1px solid #444;
+            width: 40px; height: 40px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.3s;
+        }
+        .ctrl-btn:hover { background: var(--velvet-red); border-color: var(--velvet-red); }
 
     </style>
 </head>
@@ -286,11 +346,27 @@
         <div class="curtain right"></div>
     </div>
 
-    <!-- SETUP -->
+    <!-- SETUP SCREEN (PLAYBILL) -->
     <div id="setupScreen" class="setup-screen">
-        <div style="font-family:'Cinzel'; font-size:3rem; color:#d4af37; margin-bottom:10px; text-shadow:0 0 10px #d4af37;">THE ENDROLL</div>
-        <div id="setupList" style="color:#666; margin-bottom:20px;">Loading...</div>
-        <button class="setup-btn" onclick="window.startShow()">START SHOW</button>
+        <div class="playbill">
+            <div class="playbill-title">THE PROGRAM</div>
+            
+            <div class="filter-bar">
+                <button class="filter-btn active" onclick="window.setMode('all')">ALL</button>
+                <button class="filter-btn" onclick="window.setMode('pair')">BY PAIR</button>
+                <button class="filter-btn" onclick="window.setMode('month')">BY MONTH</button>
+            </div>
+
+            <div id="setupList" class="program-list">Loading...</div>
+
+            <div class="setup-actions">
+                <div>
+                    <span class="action-link" onclick="window.toggleAll(true)">Select All</span> / 
+                    <span class="action-link" onclick="window.toggleAll(false)">Clear</span>
+                </div>
+                <button class="start-btn" onclick="window.startShow()">START SHOW</button>
+            </div>
+        </div>
     </div>
 
     <!-- MAIN CONTENT -->
@@ -312,9 +388,9 @@
     </div>
 
     <!-- CONTROLS -->
-    <div style="position:fixed; bottom:20px; right:20px; z-index:2000; display:flex; gap:10px;">
-        <button onclick="location.reload()" style="background:#222; color:#fff; border:none; padding:10px; border-radius:50%; cursor:pointer;"><span class="material-icons-round">replay</span></button>
-        <button onclick="window.close()" style="background:#222; color:#fff; border:none; padding:10px; border-radius:50%; cursor:pointer;"><span class="material-icons-round">close</span></button>
+    <div class="controls">
+        <div class="ctrl-btn" onclick="location.reload()"><span class="material-icons-round">replay</span></div>
+        <div class="ctrl-btn" onclick="window.close()"><span class="material-icons-round">close</span></div>
     </div>
 
     <script type="module">
@@ -338,6 +414,7 @@
         let allChars = {};
         let allScenarios = [];
         let selectedScenarios = [];
+        let currentMode = 'all'; // all, pair, month
 
         function createDust() { 
             const container = document.getElementById('dustContainer'); 
@@ -358,11 +435,20 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 await loadData();
-                renderSetup();
+                
+                // Direct Link Mode
                 const p = new URLSearchParams(location.search);
                 if(p.get('id')){
                     const t = allScenarios.find(s=>s.id===p.get('id'));
-                    if(t){ selectedScenarios=[t]; document.getElementById('setupScreen').classList.add('hidden'); setTimeout(playShow,500); }
+                    if(t){ 
+                        selectedScenarios=[t]; 
+                        document.getElementById('setupScreen').classList.add('hidden'); 
+                        setTimeout(playShow,500); 
+                    } else {
+                        renderSetupList();
+                    }
+                } else {
+                    renderSetupList();
                 }
             } else {
                 document.getElementById('setupList').innerHTML = "Login Required";
@@ -379,19 +465,106 @@
             } catch(e){ console.error(e); }
         }
 
-        function renderSetup(){
-            const div = document.getElementById('setupList');
-            div.innerHTML = `<select id="selScn" style="padding:10px; font-size:1rem; width:300px; background:#111; color:#fff; border:1px solid #444;"><option value="">-- SELECT SCENARIO --</option>${allScenarios.map((s,i)=>`<option value="${i}">${s.title} (${s.date})</option>`).join('')}</select>`;
+        // --- SETUP LOGIC ---
+        window.setMode = (mode) => {
+            currentMode = mode;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            // ボタンのアクティブ化
+            const index = mode === 'all' ? 0 : (mode === 'pair' ? 1 : 2);
+            document.querySelectorAll('.filter-btn')[index].classList.add('active');
+            renderSetupList();
+        };
+
+        function renderSetupList() {
+            const list = document.getElementById('setupList');
+            list.innerHTML = "";
+
+            if(allScenarios.length === 0) { list.innerHTML = "No Data"; return; }
+
+            const groups = groupScenarios(currentMode);
+
+            // Render Groups
+            Object.keys(groups).forEach(key => {
+                // Header (Only for groups)
+                if(currentMode !== 'all') {
+                    const header = document.createElement('div');
+                    header.className = 'group-header';
+                    header.textContent = key;
+                    list.appendChild(header);
+                }
+
+                groups[key].forEach(s => {
+                    const row = document.createElement('label');
+                    row.className = 'scene-row';
+                    row.innerHTML = `
+                        <input type="checkbox" class="scene-chk" value="${s.id}">
+                        <div class="scene-name">${s.title}</div>
+                        <div class="scene-date-sm">${s.date || ""}</div>
+                    `;
+                    list.appendChild(row);
+                });
+            });
         }
 
+        function groupScenarios(mode) {
+            const groups = {};
+            
+            if (mode === 'all') {
+                groups['ALL'] = allScenarios;
+            } else if (mode === 'pair') {
+                allScenarios.forEach(s => {
+                    const mems = (s.members || []).slice().sort();
+                    let key = "SOLO / OTHERS";
+                    
+                    if (mems.length === 2) {
+                        const n1 = allChars[mems[0]]?.name || "?";
+                        const n2 = allChars[mems[1]]?.name || "?";
+                        key = `${n1} & ${n2}`;
+                    } else if (mems.length === 1) {
+                        key = allChars[mems[0]]?.name || "Unknown";
+                    }
+                    if (!groups[key]) groups[key] = [];
+                    groups[key].push(s);
+                });
+            } else if (mode === 'month') {
+                allScenarios.forEach(s => {
+                    let key = "Unknown Date";
+                    if (s.date) {
+                        key = s.date.substring(0, 7); // YYYY-MM
+                    }
+                    if (!groups[key]) groups[key] = [];
+                    groups[key].push(s);
+                });
+                // Sort keys desc
+                const sortedKeys = Object.keys(groups).sort().reverse();
+                const sortedGroups = {};
+                sortedKeys.forEach(k => sortedGroups[k] = groups[k]);
+                return sortedGroups;
+            }
+            return groups;
+        }
+
+        window.toggleAll = (checked) => {
+            document.querySelectorAll('.scene-chk').forEach(c => c.checked = checked);
+        };
+
         window.startShow = () => {
-            const idx = document.getElementById('selScn').value;
-            if(idx === "") return alert("Select a scenario");
-            selectedScenarios = [allScenarios[idx]];
+            const checks = document.querySelectorAll('.scene-chk:checked');
+            if(checks.length === 0) return alert("Select at least one scenario.");
+            
+            selectedScenarios = [];
+            checks.forEach(c => {
+                const s = allScenarios.find(item => item.id === c.value);
+                if(s) selectedScenarios.push(s);
+            });
+            // Sort selected by date
+            selectedScenarios.sort((a,b) => new Date(a.date||0) - new Date(b.date||0));
+
             document.getElementById('setupScreen').classList.add('hidden');
             setTimeout(playShow, 800);
         };
 
+        // --- PLAYBACK ---
         function playShow() {
             document.getElementById('curtain').classList.add('open');
             const container = document.getElementById('scrollContent');
@@ -406,31 +579,21 @@
                 const is2PL = (s.type === "2PL" || s.type === "4PL");
                 
                 let overview = s.overview || "";
+                let entities = s.entities || "";
 
                 html += `
                     <div class="scenario-block" id="scene-${i}" data-index="${i}">
                         <div class="scenario-marker"></div>
-                        
                         <div class="sc-header reveal-text">
                             <div class="sc-title">${s.title}</div>
                             <div class="sc-date">${s.date || ""}</div>
                         </div>
-
-                        ${s.images?.trailer ? `
-                        <div class="sc-image-box reveal-text">
-                            <img src="${s.images.trailer}" class="sc-image">
-                        </div>` : ''}
-
+                        ${s.images?.trailer ? `<div class="sc-image-box reveal-text"><img src="${s.images.trailer}" class="sc-image"></div>` : ''}
                         <div class="text-section reveal-text">
                             ${s.introduction ? `<div class="story-intro">“ ${s.introduction} ”</div>` : ''}
                             ${overview ? `<div class="section-label">STORY</div><div>${overview}</div>` : ''}
                         </div>
-
-                        ${(is2PL && kpName) ? `
-                        <div class="kp-info-area reveal-text">
-                            <span style="border-bottom:1px solid #555; padding-bottom:5px;">GAME MASTER : ${kpName}</span>
-                        </div>` : ''}
-
+                        ${(is2PL && kpName) ? `<div class="kp-info-area reveal-text"><span style="border-bottom:1px solid #555; padding-bottom:5px;">GAME MASTER : ${kpName}</span></div>` : ''}
                         <div class="cast-container reveal-text">
                             <div class="cast-grid">
                                 <div class="cast-card">
@@ -440,7 +603,6 @@
                                     ${s.characters?.pc?.quote ? `<div class="line-box">${s.characters.pc.quote}</div>` : ''}
                                     <span class="status-label ${s.characters?.pc?.res==='Lost'?'st-lost':'st-alive'}">${s.characters?.pc?.res || 'Alive'}</span>
                                 </div>
-
                                 <div class="cast-card">
                                     <span class="role-badge">${is2PL ? 'PLAYER CHARACTER 2' : 'KEY PERSON'}</span>
                                     <div class="cast-name" style="color:${kpc.color || '#ddd'}">${kpc.name}</div>
@@ -450,12 +612,10 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="ending-block reveal-text">
                             <div style="font-family:'Cinzel'; font-size:0.8rem; color:#888; margin-bottom:10px;">CONCLUSION</div>
                             <div class="end-name">${s.endName || "UNKNOWN ENDING"}</div>
                         </div>
-
                     </div>
                 `;
             });
@@ -486,7 +646,6 @@
                 const markers = document.querySelectorAll('.scenario-marker');
                 markers.forEach(m => {
                     const rect = m.getBoundingClientRect();
-                    // キャラクター表示タイミング（画面上部近く）
                     if(rect.top < window.innerHeight * 0.9 && rect.bottom > 0) {
                         const idx = m.parentElement.dataset.index;
                         if(currentSceneIdx !== idx) {
